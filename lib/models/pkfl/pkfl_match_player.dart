@@ -1,17 +1,15 @@
 
 class PkflMatchPlayer {
-  String name;
-  int goals;
-  int receivedGoals;
-  int ownGoals;
-  int goalkeepingMinutes;
-  int yellowCards;
-  int redCards;
-  bool bestPlayer;
-  bool hattrick;
-  bool cleanSheet;
-  String yellowCardComment;
-  String redCardComment;
+  final String name;
+  final int goals;
+  final int receivedGoals;
+  final int ownGoals;
+  final int goalkeepingMinutes;
+  final int yellowCards;
+  final int redCards;
+  final bool bestPlayer;
+  String? yellowCardComment;
+  String? redCardComment;
 
   PkflMatchPlayer(
       this.name,
@@ -22,10 +20,18 @@ class PkflMatchPlayer {
       this.yellowCards,
       this.redCards,
       this.bestPlayer,
-      this.hattrick,
-      this.cleanSheet,
-      this.yellowCardComment,
-      this.redCardComment);
+       {
+         this.yellowCardComment,
+         this.redCardComment
+});
+
+  bool hattrick() {
+    return goals > 2;
+  }
+
+  bool cleanSheet() {
+    return receivedGoals == 0 && goalkeepingMinutes > 0;
+  }
 
   @override
   bool operator ==(Object other) =>

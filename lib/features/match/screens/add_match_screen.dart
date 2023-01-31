@@ -112,7 +112,7 @@ class _AddMatchScreenState extends ConsumerState<AddMatchScreen> {
               Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
                 SizedBox(
                     width: (size.width / 3) - padding,
-                    child: const CustomText(text: "Vyber sezonu:")),
+                    child: CustomText(text: "Vyber sezonu:")),
                 SizedBox(
                   width: (size.width / 1.5) - padding,
                   child: StreamBuilder<List<SeasonModel>>(
@@ -144,7 +144,7 @@ class _AddMatchScreenState extends ConsumerState<AddMatchScreen> {
                 children: [
                   SizedBox(
                       width: (size.width / 3) - padding,
-                      child: const CustomText(text: "Vyber hráče:")),
+                      child: CustomText(text: "Vyber hráče:")),
                   SizedBox(
                     width: (size.width / 1.5) - padding,
                     child: PlayerDropdownMultiSelect(
@@ -162,7 +162,7 @@ class _AddMatchScreenState extends ConsumerState<AddMatchScreen> {
                 children: [
                   SizedBox(
                       width: (size.width / 3) - padding,
-                      child: const CustomText(text: "Vyber fanoušky:")),
+                      child: CustomText(text: "Vyber fanoušky:")),
                   SizedBox(
                       width: (size.width / 1.5) - padding,
                       child: PlayerDropdownMultiSelect(

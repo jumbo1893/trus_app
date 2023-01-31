@@ -4,7 +4,7 @@ import 'dart:core';
 import 'package:trus_app/models/pkfl/pkfl_match_player.dart';
 
 class PkflMatchDetail {
-  String refereeComment;
+  final String refereeComment;
   final List<PkflMatchPlayer> pkflPlayers;
 
   PkflMatchDetail(this.refereeComment, this.pkflPlayers);
