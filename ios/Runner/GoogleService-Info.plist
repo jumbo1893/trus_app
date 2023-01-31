@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>CLIENT_ID</key>
+	<string>636205690539-p53in3s031qjec4mcopnnotl4gqft0cm.apps.googleusercontent.com</string>
+	<key>REVERSED_CLIENT_ID</key>
+	<string>com.googleusercontent.apps.636205690539-p53in3s031qjec4mcopnnotl4gqft0cm</string>
+	<key>API_KEY</key>
+	<string>AIzaSyCjLXiqtcBeeN7Ui3sZGeTsgWzaho1wSwk</string>
+	<key>GCM_SENDER_ID</key>
+	<string>636205690539</string>
+	<key>PLIST_VERSION</key>
+	<string>1</string>
+	<key>BUNDLE_ID</key>
+	<string>com.jumbo.trusApp</string>
+	<key>PROJECT_ID</key>
+	<string>trus-flutter</string>
+	<key>STORAGE_BUCKET</key>
+	<string>trus-flutter.appspot.com</string>
+	<key>IS_ADS_ENABLED</key>
+	<false></false>
+	<key>IS_ANALYTICS_ENABLED</key>
+	<false></false>
+	<key>IS_APPINVITE_ENABLED</key>
+	<true></true>
+	<key>IS_GCM_ENABLED</key>
+	<true></true>
+	<key>IS_SIGNIN_ENABLED</key>
+	<true></true>
+	<key>GOOGLE_APP_ID</key>
+	<string>1:636205690539:ios:59a11eb850231750c491ee</string>
+</dict>
+</plist>

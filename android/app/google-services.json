@@ -1,0 +1,39 @@
+{
+  "project_info": {
+    "project_number": "636205690539",
+    "project_id": "trus-flutter",
+    "storage_bucket": "trus-flutter.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:636205690539:android:e717006a556e0c6cc491ee",
+        "android_client_info": {
+          "package_name": "com.jumbo.trus_app"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "636205690539-sh2ev9ba8p6dlc9mu6nj4269q1kfui9g.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCOm6lge37xxE5Bw7uesoUg8CJzxE3UFo4"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "636205690539-sh2ev9ba8p6dlc9mu6nj4269q1kfui9g.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

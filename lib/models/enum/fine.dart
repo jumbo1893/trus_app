@@ -1,0 +1,4 @@
+enum Fine {
+  amount,
+  number,
+}
