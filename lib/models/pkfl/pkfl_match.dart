@@ -32,8 +32,12 @@ class PkflMatch {
     return "$opponent - Liščí Trus";
   }
 
-  String _dateToStringWithoutSecondsAndMilliseconds() {
+  String dateToStringWithoutSecondsAndMilliseconds() {
     return date.toString().replaceAll(":00.000", "");
+  }
+
+  String toStringWithOpponentAndDate() {
+    return "${toStringNameWithOpponent()},\n hráno ${dateToStringWithoutSecondsAndMilliseconds()}";
   }
 
   String returnFirstDetailsOfMatch() {
@@ -43,7 +47,7 @@ class PkflMatch {
     } else {
       result = this.result;
     }
-    return "$round. kolo, $league, hrané ${_dateToStringWithoutSecondsAndMilliseconds()}\nStadion: $stadium\nRozhodčí: $referee\nVýsledek: $result";
+    return "$round. kolo, $league, hrané ${dateToStringWithoutSecondsAndMilliseconds()}\nStadion: $stadium\nRozhodčí: $referee\nVýsledek: $result";
   }
 
   String returnSecondDetailsOfMatch() {
@@ -106,7 +110,7 @@ class PkflMatch {
 
 
   String toStringForSubtitle() {
-    return "Datum: ${_dateToStringWithoutSecondsAndMilliseconds()}, výsledek: $result";
+    return "Datum: ${dateToStringWithoutSecondsAndMilliseconds()}, výsledek: $result";
   }
 
   @override

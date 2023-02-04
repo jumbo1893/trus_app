@@ -25,7 +25,7 @@ class RetrieveMatchesTask {
       for (var tr in trs) {
         var tds = tr.querySelectorAll("td");
         if (tds.length > 8) {
-          pkflMatches.add(returnPkflMatch(tds));
+          pkflMatches.add(_returnPkflMatch(tds));
         }
       }
       return pkflMatches;
@@ -36,10 +36,10 @@ class RetrieveMatchesTask {
     }
   }
 
-  PkflMatch returnPkflMatch(List<Element> tds) {
-    bool homeMatch = isHomeMatch(tds[4].text);
+  PkflMatch _returnPkflMatch(List<Element> tds) {
+    bool homeMatch = _isHomeMatch(tds[4].text);
     PkflMatch pkflMatch = PkflMatch(
-        convertTextToDateTime(tds[0].text, tds[1].text),
+        _convertTextToDateTime(tds[0].text, tds[1].text),
         (homeMatch ? tds[5].text.trim() : tds[4].text.trim()),
         int.parse(tds[2].text.trim()),
         tds[3].text.trim(),
@@ -52,7 +52,7 @@ class RetrieveMatchesTask {
     return pkflMatch;
   }
 
-  DateTime convertTextToDateTime(String date, String time) {
+  DateTime _convertTextToDateTime(String date, String time) {
     try {
       return DateTime.parse("${date.trim()} ${time.trim()}");
     } catch (e) {
@@ -61,7 +61,7 @@ class RetrieveMatchesTask {
     }
   }
 
-  bool isHomeMatch(String homeTeam) {
+  bool _isHomeMatch(String homeTeam) {
     if (homeTeam.trim() == ("Liščí trus")) {
       return true;
     }

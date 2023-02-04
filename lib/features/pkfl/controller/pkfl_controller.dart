@@ -1,11 +1,14 @@
-import 'package:flutter/cupertino.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:trus_app/models/helper/beer_stats_helper_model.dart';
-import 'package:trus_app/models/helper/fine_stats_helper_model.dart';
-import 'package:trus_app/models/match_model.dart';
-import 'package:trus_app/models/player_model.dart';
+import 'dart:collection';
 
-import '../../../models/season_model.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:trus_app/features/pkfl/tasks/retrieve_match_detail_task.dart';
+import 'package:trus_app/features/pkfl/tasks/retrieve_matches_task.dart';
+import 'package:trus_app/features/pkfl/tasks/retrieve_season_url_task.dart';
+import 'package:trus_app/models/enum/spinner_options.dart';
+import 'package:trus_app/models/pkfl/pkfl_match.dart';
+import 'package:trus_app/models/pkfl/pkfl_player_stats.dart';
+import 'package:trus_app/models/pkfl/pkfl_season.dart';
+import '../../../models/pkfl/pkfl_match_player.dart';
 import '../repository/pkfl_repository.dart';
 
 final pkflControllerProvider = Provider((ref) {
@@ -16,16 +19,12 @@ final pkflControllerProvider = Provider((ref) {
 class PkflController {
   final PkflRepository pkflRepository;
   final ProviderRef ref;
-
   PkflController({
     required this.pkflRepository,
     required this.ref,
   });
 
-
   Future<String> url() async {
     return pkflRepository.getPkflUrl();
   }
-
-
 }

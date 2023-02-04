@@ -9,6 +9,7 @@ import 'package:trus_app/features/match/controller/match_controller.dart';
 import 'package:trus_app/features/match/screens/add_match_screen.dart';
 import 'package:trus_app/features/match/screens/edit_match_screen.dart';
 import 'package:trus_app/features/match/screens/match_screen.dart';
+import 'package:trus_app/features/pkfl/screens/main_pkfl_statistics_screen.dart';
 import 'package:trus_app/features/pkfl/screens/pkfl_match_screens.dart';
 import 'package:trus_app/features/player/screens/add_player_screen.dart';
 import 'package:trus_app/features/player/screens/edit_player_screen.dart';
@@ -223,7 +224,7 @@ class _MainScreenState extends ConsumerState<MainScreen> {
                       color: Colors.orange,
                     ),
                     title: const Text("Statistiky z PKFL"),
-                    onTap: () {},
+                    onTap: () => onModalBottomSheetMenuTapped(20),
                   ),
                   Row(
                     children: const [
@@ -505,6 +506,9 @@ class _MainScreenState extends ConsumerState<MainScreen> {
           ),
           const PkflMatchScreen(
             //19
+          ),
+          const MainPkflStatisticsScreen(
+            //20
 
           )
         ],

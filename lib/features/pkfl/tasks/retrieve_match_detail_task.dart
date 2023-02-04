@@ -23,7 +23,7 @@ class RetrieveMatchDetailTask {
           "matches");
       var ps = matches[0].querySelectorAll("p");
       var tables = document.getElementsByClassName("dataTable table table-striped no-footer");
-      PkflMatchDetail pkflMatchDetail = PkflMatchDetail(getRefereeComment(ps), getPlayersFromMatch(getTrsFromTables(tables,isHomeMatch(ps))));
+      PkflMatchDetail pkflMatchDetail = PkflMatchDetail(_getRefereeComment(ps), _getPlayersFromMatch(_getTrsFromTables(tables,_isHomeMatch(ps))));
       return pkflMatchDetail;
     } on BadFormatException {
       rethrow;
@@ -32,19 +32,19 @@ class RetrieveMatchDetailTask {
     }
   }
 
-  String getRefereeComment(List<Element> ps) {
+  String _getRefereeComment(List<Element> ps) {
     if (ps.length > 6 && ps[6].text.toLowerCase().contains("komentář")) {
       return ps[6].text.replaceAll("  ", "");
     }
     return "Bez komentáře rozhodčího";
   }
 
-  bool isHomeMatch(List<Element> ps) {
+  bool _isHomeMatch(List<Element> ps) {
     String name = ps[0].text.split("/")[1].trim().toLowerCase();
     return name != ("liščí trus");
   }
 
-  List<PkflMatchPlayer> getPlayersFromMatch(List<Element> trs) {
+  List<PkflMatchPlayer> _getPlayersFromMatch(List<Element> trs) {
     List<PkflMatchPlayer> players = [];
 
     for (Element tr in trs) {
@@ -56,7 +56,7 @@ class RetrieveMatchDetailTask {
     return players;
   }
 
-  List<Element> getTrsFromTables(List<Element> tables, bool homeMatch) {
+  List<Element> _getTrsFromTables(List<Element> tables, bool homeMatch) {
     if (homeMatch) {
       return tables[0].querySelectorAll("tr");
     }
@@ -69,12 +69,12 @@ class RetrieveMatchDetailTask {
 
     try {
       PkflMatchPlayer pkflMatchPlayer = PkflMatchPlayer(tds[0].text.trim(), int.parse(tds[1].text.trim()), int.parse(tds[2].text.trim()), int.parse(tds[3].text.trim()),
-          getNumbersFromString(tds[4].text.trim()), int.parse(tds[5].text.trim()), int.parse(tds[6].text.trim()), isBestPlayer(tds[0]));
+          _getNumbersFromString(tds[4].text.trim()), int.parse(tds[5].text.trim()), int.parse(tds[6].text.trim()), _isBestPlayer(tds[0]));
       if (pkflMatchPlayer.yellowCards > 0) {
-        pkflMatchPlayer.yellowCardComment = (returnCardComment(tds[5]));
+        pkflMatchPlayer.yellowCardComment = (_returnCardComment(tds[5]));
       }
       if (pkflMatchPlayer.redCards > 0) {
-        pkflMatchPlayer.redCardComment = (returnCardComment(tds[6]));
+        pkflMatchPlayer.redCardComment = (_returnCardComment(tds[6]));
       }
       return pkflMatchPlayer;
     } catch (e) {
@@ -83,23 +83,24 @@ class RetrieveMatchDetailTask {
 
   }
 
-  String returnCardComment(Element td) {
+  String _returnCardComment(Element td) {
+
     try {
-      String comment = td.getElementsByTagName("a") .where((e) => e.attributes.containsKey('title'))
-          .map((e) => e.attributes['href']).first!;
-      return comment;
+      return td.getElementsByTagName("a").first.attributes['title'].toString();
     }
-    catch (e) {
+    catch (e, stack) {
+      print(e);
+      print(stack);
     return "chyba při načítání komentu";
     }
 
   }
 
-  int getNumbersFromString(String number) {
+  int _getNumbersFromString(String number) {
     return int.parse(number.replaceAll(RegExp("[^0-9]"), ""));
   }
 
-  bool isBestPlayer(Element tdName) {
+  bool _isBestPlayer(Element tdName) {
     List<Element> elements = tdName.getElementsByClassName("best-player");
     return elements.isNotEmpty;
   }
