@@ -38,7 +38,7 @@ class _PkflMatchScreenState extends ConsumerState<PkflMatchScreen> {
     });
   }
 
-  Future<List<PkflMatch>> getPkflMatches() async {
+  /*Future<List<PkflMatch>> getPkflMatches() async {
     String url = "";
     List<PkflMatch> matches = [];
     await ref.read(pkflControllerProvider).url().then((value) => url = value);
@@ -50,7 +50,7 @@ class _PkflMatchScreenState extends ConsumerState<PkflMatchScreen> {
       showSnackBar(context: context, content: e.toString());
     }
     return matches;
-  }
+  }*/
 
   Future<PkflMatch> getPkflMatchDetail() async {
     RetrieveMatchDetailTask matchTask =
@@ -70,6 +70,9 @@ class _PkflMatchScreenState extends ConsumerState<PkflMatchScreen> {
 
   @override
   Widget build(BuildContext context) {
+    ref.watch(pkflControllerProvider).snackBar().listen((event) {
+      showSnackBar(context: context, content: event);
+    });
     const double padding = 8.0;
     switch (screenFlow) {
       case ScreenFlow.matchList:
@@ -78,8 +81,9 @@ class _PkflMatchScreenState extends ConsumerState<PkflMatchScreen> {
             body: Padding(
               padding: const EdgeInsets.all(padding),
               child: FutureBuilder<List<PkflMatch>>(
-                  future: getPkflMatches(),
+                  future: ref.read(pkflControllerProvider).getPkflMatches(),
                   builder: (context, snapshot) {
+                    print(snapshot.connectionState);
                     if (snapshot.connectionState == ConnectionState.waiting) {
                       return const Loader();
                     }
@@ -234,8 +238,7 @@ class _PkflMatchScreenState extends ConsumerState<PkflMatchScreen> {
                       if (pickedMatch.detailEnabled()) {
                         changeScreens(ScreenFlow.matchDetail);
                       } else {
-                        changeScreens(
-                            ScreenFlow.matchDetailWithoutResult);
+                        changeScreens(ScreenFlow.matchDetailWithoutResult);
                       }
                     },
                     padding: padding,

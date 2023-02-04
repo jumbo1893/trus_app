@@ -21,9 +21,12 @@ final pkflStatsControllerProvider = Provider((ref) {
 class PkflStatsController {
   final PkflRepository pkflRepository;
   final ProviderRef ref;
-  final streamLoaderTextController = StreamController<PercentageLoaderModel>.broadcast();
+  final streamLoaderTextController =
+      StreamController<PercentageLoaderModel>.broadcast();
   final streamLoaderController = StreamController<bool>.broadcast();
-  final streamPkflStatsPlayer = StreamController<List<PkflPlayerStats>>.broadcast();
+  final streamPkflStatsPlayer =
+      StreamController<List<PkflPlayerStats>>.broadcast();
+  final snackBarController = StreamController<String>.broadcast();
   List<PkflMatch> matchListCurrentSeason = [];
   List<PkflMatch> matchListAllSeasons = [];
 
@@ -34,6 +37,10 @@ class PkflStatsController {
 
   Future<String> url() async {
     return pkflRepository.getPkflUrl();
+  }
+
+  Stream<String> snackBar() {
+    return snackBarController.stream;
   }
 
   Stream<PercentageLoaderModel> loaderTextData() {
@@ -48,23 +55,31 @@ class PkflStatsController {
     return streamPkflStatsPlayer.stream;
   }
 
-  void setPkflPlayerStats(
-      bool currentSeason, SpinnerOption option, bool desc, String? filterText) async {
-    streamLoaderController.add(true);
-    if (currentSeason) {
-      if (matchListCurrentSeason.isEmpty) {
-        matchListCurrentSeason = await _setPkflMatches(currentSeason);
+  void setPkflPlayerStats(bool currentSeason, SpinnerOption option, bool desc,
+      String? filterText) async {
+    try {
+      streamLoaderController.add(true);
+      if (currentSeason) {
+        if (matchListCurrentSeason.isEmpty) {
+          matchListCurrentSeason = await _setPkflMatches(currentSeason);
+        }
+        streamPkflStatsPlayer.add(_sortPkflStatsPlayers(
+            _initPlayerStatsList(matchListCurrentSeason, filterText),
+            desc,
+            option));
+      } else {
+        if (matchListAllSeasons.isEmpty) {
+          matchListAllSeasons = await _setPkflMatches(currentSeason);
+        }
+        streamPkflStatsPlayer.add(_sortPkflStatsPlayers(
+            _initPlayerStatsList(matchListAllSeasons, filterText),
+            desc,
+            option));
       }
-      streamPkflStatsPlayer.add(_sortPkflStatsPlayers(
-          _initPlayerStatsList(matchListCurrentSeason, filterText), desc, option));
-    } else {
-      if (matchListAllSeasons.isEmpty) {
-        matchListAllSeasons = await _setPkflMatches(currentSeason);
-      }
-      streamPkflStatsPlayer.add(_sortPkflStatsPlayers(
-          _initPlayerStatsList(matchListAllSeasons, filterText), desc, option));
+      streamLoaderController.add(false);
+    } catch (e) {
+      snackBarController.add(e.toString());
     }
-    streamLoaderController.add(false);
   }
 
   Future<List<PkflMatch>> _setPkflMatches(bool currentSeason) async {
@@ -72,14 +87,12 @@ class PkflStatsController {
     streamLoaderTextController
         .add(PercentageLoaderModel("připojuji se k webu pkfl"));
     String url = await pkflRepository.getPkflUrl();
-    streamLoaderTextController
-        .add(PercentageLoaderModel("načítám sezony"));
+    streamLoaderTextController.add(PercentageLoaderModel("načítám sezony"));
     RetrieveSeasonUrlTask retrieveSeasonUrlTask =
         RetrieveSeasonUrlTask(url, currentSeason);
     List<PkflSeason> pkflSeasons =
         await retrieveSeasonUrlTask.returnPkflSeasons();
-    streamLoaderTextController
-        .add(PercentageLoaderModel("načítám zápasy"));
+    streamLoaderTextController.add(PercentageLoaderModel("načítám zápasy"));
     for (PkflSeason pkflSeason in pkflSeasons) {
       streamLoaderTextController
           .add(PercentageLoaderModel("načítám sezonu ${pkflSeason.name}"));
@@ -89,10 +102,10 @@ class PkflStatsController {
     }
     int detailNumber = 1;
     for (PkflMatch pkflMatch in matches) {
-      PercentageLoaderModel loader = PercentageLoaderModel("načítám detail zápasu:\n ${pkflMatch.toStringWithOpponentAndDate()}");
+      PercentageLoaderModel loader = PercentageLoaderModel(
+          "načítám detail zápasu:\n ${pkflMatch.toStringWithOpponentAndDate()}");
       loader.calculatePercentageNumber(detailNumber, pkflSeasons.length);
-      streamLoaderTextController
-          .add(loader);
+      streamLoaderTextController.add(loader);
       RetrieveMatchDetailTask retrieveMatchDetailTask =
           RetrieveMatchDetailTask(pkflMatch.urlResult);
       pkflMatch.pkflMatchDetail ??=
@@ -102,7 +115,8 @@ class PkflStatsController {
     return matches;
   }
 
-  List<PkflPlayerStats> _initPlayerStatsList(List<PkflMatch> matches, String? filterValue) {
+  List<PkflPlayerStats> _initPlayerStatsList(
+      List<PkflMatch> matches, String? filterValue) {
     print(filterValue);
     HashMap<PkflMatchPlayer, PkflPlayerStats> pkflPlayerStatsHashMap =
         HashMap();
@@ -110,12 +124,14 @@ class PkflStatsController {
       for (PkflMatchPlayer pkflMatchPlayer
           in pkflMatch.pkflMatchDetail!.pkflPlayers) {
         if (filterValue == null ||
-            pkflMatchPlayer.name.toLowerCase().contains(filterValue.toLowerCase())) {
+            pkflMatchPlayer.name
+                .toLowerCase()
+                .contains(filterValue.toLowerCase())) {
           PkflPlayerStats? hashStatPlayer =
-          pkflPlayerStatsHashMap[pkflMatchPlayer];
+              pkflPlayerStatsHashMap[pkflMatchPlayer];
           if (hashStatPlayer == null) {
             PkflPlayerStats pkflPlayerStats =
-            PkflPlayerStats(pkflMatchPlayer.name);
+                PkflPlayerStats(pkflMatchPlayer.name);
             pkflPlayerStats.enhanceWithPlayerDetail(pkflMatchPlayer, pkflMatch);
             pkflPlayerStatsHashMap.addAll({pkflMatchPlayer: pkflPlayerStats});
           } else {

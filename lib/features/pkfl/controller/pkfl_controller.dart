@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:collection';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -19,12 +20,31 @@ final pkflControllerProvider = Provider((ref) {
 class PkflController {
   final PkflRepository pkflRepository;
   final ProviderRef ref;
+  final snackBarController = StreamController<String>.broadcast();
   PkflController({
     required this.pkflRepository,
     required this.ref,
   });
 
+  Stream<String> snackBar() {
+    return snackBarController.stream;
+  }
+
   Future<String> url() async {
     return pkflRepository.getPkflUrl();
+  }
+
+  Future<List<PkflMatch>> getPkflMatches() async {
+    String url = "";
+    List<PkflMatch> matches = [];
+    url = await pkflRepository.getPkflUrl();
+    RetrieveMatchesTask matchesTask = RetrieveMatchesTask(url);
+    try {
+      await matchesTask.returnPkflMatches().then((value) => matches = value);
+    } catch (e, stacktrace) {
+      print(stacktrace);
+      snackBarController.add(e.toString());
+    }
+    return matches;
   }
 }
