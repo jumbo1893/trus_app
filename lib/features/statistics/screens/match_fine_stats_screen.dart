@@ -5,19 +5,12 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:trus_app/colors.dart';
 import 'package:trus_app/common/widgets/custom_text.dart';
 import 'package:trus_app/common/widgets/loader.dart';
-import 'package:trus_app/features/match/controller/match_controller.dart';
-import 'package:trus_app/features/statistics/repository/stats_repository.dart';
-import 'package:trus_app/models/helper/beer_stats_helper_model.dart';
 import 'package:trus_app/models/helper/fine_stats_helper_model.dart';
 import 'package:trus_app/models/match_model.dart';
 import 'package:trus_app/models/player_model.dart';
 import 'package:trus_app/models/season_model.dart';
-
-import '../../../common/widgets/custom_text_field.dart';
 import '../../../common/widgets/dropdown/season_dropdown.dart';
 import '../../../common/widgets/icon_text_field.dart';
-import '../../../models/beer_model.dart';
-import '../../../models/helper/beer_helper_model.dart';
 import '../controller/stats_controller.dart';
 import '../utils.dart';
 
@@ -32,7 +25,6 @@ class MatchFineStatsScreen extends ConsumerStatefulWidget {
 }
 
 class _MatchFineStatsScreenState extends ConsumerState<MatchFineStatsScreen> {
-  SeasonModel? selectedValue;
   bool orderDescending = true;
   bool showMatchDetail = false;
   late FineStatsHelperModel pickedMatch;
@@ -47,9 +39,8 @@ class _MatchFineStatsScreenState extends ConsumerState<MatchFineStatsScreen> {
 
   void setSelectedSeason(SeasonModel seasonModel) {
     setState(() {
-      selectedValue = seasonModel;
+      ref.read(statsControllerProvider).selectedSeason = seasonModel;
     });
-    print(seasonModel);
   }
 
   ///první hodnota je pivo
@@ -88,141 +79,149 @@ class _MatchFineStatsScreenState extends ConsumerState<MatchFineStatsScreen> {
     final size = MediaQuery.of(context).size;
     const double padding = 8.0;
     if (!showMatchDetail) {
-      return Scaffold(
-        body: Padding(
-          padding: const EdgeInsets.all(padding),
-          child: Column(
-            children: [
-              Row(
+      return FutureBuilder<SeasonModel>(
+        future: ref.read(statsControllerProvider).currentSeason(),
+        builder: (context, seasonSnapshot) {
+          if (seasonSnapshot.connectionState == ConnectionState.waiting) {
+            return const Loader();
+          }
+          return Scaffold(
+            body: Padding(
+              padding: const EdgeInsets.all(padding),
+              child: Column(
                 children: [
-                  SizedBox(
-                      width: size.width / 2.5 - padding,
-                      child: SeasonDropdown(
-                          onSeasonSelected: (seasonModel) => {
-                                setSelectedSeason(seasonModel!),
-                                _searchController.clear()
+                  Row(
+                    children: [
+                      SizedBox(
+                          width: size.width / 2.5 - padding,
+                          child: SeasonDropdown(
+                              onSeasonSelected: (seasonModel) => {
+                                    setSelectedSeason(seasonModel!),
+                                    _searchController.clear()
+                                  },
+                              initSeason: ref.read(statsControllerProvider).selectedSeason ?? seasonSnapshot.data,
+                              allSeasons: true,
+                              otherSeason: true)),
+                      SizedBox(
+                          width: size.width / 5,
+                          child: Center(
+                            child: IconButton(
+                              icon: (orderDescending
+                                  ? const Icon(Icons.arrow_upward)
+                                  : const Icon(Icons.arrow_downward)),
+                              onPressed: () {
+                                setState(() {
+                                  orderDescending = !orderDescending;
+                                });
                               },
-                          initSeason: selectedValue,
-                          allSeasons: true,
-                          otherSeason: true)),
-                  SizedBox(
-                      width: size.width / 5,
-                      child: Center(
-                        child: IconButton(
-                          icon: (orderDescending
-                              ? const Icon(Icons.arrow_upward)
-                              : const Icon(Icons.arrow_downward)),
-                          onPressed: () {
-                            setState(() {
-                              orderDescending = !orderDescending;
-                            });
-                          },
-                          color: orangeColor,
-                        ),
-                      )),
-                  SizedBox(
-                      width: size.width / 2.5 - padding,
-                      child: IconTextField(
-                        textController: _searchController,
-                        labelText: "hledat",
-                        onIconPressed: () {
-                          setState(() {});
-                        },
-                        icon: const Icon(Icons.search, color: blackColor),
-                      )),
-                ],
-              ),
-              StreamBuilder<List<FineStatsHelperModel>>(
-                  stream: ref
-                      .watch(statsControllerProvider)
-                      .finesForMatchesInSeason(
-                          selectedValue?.id ?? SeasonModel.allSeason().id),
-                  builder: (context, snapshot) {
-                    if (snapshot.connectionState == ConnectionState.waiting) {
-                      return const Loader();
-                    }
-                    return Expanded(
-                      child: ListView.builder(
-                        shrinkWrap: true,
-                        itemCount: filterMatches(snapshot.data!).length + 1,
-                        itemBuilder: (context, index) {
-                          matches = sortStatsByFines(
-                              filterMatches(snapshot.data!), orderDescending);
-                          if (index == 0) {
-                            List<int> overallStats = overallValuesForMatches();
-                            return Column(
-                              children: [
-                                InkWell(
-                                  onTap: () => {},
-                                  child: Container(
-                                    decoration: const BoxDecoration(
-                                        border: Border(
-                                            bottom: BorderSide(
-                                      color: Colors.grey,
-                                    ))),
-                                    child: ListTile(
-                                      title: const Padding(
-                                        padding: EdgeInsets.only(bottom: 16),
-                                        child: Text(
-                                          "Celkem",
-                                          style: TextStyle(
-                                              fontWeight: FontWeight.bold,
-                                              fontSize: 18),
+                              color: orangeColor,
+                            ),
+                          )),
+                      SizedBox(
+                          width: size.width / 2.5 - padding,
+                          child: IconTextField(
+                            textController: _searchController,
+                            labelText: "hledat",
+                            onIconPressed: () {
+                              setState(() {});
+                            },
+                            icon: const Icon(Icons.search, color: blackColor),
+                          )),
+                    ],
+                  ),
+                  StreamBuilder<List<FineStatsHelperModel>>(
+                      stream: ref
+                          .watch(statsControllerProvider)
+                          .finesForMatchesInSeason(
+                          ref.read(statsControllerProvider).selectedSeason),
+                      builder: (context, snapshot) {
+                        if (snapshot.connectionState == ConnectionState.waiting) {
+                          return const Loader();
+                        }
+                        return Expanded(
+                          child: ListView.builder(
+                            shrinkWrap: true,
+                            itemCount: filterMatches(snapshot.data ?? []).length + 1,
+                            itemBuilder: (context, index) {
+                              matches = sortStatsByFines(
+                                  filterMatches(snapshot.data ?? []), orderDescending);
+                              if (index == 0) {
+                                List<int> overallStats = overallValuesForMatches();
+                                return Column(
+                                  children: [
+                                    InkWell(
+                                      onTap: () => {},
+                                      child: Container(
+                                        decoration: const BoxDecoration(
+                                            border: Border(
+                                                bottom: BorderSide(
+                                          color: Colors.grey,
+                                        ))),
+                                        child: ListTile(
+                                          title: const Padding(
+                                            padding: EdgeInsets.only(bottom: 16),
+                                            child: Text(
+                                              "Celkem",
+                                              style: TextStyle(
+                                                  fontWeight: FontWeight.bold,
+                                                  fontSize: 18),
+                                            ),
+                                          ),
+                                          subtitle: Text(
+                                            "Počet pokut: ${overallStats[0]}, celková částka: ${overallStats[1]} Kč",
+                                            style: const TextStyle(
+                                                color: listviewSubtitleColor),
+                                          ),
                                         ),
                                       ),
-                                      subtitle: Text(
-                                        "Počet pokut: ${overallStats[0]}, celková částka: ${overallStats[1]} Kč",
-                                        style: const TextStyle(
-                                            color: listviewSubtitleColor),
+                                    )
+                                  ],
+                                );
+                              }
+                              var match = matches[index - 1];
+                              return Column(
+                                children: [
+                                  InkWell(
+                                    onTap: () {
+                                      pickedMatch = match;
+                                      changeScreens(true);
+                                    },
+                                    child: Container(
+                                      decoration: const BoxDecoration(
+                                          border: Border(
+                                              bottom: BorderSide(
+                                        color: Colors.grey,
+                                      ))),
+                                      child: ListTile(
+                                        title: Padding(
+                                          padding:
+                                              const EdgeInsets.only(bottom: 16),
+                                          child: Text(
+                                            match.match!.name,
+                                            style: const TextStyle(
+                                                fontWeight: FontWeight.bold,
+                                                fontSize: 18),
+                                          ),
+                                        ),
+                                        subtitle: Text(
+                                          "Počet pokut: ${match.getNumberOfFinesInMatches()}, celkem: ${match.getAmountOfFinesInMatches()} Kč",
+                                          style: const TextStyle(
+                                              color: listviewSubtitleColor),
+                                        ),
                                       ),
                                     ),
-                                  ),
-                                )
-                              ],
-                            );
-                          }
-                          var match = matches[index - 1];
-                          return Column(
-                            children: [
-                              InkWell(
-                                onTap: () {
-                                  pickedMatch = match;
-                                  changeScreens(true);
-                                },
-                                child: Container(
-                                  decoration: const BoxDecoration(
-                                      border: Border(
-                                          bottom: BorderSide(
-                                    color: Colors.grey,
-                                  ))),
-                                  child: ListTile(
-                                    title: Padding(
-                                      padding:
-                                          const EdgeInsets.only(bottom: 16),
-                                      child: Text(
-                                        match.match!.name,
-                                        style: const TextStyle(
-                                            fontWeight: FontWeight.bold,
-                                            fontSize: 18),
-                                      ),
-                                    ),
-                                    subtitle: Text(
-                                      "Počet pokut: ${match.getNumberOfFinesInMatches()}, celkem: ${match.getAmountOfFinesInMatches()} Kč",
-                                      style: const TextStyle(
-                                          color: listviewSubtitleColor),
-                                    ),
-                                  ),
-                                ),
-                              )
-                            ],
-                          );
-                        },
-                      ),
-                    );
-                  }),
-            ],
-          ),
-        ),
+                                  )
+                                ],
+                              );
+                            },
+                          ),
+                        );
+                      }),
+                ],
+              ),
+            ),
+          );
+        }
       );
     }
     return Scaffold(

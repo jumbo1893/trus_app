@@ -152,12 +152,13 @@ class StatsRepository {
     return players;
   }
 
-  Stream<List<BeerStatsHelperModel>> getBeersForPlayersInSeason(String seasonId) async* {
+  Stream<List<BeerStatsHelperModel>> getBeersForPlayersInSeason(SeasonModel? season) async* {
     final List<PlayerModel> players =
     await _getPlayers();
     List<String> matchIds = [];
+    season ??= await getCurrentSeason();
     matchIds =
-    await _getMatchIdsBySeason(seasonId);
+    await _getMatchIdsBySeason(season.id);
 
     yield*
     firestore
@@ -182,11 +183,11 @@ class StatsRepository {
     });
   }
 
-  Stream<List<BeerStatsHelperModel>> getBeersForMatchesInSeason(String seasonId) async* {
+  Stream<List<BeerStatsHelperModel>> getBeersForMatchesInSeason(SeasonModel? season) async* {
     List<MatchModel> matches = [];
+    season ??= await getCurrentSeason();
     matches =
-    await _getMatchesBySeason(seasonId);
-
+    await _getMatchesBySeason(season.id);
     yield*
     firestore
         .collection(beerTable)
@@ -210,12 +211,13 @@ class StatsRepository {
     });
   }
 
-  Stream<List<FineStatsHelperModel>> getFinesForPlayersInSeason(String seasonId) async* {
+  Stream<List<FineStatsHelperModel>> getFinesForPlayersInSeason(SeasonModel? season) async* {
     final List<PlayerModel> players =
     await _getPlayersWithoutFans();
     List<String> matchIds = [];
+    season ??= await getCurrentSeason();
     matchIds =
-    await _getMatchIdsBySeason(seasonId);
+    await _getMatchIdsBySeason(season.id);
 
     yield*
     firestore
@@ -253,10 +255,11 @@ class StatsRepository {
     });
   }
 
-  Stream<List<FineStatsHelperModel>> getFinesForMatchesInSeason(String seasonId) async* {
+  Stream<List<FineStatsHelperModel>> getFinesForMatchesInSeason(SeasonModel? season) async* {
     List<MatchModel> matches = [];
+    season ??= await getCurrentSeason();
     matches =
-    await _getMatchesBySeason(seasonId);
+    await _getMatchesBySeason(season.id);
 
     yield*
     firestore
@@ -308,6 +311,18 @@ class StatsRepository {
       );
     }
     return fines;
+  }
+
+  Future<SeasonModel> getCurrentSeason() async {
+    List<SeasonModel> seasons = [];
+    final docRef = firestore.collection(seasonTable).where("fromDate", isLessThanOrEqualTo: DateTime.now().millisecondsSinceEpoch).orderBy("fromDate");
+    await docRef.get().then((res) {
+      for (var doc in res.docs) {
+        var season = SeasonModel.fromJson(doc.data());
+        seasons.add(season);
+      }
+    });
+      return seasons.firstWhere((element) => element.toDate.isBefore(DateTime.now()), orElse: () => SeasonModel.allSeason());
   }
 
 }

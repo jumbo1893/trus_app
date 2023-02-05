@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/cupertino.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:trus_app/models/helper/beer_stats_helper_model.dart';
@@ -22,24 +24,31 @@ class StatsController {
     required this.ref,
   });
 
-  Stream<List<BeerStatsHelperModel>> beersForPlayersInSeason(String seasonId) {
+  SeasonModel? selectedSeason;
 
-    return statsRepository.getBeersForPlayersInSeason(seasonId);
+  Future<SeasonModel> currentSeason() async {
+    return statsRepository.getCurrentSeason();
   }
 
-  Stream<List<BeerStatsHelperModel>> beersForMatchesInSeason(String seasonId) {
 
-    return statsRepository.getBeersForMatchesInSeason(seasonId);
+  Stream<List<BeerStatsHelperModel>> beersForPlayersInSeason(SeasonModel? season) {
+
+    return statsRepository.getBeersForPlayersInSeason(season);
   }
 
-  Stream<List<FineStatsHelperModel>> finesForPlayersInSeason(String seasonId) {
+  Stream<List<BeerStatsHelperModel>> beersForMatchesInSeason(SeasonModel? season) {
 
-    return statsRepository.getFinesForPlayersInSeason(seasonId);
+    return statsRepository.getBeersForMatchesInSeason(selectedSeason);
   }
 
-  Stream<List<FineStatsHelperModel>> finesForMatchesInSeason(String seasonId) {
+  Stream<List<FineStatsHelperModel>> finesForPlayersInSeason(SeasonModel? season) {
 
-    return statsRepository.getFinesForMatchesInSeason(seasonId);
+    return statsRepository.getFinesForPlayersInSeason(season);
+  }
+
+  Stream<List<FineStatsHelperModel>> finesForMatchesInSeason(SeasonModel? season) {
+
+    return statsRepository.getFinesForMatchesInSeason(season);
   }
 
   Future<List<MatchModel>> matchNamesById(List<String> matchListId) async {

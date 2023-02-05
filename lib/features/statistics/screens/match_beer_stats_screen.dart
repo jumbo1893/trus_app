@@ -29,7 +29,6 @@ class MatchBeerStatsScreen extends ConsumerStatefulWidget {
 }
 
 class _MatchBeerStatsScreenState extends ConsumerState<MatchBeerStatsScreen> {
-  SeasonModel? selectedValue;
   bool orderDescending = true;
   bool showMatchDetail = false;
   late BeerStatsHelperModel pickedMatch;
@@ -44,7 +43,7 @@ class _MatchBeerStatsScreenState extends ConsumerState<MatchBeerStatsScreen> {
 
   void setSelectedSeason(SeasonModel seasonModel) {
     setState(() {
-      selectedValue = seasonModel;
+      ref.read(statsControllerProvider).selectedSeason = seasonModel;
     });
   }
 
@@ -87,141 +86,149 @@ class _MatchBeerStatsScreenState extends ConsumerState<MatchBeerStatsScreen> {
     final size = MediaQuery.of(context).size;
     const double padding = 8.0;
     if (!showMatchDetail) {
-      return Scaffold(
-        body: Padding(
-          padding: const EdgeInsets.all(padding),
-          child: Column(
-            children: [
-              Row(
+      return FutureBuilder<SeasonModel>(
+        future: ref.read(statsControllerProvider).currentSeason(),
+        builder: (context, seasonSnapshot) {
+          if (seasonSnapshot.connectionState == ConnectionState.waiting) {
+            return const Loader();
+          }
+          return Scaffold(
+            body: Padding(
+              padding: const EdgeInsets.all(padding),
+              child: Column(
                 children: [
-                  SizedBox(
-                      width: size.width / 2.5 - padding,
-                      child: SeasonDropdown(
-                          onSeasonSelected: (seasonModel) => {
-                                setSelectedSeason(seasonModel!),
-                                _searchController.clear()
+                  Row(
+                    children: [
+                      SizedBox(
+                          width: size.width / 2.5 - padding,
+                          child: SeasonDropdown(
+                              onSeasonSelected: (seasonModel) => {
+                                    setSelectedSeason(seasonModel!),
+                                    _searchController.clear()
+                                  },
+                              initSeason: ref.read(statsControllerProvider).selectedSeason ?? seasonSnapshot.data,
+                              allSeasons: true,
+                              otherSeason: true)),
+                      SizedBox(
+                          width: size.width / 5,
+                          child: Center(
+                            child: IconButton(
+                              icon: (orderDescending
+                                  ? const Icon(Icons.arrow_upward)
+                                  : const Icon(Icons.arrow_downward)),
+                              onPressed: () {
+                                setState(() {
+                                  orderDescending = !orderDescending;
+                                });
                               },
-                          initSeason: selectedValue,
-                          allSeasons: true,
-                          otherSeason: true)),
-                  SizedBox(
-                      width: size.width / 5,
-                      child: Center(
-                        child: IconButton(
-                          icon: (orderDescending
-                              ? const Icon(Icons.arrow_upward)
-                              : const Icon(Icons.arrow_downward)),
-                          onPressed: () {
-                            setState(() {
-                              orderDescending = !orderDescending;
-                            });
-                          },
-                          color: orangeColor,
-                        ),
-                      )),
-                  SizedBox(
-                      width: size.width / 2.5 - padding,
-                      child: IconTextField(
-                        textController: _searchController,
-                        labelText: "hledat",
-                        onIconPressed: () {
-                          setState(() {});
-                        },
-                        icon: const Icon(Icons.search, color: blackColor),
-                      )),
-                ],
-              ),
-              StreamBuilder<List<BeerStatsHelperModel>>(
-                  stream: ref
-                      .watch(statsControllerProvider)
-                      .beersForMatchesInSeason(
-                          selectedValue?.id ?? SeasonModel.allSeason().id),
-                  builder: (context, snapshot) {
-                    if (snapshot.connectionState == ConnectionState.waiting) {
-                      return const Loader();
-                    }
-                    return Expanded(
-                      child: ListView.builder(
-                        shrinkWrap: true,
-                        itemCount: filterMatches(snapshot.data!).length + 1,
-                        itemBuilder: (context, index) {
-                          matches = sortStatsByDrinks(
-                              filterMatches(snapshot.data!), orderDescending);
-                          if (index == 0) {
-                            List<int> overallStats = overallValuesForMatches();
-                            return Column(
-                              children: [
-                                InkWell(
-                                  onTap: () => {},
-                                  child: Container(
-                                    decoration: const BoxDecoration(
-                                        border: Border(
-                                            bottom: BorderSide(
-                                      color: Colors.grey,
-                                    ))),
-                                    child: ListTile(
-                                      title: const Padding(
-                                        padding: EdgeInsets.only(bottom: 16),
-                                        child: Text(
-                                          "Celkem",
-                                          style: TextStyle(
-                                              fontWeight: FontWeight.bold,
-                                              fontSize: 18),
+                              color: orangeColor,
+                            ),
+                          )),
+                      SizedBox(
+                          width: size.width / 2.5 - padding,
+                          child: IconTextField(
+                            textController: _searchController,
+                            labelText: "hledat",
+                            onIconPressed: () {
+                              setState(() {});
+                            },
+                            icon: const Icon(Icons.search, color: blackColor),
+                          )),
+                    ],
+                  ),
+                  StreamBuilder<List<BeerStatsHelperModel>>(
+                      stream: ref
+                          .watch(statsControllerProvider)
+                          .beersForMatchesInSeason(
+                          ref.read(statsControllerProvider).selectedSeason),
+                      builder: (context, snapshot) {
+                        if (snapshot.connectionState == ConnectionState.waiting) {
+                          return const Loader();
+                        }
+                        return Expanded(
+                          child: ListView.builder(
+                            shrinkWrap: true,
+                            itemCount: filterMatches(snapshot.data ?? []).length + 1,
+                            itemBuilder: (context, index) {
+                              matches = sortStatsByDrinks(
+                                  filterMatches(snapshot.data ?? []), orderDescending);
+                              if (index == 0) {
+                                List<int> overallStats = overallValuesForMatches();
+                                return Column(
+                                  children: [
+                                    InkWell(
+                                      onTap: () => {},
+                                      child: Container(
+                                        decoration: const BoxDecoration(
+                                            border: Border(
+                                                bottom: BorderSide(
+                                          color: Colors.grey,
+                                        ))),
+                                        child: ListTile(
+                                          title: const Padding(
+                                            padding: EdgeInsets.only(bottom: 16),
+                                            child: Text(
+                                              "Celkem",
+                                              style: TextStyle(
+                                                  fontWeight: FontWeight.bold,
+                                                  fontSize: 18),
+                                            ),
+                                          ),
+                                          subtitle: Text(
+                                            "Počet piv: ${overallStats[0]} , počet panáků: ${overallStats[1]}, dohromady: ${overallStats[2]}",
+                                            style: const TextStyle(
+                                                color: listviewSubtitleColor),
+                                          ),
                                         ),
                                       ),
-                                      subtitle: Text(
-                                        "Počet piv: ${overallStats[0]} , počet panáků: ${overallStats[1]}, dohromady: ${overallStats[2]}",
-                                        style: const TextStyle(
-                                            color: listviewSubtitleColor),
+                                    )
+                                  ],
+                                );
+                              }
+                              var match = matches[index - 1];
+                              return Column(
+                                children: [
+                                  InkWell(
+                                    onTap: () {
+                                      pickedMatch = match;
+                                      changeScreens(true);
+                                    },
+                                    child: Container(
+                                      decoration: const BoxDecoration(
+                                          border: Border(
+                                              bottom: BorderSide(
+                                        color: Colors.grey,
+                                      ))),
+                                      child: ListTile(
+                                        title: Padding(
+                                          padding:
+                                              const EdgeInsets.only(bottom: 16),
+                                          child: Text(
+                                            match.match!.toStringWithOpponentNameAndDate(),
+                                            style: const TextStyle(
+                                                fontWeight: FontWeight.bold,
+                                                fontSize: 18),
+                                          ),
+                                        ),
+                                        subtitle: Text(
+                                          "Počet piv: ${match.getNumberOfBeersInMatches()} , počet panáků: ${match.getNumberOfLiquorsInMatches()}, dohromady: ${match.getNumberOfBeersAndLiquorsInMatches()}",
+                                          style: const TextStyle(
+                                              color: listviewSubtitleColor),
+                                        ),
                                       ),
                                     ),
-                                  ),
-                                )
-                              ],
-                            );
-                          }
-                          var match = matches[index - 1];
-                          return Column(
-                            children: [
-                              InkWell(
-                                onTap: () {
-                                  pickedMatch = match;
-                                  changeScreens(true);
-                                },
-                                child: Container(
-                                  decoration: const BoxDecoration(
-                                      border: Border(
-                                          bottom: BorderSide(
-                                    color: Colors.grey,
-                                  ))),
-                                  child: ListTile(
-                                    title: Padding(
-                                      padding:
-                                          const EdgeInsets.only(bottom: 16),
-                                      child: Text(
-                                        match.match!.toStringWithOpponentNameAndDate(),
-                                        style: const TextStyle(
-                                            fontWeight: FontWeight.bold,
-                                            fontSize: 18),
-                                      ),
-                                    ),
-                                    subtitle: Text(
-                                      "Počet piv: ${match.getNumberOfBeersInMatches()} , počet panáků: ${match.getNumberOfLiquorsInMatches()}, dohromady: ${match.getNumberOfBeersAndLiquorsInMatches()}",
-                                      style: const TextStyle(
-                                          color: listviewSubtitleColor),
-                                    ),
-                                  ),
-                                ),
-                              )
-                            ],
-                          );
-                        },
-                      ),
-                    );
-                  }),
-            ],
-          ),
-        ),
+                                  )
+                                ],
+                              );
+                            },
+                          ),
+                        );
+                      }),
+                ],
+              ),
+            ),
+          );
+        }
       );
     }
     return Scaffold(
