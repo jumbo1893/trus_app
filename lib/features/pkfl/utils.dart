@@ -2,6 +2,8 @@ import 'package:trus_app/models/enum/spinner_options.dart';
 import 'package:trus_app/models/pkfl/pkfl_match.dart';
 import 'package:trus_app/models/pkfl/pkfl_player_stats.dart';
 
+import '../../models/pkfl/pkfl_team.dart';
+
 List<PkflMatch> sortMatchesByDate(List<PkflMatch> matches, bool desc) {
   if (desc) {
     matches.sort((b, a) => a.date.compareTo(b.date));
@@ -10,5 +12,10 @@ List<PkflMatch> sortMatchesByDate(List<PkflMatch> matches, bool desc) {
     matches.sort((a, b) => a.date.compareTo(b.date));
   }
   return matches;
+}
+
+List<PkflTeam> sortMatchesByPoints(List<PkflTeam> teams) {
+  teams.sort((b, a) => a.points.compareTo(b.points));
+  return teams;
 }
 

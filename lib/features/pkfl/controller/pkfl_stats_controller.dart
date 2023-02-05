@@ -36,7 +36,7 @@ class PkflStatsController {
   });
 
   Future<String> url() async {
-    return pkflRepository.getPkflUrl();
+    return pkflRepository.getPkflTeamUrl();
   }
 
   Stream<String> snackBar() {
@@ -86,7 +86,7 @@ class PkflStatsController {
     List<PkflMatch> matches = [];
     streamLoaderTextController
         .add(PercentageLoaderModel("připojuji se k webu pkfl"));
-    String url = await pkflRepository.getPkflUrl();
+    String url = await pkflRepository.getPkflTeamUrl();
     streamLoaderTextController.add(PercentageLoaderModel("načítám sezony"));
     RetrieveSeasonUrlTask retrieveSeasonUrlTask =
         RetrieveSeasonUrlTask(url, currentSeason);

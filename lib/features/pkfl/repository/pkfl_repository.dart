@@ -26,17 +26,42 @@ class PkflRepository {
 
   PkflRepository({required this.firestore});
 
-  Future<String> getPkflUrl() async {
+  Future<String> getPkflTeamUrl() async {
     String url ="";
       final docRef = firestore.collection(pkflTable).doc("url");
       await docRef.get().then(
             (DocumentSnapshot doc) {
           Map data = doc.data() as Map;
-          url = data['url'];
+          url = data['team_url'];
         },
         onError: (e) => print("Error getting document: $e"),
       );
     return url;
+  }
+
+  Future<String> getPkflTableUrl() async {
+    String url ="";
+    final docRef = firestore.collection(pkflTable).doc("url");
+    await docRef.get().then(
+          (DocumentSnapshot doc) {
+        Map data = doc.data() as Map;
+        url = data['table_url'];
+      },
+      onError: (e) => print("Error getting document: $e"),
+    );
+    return url;
+  }
+
+  Future<bool> editPlayer(BuildContext context, String tableUrl) async {
+    try {
+      final document = firestore.collection(pkflTable).doc("url");
+      await document.update({"table_url": tableUrl});
+      showSnackBar(context: context, content: ("url pro tabulku úspěšně upravena"));
+      return true;
+    } on FirebaseException catch (e) {
+      showSnackBar(context: context, content: e.message!, );
+    }
+    return false;
   }
 
 }

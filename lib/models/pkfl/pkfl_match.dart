@@ -113,8 +113,15 @@ class PkflMatch {
     return "Datum: ${dateToStringWithoutSecondsAndMilliseconds()}, výsledek: $result";
   }
 
+  String toStringForMutualMatchesSubtitle() {
+    return toStringForSubtitle() + returnGoalScorersText(pkflMatchDetail!.getGoalScorers());
+  }
+
   @override
   String toString() {
     return 'PkflMatch{date: $date, opponent: $opponent, round: $round, league: $league, stadium: $stadium, referee: $referee, result: $result, homeMatch: $homeMatch, urlResult: $urlResult, pkflMatchDetail: $pkflMatchDetail}';
   }
+
+
+
 }

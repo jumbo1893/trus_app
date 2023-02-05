@@ -25,6 +25,7 @@ import '../beer/screens/beer_simple_screen.dart';
 import '../fine/match/screens/multiple_fine_players_screen.dart';
 import '../fine/screens/add_fine_screen.dart';
 import '../fine/screens/edit_fine_screen.dart';
+import '../pkfl/screens/pkfl_table_screens.dart';
 import '../season/screens/add_season_screen.dart';
 import '../statistics/screens/main_statistics_screen.dart';
 
@@ -216,7 +217,7 @@ class _MainScreenState extends ConsumerState<MainScreen> {
                       color: Colors.orange,
                     ),
                     title: const Text("PKFL tabulka"),
-                    onTap: () {},
+                    onTap: () => onModalBottomSheetMenuTapped(21),
                   ),
                   ListTile(
                     leading: const Icon(
@@ -509,7 +510,9 @@ class _MainScreenState extends ConsumerState<MainScreen> {
           ),
           const MainPkflStatisticsScreen(
             //20
-
+          ),
+          const PkflTableScreen(
+            //21
           )
         ],
       ),

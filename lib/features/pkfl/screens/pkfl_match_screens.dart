@@ -38,21 +38,7 @@ class _PkflMatchScreenState extends ConsumerState<PkflMatchScreen> {
     });
   }
 
-  /*Future<List<PkflMatch>> getPkflMatches() async {
-    String url = "";
-    List<PkflMatch> matches = [];
-    await ref.read(pkflControllerProvider).url().then((value) => url = value);
-    RetrieveMatchesTask matchesTask = RetrieveMatchesTask(url);
-    try {
-      await matchesTask.returnPkflMatches().then((value) => matches = value);
-    } catch (e, stacktrace) {
-      print(stacktrace);
-      showSnackBar(context: context, content: e.toString());
-    }
-    return matches;
-  }*/
-
-  Future<PkflMatch> getPkflMatchDetail() async {
+  /*Future<PkflMatch> getPkflMatchDetail() async {
     RetrieveMatchDetailTask matchTask =
         RetrieveMatchDetailTask(pickedMatch.urlResult);
     try {
@@ -66,7 +52,7 @@ class _PkflMatchScreenState extends ConsumerState<PkflMatchScreen> {
       showSnackBar(context: context, content: e.toString());
     }
     return pickedMatch;
-  }
+  }*/
 
   @override
   Widget build(BuildContext context) {
@@ -83,7 +69,6 @@ class _PkflMatchScreenState extends ConsumerState<PkflMatchScreen> {
               child: FutureBuilder<List<PkflMatch>>(
                   future: ref.read(pkflControllerProvider).getPkflMatches(),
                   builder: (context, snapshot) {
-                    print(snapshot.connectionState);
                     if (snapshot.connectionState == ConnectionState.waiting) {
                       return const Loader();
                     }
@@ -166,7 +151,9 @@ class _PkflMatchScreenState extends ConsumerState<PkflMatchScreen> {
                     children: [
                       CustomText(text: pickedMatch.returnFirstDetailsOfMatch()),
                       FutureBuilder<PkflMatch>(
-                          future: getPkflMatchDetail(),
+                          future: ref
+                              .read(pkflControllerProvider)
+                              .getPkflMatchDetail(pickedMatch),
                           builder: (context, snapshot) {
                             if (snapshot.connectionState ==
                                 ConnectionState.waiting) {
@@ -226,37 +213,74 @@ class _PkflMatchScreenState extends ConsumerState<PkflMatchScreen> {
           return Scaffold(
             body: Padding(
               padding: const EdgeInsets.all(padding),
-              child: Column(
-                children: [
-                  RowBackOrForward(
-                    backText: "Zpět na seznam",
-                    forwardText: "Zpět na detail",
-                    onBackChecked: () {
-                      changeScreens(ScreenFlow.matchList);
-                    },
-                    onForwardChecked: () {
-                      if (pickedMatch.detailEnabled()) {
-                        changeScreens(ScreenFlow.matchDetail);
-                      } else {
-                        changeScreens(ScreenFlow.matchDetailWithoutResult);
+              child: Column(children: [
+                RowBackOrForward(
+                  backText: "Zpět na seznam",
+                  forwardText: "Zpět na detail",
+                  onBackChecked: () {
+                    changeScreens(ScreenFlow.matchList);
+                  },
+                  onForwardChecked: () {
+                    if (pickedMatch.detailEnabled()) {
+                      changeScreens(ScreenFlow.matchDetail);
+                    } else {
+                      changeScreens(ScreenFlow.matchDetailWithoutResult);
+                    }
+                  },
+                  padding: padding,
+                  secondArrowForward: false,
+                ),
+                FutureBuilder<List<PkflMatch>>(
+                    future: ref
+                        .read(pkflControllerProvider)
+                        .getMutualPkflMatches(pickedMatch),
+                    builder: (context, snapshot) {
+                      if (snapshot.connectionState == ConnectionState.waiting) {
+                        return const Loader();
                       }
-                    },
-                    padding: padding,
-                    secondArrowForward: false,
-                  ),
-                  Padding(
-                    padding: const EdgeInsets.only(top: 8.0, bottom: 16.0),
-                    child: Text(pickedMatch.toStringNameWithOpponent(),
-                        style: const TextStyle(
-                            fontSize: 20.0, fontWeight: FontWeight.bold)),
-                  ),
-                  Column(
-                    children: [
-                      CustomText(text: pickedMatch.returnFirstDetailsOfMatch())
-                    ],
-                  ),
-                ],
-              ),
+                      sortMatchesByDate(snapshot.data!, false);
+                      return Expanded(
+                        child: ListView.builder(
+                          shrinkWrap: true,
+                          itemCount: snapshot.data!.length,
+                          itemBuilder: (context, index) {
+                            var match = snapshot.data![index];
+                            return Column(
+                              children: [
+                                InkWell(
+                                  onTap: () {},
+                                  child: Container(
+                                    decoration: const BoxDecoration(
+                                        border: Border(
+                                            bottom: BorderSide(
+                                      color: Colors.grey,
+                                    ))),
+                                    child: ListTile(
+                                      title: Padding(
+                                        padding: const EdgeInsets.only(
+                                            bottom: padding * 2),
+                                        child: Text(
+                                          match.toStringNameWithOpponent(),
+                                          style: const TextStyle(
+                                              fontWeight: FontWeight.bold,
+                                              fontSize: 18),
+                                        ),
+                                      ),
+                                      subtitle: Text(
+                                        match.toStringForMutualMatchesSubtitle(),
+                                        style: const TextStyle(
+                                            color: listviewSubtitleColor),
+                                      ),
+                                    ),
+                                  ),
+                                )
+                              ],
+                            );
+                          },
+                        ),
+                      );
+                    }),
+              ]),
             ),
           );
         }
