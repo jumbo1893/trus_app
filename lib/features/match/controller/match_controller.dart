@@ -118,7 +118,7 @@ class MatchController {
   PkflMatch? returnLastPkflMatch(List<PkflMatch> pkflMatches) {
     PkflMatch? returnMatch;
     for (PkflMatch pkflMatch in pkflMatches) {
-      if (pkflMatch.date.isAfter(DateTime.now())) {
+      if (pkflMatch.date.isBefore(DateTime.now())) {
         if (returnMatch == null || returnMatch.date.isBefore(pkflMatch.date)) {
           returnMatch = pkflMatch;
         }
