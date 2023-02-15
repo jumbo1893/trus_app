@@ -6,7 +6,7 @@ import 'package:trus_app/common/widgets/loader.dart';
 import 'package:trus_app/features/match/controller/match_controller.dart';
 import 'package:trus_app/features/pkfl/controller/pkfl_controller.dart';
 import 'package:trus_app/features/pkfl/exception/bad_format_exception.dart';
-import 'package:trus_app/features/pkfl/screens.dart';
+import 'package:trus_app/features/pkfl/pkfl_screens.dart';
 import 'package:trus_app/features/pkfl/tasks/retrieve_match_detail_task.dart';
 import 'package:trus_app/features/pkfl/tasks/retrieve_matches_task.dart';
 import 'package:trus_app/features/pkfl/utils.dart';
@@ -29,30 +29,14 @@ class PkflMatchScreen extends ConsumerStatefulWidget {
 }
 
 class _PkflMatchScreenState extends ConsumerState<PkflMatchScreen> {
-  ScreenFlow screenFlow = ScreenFlow.matchList;
+  PkflScreens screen = PkflScreens.matchList;
   late PkflMatch pickedMatch;
 
-  void changeScreens(ScreenFlow screenFlow) {
+  void changeScreens(PkflScreens screenFlow) {
     setState(() {
-      this.screenFlow = screenFlow;
+      screen = screenFlow;
     });
   }
-
-  /*Future<PkflMatch> getPkflMatchDetail() async {
-    RetrieveMatchDetailTask matchTask =
-        RetrieveMatchDetailTask(pickedMatch.urlResult);
-    try {
-      await matchTask.returnPkflMatchDetail().then(
-        (value) {
-          pickedMatch.pkflMatchDetail = value;
-        },
-      );
-    } catch (e, stacktrace) {
-      print(stacktrace);
-      showSnackBar(context: context, content: e.toString());
-    }
-    return pickedMatch;
-  }*/
 
   @override
   Widget build(BuildContext context) {
@@ -60,8 +44,8 @@ class _PkflMatchScreenState extends ConsumerState<PkflMatchScreen> {
       showSnackBar(context: context, content: event);
     });
     const double padding = 8.0;
-    switch (screenFlow) {
-      case ScreenFlow.matchList:
+    switch (screen) {
+      case PkflScreens.matchList:
         {
           return Scaffold(
             body: Padding(
@@ -84,10 +68,10 @@ class _PkflMatchScreenState extends ConsumerState<PkflMatchScreen> {
                               onTap: () {
                                 pickedMatch = match;
                                 if (pickedMatch.detailEnabled()) {
-                                  changeScreens(ScreenFlow.matchDetail);
+                                  changeScreens(PkflScreens.matchDetail);
                                 } else {
                                   changeScreens(
-                                      ScreenFlow.matchDetailWithoutResult);
+                                      PkflScreens.matchDetailWithoutResult);
                                 }
                               },
                               child: Container(
@@ -123,7 +107,7 @@ class _PkflMatchScreenState extends ConsumerState<PkflMatchScreen> {
             ),
           );
         }
-      case ScreenFlow.matchDetail:
+      case PkflScreens.matchDetail:
         {
           return Scaffold(
             body: Padding(
@@ -134,10 +118,10 @@ class _PkflMatchScreenState extends ConsumerState<PkflMatchScreen> {
                     backText: "Zpět na seznam",
                     forwardText: "Vzájemné zápasy",
                     onBackChecked: () {
-                      changeScreens(ScreenFlow.matchList);
+                      changeScreens(PkflScreens.matchList);
                     },
                     onForwardChecked: () {
-                      changeScreens(ScreenFlow.mutualMatches);
+                      changeScreens(PkflScreens.mutualMatches);
                     },
                     padding: padding,
                   ),
@@ -174,7 +158,7 @@ class _PkflMatchScreenState extends ConsumerState<PkflMatchScreen> {
             ),
           );
         }
-      case ScreenFlow.matchDetailWithoutResult:
+      case PkflScreens.matchDetailWithoutResult:
         {
           return Scaffold(
             body: Padding(
@@ -185,10 +169,10 @@ class _PkflMatchScreenState extends ConsumerState<PkflMatchScreen> {
                     backText: "Zpět na seznam",
                     forwardText: "Vzájemné zápasy",
                     onBackChecked: () {
-                      changeScreens(ScreenFlow.matchList);
+                      changeScreens(PkflScreens.matchList);
                     },
                     onForwardChecked: () {
-                      changeScreens(ScreenFlow.mutualMatches);
+                      changeScreens(PkflScreens.mutualMatches);
                     },
                     padding: padding,
                   ),
@@ -208,7 +192,7 @@ class _PkflMatchScreenState extends ConsumerState<PkflMatchScreen> {
             ),
           );
         }
-      case ScreenFlow.mutualMatches:
+      case PkflScreens.mutualMatches:
         {
           return Scaffold(
             body: Padding(
@@ -218,13 +202,13 @@ class _PkflMatchScreenState extends ConsumerState<PkflMatchScreen> {
                   backText: "Zpět na seznam",
                   forwardText: "Zpět na detail",
                   onBackChecked: () {
-                    changeScreens(ScreenFlow.matchList);
+                    changeScreens(PkflScreens.matchList);
                   },
                   onForwardChecked: () {
                     if (pickedMatch.detailEnabled()) {
-                      changeScreens(ScreenFlow.matchDetail);
+                      changeScreens(PkflScreens.matchDetail);
                     } else {
-                      changeScreens(ScreenFlow.matchDetailWithoutResult);
+                      changeScreens(PkflScreens.matchDetailWithoutResult);
                     }
                   },
                   padding: padding,

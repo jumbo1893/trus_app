@@ -1,3 +1,5 @@
+import 'dart:collection';
+
 import 'package:flutter/material.dart';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -6,7 +8,9 @@ import 'package:trus_app/models/fine_match_model.dart';
 import 'package:trus_app/models/helper/beer_stats_helper_model.dart';
 import 'package:trus_app/models/helper/fine_match_helper_model.dart';
 import 'package:trus_app/models/fine_model.dart';
+import 'package:trus_app/models/helper/player_stats_helper_model.dart';
 import 'package:trus_app/models/player_model.dart';
+import 'package:trus_app/models/player_stats_model.dart';
 import 'package:trus_app/models/season_model.dart';
 
 import '../../../../common/utils/utils.dart';
@@ -323,6 +327,40 @@ class StatsRepository {
       }
     });
       return seasons.firstWhere((element) => element.toDate.isBefore(DateTime.now()), orElse: () => SeasonModel.allSeason());
+  }
+
+  Stream<List<PlayerStatsHelperModel>> getPlayerStatsForPlayersInSeason(SeasonModel? season) async* {
+    final List<PlayerModel> players =
+    await _getPlayers();
+    List<String> matchIds = [];
+    season ??= await getCurrentSeason();
+    matchIds =
+    await _getMatchIdsBySeason(season.id);
+
+    yield*
+    firestore
+        .collection(playerStatsTable)
+        .where("matchId", whereIn: matchIds)
+        .snapshots()
+        .asyncMap((event) async {
+      final HashMap<String, PlayerStatsHelperModel> playerStatsHashMap = HashMap();
+      PlayerModel findPlayer(String id) =>
+          players.firstWhere((e) => e.id == id,
+              orElse: () => PlayerModel.dummy());
+      for (var document in event.docs) {
+        var player = PlayerStatsModel.fromJson(document.data());
+        if(playerStatsHashMap[player.playerId] == null) {
+          playerStatsHashMap.addAll({player.playerId : PlayerStatsHelperModel(id: player.id,
+              player: findPlayer(player.playerId),
+              goalNumber: player.goalNumber,
+              assistNumber: player.assistNumber)});
+        }
+        else {
+          playerStatsHashMap[player.playerId]!.addAssistAndGoalNumber(player.assistNumber, player.goalNumber);
+        }
+      }
+      return playerStatsHashMap.values.toList();
+    });
   }
 
 }

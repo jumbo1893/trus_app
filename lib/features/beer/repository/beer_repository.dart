@@ -159,15 +159,4 @@ class BeerRepository {
     }
     return false;
   }
-
-  Future<void> deleteFineInMatch(
-      BuildContext context, BeerModel beerModel) async {
-    await firestore.collection(beerTable).doc(beerModel.id).delete().then(
-          (value) => {},
-          onError: (e) => showSnackBar(
-            context: context,
-            content: e.message!,
-          ),
-        );
-  }
 }

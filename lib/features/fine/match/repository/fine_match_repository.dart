@@ -117,7 +117,7 @@ class FineMatchRepository {
   }
 
   Future<bool> addMultipleFinesInMatch(BuildContext context, String matchId,
-      String fineId, String playerId, int number) async {
+      String fineId, String playerId, int number, bool rewrite) async {
     try {
       await firestore
           .collection(fineMatchTable)
@@ -133,7 +133,7 @@ class FineMatchRepository {
           );
         }
         else if(value.size == 1) {
-          await _addFineNumberInMatch(context, number, FineMatchModel.fromJson(value.docs[0].data()));
+          await _addFineNumberInMatch(context, number, FineMatchModel.fromJson(value.docs[0].data()), rewrite);
         }
         else {
           await addFineInMatch(context, FineMatchModel.dummy().id, matchId, fineId, playerId, number);
@@ -151,7 +151,8 @@ class FineMatchRepository {
   Future<bool> _addFineNumberInMatch(
       BuildContext context,
       int number,
-      FineMatchModel fineMatchModel) async {
+      FineMatchModel fineMatchModel,
+      bool rewrite) async {
     try {
       final document =
           firestore.collection(fineMatchTable).doc(fineMatchModel.id);
@@ -160,7 +161,7 @@ class FineMatchRepository {
           matchId: fineMatchModel.matchId,
           fineId: fineMatchModel.fineId,
           playerId: fineMatchModel.playerId,
-          number: fineMatchModel.number + number);
+          number: rewrite ? number : fineMatchModel.number + number);
       await document.set(fine.toJson());
       return true;
     } on FirebaseException catch (e) {

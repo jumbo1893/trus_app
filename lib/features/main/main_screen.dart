@@ -27,6 +27,7 @@ import '../fine/screens/add_fine_screen.dart';
 import '../fine/screens/edit_fine_screen.dart';
 import '../pkfl/screens/pkfl_table_screens.dart';
 import '../season/screens/add_season_screen.dart';
+import '../statistics/playerstats/screens/player_stats_stats_screen.dart';
 import '../statistics/screens/main_statistics_screen.dart';
 
 class MainScreen extends ConsumerStatefulWidget {
@@ -333,6 +334,14 @@ class _MainScreenState extends ConsumerState<MainScreen> {
                   ),
                   ListTile(
                     leading: const Icon(
+                      Icons.query_stats,
+                      color: Colors.orange,
+                    ),
+                    title: const Text("Statistiky gólů/asistencí"),
+                    onTap: () => onModalBottomSheetMenuTapped(22),
+                  ),
+                  ListTile(
+                    leading: const Icon(
                       Icons.download,
                       color: Colors.orange,
                     ),
@@ -513,6 +522,9 @@ class _MainScreenState extends ConsumerState<MainScreen> {
           ),
           const PkflTableScreen(
             //21
+          ),
+          const PlayerStatsStatsScreen(
+            //22
           )
         ],
       ),

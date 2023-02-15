@@ -15,9 +15,6 @@ import 'package:trus_app/models/pkfl/pkfl_match_detail.dart';
 import 'package:trus_app/models/pkfl/pkfl_team.dart';
 import 'package:trus_app/models/season_model.dart';
 
-import '../../../common/widgets/custom_text.dart';
-import '../../../common/widgets/dropdown/season_dropdown.dart';
-import '../../../common/widgets/rows/row_back_or_forward.dart';
 import '../controller/pkfl_table_controller.dart';
 
 class PkflTableScreen extends ConsumerStatefulWidget {

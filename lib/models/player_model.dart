@@ -15,6 +15,13 @@ class PlayerModel {
       required this.fan,
       required this.isActive,});
 
+  PlayerModel.dummy()
+      : id = "dummy",
+        name = "neznámý hráč",
+        birthday = DateTime.fromMicrosecondsSinceEpoch(0),
+        fan = false,
+        isActive = false;
+
   int calculateAge() {
     return AgeCalculator.age(birthday).years;
   }

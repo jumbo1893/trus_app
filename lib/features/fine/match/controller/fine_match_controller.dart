@@ -56,7 +56,7 @@ class FineMatchController {
       int number,
       ) async {
     bool result = await fineMatchRepository.addMultipleFinesInMatch(
-        context, matchId, fineId, playerId, number);
+        context, matchId, fineId, playerId, number, false);
     return result;
   }
 

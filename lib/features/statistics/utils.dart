@@ -1,5 +1,6 @@
 import 'package:trus_app/models/helper/beer_stats_helper_model.dart';
 import 'package:trus_app/models/helper/fine_stats_helper_model.dart';
+import 'package:trus_app/models/helper/player_stats_helper_model.dart';
 import 'package:trus_app/models/match_model.dart';
 
 List<BeerStatsHelperModel> sortStatsByDrinks(
@@ -38,4 +39,23 @@ List<MatchModel> sortMatchesByDate(List<MatchModel> matches, bool desc) {
     matches.sort((a, b) => a.date.compareTo(b.date));
   }
   return matches;
+}
+
+List<PlayerStatsHelperModel> sortByGoalsOrAssists(List<PlayerStatsHelperModel> players, bool desc, bool goal) {
+  if (goal) {
+    if (desc) {
+      players.sort((b, a) => a.goalNumber.compareTo(b.goalNumber));
+      return players;
+    } else {
+      players.sort((a, b) => a.goalNumber.compareTo(b.goalNumber));
+    }
+    return players;
+  }
+  if (desc) {
+    players.sort((b, a) => a.assistNumber.compareTo(b.assistNumber));
+    return players;
+  } else {
+    players.sort((a, b) => a.assistNumber.compareTo(b.assistNumber));
+  }
+  return players;
 }

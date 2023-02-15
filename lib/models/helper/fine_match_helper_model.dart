@@ -1,6 +1,8 @@
+import 'package:trus_app/models/helper/helper_model.dart';
+
 import '../fine_model.dart';
 
-class FineMatchHelperModel {
+class FineMatchHelperModel implements IHelperModel {
   final FineModel fine;
   final String id;
   int number;
@@ -11,7 +13,7 @@ class FineMatchHelperModel {
     required this.number,
   });
 
-  void addNumber() {
+  /*void addNumber() {
     number++;
   }
 
@@ -19,7 +21,7 @@ class FineMatchHelperModel {
     if(number > 0) {
       number--;
     }
-  }
+  }*/
 
 
   @override
@@ -36,6 +38,28 @@ class FineMatchHelperModel {
 
   @override
   int get hashCode => id.hashCode;
+
+  @override
+  int getNumber(String? field) {
+    return number;
+  }
+
+  @override
+  void addNumber(String? field) {
+    number++;
+  }
+
+  @override
+  void removeNumber(String? field) {
+    if(number > 0) {
+      number--;
+    }
+  }
+
+  @override
+  String toStringForListviewAddModel() {
+    return "${fine.name} (${fine.amount} Kč)";
+  }
 
 //
 

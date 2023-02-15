@@ -1,4 +1,4 @@
-enum ScreenFlow {
+enum PkflScreens {
   matchList,
   matchDetailWithoutResult,
   matchDetail,

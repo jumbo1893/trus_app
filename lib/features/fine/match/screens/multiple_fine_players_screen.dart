@@ -109,7 +109,6 @@ class _FinePlayersScreenState extends ConsumerState<MultipleFinePlayersScreen> {
                                   },
                                   padding: 16,
                                   helperModel: fineMatch,
-                                  name: "${fineMatch.fine.name} (${fineMatch.fine.amount} Kč)",
                                 ),
                               ),
                             ),
