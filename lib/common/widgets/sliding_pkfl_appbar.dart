@@ -14,13 +14,13 @@ class SlidingPkflAppBar extends StatefulWidget implements PreferredSizeWidget {
   final VoidCallback onAppBarInvisible;
 
   @override
-  State<SlidingPkflAppBar> createState() => _SlidingPkflAppBartate();
+  State<SlidingPkflAppBar> createState() => _SlidingPkflAppBarState();
 
   @override
   Size get preferredSize => const Size.fromHeight(kMinInteractiveDimension);
 }
 
-class _SlidingPkflAppBartate extends State<SlidingPkflAppBar>
+class _SlidingPkflAppBarState extends State<SlidingPkflAppBar>
     with SingleTickerProviderStateMixin {
   bool visible = true;
   late final AnimationController _animationController;

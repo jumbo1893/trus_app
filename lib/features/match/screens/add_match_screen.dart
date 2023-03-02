@@ -164,6 +164,9 @@ class _AddMatchScreenState extends ConsumerState<AddMatchScreen> {
                   return const Loader();
                 }
                 var pkflMatch = snapshot.data;
+                if(pkflMatch == null) {
+                  appBarVisibility = false;
+                }
               return Scaffold(
                 appBar: appBarVisibility ? SlidingPkflAppBar(pkflMatch: snapshot.data, onConfirmPressed: () {
                   setState(() {
@@ -172,11 +175,10 @@ class _AddMatchScreenState extends ConsumerState<AddMatchScreen> {
                     isHomeChecked = pkflMatch?.homeMatch ?? false;
                     appBarVisibility = false;
                   });
-                }, onAppBarInvisible: () { setState(() {
+                }, onAppBarInvisible: () {   setState(() {
                   appBarVisibility = false;
+
                 });  },
-
-
                   ): null,
                 body: Padding(
                   padding: const EdgeInsets.all(padding),

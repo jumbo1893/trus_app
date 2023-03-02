@@ -5,7 +5,6 @@ import 'package:trus_app/features/auth/screens/login_screen.dart';
 import 'package:trus_app/features/fine/match/screens/fine_match_screen.dart';
 import 'package:trus_app/features/fine/match/screens/fine_player_screen.dart';
 import 'package:trus_app/features/fine/screens/fine_screen.dart';
-import 'package:trus_app/features/match/controller/match_controller.dart';
 import 'package:trus_app/features/match/screens/add_match_screen.dart';
 import 'package:trus_app/features/match/screens/edit_match_screen.dart';
 import 'package:trus_app/features/match/screens/match_screen.dart';
@@ -42,6 +41,7 @@ class MainScreen extends ConsumerStatefulWidget {
 class _MainScreenState extends ConsumerState<MainScreen> {
   int _selectedIndex = 0;
   PageController pageController = PageController();
+  String appBarTitle = "Trusí appka";
 
   //dummy modely , které se předávají na další obrazovky
   PlayerModel playerModel = PlayerModel(
@@ -74,17 +74,17 @@ class _MainScreenState extends ConsumerState<MainScreen> {
 
   void onPickedPlayerChange(PlayerModel newPlayerModel) {
     setState(() => playerModel = newPlayerModel);
-    pageController.jumpToPage(5);
+    changeFragment(5);
   }
 
   void onPickedSeasonChange(SeasonModel newSeasonModel) {
     setState(() => seasonModel = newSeasonModel);
-    pageController.jumpToPage(8);
+    changeFragment(8);
   }
 
   void onPickedMatchChange(MatchModel newMatchModel) {
     setState(() => matchModel = newMatchModel);
-    pageController.jumpToPage(11);
+    changeFragment(11);
   }
 
   void onPickedMainMatch(MatchModel newMatchModel) {
@@ -93,17 +93,17 @@ class _MainScreenState extends ConsumerState<MainScreen> {
 
   void onPickedFineChange(FineModel newFineModel) {
     setState(() => fineModel = newFineModel);
-    pageController.jumpToPage(14);
+    changeFragment(14);
   }
 
   void onPickedPlayerFinesChange(PlayerModel newPlayerModel) {
     setState(() => playerModel = newPlayerModel);
-    pageController.jumpToPage(15);
+    changeFragment(15);
   }
 
   void onPickedPlayersFinesChange(List<PlayerModel> newPlayerList) {
     setState(() => playerListModel = newPlayerList);
-    pageController.jumpToPage(16);
+    changeFragment(16);
   }
 
   void showBottomSheetNavigation() {
@@ -163,7 +163,7 @@ class _MainScreenState extends ConsumerState<MainScreen> {
                       color: Colors.orange,
                     ),
                     title: const Text("Přehled"),
-                    onTap: () => onTapped,
+                    onTap: () => onModalBottomSheetMenuTapped(0),
                   ),
                   Row(
                     children: const [
@@ -183,7 +183,7 @@ class _MainScreenState extends ConsumerState<MainScreen> {
                       color: Colors.orange,
                     ),
                     title: const Text("Přidat zápas"),
-                    onTap: () {},
+                    onTap: () => onModalBottomSheetMenuTapped(10),
                   ),
                   ListTile(
                     leading: const Icon(
@@ -247,7 +247,7 @@ class _MainScreenState extends ConsumerState<MainScreen> {
                       color: Colors.orange,
                     ),
                     title: const Text("Přidat hráče"),
-                    onTap: () {},
+                    onTap: () => onModalBottomSheetMenuTapped(4),
                   ),
                   ListTile(
                     leading: const Icon(
@@ -291,7 +291,7 @@ class _MainScreenState extends ConsumerState<MainScreen> {
                       color: Colors.orange,
                     ),
                     title: const Text("Přidat pokutu v zápase"),
-                    onTap: () {},
+                    onTap: () => onModalBottomSheetMenuTapped(1),
                   ),
                   Row(
                     children: const [
@@ -311,7 +311,7 @@ class _MainScreenState extends ConsumerState<MainScreen> {
                       color: Colors.orange,
                     ),
                     title: const Text("Přidat pivo v zápase"),
-                    onTap: () {},
+                    onTap: () => onModalBottomSheetMenuTapped(17),
                   ),
                   Row(
                     children: const [
@@ -331,7 +331,7 @@ class _MainScreenState extends ConsumerState<MainScreen> {
                       color: Colors.orange,
                     ),
                     title: const Text("Statistiky piv/pokut"),
-                    onTap: () {},
+                    onTap: () => onModalBottomSheetMenuTapped(3),
                   ),
                   ListTile(
                     leading: const Icon(
@@ -390,21 +390,109 @@ class _MainScreenState extends ConsumerState<MainScreen> {
             ));
   }
 
-  void onTapped(int index) {
+  void changeFragment(int index) {
+    setAppBarTitle(index);
+    changeBottomSheetColor(index);
+    pageController.jumpToPage(index);
+  }
+
+  void changeBottomSheetColor(int index) {
     print(index);
+    setState(() {
+      if (index == 0 || index == 1 || index == 3) {
+        _selectedIndex = index;
+      } else if (index == 4) {
+      }
+      else {
+        _selectedIndex = 2;
+      }
+    });
+  }
+
+  void setAppBarTitle(int index) {
+    setState(() {
+      switch (index) {
+        case 0:
+          appBarTitle = "Trusí appka";
+          break;
+        case 1:
+          appBarTitle = "Přidání pokut";
+          break;
+        case 3:
+          appBarTitle = "Statistiky pokut/piv";
+          break;
+        case 4:
+          appBarTitle = "Přidat hráče";
+          break;
+        case 5:
+          appBarTitle = "Upravit hráče";
+          break;
+        case 6:
+          appBarTitle = "Sezony";
+          break;
+        case 7:
+          appBarTitle = "Přidat sezonu";
+          break;
+        case 8:
+          appBarTitle = "Upravit sezonu";
+          break;
+        case 9:
+          appBarTitle = "Zápasy";
+          break;
+        case 10:
+          appBarTitle = "Přidat zápas";
+          break;
+        case 11:
+          appBarTitle = "Upravit zápas";
+          break;
+        case 12:
+          appBarTitle = "Pokuty";
+          break;
+        case 13:
+          appBarTitle = "Přidat pokutu";
+          break;
+        case 14:
+          appBarTitle = "Upravit pokutu";
+          break;
+        case 15:
+          appBarTitle = "Přidat pokutu hráči";
+          break;
+        case 16:
+          appBarTitle = "Přidat pokutu více hráčům";
+          break;
+        case 17:
+          appBarTitle = "Přidat pivo";
+          break;
+        case 18:
+          appBarTitle = "Hráči";
+          break;
+        case 19:
+          appBarTitle = "Seznam PKFL zápasů";
+          break;
+        case 20:
+          appBarTitle = "Statistika PKFL";
+          break;
+        case 21:
+          appBarTitle = "Tabulka PKFL";
+          break;
+        case 22:
+          appBarTitle = "Statistika gólů/asistencí";
+          break;
+      }
+    });
+  }
+
+  void onTapped(int index) {
     if (index == 4) {
       showBottomSheetNavigation();
-    } else {
-      setState(() {
-        _selectedIndex = index;
-      });
-      pageController.jumpToPage(index);
+      return;
     }
+    changeFragment(index);
   }
 
   void onModalBottomSheetMenuTapped(int index) {
     Navigator.of(context).pop();
-    pageController.jumpToPage(index);
+    changeFragment(index);
   }
 
   @override
@@ -413,9 +501,10 @@ class _MainScreenState extends ConsumerState<MainScreen> {
       resizeToAvoidBottomInset:
           false, //pak nelítá prostřední tlačítko z dolního menu nahoru
       appBar: AppBar(
-        title: Text("Trusí appka"),
+        title: Text(appBarTitle),
         actions: [
-          IconButton(onPressed: () {}, icon: const Icon(Icons.add)),
+          IconButton(
+              onPressed: () => changeFragment(10), icon: const Icon(Icons.add)),
           IconButton(onPressed: () {}, icon: const Icon(Icons.notifications)),
         ],
       ),
@@ -423,8 +512,8 @@ class _MainScreenState extends ConsumerState<MainScreen> {
         controller: pageController,
         children: [
           const HomeScreen(
-            //0
-          ),
+              //0
+              ),
           FineMatchScreen(
             //1
             mainMatch: mainMatch,
@@ -438,98 +527,98 @@ class _MainScreenState extends ConsumerState<MainScreen> {
             color: Colors.yellow,
           ),
           const MainStatisticsScreen(
-            //3
-          ),
+              //3
+              ),
           AddPlayerScreen(
             //4
-            onAddPlayerPressed: () => pageController.jumpToPage(3),
+            onAddPlayerPressed: () => changeFragment(3),
           ),
           EditPlayerScreen(
             //5
             playerModel,
-            onButtonConfirmPressed: () => pageController.jumpToPage(3),
+            onButtonConfirmPressed: () => changeFragment(3),
           ),
           SeasonScreen(
             //6
-            onPlusButtonPressed: () => pageController.jumpToPage(7),
+            onPlusButtonPressed: () => changeFragment(7),
             setSeason: (season) => onPickedSeasonChange(season),
           ),
           AddSeasonScreen(
             //7
-            onAddSeasonPressed: () => pageController.jumpToPage(6),
+            onAddSeasonPressed: () => changeFragment(6),
           ),
           EditSeasonScreen(
             //8
             seasonModel,
-            onButtonConfirmPressed: () => pageController.jumpToPage(6),
+            onButtonConfirmPressed: () => changeFragment(6),
           ),
           MatchScreen(
             //9
-            onPlusButtonPressed: () => pageController.jumpToPage(10),
+            onPlusButtonPressed: () => changeFragment(10),
             setMatch: (match) => onPickedMatchChange(match),
           ),
           AddMatchScreen(
             //10
-            onAddMatchPressed: () => pageController.jumpToPage(9),
+            onAddMatchPressed: () => changeFragment(9),
           ),
           EditMatchScreen(
             //11
             matchModel: matchModel,
-            onButtonConfirmPressed: () => pageController.jumpToPage(9),
+            onButtonConfirmPressed: () => changeFragment(9),
           ),
           FineScreen(
             //12
-            onPlusButtonPressed: () => pageController.jumpToPage(13),
+            onPlusButtonPressed: () => changeFragment(13),
             setFine: (fine) => onPickedFineChange(fine),
           ),
           AddFineScreen(
             //13
-            onAddFinePressed: () => pageController.jumpToPage(12),
+            onAddFinePressed: () => changeFragment(12),
           ),
           EditFineScreen(
             //14
             fineModel,
-            onButtonConfirmPressed: () => pageController.jumpToPage(12),
+            onButtonConfirmPressed: () => changeFragment(12),
           ),
           FinePlayerScreen(
             //15
             matchModel: mainMatch,
             playerModel: playerModel,
-            onButtonConfirmPressed: () => pageController.jumpToPage(1),
+            onButtonConfirmPressed: () => changeFragment(1),
           ),
           MultipleFinePlayersScreen(
             //16
             matchId: mainMatch.id,
             players: playerListModel,
-            onButtonConfirmPressed: () => pageController.jumpToPage(1),
+            onButtonConfirmPressed: () => changeFragment(1),
           ),
           BeerSimpleScreen(
             //17
             mainMatch: mainMatch,
             setMainMatch: (match) => onPickedMainMatch(match),
-            onButtonConfirmPressed: () => pageController.jumpToPage(0),
+            onButtonConfirmPressed: () => changeFragment(0),
           ),
           PlayerScreen(
             //18
-            onPlusButtonPressed: () => pageController.jumpToPage(4),
+            onPlusButtonPressed: () => changeFragment(4),
             setPlayer: (player) => onPickedPlayerChange(player),
           ),
           const PkflMatchScreen(
-            //19
-          ),
+              //19
+              ),
           const MainPkflStatisticsScreen(
-            //20
-          ),
+              //20
+              ),
           const PkflTableScreen(
-            //21
-          ),
+              //21
+              ),
           const PlayerStatsStatsScreen(
-            //22
-          )
+              //22
+              )
         ],
       ),
       floatingActionButton: FloatingActionButton(
-        onPressed: () => pageController.jumpToPage(17),
+        onPressed: () => changeFragment(17),
         elevation: 4.0,
         backgroundColor: Colors.orange,
         child: const Icon(
