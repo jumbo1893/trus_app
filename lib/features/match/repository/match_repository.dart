@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:trus_app/features/beer/controller/beer_controller.dart';
 import 'package:trus_app/models/helper/player_stats_helper_model.dart';
 import 'package:trus_app/models/match_model.dart';
 
@@ -193,10 +194,9 @@ class MatchRepository {
           assistNumber: assistNumber,
         );
       }
-      if(goalNumber == 0 && assistNumber == 0) {
-        await deletePlayerStats(context, document.id);
-      }
-      else {
+      if (goalNumber == 0 && assistNumber == 0) {
+        await _deleteMatchFromStatsTables(context, document.id, playerStatsTable);
+      } else {
         await document.set(playerStatsModel.toJson());
       }
       return true;
@@ -209,13 +209,44 @@ class MatchRepository {
     return false;
   }
 
-  Future<void> deletePlayerStats(BuildContext context, String id) async {
-    await firestore.collection(playerStatsTable).doc(id).delete().then(
+  Future<void> _deleteMatchFromStatsTables(BuildContext context, String id, String table) async {
+    await firestore.collection(table).doc(id).delete().then(
           (value) => {},
-      onError: (e) => showSnackBar(
-        context: context,
-        content: e.message!,
-      ),
-    );
+          onError: (e) => showSnackBar(
+            context: context,
+            content: e.message!,
+          ),
+        );
+  }
+
+  Future<void> deleteStatsFromTablesByMatch(
+      BuildContext context, String matchId) async {
+    await firestore
+        .collection(playerStatsTable)
+        .where("matchId", isEqualTo: matchId)
+        .get()
+        .then((value) async {
+      for (var document in value.docs) {
+        await _deleteMatchFromStatsTables(context, document.id, playerStatsTable);
+      }
+    });
+    await firestore
+        .collection(fineMatchTable)
+        .where("matchId", isEqualTo: matchId)
+        .get()
+        .then((value) async {
+      for (var document in value.docs) {
+        await _deleteMatchFromStatsTables(context, document.id, fineMatchTable);
+      }
+    });
+    await firestore
+        .collection(beerTable)
+        .where("matchId", isEqualTo: matchId)
+        .get()
+        .then((value) async {
+      for (var document in value.docs) {
+        await _deleteMatchFromStatsTables(context, document.id, beerTable);
+      }
+    });
   }
 }

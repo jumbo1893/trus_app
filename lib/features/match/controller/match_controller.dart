@@ -98,6 +98,8 @@ class MatchController {
       BuildContext context,
       MatchModel matchModel,
       ) async {
+    final String id = matchModel.id;
+    await matchRepository.deleteStatsFromTablesByMatch(context, id);
     await matchRepository.deleteMatch(context, matchModel);
   }
 

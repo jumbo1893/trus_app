@@ -54,6 +54,8 @@ class PlayerController {
     BuildContext context,
     PlayerModel playerModel,
   ) async {
+    final String playerId = playerModel.id;
+    await playerRepository.deleteStatsFromTablesByPlayer(context, playerId);
     await playerRepository.deletePlayer(context, playerModel);
   }
 }

@@ -39,9 +39,12 @@ class MainScreen extends ConsumerStatefulWidget {
 }
 
 class _MainScreenState extends ConsumerState<MainScreen> {
-  int _selectedIndex = 0;
+  int _selectedBottomSheetIndex = 0;
   PageController pageController = PageController();
   String appBarTitle = "Trusí appka";
+  final List<int> fragmentList = [];
+  bool backButtonVisibility = false;
+  int _currentIndex = 0;
 
   //dummy modely , které se předávají na další obrazovky
   PlayerModel playerModel = PlayerModel(
@@ -391,22 +394,55 @@ class _MainScreenState extends ConsumerState<MainScreen> {
   }
 
   void changeFragment(int index) {
+    manageBackButton(index, false);
     setAppBarTitle(index);
     changeBottomSheetColor(index);
     pageController.jumpToPage(index);
   }
 
   void changeBottomSheetColor(int index) {
-    print(index);
     setState(() {
       if (index == 0 || index == 1 || index == 3) {
-        _selectedIndex = index;
+        _selectedBottomSheetIndex = index;
       } else if (index == 4) {
       }
       else {
-        _selectedIndex = 2;
+        _selectedBottomSheetIndex = 2;
       }
     });
+  }
+
+  void manageBackButton(int index, bool tappedBackButton) {
+    if(!tappedBackButton) {
+      fragmentList.add(_currentIndex);
+    }
+    _currentIndex = index;
+    if(fragmentList.isEmpty && backButtonVisibility) {
+      setState(() {
+        backButtonVisibility = false;
+        });
+    }
+    else if(fragmentList.isNotEmpty && !backButtonVisibility) {
+      setState(() {
+        backButtonVisibility = true;
+      });
+    }
+  }
+
+  void onBackButtonTap() {
+    if(fragmentList.isNotEmpty) {
+      int index = fragmentList.removeLast();
+      manageBackButton(index, true);
+      setAppBarTitle(index);
+      changeBottomSheetColor(index);
+      pageController.jumpToPage(index);
+    }
+    else {
+      manageBackButton(0, true);
+      setAppBarTitle(0);
+      changeBottomSheetColor(0);
+      pageController.jumpToPage(0);
+    }
   }
 
   void setAppBarTitle(int index) {
@@ -501,6 +537,7 @@ class _MainScreenState extends ConsumerState<MainScreen> {
       resizeToAvoidBottomInset:
           false, //pak nelítá prostřední tlačítko z dolního menu nahoru
       appBar: AppBar(
+        leading: backButtonVisibility ? BackButton(color: Colors.white, onPressed: () => onBackButtonTap(),): null,
         title: Text(appBarTitle),
         actions: [
           IconButton(
@@ -640,7 +677,7 @@ class _MainScreenState extends ConsumerState<MainScreen> {
               icon: Icon(Icons.equalizer), label: "Statistiky"),
           const BottomNavigationBarItem(icon: Icon(Icons.menu), label: "Menu"),
         ],
-        currentIndex: _selectedIndex,
+        currentIndex: _selectedBottomSheetIndex,
         selectedItemColor: selectedItemColor,
         unselectedItemColor: unselectedItemColor,
         onTap: onTapped,

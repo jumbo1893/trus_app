@@ -37,7 +37,7 @@ class FineStatsHelperModel {
     return number;
   }
 
-  bool _isPlayer(List<PlayerModel> players, String playerId) {;
+  bool _isPlayer(List<PlayerModel> players, String playerId) {
     return !players
         .firstWhere((element) => (element.id == playerId))
         .fan;

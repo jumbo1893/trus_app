@@ -79,4 +79,46 @@ class PlayerRepository {
                 : "Hráč "}$name úspěšně smazán")),
         onError: (e) => showSnackBar(context: context, content: e.message!,),);
   }
+
+  Future<void> _deletePlayerFromStatsTables(BuildContext context, String id, String table) async {
+    await firestore.collection(table).doc(id).delete().then(
+          (value) => {},
+      onError: (e) => showSnackBar(
+        context: context,
+        content: e.message!,
+      ),
+    );
+  }
+
+  Future<void> deleteStatsFromTablesByPlayer(
+      BuildContext context, String playerId) async {
+    print(playerId + "deleteStatsFromTablesByPlayer");
+    await firestore
+        .collection(playerStatsTable)
+        .where("playerId", isEqualTo: playerId)
+        .get()
+        .then((value) async {
+      for (var document in value.docs) {
+        await _deletePlayerFromStatsTables(context, document.id, playerStatsTable);
+      }
+    });
+    await firestore
+        .collection(fineMatchTable)
+        .where("playerId", isEqualTo: playerId)
+        .get()
+        .then((value) async {
+      for (var document in value.docs) {
+        await _deletePlayerFromStatsTables(context, document.id, fineMatchTable);
+      }
+    });
+    await firestore
+        .collection(beerTable)
+        .where("playerId", isEqualTo: playerId)
+        .get()
+        .then((value) async {
+      for (var document in value.docs) {
+        await _deletePlayerFromStatsTables(context, document.id, beerTable);
+      }
+    });
+  }
 }

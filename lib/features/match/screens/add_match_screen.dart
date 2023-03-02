@@ -122,7 +122,7 @@ class _AddMatchScreenState extends ConsumerState<AddMatchScreen> {
                     : assistNumber[i]) &&
             writeToFines) {
           await rewriteFinesForPlayer(
-              playerStatsList[i].id,
+              playerStatsList[i].player.id,
               goalNumber[i] == -1
                   ? playerStatsList[i].goalNumber
                   : goalNumber[i]);

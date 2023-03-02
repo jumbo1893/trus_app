@@ -44,7 +44,7 @@ class _EditMatchScreenState extends ConsumerState<EditMatchScreen> {
   final _calendarController = TextEditingController();
   String nameErrorText = "";
   String seasonErrorText = "";
-
+  bool writeToFines = true;
   DateTime pickedDate = DateTime.now();
   bool isHomeChecked = false;
   SeasonModel? pickedSeason;
@@ -147,8 +147,8 @@ class _EditMatchScreenState extends ConsumerState<EditMatchScreen> {
             goalNumber[i] == -1 ? playerStatsList[i].goalNumber : goalNumber[i],
             assistNumber[i] == -1
                 ? playerStatsList[i].assistNumber
-                : assistNumber[i])) {
-          await rewriteFinesForPlayer(playerStatsList[i].id, goalNumber[i] == -1
+                : assistNumber[i]) && writeToFines) {
+          await rewriteFinesForPlayer(playerStatsList[i].player.id, goalNumber[i] == -1
               ? playerStatsList[i].goalNumber
               : goalNumber[i]);
         }
@@ -417,6 +417,18 @@ class _EditMatchScreenState extends ConsumerState<EditMatchScreen> {
                               )
                             ],
                           );
+                        },
+                      ),
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.all(padding),
+                      child: RowSwitch(
+                        size: size,
+                        padding: padding,
+                        textFieldText: "Propsat do pokut?",
+                        initChecked: writeToFines,
+                        onChecked: (write) {
+                          setState(() => writeToFines = write);
                         },
                       ),
                     ),
