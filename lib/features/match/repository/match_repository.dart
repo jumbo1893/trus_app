@@ -21,9 +21,7 @@ class MatchRepository {
 
   Stream<List<MatchModel>> getMatches() {
     return firestore.collection(matchTable).snapshots().map((event) {
-      print("1");
       List<MatchModel> matches = [];
-      print(event.docs.length);
       for (var document in event.docs) {
         var match = MatchModel.fromJson(document.data());
         matches.add(match);
@@ -122,6 +120,17 @@ class MatchRepository {
       }
     });
     return players;
+  }
+
+  Stream<List<PlayerStatsModel>> getPlayerStats() {
+    return firestore.collection(playerStatsTable).snapshots().map((event) {
+      List<PlayerStatsModel> playerStatsList = [];
+      for (var document in event.docs) {
+        var playerStats = PlayerStatsModel.fromJson(document.data());
+        playerStatsList.add(playerStats);
+      }
+      return playerStatsList;
+    });
   }
 
   Stream<List<PlayerStatsHelperModel>> getPlayersStatsForMatch(

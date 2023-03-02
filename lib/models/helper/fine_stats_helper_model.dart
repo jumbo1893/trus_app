@@ -1,4 +1,5 @@
 import '../enum/fine.dart';
+import '../enum/participant.dart';
 import '../match_model.dart';
 import '../player_model.dart';
 import 'fine_match_stats_helper_model.dart';
@@ -10,15 +11,7 @@ class FineStatsHelperModel {
 
   FineStatsHelperModel(this.listOfFines, [this.player, this.match]);
 
-  int getNumberOfFinesInMatches() {
-    return _returnNumberOfDrinks(Fine.number);
-  }
-
-  int getAmountOfFinesInMatches() {
-    return _returnNumberOfDrinks(Fine.amount);
-  }
-
-  int _returnNumberOfDrinks(Fine fine) {
+  int getNumberOrAmountOfFines(Fine fine) {
     int fines = 0;
     for(FineMatchStatsHelperModel fineMatch in listOfFines) {
       switch (fine) {
@@ -31,6 +24,23 @@ class FineStatsHelperModel {
       }
     }
     return fines;
+  }
+
+  ///parametr players povinný, pokud není participant=both
+  int getNumberOfPlayersInMatch(Participant participant, List<PlayerModel>? players) {
+    int number = 0;
+    for(String id in getPlayerIdsFromMatchPlayer()) {
+      if(participant == Participant.both || (_isPlayer(players!, id) && participant == Participant.player) || (!_isPlayer(players, id) && participant == Participant.fan)) {
+        number++;
+      }
+    }
+    return number;
+  }
+
+  bool _isPlayer(List<PlayerModel> players, String playerId) {;
+    return !players
+        .firstWhere((element) => (element.id == playerId))
+        .fan;
   }
 
   String returnPlayerDetail(String matchId) {
@@ -47,7 +57,7 @@ class FineStatsHelperModel {
       }
     }
     if(totalFinesNumber > 1) {
-      detail += "$totalFineNumber pokuty celkem, v součtu ${totalAmountNumber} Kč \n";
+      detail += "$totalFineNumber pokuty celkem, v součtu $totalAmountNumber Kč \n";
     }
     return detail;
   }

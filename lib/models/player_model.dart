@@ -26,8 +26,81 @@ class PlayerModel {
     return AgeCalculator.age(birthday).years;
   }
 
-  int calculateDaysToNextBirthday() {
-    return AgeCalculator.timeToNextBirthday(birthday).days;
+  DateDuration nextBirthday() {
+    return AgeCalculator.timeToNextBirthday(birthday);
+  }
+
+  bool isTodayBirthDay() {
+    return nextBirthday().days == 0 && nextBirthday().months == 0;
+  }
+
+  String nextBirthdayToString() {
+    String text = "";
+    if(nextBirthday().months != 0) {
+      text +=monthsToNextBirtdayToString();
+      if (nextBirthday().days != 0) {
+        return text+= " a ${daysToNextBirtdayToString()}";
+      }
+      else {
+        return text;
+      }
+    }
+    return daysToNextBirtdayToString();
+  }
+
+  String daysToNextBirtdayToString() {
+    String text = "";
+    if (nextBirthday().days == 1) {
+      text += "${nextBirthday().days} den";
+    }
+    else if (nextBirthday().days == 2 || nextBirthday().days == 3 || nextBirthday().days == 4) {
+      text += "${nextBirthday().days} dny";
+    }
+    else if (nextBirthday().days == 0) {
+    }
+    else {
+      text += "${nextBirthday().days} dní";
+    }
+    return text;
+  }
+
+  String monthsToNextBirtdayToString() {
+    String text = "";
+    if (nextBirthday().months == 1) {
+      text += "${nextBirthday().months} měsíc";
+    }
+    else if (nextBirthday().months == 2 || nextBirthday().months == 3 || nextBirthday().months == 4) {
+      text += "${nextBirthday().months} měsíce";
+    }
+    else if (nextBirthday().months == 0) {
+    }
+    else {
+      text += "${nextBirthday().months} měsíců";
+    }
+    return text;
+  }
+
+  /// 0 = dříve
+  /// 1 = starší
+  /// 2 = stejně
+  int compareBirthday (PlayerModel playerModel) {
+    if(nextBirthday().months < playerModel.nextBirthday().months) {
+      return 0;
+    }
+    else if (nextBirthday().months > playerModel.nextBirthday().months) {
+      return 1;
+    }
+    else {
+      if(nextBirthday().days < playerModel.nextBirthday().months) {
+        return 0;
+      }
+      else if (nextBirthday().days > playerModel.nextBirthday().months) {
+        return 1;
+      }
+      else {
+        return 2;
+      }
+    }
   }
 
 

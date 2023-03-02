@@ -40,6 +40,10 @@ class PkflMatch {
     return "${toStringNameWithOpponent()},\n hráno ${dateToStringWithoutSecondsAndMilliseconds()}";
   }
 
+  String toStringForHomeScreen() {
+    return "${toStringNameWithOpponent()}, v čase ${dateToStringWithoutSecondsAndMilliseconds()}. Jedná se o $round. kolo a bude se hrát na hřišti $stadium. Pískat bude ${referee.isNotEmpty ? referee : "zatím neznáný rozhodčí"}";
+  }
+
   String returnFirstDetailsOfMatch() {
     String result;
     if (!detailEnabled()) {

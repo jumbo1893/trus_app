@@ -1,6 +1,7 @@
 
 import '../enum/drink.dart';
 import '../beer_model.dart';
+import '../enum/participant.dart';
 import '../fine_model.dart';
 import '../match_model.dart';
 import '../player_model.dart';
@@ -12,34 +13,46 @@ class BeerStatsHelperModel {
 
   BeerStatsHelperModel(this.listOfBeers, [this.player, this.match]);
 
-  int getNumberOfBeersInMatches() {
-    return _returnNumberOfDrinks(Drink.beer);
+  int getNumberOfDrinksInMatches(Drink drink, Participant participant, List<PlayerModel>? players) {
+    return _returnNumberOfDrinks(drink, participant, players);
   }
 
-  int getNumberOfLiquorsInMatches() {
-    return _returnNumberOfDrinks(Drink.liquor);
-  }
-
-  int getNumberOfBeersAndLiquorsInMatches() {
-    return _returnNumberOfDrinks(Drink.both);
-  }
-
-  int _returnNumberOfDrinks(Drink drink) {
+  ///parametr players povinný, pokud není participant=both
+  int _returnNumberOfDrinks(Drink drink, Participant participant, List<PlayerModel>? players) {
     int drinks = 0;
     for(BeerModel beerModel in listOfBeers) {
-      switch (drink) {
-        case Drink.beer:
-          drinks+= beerModel.beerNumber;
-          break;
-        case Drink.liquor:
-          drinks+= beerModel.liquorNumber;
-          break;
-        case Drink.both:
-          drinks+= beerModel.beerNumber + beerModel.liquorNumber;
-          break;
+      if(participant == Participant.both || (_isPlayer(players!, beerModel.playerId) && participant == Participant.player) || (!_isPlayer(players, beerModel.playerId) && participant == Participant.fan)) {
+        switch (drink) {
+          case Drink.beer:
+            drinks += beerModel.beerNumber;
+            break;
+          case Drink.liquor:
+            drinks += beerModel.liquorNumber;
+            break;
+          case Drink.both:
+            drinks += beerModel.beerNumber + beerModel.liquorNumber;
+            break;
+        }
       }
     }
     return drinks;
+  }
+
+  ///parametr players povinný, pokud není participant=both
+  int getNumberOfPlayersInMatch(Participant participant, List<PlayerModel>? players) {
+    int number = 0;
+    for(String id in getPlayerIdsFromMatchPlayer()) {
+      if(participant == Participant.both || (_isPlayer(players!, id) && participant == Participant.player) || (!_isPlayer(players, id) && participant == Participant.fan)) {
+        number++;
+      }
+    }
+    return number;
+  }
+
+  bool _isPlayer(List<PlayerModel> players, String playerId) {
+    return !players
+        .firstWhere((element) => (element.id == playerId))
+        .fan;
   }
 
   List<String> getMatchIdsFromPickedPlayer() {
@@ -51,11 +64,11 @@ class BeerStatsHelperModel {
   }
 
   List<String> getPlayerIdsFromMatchPlayer() {
-    List<String> matchIds = [];
+    List<String> playerIds = [];
     for (BeerModel beerModel in listOfBeers) {
-      matchIds.add(beerModel.playerId);
+      playerIds.add(beerModel.playerId);
     }
-    return matchIds;
+    return playerIds;
   }
 
 }

@@ -16,6 +16,7 @@ import '../../../common/widgets/custom_text_field.dart';
 import '../../../common/widgets/dropdown/season_dropdown.dart';
 import '../../../common/widgets/icon_text_field.dart';
 import '../../../models/beer_model.dart';
+import '../../../models/enum/fine.dart';
 import '../../../models/helper/beer_helper_model.dart';
 import '../controller/stats_controller.dart';
 import '../utils.dart';
@@ -55,8 +56,8 @@ class _PlayerFineStatsScreenState extends ConsumerState<PlayerFineStatsScreen> {
     int number = 0;
     int amount = 0;
     for (FineStatsHelperModel player in players) {
-      number += player.getNumberOfFinesInMatches();
-      amount += player.getAmountOfFinesInMatches();
+      number += player.getNumberOrAmountOfFines(Fine.number);
+      amount += player.getNumberOrAmountOfFines(Fine.amount);
     }
     return [number, amount];
   }
@@ -210,7 +211,7 @@ class _PlayerFineStatsScreenState extends ConsumerState<PlayerFineStatsScreen> {
                                           ),
                                         ),
                                         subtitle: Text(
-                                          "Počet pokut: ${player.getNumberOfFinesInMatches()}, celkem: ${player.getAmountOfFinesInMatches()} Kč",
+                                          "Počet pokut: ${player.getNumberOrAmountOfFines(Fine.number)}, celkem: ${player.getNumberOrAmountOfFines(Fine.amount)} Kč",
                                           style: const TextStyle(
                                               color: listviewSubtitleColor),
                                         ),

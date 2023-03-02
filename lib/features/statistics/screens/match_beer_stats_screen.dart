@@ -14,6 +14,8 @@ import '../../../common/widgets/custom_text_field.dart';
 import '../../../common/widgets/dropdown/season_dropdown.dart';
 import '../../../common/widgets/icon_text_field.dart';
 import '../../../models/beer_model.dart';
+import '../../../models/enum/drink.dart';
+import '../../../models/enum/participant.dart';
 import '../../../models/helper/beer_helper_model.dart';
 import '../controller/stats_controller.dart';
 import '../utils.dart';
@@ -55,9 +57,9 @@ class _MatchBeerStatsScreenState extends ConsumerState<MatchBeerStatsScreen> {
     int liquor = 0;
     int overall = 0;
     for (BeerStatsHelperModel match in matches) {
-      beer += match.getNumberOfBeersInMatches();
-      liquor += match.getNumberOfLiquorsInMatches();
-      overall += match.getNumberOfBeersAndLiquorsInMatches();
+      beer += match.getNumberOfDrinksInMatches(Drink.beer, Participant.both, null);
+      liquor += match.getNumberOfDrinksInMatches(Drink.liquor, Participant.both, null);
+      overall += match.getNumberOfDrinksInMatches(Drink.both, Participant.both, null);
     }
     return [beer, liquor, overall];
   }
@@ -211,7 +213,7 @@ class _MatchBeerStatsScreenState extends ConsumerState<MatchBeerStatsScreen> {
                                           ),
                                         ),
                                         subtitle: Text(
-                                          "Počet piv: ${match.getNumberOfBeersInMatches()} , počet panáků: ${match.getNumberOfLiquorsInMatches()}, dohromady: ${match.getNumberOfBeersAndLiquorsInMatches()}",
+                                          "Počet piv: ${match.getNumberOfDrinksInMatches(Drink.beer, Participant.both, null)} , počet panáků: ${match.getNumberOfDrinksInMatches(Drink.liquor, Participant.both, null)}, dohromady: ${match.getNumberOfDrinksInMatches(Drink.both, Participant.both, null)}",
                                           style: const TextStyle(
                                               color: listviewSubtitleColor),
                                         ),

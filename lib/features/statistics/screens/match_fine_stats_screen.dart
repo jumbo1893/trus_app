@@ -11,6 +11,7 @@ import 'package:trus_app/models/player_model.dart';
 import 'package:trus_app/models/season_model.dart';
 import '../../../common/widgets/dropdown/season_dropdown.dart';
 import '../../../common/widgets/icon_text_field.dart';
+import '../../../models/enum/fine.dart';
 import '../controller/stats_controller.dart';
 import '../utils.dart';
 
@@ -49,8 +50,8 @@ class _MatchFineStatsScreenState extends ConsumerState<MatchFineStatsScreen> {
     int number = 0;
     int amount = 0;
     for (FineStatsHelperModel match in matches) {
-      number += match.getNumberOfFinesInMatches();
-      amount += match.getAmountOfFinesInMatches();
+      number += match.getNumberOrAmountOfFines(Fine.number);
+      amount += match.getNumberOrAmountOfFines(Fine.amount);
     }
     return [number, amount];
   }
@@ -204,7 +205,7 @@ class _MatchFineStatsScreenState extends ConsumerState<MatchFineStatsScreen> {
                                           ),
                                         ),
                                         subtitle: Text(
-                                          "Počet pokut: ${match.getNumberOfFinesInMatches()}, celkem: ${match.getAmountOfFinesInMatches()} Kč",
+                                          "Počet pokut: ${match.getNumberOrAmountOfFines(Fine.number)}, celkem: ${match.getNumberOrAmountOfFines(Fine.amount)} Kč",
                                           style: const TextStyle(
                                               color: listviewSubtitleColor),
                                         ),

@@ -25,6 +25,7 @@ import '../beer/screens/beer_simple_screen.dart';
 import '../fine/match/screens/multiple_fine_players_screen.dart';
 import '../fine/screens/add_fine_screen.dart';
 import '../fine/screens/edit_fine_screen.dart';
+import '../home/screens/home_screen.dart';
 import '../pkfl/screens/pkfl_table_screens.dart';
 import '../season/screens/add_season_screen.dart';
 import '../statistics/playerstats/screens/player_stats_stats_screen.dart';
@@ -421,9 +422,8 @@ class _MainScreenState extends ConsumerState<MainScreen> {
       body: PageView(
         controller: pageController,
         children: [
-          Container(
+          const HomeScreen(
             //0
-            color: Colors.red,
           ),
           FineMatchScreen(
             //1

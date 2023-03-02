@@ -4,6 +4,8 @@ import 'package:flutter/material.dart';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:trus_app/features/statistics/helper/beer_stats_helper.dart';
+import 'package:trus_app/features/statistics/helper/fine_stats_helper.dart';
 import 'package:trus_app/models/fine_match_model.dart';
 import 'package:trus_app/models/helper/beer_stats_helper_model.dart';
 import 'package:trus_app/models/helper/fine_match_helper_model.dart';
@@ -175,15 +177,8 @@ class StatsRepository {
         var beer = BeerModel.fromJson(document.data());
         beers.add(beer);
       }
-      final List<BeerStatsHelperModel> beersWithPlayers = [];
-      for (PlayerModel player in players) {
-        List<BeerModel> listOfBeers = beers.where((element) => (element.playerId == player.id && (element.beerNumber > 0 || element.liquorNumber > 0))).toList();
-        if (listOfBeers.isNotEmpty) {
-          beersWithPlayers.add(BeerStatsHelperModel(
-              listOfBeers, player));
-        }
-      }
-      return beersWithPlayers;
+      BeerStatsHelper beerStatsHelper = BeerStatsHelper(beers);
+      return beerStatsHelper.convertBeerModelToBeerStatsHelperModelForPlayers(players);
     });
   }
 
@@ -203,15 +198,8 @@ class StatsRepository {
         var beer = BeerModel.fromJson(document.data());
         beers.add(beer);
       }
-      final List<BeerStatsHelperModel> beersInMatches = [];
-      for (MatchModel match in matches) {
-        List<BeerModel> listOfBeers = beers.where((element) => (element.matchId == match.id && (element.beerNumber > 0 || element.liquorNumber > 0))).toList();
-        if (listOfBeers.isNotEmpty) {
-          beersInMatches.add(BeerStatsHelperModel(
-              listOfBeers, null, match));
-        }
-      }
-      return beersInMatches;
+      BeerStatsHelper beerStatsHelper = BeerStatsHelper(beers);
+      return beerStatsHelper.convertBeerModelToBeerStatsHelperModelForMatches(matches);
     });
   }
 
@@ -222,7 +210,6 @@ class StatsRepository {
     season ??= await getCurrentSeason();
     matchIds =
     await _getMatchIdsBySeason(season.id);
-
     yield*
     firestore
         .collection(fineMatchTable)
@@ -232,30 +219,14 @@ class StatsRepository {
       List<FineMatchModel> finesMatch = [];
       List<String> finesIds = [];
       List<FineModel> fines = [];
-      FineModel findFine(String id) =>
-          fines.firstWhere((e) => e.id == id,
-              orElse: () => FineModel.dummy());
       for (var document in event.docs) {
         var fine = FineMatchModel.fromJson(document.data());
         finesMatch.add(fine);
         finesIds.add(fine.fineId);
       }
       fines = await getFinesById(finesIds);
-      final List<FineStatsHelperModel> finesWithPlayers = [];
-      for (PlayerModel player in players) {
-        List<FineMatchModel> listOfFinesMatches = finesMatch.where((element) => (element.playerId == player.id && element.number > 0)).toList();
-        List<FineMatchStatsHelperModel> listOfFines = [];
-        for(FineMatchModel fineMatchModel in listOfFinesMatches) {
-          FineMatchStatsHelperModel fineMatchStatsHelperModel = FineMatchStatsHelperModel(id: fineMatchModel.id, fine: findFine(fineMatchModel.fineId), playerId: fineMatchModel.playerId, matchId: fineMatchModel.matchId, number: fineMatchModel.number);
-          if(fineMatchStatsHelperModel.fine != FineModel.dummy()) {
-            listOfFines.add(fineMatchStatsHelperModel);
-          }
-        }
-        if (listOfFines.isNotEmpty) {
-          finesWithPlayers.add(FineStatsHelperModel(listOfFines, player));
-        }
-      }
-      return finesWithPlayers;
+      FineStatsHelper fineStatsHelper = FineStatsHelper(fines, finesMatch);
+      return fineStatsHelper.convertFineModelToFineStatsHelperModelForPlayers(players);
     });
   }
 
@@ -264,7 +235,6 @@ class StatsRepository {
     season ??= await getCurrentSeason();
     matches =
     await _getMatchesBySeason(season.id);
-
     yield*
     firestore
         .collection(fineMatchTable)
@@ -274,30 +244,14 @@ class StatsRepository {
       List<FineMatchModel> finesMatch = [];
       List<String> finesIds = [];
       List<FineModel> fines = [];
-      FineModel findFine(String id) =>
-          fines.firstWhere((e) => e.id == id,
-              orElse: () => FineModel.dummy());
       for (var document in event.docs) {
         var fine = FineMatchModel.fromJson(document.data());
         finesMatch.add(fine);
         finesIds.add(fine.fineId);
       }
       fines = await getFinesById(finesIds);
-      final List<FineStatsHelperModel> finesWithPlayers = [];
-      for (MatchModel match in matches) {
-        List<FineMatchModel> listOfFinesMatches = finesMatch.where((element) => (element.matchId == match.id && element.number > 0)).toList();
-        List<FineMatchStatsHelperModel> listOfFines = [];
-        for(FineMatchModel fineMatchModel in listOfFinesMatches) {
-          FineMatchStatsHelperModel fineMatchStatsHelperModel = FineMatchStatsHelperModel(id: fineMatchModel.id, fine: findFine(fineMatchModel.fineId), playerId: fineMatchModel.playerId, matchId: fineMatchModel.matchId, number: fineMatchModel.number);
-          if(fineMatchStatsHelperModel.fine != FineModel.dummy()) {
-            listOfFines.add(fineMatchStatsHelperModel);
-          }
-        }
-        if (listOfFines.isNotEmpty) {
-          finesWithPlayers.add(FineStatsHelperModel(listOfFines, null, match));
-        }
-      }
-      return finesWithPlayers;
+      FineStatsHelper fineStatsHelper = FineStatsHelper(fines, finesMatch);
+      return fineStatsHelper.convertFineModelToFineStatsHelperModelForMatches(matches);
     });
   }
 
@@ -326,7 +280,7 @@ class StatsRepository {
         seasons.add(season);
       }
     });
-      return seasons.firstWhere((element) => element.toDate.isBefore(DateTime.now()), orElse: () => SeasonModel.allSeason());
+      return seasons.firstWhere((element) => element.toDate.isBefore(DateTime.now()), orElse: () => SeasonModel.otherSeason());
   }
 
   Stream<List<PlayerStatsHelperModel>> getPlayerStatsForPlayersInSeason(SeasonModel? season) async* {

@@ -3,17 +3,21 @@ import 'package:trus_app/models/helper/fine_stats_helper_model.dart';
 import 'package:trus_app/models/helper/player_stats_helper_model.dart';
 import 'package:trus_app/models/match_model.dart';
 
+import '../../models/enum/drink.dart';
+import '../../models/enum/fine.dart';
+import '../../models/enum/participant.dart';
+
 List<BeerStatsHelperModel> sortStatsByDrinks(
     List<BeerStatsHelperModel> beerStats, bool desc) {
   if (desc) {
     beerStats.sort((b, a) => a
-        .getNumberOfBeersAndLiquorsInMatches()
-        .compareTo(b.getNumberOfBeersAndLiquorsInMatches()));
+        .getNumberOfDrinksInMatches(Drink.both, Participant.both, null)
+        .compareTo(b.getNumberOfDrinksInMatches(Drink.both, Participant.both, null)));
     return beerStats;
   }
   beerStats.sort((a, b) => a
-      .getNumberOfBeersAndLiquorsInMatches()
-      .compareTo(b.getNumberOfBeersAndLiquorsInMatches()));
+      .getNumberOfDrinksInMatches(Drink.both, Participant.both, null)
+      .compareTo(b.getNumberOfDrinksInMatches(Drink.both, Participant.both, null)));
   return beerStats;
 }
 
@@ -21,13 +25,13 @@ List<FineStatsHelperModel> sortStatsByFines(
     List<FineStatsHelperModel> fineStats, bool desc) {
   if (desc) {
     fineStats.sort((b, a) => a
-        .getAmountOfFinesInMatches()
-        .compareTo(b.getAmountOfFinesInMatches()));
+        .getNumberOrAmountOfFines(Fine.amount)
+        .compareTo(b.getNumberOrAmountOfFines(Fine.amount)));
     return fineStats;
   }
   fineStats.sort((a, b) => a
-      .getAmountOfFinesInMatches()
-      .compareTo(b.getAmountOfFinesInMatches()));
+      .getNumberOrAmountOfFines(Fine.amount)
+      .compareTo(b.getNumberOrAmountOfFines(Fine.amount)));
   return fineStats;
 }
 
