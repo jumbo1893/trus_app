@@ -11,6 +11,7 @@ import '../../../common/utils/calendar.dart';
 import '../../../common/utils/field_validator.dart';
 import '../../../common/widgets/confirmation_dialog.dart';
 import '../../../models/season_model.dart';
+import '../../notification/controller/notification_controller.dart';
 
 class EditSeasonScreen extends ConsumerStatefulWidget {
   final VoidCallback onButtonConfirmPressed;
@@ -58,6 +59,7 @@ class _EditSeasonScreenState extends ConsumerState<EditSeasonScreen> {
     if (nameErrorText.isEmpty && calendarFromErrorText.isEmpty) {
       if (await ref.read(seasonControllerProvider).editSeason(
           context, name, pickedDateFrom, pickedDateTo, widget.seasonModel!)) {
+        await sendNotification("Upravena sezona $name", 'Začátek sezony: ${dateTimeToString(pickedDateFrom)}, konec sezony: ${dateTimeToString(pickedDateTo)}');
         widget.onButtonConfirmPressed.call();
       }
     }
@@ -69,10 +71,20 @@ class _EditSeasonScreenState extends ConsumerState<EditSeasonScreen> {
   }
 
   Future<void> deleteSeason() async {
+    final String name = widget.seasonModel!.name;
+    final String text = widget.seasonModel!.toStringForSeasonList();
     await ref
         .read(seasonControllerProvider)
         .deleteSeason(context, widget.seasonModel!);
+    await sendNotification("Smazána sezona $name", text);
     widget.onButtonConfirmPressed.call();
+  }
+
+  Future<void> sendNotification(String title, String text) async {
+    if(text.isNotEmpty) {
+      await ref.read(notificationControllerProvider).addNotification(
+          context, title, text);
+    }
   }
 
   void setSeason(SeasonModel? season) {

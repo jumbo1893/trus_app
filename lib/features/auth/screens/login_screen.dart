@@ -62,7 +62,6 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
               height: 240,
               width: 215,
             ),
-            //SizedBox(height: size.height/20),
             const Text("Pro přihlášení zadej uživatelské jméno a heslo."),
             const SizedBox(height: 15),
             CustomTextField(textController: emailController, labelText: "email", errorText: emailErrorText),

@@ -33,6 +33,8 @@ class MatchModel {
     return 'MatchModel{id: $id, name: $name, date: $date, home: $home, playerIdList: $playerIdList, seasonId: $seasonId}';
   }
 
+
+
   String toStringForMatchList() {
     return "Datum zápasu: ${dateTimeToString(date)}";
   }

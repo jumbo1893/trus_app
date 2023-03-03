@@ -7,6 +7,7 @@ import 'package:trus_app/common/widgets/rows/row_text_field.dart';
 
 import '../../../common/utils/calendar.dart';
 import '../../../common/utils/field_validator.dart';
+import '../../notification/controller/notification_controller.dart';
 import '../controller/fine_controller.dart';
 
 class AddFineScreen extends ConsumerStatefulWidget {
@@ -44,8 +45,17 @@ class _AddFineScreenState extends ConsumerState<AddFineScreen> {
       if (await ref
           .read(fineControllerProvider)
           .addFine(context, name, int.parse(amount))) {
+        await sendNotification(name, "ve výši $amount Kč");
         widget.onAddFinePressed.call();
       }
+    }
+  }
+
+  Future<void> sendNotification(String fine, String text) async {
+    if(text.isNotEmpty) {
+      String title = "Přidána pokuta $fine";
+      await ref.read(notificationControllerProvider).addNotification(
+          context, title, text);
     }
   }
 

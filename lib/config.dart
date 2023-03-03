@@ -9,3 +9,4 @@ const fineMatchTable = "fines_match";
 const beerTable = "beers";
 const pkflTable = "pkfl";
 const playerStatsTable = "players_statistics";
+const notificationTable = "notifications";

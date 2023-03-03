@@ -7,6 +7,7 @@ import '../../../common/widgets/custom_text_field.dart';
 import 'package:trus_app/features/auth/controller/auth_controller.dart';
 
 import '../../main/main_screen.dart';
+import '../../notification/controller/notification_controller.dart';
 
 class UserInformationScreen extends ConsumerStatefulWidget {
   const UserInformationScreen({Key? key}) : super(key: key);
@@ -34,6 +35,7 @@ class _UserInformationScreenState extends ConsumerState<UserInformationScreen> {
     });
     if(errorText.isEmpty) {
       if(await ref.read(authControllerProvider).saveUserDataToFirebase(context, name)) {
+        await ref.read(notificationControllerProvider).addAdminNotification(context, "Nová registrace", "Zaregistrován nový píč $name");
         Navigator.pushNamedAndRemoveUntil(context, MainScreen.routeName, (route) => false);
       }
     }

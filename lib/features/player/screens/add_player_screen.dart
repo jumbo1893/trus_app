@@ -8,6 +8,7 @@ import 'package:trus_app/common/widgets/rows/row_text_field.dart';
 
 import '../../../common/utils/calendar.dart';
 import '../../../common/utils/field_validator.dart';
+import '../../notification/controller/notification_controller.dart';
 import '../controller/player_controller.dart';
 
 class AddPlayerScreen extends ConsumerStatefulWidget {
@@ -45,8 +46,17 @@ class _AddPlayerScreenState extends ConsumerState<AddPlayerScreen> {
       if (await ref
           .read(playerControllerProvider)
           .addPlayer(context, name, pickedDate, isFanChecked, isActiveChecked)) {
+        await sendNotification(name, "${isFanChecked ? "Fanoušek" : "Hráč"} s datem narození: ${dateTimeToString(pickedDate)} Kč");
         widget.onAddPlayerPressed.call();
       }
+    }
+  }
+
+  Future<void> sendNotification(String player, String text) async {
+    if(text.isNotEmpty) {
+      String title = "Přidán $player";
+      await ref.read(notificationControllerProvider).addNotification(
+          context, title, text);
     }
   }
 

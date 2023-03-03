@@ -12,6 +12,7 @@ import 'package:trus_app/models/match_model.dart';
 import '../../../../common/widgets/custom_button.dart';
 import '../../../../models/fine_model.dart';
 import '../../../../models/player_model.dart';
+import '../../../notification/controller/notification_controller.dart';
 import '../../../player/controller/player_controller.dart';
 import '../../controller/fine_controller.dart';
 import '../controller/fine_match_controller.dart';
@@ -32,23 +33,33 @@ class FinePlayerScreen extends ConsumerStatefulWidget {
 }
 
 class _FinePlayerScreenState extends ConsumerState<FinePlayerScreen> {
-  MatchModel? selectedValue;
   List<FineMatchHelperModel> fines = [];
   List<int> finesNumber = [];
 
-  void changeFines() {
-    print(finesNumber);
+  void changeFines() async {
+    String text = "";
     for (int i = 0; i < finesNumber.length; i++) {
       if (finesNumber[i] != -1) {
         addFine(fines[i].id, fines[i].fine.id, finesNumber[i]);
+        text += "${fines[i].fine.name} ==> ${finesNumber[i]}\n";
       }
     }
+    await sendNotification(text);
     widget.onButtonConfirmPressed.call();
   }
 
   Future<void> addFine(String id, String fineId, int number) async {
     if (await ref.read(fineMatchControllerProvider).addFineInMatch(context, id,
         widget.matchModel!.id, widget.playerModel!.id, fineId, number)) {
+    }
+  }
+
+  Future<void> sendNotification(String text) async {
+    if(text.isNotEmpty) {
+      String title = "Změna pokut v zápase ${widget.matchModel!
+          .toStringWithOpponentName()} u hráče ${widget.playerModel!.name}";
+      await ref.read(notificationControllerProvider).addNotification(
+          context, title, text);
     }
   }
 

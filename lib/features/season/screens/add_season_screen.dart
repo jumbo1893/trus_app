@@ -9,6 +9,7 @@ import 'package:trus_app/features/season/controller/season_controller.dart';
 import '../../../common/utils/calendar.dart';
 import '../../../common/utils/field_validator.dart';
 import '../../../models/season_model.dart';
+import '../../notification/controller/notification_controller.dart';
 
 class AddSeasonScreen extends ConsumerStatefulWidget {
   final VoidCallback onAddSeasonPressed;
@@ -53,8 +54,17 @@ class _AddSeasonScreenState extends ConsumerState<AddSeasonScreen> {
       if (await ref
           .read(seasonControllerProvider)
           .addSeason(context, name, pickedDateFrom, pickedDateTo)) {
+        await sendNotification("Přidána sezona $name", 'Začátek sezony: ${dateTimeToString(pickedDateFrom)}, konec sezony: ${dateTimeToString(pickedDateTo)}');
         widget.onAddSeasonPressed.call();
       }
+    }
+  }
+
+  Future<void> sendNotification(String season, String text) async {
+    if(text.isNotEmpty) {
+      String title = "Přidána sezona $season";
+      await ref.read(notificationControllerProvider).addNotification(
+          context, title, text);
     }
   }
 

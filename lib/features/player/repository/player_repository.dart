@@ -92,7 +92,6 @@ class PlayerRepository {
 
   Future<void> deleteStatsFromTablesByPlayer(
       BuildContext context, String playerId) async {
-    print(playerId + "deleteStatsFromTablesByPlayer");
     await firestore
         .collection(playerStatsTable)
         .where("playerId", isEqualTo: playerId)

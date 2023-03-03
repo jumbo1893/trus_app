@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:trus_app/colors.dart';
+import 'package:trus_app/common/utils/utils.dart';
 import 'package:trus_app/common/widgets/listview/listview_add_model.dart';
 import 'package:trus_app/common/widgets/loader.dart';
 import 'package:trus_app/common/widgets/dropdown/match_dropdown.dart';
@@ -12,6 +13,7 @@ import 'package:trus_app/models/match_model.dart';
 import '../../../../common/widgets/custom_button.dart';
 import '../../../../models/fine_model.dart';
 import '../../../../models/player_model.dart';
+import '../../../notification/controller/notification_controller.dart';
 import '../../../player/controller/player_controller.dart';
 import '../../controller/fine_controller.dart';
 import '../controller/fine_match_controller.dart';
@@ -19,11 +21,11 @@ import '../controller/fine_match_controller.dart';
 class MultipleFinePlayersScreen extends ConsumerStatefulWidget {
   final VoidCallback onButtonConfirmPressed;
   final List<PlayerModel> players;
-  final String matchId;
+  final MatchModel match;
   const MultipleFinePlayersScreen({
     Key? key,
     required this.players,
-    required this.matchId,
+    required this.match,
     required this.onButtonConfirmPressed,
   }) : super(key: key);
 
@@ -35,23 +37,42 @@ class _FinePlayersScreenState extends ConsumerState<MultipleFinePlayersScreen> {
   List<FineMatchHelperModel> fines = [];
   List<int> finesNumber = [];
 
-  void changeFines() {
-    print(finesNumber);
-    for(PlayerModel playerModel in widget.players) {
+  void changeFines() async {
+    showLoaderSnackBar(context: context);
+    String text = "";
+    String players = "";
+    for(int j = 0; j < widget.players.length; j++) {
+      players += "${widget.players[j].name}, ";
       for (int i = 0; i < finesNumber.length; i++) {
         if (finesNumber[i] != 0) {
-          addFine(fines[i].fine.id, playerModel.id, finesNumber[i]);
+          addFine(fines[i].fine.id, widget.players[j].id, finesNumber[i]);
+          if(j==0) {
+            text += "${fines[i].fine.name} ==> ${finesNumber[i]}\n";
+          }
         }
       }
     }
+    await sendNotification(players, text);
+    hideSnackBar(context);
+    showSnackBar(context: context, content: "pokuty u ${widget.players.length} hráčů změněny");
+    widget.onButtonConfirmPressed.call();
   }
 
   Future<void> addFine(String fineId, String playerId, int number) async {
     if (await ref.read(fineMatchControllerProvider).addMultipleFinesInMatch(context,
-        widget.matchId, playerId, fineId, number)) {
-      widget.onButtonConfirmPressed.call();
+        widget.match.id, playerId, fineId, number)) {
     }
   }
+
+  Future<void> sendNotification(String players, String text) async {
+    if(text.isNotEmpty) {
+      String title = "Hromadná změna pokut v zápase ${widget.match
+          .toStringWithOpponentName()} u hráčů ${players.substring(0, players.length-2)}";
+      await ref.read(notificationControllerProvider).addNotification(
+          context, title, text);
+    }
+  }
+
 
   void setNewFinesNumber(int length) {
     finesNumber.clear();

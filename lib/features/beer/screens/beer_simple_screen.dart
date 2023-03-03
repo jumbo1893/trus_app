@@ -14,6 +14,7 @@ import '../../../common/widgets/dropdown/match_dropdown_without_stream.dart';
 import '../../../models/player_model.dart';
 import '../../fine/match/controller/fine_match_controller.dart';
 import '../../match/controller/match_controller.dart';
+import '../../notification/controller/notification_controller.dart';
 
 class BeerSimpleScreen extends ConsumerStatefulWidget {
   final VoidCallback onButtonConfirmPressed;
@@ -35,15 +36,24 @@ class _BeerSimpleScreenState extends ConsumerState<BeerSimpleScreen> {
   List<BeerHelperModel> beers = [];
   List<int> beerNumber = [];
   List<int> liquorNumber = [];
+  List<MatchModel> matches = [];
   List<String> matchPlayers = []; // list hráčů, kteří se účastnili zápasu
 
-  void changeBeers() {
+  void changeBeers() async {
     showLoaderSnackBar(context: context);
+    String text = "";
     for (int i = 0; i < beerNumber.length; i++) {
+      //pokud počet piv nebo kořalek není -1 (=nezměnily se)
       if (beerNumber[i] != -1 || liquorNumber[i] != -1) {
+        //id, id hráče, pokud je počet piv -1, tak dáváme původení počet, pokud ne, tak nový, pokud je počet kořalek -1, tak dáváme původení počet, pokud ne, tak nový
         addBeer(beers[i].id, beers[i].player.id, beerNumber[i] == -1 ? beers[i].beerNumber : beerNumber[i], liquorNumber[i] == -1 ? beers[i].liquorNumber : liquorNumber[i]);
+        //pokud je změna v pivech tak piva
+        text += beerNumber[i] == -1 ? "" : "${beers[i].player.name} vypil piv: ${beerNumber[i]}\n";
+        //pokud je změna v kořalkách, tak kořalka
+        text += liquorNumber[i] == -1 ? "" : "${beers[i].player.name} vypil kořalek: ${liquorNumber[i]}\n";
       }
     }
+    await sendNotification(text);
     hideSnackBar(context);
     showSnackBar(
       context: context,
@@ -55,6 +65,16 @@ class _BeerSimpleScreenState extends ConsumerState<BeerSimpleScreen> {
   Future<void> addBeer(String id, String playerId, int beerNumber, int liquorNumber) async {
     if (await ref.read(beerControllerProvider).addBeerInMatch(context, id,
         selectedValue!.id, playerId, beerNumber, liquorNumber)) {
+    }
+  }
+
+  Future<void> sendNotification(String text) async {
+    if(text.isNotEmpty) {
+      String title = "Změna pivek v zápase ${selectedValue
+          ?.toStringWithOpponentName() ??
+          matches[0].toStringWithOpponentName()}";
+      await ref.read(notificationControllerProvider).addNotification(
+          context, title, text);
     }
   }
 
@@ -84,6 +104,7 @@ class _BeerSimpleScreenState extends ConsumerState<BeerSimpleScreen> {
         return const Loader();
       }
       List<MatchModel> matches = snapshot.data!;
+      this.matches = matches;
       if (matches.isEmpty) {
         return const Text("Nebyl nalezen žádný zápas");
       }

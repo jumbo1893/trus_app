@@ -9,6 +9,7 @@ import 'package:trus_app/models/player_model.dart';
 
 import '../../../common/utils/field_validator.dart';
 import '../../../common/widgets/confirmation_dialog.dart';
+import '../../notification/controller/notification_controller.dart';
 import '../controller/player_controller.dart';
 
 class EditPlayerScreen extends ConsumerStatefulWidget {
@@ -49,6 +50,7 @@ class _EditPlayerScreenState extends ConsumerState<EditPlayerScreen> {
     if (nameErrorText.isEmpty) {
       if (await ref.read(playerControllerProvider).editPlayer(
           context, name, pickedDate, isFanChecked, isActiveChecked, widget.playerModel!)) {
+        await sendNotification("Upraven $name", "${isFanChecked ? "Fanoušek" : "Hráč"} s datem narození: ${dateTimeToString(pickedDate)} Kč");
         widget.onButtonConfirmPressed.call();
       }
     }
@@ -60,10 +62,20 @@ class _EditPlayerScreenState extends ConsumerState<EditPlayerScreen> {
   }
 
   Future<void> deletePlayer() async {
+    final String name = widget.playerModel!.name;
+    final String text = widget.playerModel!.toStringForPlayerList();
     await ref
         .read(playerControllerProvider)
         .deletePlayer(context, widget.playerModel!);
+    await sendNotification("Smazán hráč $name", text);
     widget.onButtonConfirmPressed.call();
+  }
+
+  Future<void> sendNotification(String title, String text) async {
+    if(text.isNotEmpty) {
+      await ref.read(notificationControllerProvider).addNotification(
+          context, title, text);
+    }
   }
 
   void setPlayer(PlayerModel? player) {

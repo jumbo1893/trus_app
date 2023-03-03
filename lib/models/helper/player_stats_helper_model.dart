@@ -53,6 +53,11 @@ class PlayerStatsHelperModel implements IHelperModel {
   int get hashCode => id.hashCode;
 
 
+  @override
+  String toString() {
+    return 'PlayerStatsHelperModel{player: $player}';
+  }
+
   ///pro přidání čísla pro pole goalNumber použíjeme parametr "goal", pro assistNumber parametr "assist"
   @override
   void addNumber(String? field) {

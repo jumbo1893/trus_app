@@ -23,6 +23,7 @@ import '../../../common/widgets/dropdown/season_dropdown_button.dart';
 import '../../../common/widgets/listview/listview_add_model.dart';
 import '../../../common/widgets/loader.dart';
 import '../../fine/match/controller/fine_match_controller.dart';
+import '../../notification/controller/notification_controller.dart';
 import '../../season/controller/season_controller.dart';
 import '../../season/utils/season_calculator.dart';
 import '../match_screens.dart';
@@ -82,6 +83,7 @@ class _AddMatchScreenState extends ConsumerState<AddMatchScreen> {
           isHomeChecked,
           (playerList + fansList),
           pickedSeason!.id);
+      await sendNotification("Přidán zápas $name", "${isHomeChecked ? "Domácí zápas" : "Venkovní zápas"} hraný ${dateTimeToString(pickedDate)}, tedy v sezoně ${pickedSeason!.name}, s celkovým počtem účastníků ${playerList.length+fansList.length}");
       if (addedMatch != null) {
         if (!playerStats) {
           widget.onAddMatchPressed.call();
@@ -109,26 +111,36 @@ class _AddMatchScreenState extends ConsumerState<AddMatchScreen> {
 
   Future<void> changePlayerStats() async {
     showLoaderSnackBar(context: context);
+    String text = "";
+    List playerStatsListClone = [...playerStatsList];
     for (int i = 0; i < goalNumber.length; i++) {
       if (goalNumber[i] != -1 || assistNumber[i] != -1) {
         if (await addPlayerStats(
-                playerStatsList[i].id,
-                playerStatsList[i].player.id,
+            playerStatsListClone[i].id,
+            playerStatsListClone[i].player.id,
                 goalNumber[i] == -1
-                    ? playerStatsList[i].goalNumber
+                    ? playerStatsListClone[i].goalNumber
                     : goalNumber[i],
                 assistNumber[i] == -1
-                    ? playerStatsList[i].assistNumber
+                    ? playerStatsListClone[i].assistNumber
                     : assistNumber[i]) &&
             writeToFines) {
           await rewriteFinesForPlayer(
-              playerStatsList[i].player.id,
+              playerStatsListClone[i].player.id,
               goalNumber[i] == -1
-                  ? playerStatsList[i].goalNumber
+                  ? playerStatsListClone[i].goalNumber
                   : goalNumber[i]);
         }
+        //pokud je změna v golech tak góly
+        text += goalNumber[i] == -1 ? "" : "${playerStatsListClone[i].player.name} dal gólů: ${goalNumber[i]}\n";
+        //pokud je změna v asistencích, tak přidáme asistence
+        text += assistNumber[i] == -1 ? "" : "${playerStatsListClone[i].player.name} dal asistencí: ${assistNumber[i]}\n";
       }
     }
+    if(writeToFines) {
+      text += "Výše zmíněné změny byly propsány i do pokut";
+    }
+    await sendNotification("Přidány hráčské statistiky v zápase ${_nameController.text.trim()}", text);
     hideSnackBar(context);
     showSnackBar(
       context: context,
@@ -147,6 +159,13 @@ class _AddMatchScreenState extends ConsumerState<AddMatchScreen> {
   Future<void> rewriteFinesForPlayer(String playerId, int number) async {
     if (await ref.read(matchControllerProvider).addFinesInMatch(
         context, addedMatch!.id, playerId, "ubSjhRc8KThXHo3yIEQc", number)) {}
+  }
+
+  Future<void> sendNotification(String title, String text) async {
+    if(text.isNotEmpty) {
+      await ref.read(notificationControllerProvider).addNotification(
+          context, title, text);
+    }
   }
 
   @override

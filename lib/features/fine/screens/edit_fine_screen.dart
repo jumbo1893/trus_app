@@ -9,6 +9,7 @@ import '../../../common/utils/calendar.dart';
 import '../../../common/utils/field_validator.dart';
 import '../../../common/widgets/confirmation_dialog.dart';
 import '../../../models/fine_model.dart';
+import '../../notification/controller/notification_controller.dart';
 import '../controller/fine_controller.dart';
 
 class EditFineScreen extends ConsumerStatefulWidget {
@@ -50,6 +51,7 @@ class _EditFineScreenState extends ConsumerState<EditFineScreen> {
       if (await ref
           .read(fineControllerProvider)
           .editFine(context, name, int.parse(amount), widget.fineModel!)) {
+        await sendNotification("Upravena pokuta $name", "na výši $amount Kč");
         widget.onButtonConfirmPressed.call();
       }
     }
@@ -63,10 +65,20 @@ class _EditFineScreenState extends ConsumerState<EditFineScreen> {
   }
 
   Future<void> deleteFine() async {
+    final String name = widget.fineModel!.name;
+    final String amount = widget.fineModel!.amount.toString();
     await ref
         .read(fineControllerProvider)
         .deleteFine(context, widget.fineModel!);
+    await sendNotification("Smazána pokuta $name", "v původní výši $amount Kč");
     widget.onButtonConfirmPressed.call();
+  }
+
+  Future<void> sendNotification(String title, String text) async {
+    if(text.isNotEmpty) {
+      await ref.read(notificationControllerProvider).addNotification(
+          context, title, text);
+    }
   }
 
   void setFine(FineModel? fineModel) {

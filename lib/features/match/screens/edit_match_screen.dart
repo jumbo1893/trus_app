@@ -1,4 +1,3 @@
-
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:trus_app/common/widgets/custom_button.dart';
@@ -20,6 +19,7 @@ import '../../../common/widgets/loader.dart';
 import '../../../common/widgets/dropdown/player_dropdown_multiselect.dart';
 import '../../../common/widgets/dropdown/season_dropdown_button.dart';
 import '../../../models/helper/player_stats_helper_model.dart';
+import '../../notification/controller/notification_controller.dart';
 import '../../season/controller/season_controller.dart';
 import '../../season/utils/season_calculator.dart';
 import '../match_screens.dart';
@@ -82,10 +82,10 @@ class _EditMatchScreenState extends ConsumerState<EditMatchScreen> {
           (playerList + fanList),
           pickedSeason!.id,
           widget.matchModel!)) {
-        if(!playerStats) {
+        await sendNotification("Upraven zápas $name na", "${isHomeChecked ? "Domácí zápas" : "Venkovní zápas"} hraný ${dateTimeToString(pickedDate)}, tedy v sezoně ${pickedSeason!.name}, s celkovým počtem účastníků ${playerList.length+fanList.length}");
+        if (!playerStats) {
           widget.onButtonConfirmPressed.call();
         }
-
       }
     }
   }
@@ -98,9 +98,12 @@ class _EditMatchScreenState extends ConsumerState<EditMatchScreen> {
   }
 
   Future<void> deleteMatch() async {
+    final String name = widget.matchModel!.toStringWithOpponentName();
+    final String text = widget.matchModel!.toStringWithOpponentNameAndDate();
     await ref
         .read(matchControllerProvider)
         .deleteMatch(context, widget.matchModel!);
+    await sendNotification("Smazán zápas $name", text);
     widget.onButtonConfirmPressed.call();
   }
 
@@ -110,9 +113,7 @@ class _EditMatchScreenState extends ConsumerState<EditMatchScreen> {
       pickedDate = match?.date ?? DateTime.now();
       isHomeChecked = match?.home ?? false;
       _calendarController.text = dateTimeToString(pickedDate);
-      initSeasonId = match?.seasonId ?? SeasonModel
-          .automaticSeason()
-          .id;
+      initSeasonId = match?.seasonId ?? SeasonModel.automaticSeason().id;
       initPlayerIdList = match?.playerIdList ?? [];
       widget.init = false;
     }
@@ -132,7 +133,7 @@ class _EditMatchScreenState extends ConsumerState<EditMatchScreen> {
       this.screen = screen;
     });
   }
-  
+
   Future<void> editMatchWithPlayerStats() async {
     await editMatch(true);
     await changePlayerStats();
@@ -140,20 +141,36 @@ class _EditMatchScreenState extends ConsumerState<EditMatchScreen> {
 
   Future<void> changePlayerStats() async {
     showLoaderSnackBar(context: context);
+    String text = "";
+    List playerStatsListClone = [...playerStatsList];
     for (int i = 0; i < goalNumber.length; i++) {
       if (goalNumber[i] != -1 || assistNumber[i] != -1) {
         if (await addPlayerStats(
-            playerStatsList[i].id, playerStatsList[i].player.id,
-            goalNumber[i] == -1 ? playerStatsList[i].goalNumber : goalNumber[i],
-            assistNumber[i] == -1
-                ? playerStatsList[i].assistNumber
-                : assistNumber[i]) && writeToFines) {
-          await rewriteFinesForPlayer(playerStatsList[i].player.id, goalNumber[i] == -1
-              ? playerStatsList[i].goalNumber
-              : goalNumber[i]);
+                playerStatsList[i].id,
+                playerStatsList[i].player.id,
+                goalNumber[i] == -1
+                    ? playerStatsList[i].goalNumber
+                    : goalNumber[i],
+                assistNumber[i] == -1
+                    ? playerStatsList[i].assistNumber
+                    : assistNumber[i]) &&
+            writeToFines) {
+          await rewriteFinesForPlayer(
+              playerStatsList[i].player.id,
+              goalNumber[i] == -1
+                  ? playerStatsList[i].goalNumber
+                  : goalNumber[i]);
         }
+        //pokud je změna v golech tak góly
+        text += goalNumber[i] == -1 ? "" : "${playerStatsListClone[i].player.name} dal gólů: ${goalNumber[i]}\n";
+        //pokud je změna v asistencích, tak přidáme asistence
+        text += assistNumber[i] == -1 ? "" : "${playerStatsListClone[i].player.name} dal asistencí: ${assistNumber[i]}\n";
       }
     }
+    if(writeToFines) {
+      text += "Výše zmíněné změny byly propsány i do pokut";
+    }
+    await sendNotification("Změněny hráčské statistiky v zápase ${_nameController.text.trim()}", text);
     hideSnackBar(context);
     showSnackBar(
       context: context,
@@ -162,11 +179,10 @@ class _EditMatchScreenState extends ConsumerState<EditMatchScreen> {
     widget.onButtonConfirmPressed.call();
   }
 
-  Future<bool> addPlayerStats(String id, String playerId, int goalNumber,
-      int assistNumber) async {
+  Future<bool> addPlayerStats(
+      String id, String playerId, int goalNumber, int assistNumber) async {
     return await ref.read(matchControllerProvider).addPlayerStatsInMatch(
-        context, id,
-        widget.matchModel!.id, playerId, goalNumber, assistNumber);
+        context, id, widget.matchModel!.id, playerId, goalNumber, assistNumber);
   }
 
   //TODO pokuta gol a hattrick natvrdo
@@ -175,14 +191,19 @@ class _EditMatchScreenState extends ConsumerState<EditMatchScreen> {
         widget.matchModel!.id, playerId, "ubSjhRc8KThXHo3yIEQc", number)) {}
   }
 
+  Future<void> sendNotification(String title, String text) async {
+    if(text.isNotEmpty) {
+      await ref.read(notificationControllerProvider).addNotification(
+          context, title, text);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     print("playerList");
     print(playerList);
     const double padding = 8.0;
-    final size = MediaQuery
-        .of(context)
-        .size;
+    final size = MediaQuery.of(context).size;
     switch (screen) {
       case MatchScreens.editMatch:
         _calendarController.text = dateTimeToString(pickedDate);
@@ -222,7 +243,8 @@ class _EditMatchScreenState extends ConsumerState<EditMatchScreen> {
                     },
                   ),
                   const SizedBox(height: 10),
-                  Row(mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         SizedBox(
                             width: (size.width / 3) - padding,
@@ -230,8 +252,8 @@ class _EditMatchScreenState extends ConsumerState<EditMatchScreen> {
                         SizedBox(
                           width: (size.width / 1.5) - padding,
                           child: StreamBuilder<List<SeasonModel>>(
-                              stream: ref.watch(seasonControllerProvider)
-                                  .seasons(),
+                              stream:
+                                  ref.watch(seasonControllerProvider).seasons(),
                               builder: (context, snapshot) {
                                 if (snapshot.connectionState ==
                                     ConnectionState.waiting) {
@@ -241,8 +263,8 @@ class _EditMatchScreenState extends ConsumerState<EditMatchScreen> {
                                 allSeasons = snapshot.data!;
                                 seasons.add(SeasonModel.otherSeason());
 
-                                seasons.insert(0, SeasonModel
-                                    .automaticSeason());
+                                seasons.insert(
+                                    0, SeasonModel.automaticSeason());
 
                                 return SeasonDropdownButton(
                                   errorText: seasonErrorText,
@@ -270,9 +292,7 @@ class _EditMatchScreenState extends ConsumerState<EditMatchScreen> {
                             },
                             fan: false,
                             initPlayers: initPlayerIdList,
-
-                          )
-                      ),
+                          )),
                     ],
                   ),
                   const SizedBox(height: 10),
@@ -290,13 +310,15 @@ class _EditMatchScreenState extends ConsumerState<EditMatchScreen> {
                             },
                             fan: true,
                             initPlayers: initPlayerIdList,
-                          )
-                      ),
+                          )),
                     ],
                   ),
                   const SizedBox(height: 10),
-                  CustomButton(text: "Potvrď změny", onPressed: () =>  editMatch(false)),
-                  CustomButton(text: "Pokračuj k hráčům", onPressed: () => changeScreens(MatchScreens.addGoals)),
+                  CustomButton(
+                      text: "Potvrď změny", onPressed: () => editMatch(false)),
+                  CustomButton(
+                      text: "Pokračuj k hráčům",
+                      onPressed: () => changeScreens(MatchScreens.addGoals)),
                   CustomButton(
                       text: "Smaž zápas", onPressed: showDeleteConfirmation),
                 ],
@@ -306,7 +328,9 @@ class _EditMatchScreenState extends ConsumerState<EditMatchScreen> {
         );
       case MatchScreens.addGoals:
         return Scaffold(
-          appBar: const AppBarHeadline(text: "Přidej góly",),
+          appBar: const AppBarHeadline(
+            text: "Přidej góly",
+          ),
           body: Padding(
             padding: const EdgeInsets.only(top: 8.0),
             child: StreamBuilder<List<PlayerStatsHelperModel>>(
@@ -339,8 +363,8 @@ class _EditMatchScreenState extends ConsumerState<EditMatchScreen> {
                                     decoration: const BoxDecoration(
                                         border: Border(
                                             bottom: BorderSide(
-                                              color: Colors.grey,
-                                            ))),
+                                      color: Colors.grey,
+                                    ))),
                                     child: ListviewAddModel(
                                       onNumberChanged: (number) {
                                         goalNumber[index] = number;
@@ -360,7 +384,8 @@ class _EditMatchScreenState extends ConsumerState<EditMatchScreen> {
                     ),
                     Padding(
                       padding: const EdgeInsets.only(bottom: 16.0),
-                      child: CustomButton(text: "Pokračuj k asistencím",
+                      child: CustomButton(
+                          text: "Pokračuj k asistencím",
                           onPressed: () =>
                               changeScreens(MatchScreens.addAssists)),
                     ),
@@ -372,7 +397,9 @@ class _EditMatchScreenState extends ConsumerState<EditMatchScreen> {
         );
       case MatchScreens.addAssists:
         return Scaffold(
-          appBar: const AppBarHeadline(text: "Přidej asistence",),
+          appBar: const AppBarHeadline(
+            text: "Přidej asistence",
+          ),
           body: Padding(
             padding: const EdgeInsets.only(top: 8.0),
             child: StreamBuilder<List<PlayerStatsHelperModel>>(
@@ -402,8 +429,8 @@ class _EditMatchScreenState extends ConsumerState<EditMatchScreen> {
                                     decoration: const BoxDecoration(
                                         border: Border(
                                             bottom: BorderSide(
-                                              color: Colors.grey,
-                                            ))),
+                                      color: Colors.grey,
+                                    ))),
                                     child: ListviewAddModel(
                                       onNumberChanged: (number) {
                                         assistNumber[index] = number;
@@ -434,7 +461,8 @@ class _EditMatchScreenState extends ConsumerState<EditMatchScreen> {
                     ),
                     Padding(
                       padding: const EdgeInsets.only(bottom: 16.0),
-                      child: CustomButton(text: "Uprav zápas a statistiky",
+                      child: CustomButton(
+                          text: "Uprav zápas a statistiky",
                           onPressed: () => editMatchWithPlayerStats()),
                     ),
                   ],

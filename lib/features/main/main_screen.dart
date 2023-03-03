@@ -25,6 +25,7 @@ import '../fine/match/screens/multiple_fine_players_screen.dart';
 import '../fine/screens/add_fine_screen.dart';
 import '../fine/screens/edit_fine_screen.dart';
 import '../home/screens/home_screen.dart';
+import '../notification/screen/notification_screen.dart';
 import '../pkfl/screens/pkfl_table_screens.dart';
 import '../season/screens/add_season_screen.dart';
 import '../statistics/playerstats/screens/player_stats_stats_screen.dart';
@@ -417,6 +418,9 @@ class _MainScreenState extends ConsumerState<MainScreen> {
       fragmentList.add(_currentIndex);
     }
     _currentIndex = index;
+    if(index == 0) {
+      fragmentList.clear();
+    }
     if(fragmentList.isEmpty && backButtonVisibility) {
       setState(() {
         backButtonVisibility = false;
@@ -514,6 +518,9 @@ class _MainScreenState extends ConsumerState<MainScreen> {
         case 22:
           appBarTitle = "Statistika gólů/asistencí";
           break;
+        case 23:
+          appBarTitle = "Notifikace";
+          break;
       }
     });
   }
@@ -531,156 +538,168 @@ class _MainScreenState extends ConsumerState<MainScreen> {
     changeFragment(index);
   }
 
+  Future<bool> _onWillPop() async {
+    onBackButtonTap();
+    return false;
+  }
+
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      resizeToAvoidBottomInset:
-          false, //pak nelítá prostřední tlačítko z dolního menu nahoru
-      appBar: AppBar(
-        leading: backButtonVisibility ? BackButton(color: Colors.white, onPressed: () => onBackButtonTap(),): null,
-        title: Text(appBarTitle),
-        actions: [
-          IconButton(
-              onPressed: () => changeFragment(10), icon: const Icon(Icons.add)),
-          IconButton(onPressed: () {}, icon: const Icon(Icons.notifications)),
-        ],
-      ),
-      body: PageView(
-        controller: pageController,
-        children: [
-          const HomeScreen(
-              //0
-              ),
-          FineMatchScreen(
-            //1
-            mainMatch: mainMatch,
-            playerListToChangeFines: (players) =>
-                onPickedPlayersFinesChange(players),
-            setMainMatch: (match) => onPickedMainMatch(match),
-            setPlayer: (player) => onPickedPlayerFinesChange(player),
-          ),
-          Container(
-            //2
-            color: Colors.yellow,
-          ),
-          const MainStatisticsScreen(
-              //3
-              ),
-          AddPlayerScreen(
-            //4
-            onAddPlayerPressed: () => changeFragment(3),
-          ),
-          EditPlayerScreen(
-            //5
-            playerModel,
-            onButtonConfirmPressed: () => changeFragment(3),
-          ),
-          SeasonScreen(
-            //6
-            onPlusButtonPressed: () => changeFragment(7),
-            setSeason: (season) => onPickedSeasonChange(season),
-          ),
-          AddSeasonScreen(
-            //7
-            onAddSeasonPressed: () => changeFragment(6),
-          ),
-          EditSeasonScreen(
-            //8
-            seasonModel,
-            onButtonConfirmPressed: () => changeFragment(6),
-          ),
-          MatchScreen(
-            //9
-            onPlusButtonPressed: () => changeFragment(10),
-            setMatch: (match) => onPickedMatchChange(match),
-          ),
-          AddMatchScreen(
-            //10
-            onAddMatchPressed: () => changeFragment(9),
-          ),
-          EditMatchScreen(
-            //11
-            matchModel: matchModel,
-            onButtonConfirmPressed: () => changeFragment(9),
-          ),
-          FineScreen(
-            //12
-            onPlusButtonPressed: () => changeFragment(13),
-            setFine: (fine) => onPickedFineChange(fine),
-          ),
-          AddFineScreen(
-            //13
-            onAddFinePressed: () => changeFragment(12),
-          ),
-          EditFineScreen(
-            //14
-            fineModel,
-            onButtonConfirmPressed: () => changeFragment(12),
-          ),
-          FinePlayerScreen(
-            //15
-            matchModel: mainMatch,
-            playerModel: playerModel,
-            onButtonConfirmPressed: () => changeFragment(1),
-          ),
-          MultipleFinePlayersScreen(
-            //16
-            matchId: mainMatch.id,
-            players: playerListModel,
-            onButtonConfirmPressed: () => changeFragment(1),
-          ),
-          BeerSimpleScreen(
-            //17
-            mainMatch: mainMatch,
-            setMainMatch: (match) => onPickedMainMatch(match),
-            onButtonConfirmPressed: () => changeFragment(0),
-          ),
-          PlayerScreen(
-            //18
-            onPlusButtonPressed: () => changeFragment(4),
-            setPlayer: (player) => onPickedPlayerChange(player),
-          ),
-          const PkflMatchScreen(
-              //19
-              ),
-          const MainPkflStatisticsScreen(
-              //20
-              ),
-          const PkflTableScreen(
-              //21
-              ),
-          const PlayerStatsStatsScreen(
-              //22
-              )
-        ],
-      ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () => changeFragment(17),
-        elevation: 4.0,
-        backgroundColor: Colors.orange,
-        child: const Icon(
-          Icons.sports_bar_outlined,
-          color: Colors.black87,
+    return WillPopScope(
+      onWillPop: _onWillPop,
+      child: Scaffold(
+        resizeToAvoidBottomInset:
+            false, //pak nelítá prostřední tlačítko z dolního menu nahoru
+        appBar: AppBar(
+          leading: backButtonVisibility ? BackButton(color: Colors.white, onPressed: () => onBackButtonTap(),): null,
+          title: Text(appBarTitle),
+          actions: [
+            IconButton(
+                onPressed: () => changeFragment(10), icon: const Icon(Icons.add)),
+            IconButton(onPressed: () => changeFragment(23), icon: const Icon(Icons.notifications)),
+          ],
         ),
-      ),
-      floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
-      bottomNavigationBar: BottomNavigationBar(
-        showUnselectedLabels: true,
-        type: BottomNavigationBarType.shifting,
-        items: [
-          const BottomNavigationBarItem(
-              icon: Icon(Icons.home), label: "Přehled"),
-          const BottomNavigationBarItem(
-              icon: Icon(Icons.savings), label: "Pokuty"),
-          BottomNavigationBarItem(label: "", icon: Container()),
-          const BottomNavigationBarItem(
-              icon: Icon(Icons.equalizer), label: "Statistiky"),
-          const BottomNavigationBarItem(icon: Icon(Icons.menu), label: "Menu"),
-        ],
-        currentIndex: _selectedBottomSheetIndex,
-        selectedItemColor: selectedItemColor,
-        unselectedItemColor: unselectedItemColor,
-        onTap: onTapped,
+        body: PageView(
+          controller: pageController,
+          physics: const NeverScrollableScrollPhysics(),
+          children: [
+            const HomeScreen(
+                //0
+                ),
+            FineMatchScreen(
+              //1
+              mainMatch: mainMatch,
+              playerListToChangeFines: (players) =>
+                  onPickedPlayersFinesChange(players),
+              setMainMatch: (match) => onPickedMainMatch(match),
+              setPlayer: (player) => onPickedPlayerFinesChange(player),
+            ),
+            Container(
+              //2
+              color: Colors.yellow,
+            ),
+            const MainStatisticsScreen(
+                //3
+                ),
+            AddPlayerScreen(
+              //4
+              onAddPlayerPressed: () => changeFragment(0),
+            ),
+            EditPlayerScreen(
+              //5
+              playerModel,
+              onButtonConfirmPressed: () => changeFragment(0),
+            ),
+            SeasonScreen(
+              //6
+              onPlusButtonPressed: () => changeFragment(7),
+              setSeason: (season) => onPickedSeasonChange(season),
+            ),
+            AddSeasonScreen(
+              //7
+              onAddSeasonPressed: () => changeFragment(6),
+            ),
+            EditSeasonScreen(
+              //8
+              seasonModel,
+              onButtonConfirmPressed: () => changeFragment(6),
+            ),
+            MatchScreen(
+              //9
+              onPlusButtonPressed: () => changeFragment(10),
+              setMatch: (match) => onPickedMatchChange(match),
+            ),
+            AddMatchScreen(
+              //10
+              onAddMatchPressed: () => changeFragment(9),
+            ),
+            EditMatchScreen(
+              //11
+              matchModel: matchModel,
+              onButtonConfirmPressed: () => changeFragment(9),
+            ),
+            FineScreen(
+              //12
+              onPlusButtonPressed: () => changeFragment(13),
+              setFine: (fine) => onPickedFineChange(fine),
+            ),
+            AddFineScreen(
+              //13
+              onAddFinePressed: () => changeFragment(12),
+            ),
+            EditFineScreen(
+              //14
+              fineModel,
+              onButtonConfirmPressed: () => changeFragment(12),
+            ),
+            FinePlayerScreen(
+              //15
+              matchModel: mainMatch,
+              playerModel: playerModel,
+              onButtonConfirmPressed: () => changeFragment(1),
+            ),
+            MultipleFinePlayersScreen(
+              //16
+              match: mainMatch,
+              players: playerListModel,
+              onButtonConfirmPressed: () => changeFragment(1),
+            ),
+            BeerSimpleScreen(
+              //17
+              mainMatch: mainMatch,
+              setMainMatch: (match) => onPickedMainMatch(match),
+              onButtonConfirmPressed: () => changeFragment(0),
+            ),
+            PlayerScreen(
+              //18
+              onPlusButtonPressed: () => changeFragment(4),
+              setPlayer: (player) => onPickedPlayerChange(player),
+            ),
+            const PkflMatchScreen(
+                //19
+                ),
+            const MainPkflStatisticsScreen(
+                //20
+                ),
+            const PkflTableScreen(
+                //21
+                ),
+            const PlayerStatsStatsScreen(
+                //22
+                ),
+            const NotificationScreen(
+              //23
+            )
+          ],
+        ),
+        floatingActionButton: FloatingActionButton(
+          onPressed: () => changeFragment(17),
+          elevation: 4.0,
+          backgroundColor: Colors.orange,
+          child: const Icon(
+            Icons.sports_bar_outlined,
+            color: Colors.black87,
+          ),
+        ),
+        floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
+        bottomNavigationBar: BottomNavigationBar(
+          showUnselectedLabels: true,
+          type: BottomNavigationBarType.shifting,
+          items: [
+            const BottomNavigationBarItem(
+                icon: Icon(Icons.home), label: "Přehled"),
+            const BottomNavigationBarItem(
+                icon: Icon(Icons.savings), label: "Pokuty"),
+            BottomNavigationBarItem(label: "", icon: Container()),
+            const BottomNavigationBarItem(
+                icon: Icon(Icons.equalizer), label: "Statistiky"),
+            const BottomNavigationBarItem(icon: Icon(Icons.menu), label: "Menu"),
+          ],
+          currentIndex: _selectedBottomSheetIndex,
+          selectedItemColor: selectedItemColor,
+          unselectedItemColor: unselectedItemColor,
+          onTap: onTapped,
+        ),
       ),
     );
   }
