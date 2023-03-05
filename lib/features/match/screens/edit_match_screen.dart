@@ -91,7 +91,7 @@ class _EditMatchScreenState extends ConsumerState<EditMatchScreen> {
   }
 
   void showDeleteConfirmation() {
-    var dialog = ConfirmationDialog("opravdu chcete smazat tohoto hráče?", () {
+    var dialog = ConfirmationDialog("opravdu chcete smazat tento zápas?", () {
       deleteMatch();
     });
     showDialog(context: context, builder: (BuildContext context) => dialog);

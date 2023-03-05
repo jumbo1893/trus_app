@@ -33,6 +33,18 @@ String _validateSeasonsCollision(List<SeasonModel> allSeasons, DateTime seasonFr
               !seasonTo.isBefore(seasonModel.toDate))) {
         return "Datum se kryje s jinými sezonami";
       }
+
+    }
+    else if (currentSeason == null) {
+      if ((!seasonFrom.isBefore(seasonModel.fromDate) &&
+          !seasonFrom.isAfter(seasonModel.toDate)) ||
+          (!seasonTo.isBefore(seasonModel.fromDate) &&
+              !seasonTo.isAfter(seasonModel.toDate)) ||
+          (!seasonFrom.isAfter(seasonModel.fromDate) &&
+              !seasonTo.isBefore(seasonModel.toDate))) {
+        return "Datum se kryje s jinými sezonami";
+      }
+
     }
   }
   return "";

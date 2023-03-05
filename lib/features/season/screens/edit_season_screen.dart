@@ -66,7 +66,7 @@ class _EditSeasonScreenState extends ConsumerState<EditSeasonScreen> {
   }
 
   void showDeleteConfirmation() {
-    var dialog = ConfirmationDialog("opravdu chcete smazat tohoto hráče?", () { deleteSeason();});
+    var dialog = ConfirmationDialog("opravdu chcete smazat tuto sezonu?", () { deleteSeason();});
     showDialog(context: context, builder: (BuildContext context) => dialog);
   }
 
