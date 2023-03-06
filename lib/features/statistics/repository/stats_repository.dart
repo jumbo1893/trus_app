@@ -1,25 +1,19 @@
 import 'dart:collection';
 
-import 'package:flutter/material.dart';
-
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:trus_app/features/statistics/helper/beer_stats_helper.dart';
 import 'package:trus_app/features/statistics/helper/fine_stats_helper.dart';
 import 'package:trus_app/models/fine_match_model.dart';
 import 'package:trus_app/models/helper/beer_stats_helper_model.dart';
-import 'package:trus_app/models/helper/fine_match_helper_model.dart';
 import 'package:trus_app/models/fine_model.dart';
 import 'package:trus_app/models/helper/player_stats_helper_model.dart';
 import 'package:trus_app/models/player_model.dart';
 import 'package:trus_app/models/player_stats_model.dart';
 import 'package:trus_app/models/season_model.dart';
 
-import '../../../../common/utils/utils.dart';
 import '../../../../config.dart';
 import '../../../../models/beer_model.dart';
-import '../../../models/helper/beer_helper_model.dart';
-import '../../../models/helper/fine_match_stats_helper_model.dart';
 import '../../../models/helper/fine_stats_helper_model.dart';
 import '../../../models/match_model.dart';
 
@@ -66,19 +60,6 @@ class StatsRepository {
     return players;
   }
 
-  Future<List<MatchModel>> _getMatches() async {
-    final docRef = firestore.collection(matchTable);
-    List<MatchModel> matches = [];
-    await docRef.get().then((res) {
-      for (var doc in res.docs) {
-        var match = MatchModel.fromJson(doc.data());
-
-        matches.add(match);
-      }
-    });
-    return matches;
-  }
-
   Future<List<String>> _getMatchIdsBySeason(String seasonId) async {
     List<String> matchIds = [];
     var docRef = firestore.collection(matchTable).where(
@@ -108,22 +89,6 @@ class StatsRepository {
       }
     });
     return matches;
-  }
-
-  Future<List<PlayerModel>> _getPlayersById(List<String> playerListId) async {
-    List<PlayerModel> players = [];
-    for (String playerId in playerListId) {
-      final docRef = firestore.collection(playerTable).doc(playerId);
-      await docRef.get().then(
-        (DocumentSnapshot doc) {
-          final player =
-              PlayerModel.fromJson(doc.data() as Map<String, dynamic>);
-          players.add(player);
-        },
-        onError: (e) => print("Error getting document: $e"),
-      );
-    }
-    return players;
   }
 
   Future<List<MatchModel>> getMatchesById(List<String> matchListId) async {
@@ -280,7 +245,7 @@ class StatsRepository {
         seasons.add(season);
       }
     });
-      return seasons.firstWhere((element) => element.toDate.isBefore(DateTime.now()), orElse: () => SeasonModel.otherSeason());
+      return seasons.firstWhere((element) => !element.toDate.isBefore(DateTime.now()), orElse: () => SeasonModel.otherSeason());
   }
 
   Stream<List<PlayerStatsHelperModel>> getPlayerStatsForPlayersInSeason(SeasonModel? season) async* {

@@ -45,8 +45,8 @@ class RandomFact {
           return;
         }
       }
-      currentSeason = SeasonModel.otherSeason();
     }
+    currentSeason = SeasonModel.otherSeason();
   }
 
   void _initListBeerHelpers() {
