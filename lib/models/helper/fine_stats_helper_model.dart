@@ -5,6 +5,7 @@ import '../player_model.dart';
 import 'fine_match_stats_helper_model.dart';
 
 class FineStatsHelperModel {
+  //seznam všech pokut s id hráče, zápasu, hráče, pokuty a počtem
   final List<FineMatchStatsHelperModel> listOfFines;
   PlayerModel? player;
   MatchModel? match;
@@ -24,23 +25,6 @@ class FineStatsHelperModel {
       }
     }
     return fines;
-  }
-
-  ///parametr players povinný, pokud není participant=both
-  int getNumberOfPlayersInMatch(Participant participant, List<PlayerModel>? players) {
-    int number = 0;
-    for(String id in getPlayerIdsFromMatchPlayer()) {
-      if(participant == Participant.both || (_isPlayer(players!, id) && participant == Participant.player) || (!_isPlayer(players, id) && participant == Participant.fan)) {
-        number++;
-      }
-    }
-    return number;
-  }
-
-  bool _isPlayer(List<PlayerModel> players, String playerId) {
-    return !players
-        .firstWhere((element) => (element.id == playerId))
-        .fan;
   }
 
   String returnPlayerDetail(String matchId) {
@@ -88,10 +72,10 @@ class FineStatsHelperModel {
   }
 
   List<String> getPlayerIdsFromMatchPlayer() {
-    List<String> matchIds = [];
+    List<String> playerIds = [];
     for (FineMatchStatsHelperModel fineModel in listOfFines) {
-      matchIds.add(fineModel.playerId);
+      playerIds.add(fineModel.playerId);
     }
-    return matchIds;
+    return playerIds;
   }
 }

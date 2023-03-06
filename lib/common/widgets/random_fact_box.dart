@@ -43,7 +43,7 @@ class _RandomFactBoxState extends State<RandomFactBox> with SingleTickerProvider
   void setNextRandomFactNumber(bool next) {
     if (randomFactNumber != -1) {
       if (next) {
-        if (randomFactNumber == listLength) {
+        if (randomFactNumber == listLength-1) {
           randomFactNumber = 0;
         }
         else {
@@ -52,14 +52,13 @@ class _RandomFactBoxState extends State<RandomFactBox> with SingleTickerProvider
       }
       else {
         if (randomFactNumber == 0) {
-          randomFactNumber == listLength;
+          randomFactNumber = listLength-1;
         }
         else {
           randomFactNumber--;
         }
       }
     }
-    randomFactNumber = Random().nextInt(listLength);
   }
 
   @override

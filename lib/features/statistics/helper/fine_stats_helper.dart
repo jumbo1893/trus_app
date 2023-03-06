@@ -77,15 +77,18 @@ class FineStatsHelper {
   }
 
 
-  List<FineSeasonHelper> getSeasonWithMostBeers(
+  List<FineSeasonHelper> getSeasonWithMostFines(
       List<FineStatsHelperModel> finesInMatches, List<SeasonModel> seasons, Fine fine) {
     List<FineSeasonHelper> fineSeasons = [];
-    seasons.add(SeasonModel.otherSeason());
+    FineSeasonHelper fineSeasonHelper = FineSeasonHelper(seasonModel: SeasonModel.otherSeason());
+    _addFinesToFineSeasonHelper(fineSeasonHelper, finesInMatches);
+    fineSeasons.add(fineSeasonHelper);
     for (SeasonModel season in seasons) {
       FineSeasonHelper fineSeasonHelper = FineSeasonHelper(seasonModel: season);
       _addFinesToFineSeasonHelper(fineSeasonHelper, finesInMatches);
       fineSeasons.add(fineSeasonHelper);
     }
+
     return _filterSeasonWithMostFines(fineSeasons, fine);
   }
 
@@ -136,5 +139,32 @@ class FineStatsHelper {
       }
     }
     return returnFines;
+  }
+
+  ///parametr players povinný, pokud není participant=both
+  int getNumberOfPlayersInMatch(Participant participant, List<PlayerModel>? players, MatchModel match) {
+    int number = 0;
+    for(String id in match.playerIdList) {
+      if(participant == Participant.both || (_isPlayer(players!, id) && participant == Participant.player) || (!_isPlayer(players, id) && participant == Participant.fan)) {
+        number++;
+      }
+    }
+    return number;
+  }
+
+  int getNumberOfPlayers(Participant participant, List<PlayerModel> players) {
+    int number = 0;
+    for(PlayerModel player in players) {
+      if(participant == Participant.both || (!player.fan && participant == Participant.player) || (player.fan && participant == Participant.fan)) {
+        number++;
+      }
+    }
+    return number;
+  }
+
+  bool _isPlayer(List<PlayerModel> players, String playerId) {
+    return !players
+        .firstWhere((element) => (element.id == playerId))
+        .fan;
   }
 }

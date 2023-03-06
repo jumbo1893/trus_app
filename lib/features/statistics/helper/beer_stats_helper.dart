@@ -54,7 +54,9 @@ class BeerStatsHelper {
   List<BeerSeasonHelper> getSeasonWithMostBeers(
       List<BeerStatsHelperModel> beersInMatches, List<SeasonModel> seasons, Drink drink) {
     List<BeerSeasonHelper> beerSeasons = [];
-    seasons.add(SeasonModel.otherSeason());
+    BeerSeasonHelper beerSeasonHelper = BeerSeasonHelper(seasonModel: SeasonModel.otherSeason());
+    _addDrinksToBeerSeasonHelper(beerSeasonHelper, beersInMatches);
+    beerSeasons.add(beerSeasonHelper);
     for (SeasonModel season in seasons) {
       BeerSeasonHelper beerSeasonHelper = BeerSeasonHelper(seasonModel: season);
       _addDrinksToBeerSeasonHelper(beerSeasonHelper, beersInMatches);
@@ -69,7 +71,7 @@ class BeerStatsHelper {
       if (beer.match!.seasonId == beerSeason.seasonModel.id) {
         beerSeason.addBeer(beer.getNumberOfDrinksInMatches(
             Drink.beer, Participant.both, null));
-        beerSeason.addBeer(beer.getNumberOfDrinksInMatches(
+        beerSeason.addLiquor(beer.getNumberOfDrinksInMatches(
             Drink.liquor, Participant.both, null));
         beerSeason.addMatch();
       }
@@ -79,7 +81,10 @@ class BeerStatsHelper {
   List<BeerSeasonHelper> _filterSeasonWithMostBeers(
       List<BeerSeasonHelper> beerSeasons, Drink drink) {
     List<BeerSeasonHelper> mostBeerSeasons = [];
+
     for (BeerSeasonHelper beerSeason in beerSeasons) {
+      print("beerSeasons.length");
+      print(beerSeason.liquorNumber);
       if (mostBeerSeasons.isEmpty) {
         mostBeerSeasons.add(beerSeason);
       } else if ((beerSeason.beerNumber > mostBeerSeasons[0].beerNumber && drink == Drink.beer) || (beerSeason.liquorNumber > mostBeerSeasons[0].liquorNumber && drink == Drink.liquor)) {
@@ -127,28 +132,30 @@ class BeerStatsHelper {
     double average = 0;
     for (BeerStatsHelperModel beer in playerBeers) {
       if (seasonId == null || beer.match!.seasonId == seasonId) {
-        if (returnBeers.isEmpty) {
-          returnBeers.add(beer);
-          average =
-              beer.getNumberOfDrinksInMatches(drink, Participant.both, null) /
-                  beer.getNumberOfPlayersInMatch(Participant.both, null);
-        } else if ((highest && beer.getNumberOfDrinksInMatches(
-                    drink, Participant.both, null) /
-                beer.getNumberOfPlayersInMatch(Participant.both, null) >
-            average) || !highest && beer.getNumberOfDrinksInMatches(
-            drink, Participant.both, null) /
-            beer.getNumberOfPlayersInMatch(Participant.both, null) <
-            average) {
-          average =
-              beer.getNumberOfDrinksInMatches(drink, Participant.both, null) /
-                  beer.getNumberOfPlayersInMatch(Participant.both, null);
-          returnBeers.clear();
-          returnBeers.add(beer);
-        } else if (beer.getNumberOfDrinksInMatches(
-                    drink, Participant.both, null) /
-                beer.getNumberOfPlayersInMatch(Participant.both, null) ==
-            average) {
-          returnBeers.add(beer);
+        if(beer.getNumberOfDrinksInMatches(drink, Participant.both, null) > 0) {
+          if (returnBeers.isEmpty) {
+            returnBeers.add(beer);
+            average =
+                beer.getNumberOfDrinksInMatches(drink, Participant.both, null) /
+                    beer.getNumberOfPlayersInMatch(Participant.both, null);
+          } else if ((highest && beer.getNumberOfDrinksInMatches(
+              drink, Participant.both, null) /
+              beer.getNumberOfPlayersInMatch(Participant.both, null) >
+              average) || !highest && beer.getNumberOfDrinksInMatches(
+              drink, Participant.both, null) /
+              beer.getNumberOfPlayersInMatch(Participant.both, null) <
+              average) {
+            average =
+                beer.getNumberOfDrinksInMatches(drink, Participant.both, null) /
+                    beer.getNumberOfPlayersInMatch(Participant.both, null);
+            returnBeers.clear();
+            returnBeers.add(beer);
+          } else if (beer.getNumberOfDrinksInMatches(
+              drink, Participant.both, null) /
+              beer.getNumberOfPlayersInMatch(Participant.both, null) ==
+              average) {
+            returnBeers.add(beer);
+          }
         }
       }
     }
@@ -161,11 +168,11 @@ class BeerStatsHelper {
     outerLoop:
     for (int i = 0; i < playerIdList.length; i++) {
       bool found = false;
-      for (BeerModel beerModel in beerModelList) {
+      innerLopp: for (BeerModel beerModel in beerModelList) {
         if (beerModel.matchId == matchIdList[i].id && beerModel.playerId == playerIdList[i].id) {
           returnBeers.add(beerModel);
           found = true;
-          break outerLoop;
+          break innerLopp;
         }
       }
       if(!found) {

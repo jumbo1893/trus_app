@@ -9,10 +9,20 @@ Future<DateTime> showCalendar(BuildContext context, DateTime? initialDate) async
     firstDate: DateTime(1900),
     lastDate: DateTime(2050),
   );
-  print(chosenDateTime ?? DateTime.now());
+  if (chosenDateTime != null) {
+    return DateTime.utc(chosenDateTime.year, chosenDateTime.month, chosenDateTime.day, 12);
+  }
   return chosenDateTime ?? DateTime.now();
 }
 
 String dateTimeToString(DateTime dateTime) {
   return "${dateTime.day}.${dateTime.month}. ${dateTime.year}";
+}
+
+bool isSameDay(DateTime dateTime1, DateTime dateTime2) {
+
+  if (dateTime2.compareTo(dateTime1) == 0) {
+    return true;
+  }
+  return false;
 }

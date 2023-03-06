@@ -10,6 +10,7 @@ import 'package:trus_app/models/match_model.dart';
 import 'package:trus_app/models/player_model.dart';
 import 'package:trus_app/models/season_model.dart';
 
+import '../../common/utils/calendar.dart';
 import '../../models/enum/drink.dart';
 import '../../models/enum/fine.dart';
 import '../../models/enum/model.dart';
@@ -98,7 +99,7 @@ class RandomFact {
   void _initRandomFactStream() {
     if(finesForPlayers != null && finesForMatches != null && beersForPlayers != null && beersForMatches != null && seasons != null) {
       List<String> randomFactList = [];
-      randomFactList.add(getAmountOfFinesInCurrentSeason());
+      randomFactList.add(getAmountOfFinesInCurrentSeason()); //0
       randomFactList.add(getAverageNumberOfBeersInHomeAndAwayMatch());
       randomFactList.add(getAverageNumberOfBeersInMatch());
       randomFactList.add(getAverageNumberOfBeersInMatchForFan());
@@ -108,7 +109,7 @@ class RandomFact {
       randomFactList.add(getAverageNumberOfFinesInMatchForPlayers());
       randomFactList.add(getAverageNumberOfFinesInMatch());
       randomFactList.add(getAverageNumberOfFinesInMatchForPlayers());
-      randomFactList.add(getAverageNumberOfLiquorsInHomeAndAwayMatch());
+      randomFactList.add(getAverageNumberOfLiquorsInHomeAndAwayMatch()); //10
       randomFactList.add(getAverageNumberOfLiquorsInMatch());
       randomFactList.add(getAverageNumberOfLiquorsInMatchForFans());
       randomFactList.add(getAverageNumberOfLiquorsInMatchForPlayers());
@@ -118,7 +119,7 @@ class RandomFact {
       randomFactList.add(getMatchWithBirthday());
       randomFactList.add(getMatchWithHighestAverageBeers());
       randomFactList.add(getMatchWithHighestAverageLiquors());
-      randomFactList.add(getMatchWithLowestAverageBeers());
+      randomFactList.add(getMatchWithLowestAverageBeers()); //20
       randomFactList.add(getMatchWithLowestAverageLiquors());
       randomFactList.add(getMatchWithMostBeers());
       randomFactList.add(getMatchWithMostBeersInCurrentSeason());
@@ -128,7 +129,7 @@ class RandomFact {
       randomFactList.add(getMatchWithMostFinesInCurrentSeason());
       randomFactList.add(getMatchWithMostLiquors());
       randomFactList.add(getMatchWithMostLiquorsInCurrentSeason());
-      randomFactList.add(getNumberOfBeersInCurrentSeason());
+      randomFactList.add(getNumberOfBeersInCurrentSeason()); //30
       randomFactList.add(getNumberOfFinesInCurrentSeason());
       randomFactList.add(getNumberOfLiquorsInCurrentSeason());
       randomFactList.add(getPlayerWithMostBeers());
@@ -138,7 +139,10 @@ class RandomFact {
       randomFactList.add(getSeasonWithMostBeers());
       randomFactList.add(getSeasonWithMostFines());
       randomFactList.add(getSeasonWithMostFinesAmount());
-      randomFactList.add(getSeasonWithMostLiquors());
+      randomFactList.add(getSeasonWithMostLiquors()); //40
+      for (int i = 0; i < randomFactList.length; i++) {
+        randomFactList[i] += i.toString();
+      }
       randomFactListStream.add(randomFactList);
     }
   }
@@ -323,8 +327,11 @@ class RandomFact {
           beer.getNumberOfDrinksInMatches(Drink.beer, Participant.both, null);
       playerNumber += beer.getNumberOfPlayersInMatch(Participant.both, null);
     }
-    double average = beerNumber / playerNumber;
-    return "Za celou historii průměrně každý hráč a fanoušek Trusu vypil $average piv za zápas";
+    double average = 0;
+    if(playerNumber != 0) {
+      average = beerNumber / playerNumber;
+    }
+    return "Za celou historii průměrně každý hráč a fanoušek Trusu, který se zúčastnil zápasu, vypil $average piv za zápas";
   }
 
   /// @return vrátí průměrný počet piv na hráče
@@ -335,10 +342,13 @@ class RandomFact {
     for (BeerStatsHelperModel beer in returnBeers) {
       beerNumber += beer.getNumberOfDrinksInMatches(
           Drink.beer, Participant.player, players);
-      playerNumber += beer.getNumberOfPlayersInMatch(Participant.fan, players);
+      playerNumber += beer.getNumberOfPlayersInMatch(Participant.player, players);
     }
-    double average = beerNumber / playerNumber;
-    return "Za celou historii průměrně každý hráč Trusu vypil $average piv za zápas";
+    double average = 0;
+    if(playerNumber != 0) {
+      average = beerNumber / playerNumber;
+    }
+    return "Za celou historii průměrně každý hráč Trusu, který se zúčastnil zápasu, vypil $average piv za zápas";
   }
 
   /// @return vrátí průměrný počet piv na fanouška
@@ -351,8 +361,11 @@ class RandomFact {
           beer.getNumberOfDrinksInMatches(Drink.beer, Participant.fan, players);
       playerNumber += beer.getNumberOfPlayersInMatch(Participant.fan, players);
     }
-    double average = beerNumber / playerNumber;
-    return "Za celou historii průměrně každý fanoušek Trusu vypil $average piv za zápas";
+    double average = 0;
+    if(playerNumber != 0) {
+      average = beerNumber / playerNumber;
+    }
+    return "Za celou historii průměrně každý fanoušek Trusu, který se zúčastnil zápasu, vypil $average piv za zápas";
   }
 
   /// @return vrátí průměrný počet piv na zápas
@@ -361,9 +374,9 @@ class RandomFact {
     List<BeerStatsHelperModel> returnBeers = beersForMatches!;
     for (BeerStatsHelperModel beer in returnBeers) {
       beerNumber +=
-          beer.getNumberOfDrinksInMatches(Drink.beer, Participant.fan, players);
+          beer.getNumberOfDrinksInMatches(Drink.beer, Participant.both, null);
     }
-    double average = beerNumber / returnBeers.length;
+    double average = beerNumber / matches!.length;
     return "V naprosto průměrném zápasu Trusu se vypije $average piv";
   }
 
@@ -455,8 +468,15 @@ class RandomFact {
             Drink.beer, Participant.both, null);
       }
     }
-    double homeAverage = homeBeerNumber / homeMatches;
-    double awayAverage = awayBeerNumber / (matches!.length - homeMatches);
+    double homeAverage = 0;
+    if(homeMatches != 0) {
+      print(homeMatches);
+      homeAverage = homeBeerNumber / homeMatches;
+    }
+    double awayAverage = 0;
+    if(matches!.length - homeMatches != 0) {
+      awayAverage = awayBeerNumber / (matches!.length - homeMatches);
+    }
     String response =
         "Průměrně se na domácím zápase vypije $homeAverage piv, oproti venkovním zápasům, kde je průměr $awayAverage piv na zápas. ";
     if (homeAverage > awayAverage) {
@@ -747,7 +767,7 @@ class RandomFact {
   String getSeasonWithMostFines() {
     Fine enumFine = Fine.number;
     List<FineSeasonHelper> returnSeasons = finesStatsHelper!
-        .getSeasonWithMostBeers(finesForMatches!, seasons!, enumFine);
+        .getSeasonWithMostFines(finesForMatches!, seasons!, enumFine);
     if (returnSeasons.isEmpty ||
         returnSeasons[0].getNumberOrAmount(enumFine) == 0) {
       return "Nelze najít sezonu s nejvíce pokutama, protože se zatím žádná pokuta nerozdala!";
@@ -775,7 +795,7 @@ class RandomFact {
   String getSeasonWithMostFinesAmount() {
     Fine enumFine = Fine.amount;
     List<FineSeasonHelper> returnSeasons = finesStatsHelper!
-        .getSeasonWithMostBeers(finesForMatches!, seasons!, enumFine);
+        .getSeasonWithMostFines(finesForMatches!, seasons!, enumFine);
     if (returnSeasons.isEmpty ||
         returnSeasons[0].getNumberOrAmount(enumFine) == 0) {
       return "Nelze najít sezonu kdy se vybralo nejvíc za pokuty, protože se zatím žádná pokuta nerozdala!";
@@ -803,27 +823,23 @@ class RandomFact {
   /// @return vrátí průměrný počet pokut na hráče
   String getAverageNumberOfFinesInMatchForPlayers() {
     int finesNumber = 0;
-    int playerNumber = 0;
     List<FineStatsHelperModel> returnFines = finesForMatches!;
     for (FineStatsHelperModel fine in returnFines) {
       finesNumber += fine.getNumberOrAmountOfFines(Fine.number);
-      playerNumber += fine.getNumberOfPlayersInMatch(Participant.fan, players);
     }
-    double average = finesNumber / playerNumber;
-    return "Za celou historii průměrně každý hráč Trusu dostal $average pokut za zápas";
+    double average = finesNumber / (finesStatsHelper!.getNumberOfPlayers(Participant.player, players!)*matches!.length);
+    return "V historii v průměru připadá $average pokut na hráče pro každý zápas";
   }
 
   /// @return vrátí průměrný cálování pokut na hráče
   String getAverageNumberOfFinesAmountInMatchForPlayers() {
     int finesNumber = 0;
-    int playerNumber = 0;
     List<FineStatsHelperModel> returnFines = finesForMatches!;
     for (FineStatsHelperModel fine in returnFines) {
       finesNumber += fine.getNumberOrAmountOfFines(Fine.amount);
-      playerNumber += fine.getNumberOfPlayersInMatch(Participant.fan, players);
     }
-    double average = finesNumber / playerNumber;
-    return "Za celou historii průměrně každý hráč Trusu zacáloval $average korun každý zápas za pokuty";
+    double average = finesNumber / (finesStatsHelper!.getNumberOfPlayers(Participant.player, players!)*matches!.length);
+    return "V historii v průměru připadá $average Kč zaplaceno na pokutách na hráče pro každý zápas";
   }
 
   /// @return vrátí průměrný počet pokut na zápas
@@ -833,7 +849,7 @@ class RandomFact {
     for (FineStatsHelperModel fine in returnFines) {
       finesNumber += fine.getNumberOrAmountOfFines(Fine.number);
     }
-    double average = finesNumber / returnFines.length;
+    double average = finesNumber / matches!.length;
     return "V naprosto průměrném zápasu Trusu se udělí $average pokut";
   }
 
@@ -844,7 +860,7 @@ class RandomFact {
     for (FineStatsHelperModel fine in returnFines) {
       finesNumber += fine.getNumberOrAmountOfFines(Fine.amount);
     }
-    double average = finesNumber / returnFines.length;
+    double average = finesNumber / matches!.length;
     return "V naprosto průměrném zápasu Trusu se vybere $average Kč na pokutách";
   }
 
@@ -891,14 +907,14 @@ class RandomFact {
             0) {
       return "Nelze najít zápas s nejvíce panáky, protože si zatím nikdo žádný nedal! Jedna šťopička nikdy nikoho nezabila, tak se neostýchejte pánové!";
     } else if (returnBeers.length == 1) {
-      return "Nejvíce panáků za historii padlo v zápase ${returnBeers[0].match!.toStringWithOpponentNameAndDate()} a padlo v něm ${returnBeers[0].getNumberOfDrinksInMatches(enumDrink, Participant.both, null)} frťanů";
+      return "Nejvíce panáků za historii padlo v zápase ${returnBeers[0].match!.toStringWithOpponentNameAndDate()} s celkovým počtem ${returnBeers[0].getNumberOfDrinksInMatches(enumDrink, Participant.both, null)}. frťanů";
     } else {
       String result = "O pozici zápasu ve kterém padlo nejvíce panáků se dělí ";
       for (int i = 0; i < returnBeers.length; i++) {
         result += returnBeers[i].match!.toStringWithOpponentNameAndDate();
         if (i == returnBeers.length - 1) {
           result +=
-              " ve kterých padlo ${returnBeers[0].getNumberOfDrinksInMatches(enumDrink, Participant.both, null)} frťanů.";
+              ". V každém z těchto zápasů padlo ${returnBeers[0].getNumberOfDrinksInMatches(enumDrink, Participant.both, null)} frťanů.";
         } else if (i == returnBeers.length - 2) {
           result += " a ";
         } else {
@@ -934,15 +950,15 @@ class RandomFact {
             0) {
       return "Nelze najít zápas s nejvíce panáky odehraný v této sezoně ${currentSeason.name}, protože si zatím nikdo žádný nedal! Aspoň jeden Liščí Trus denně je prospěšný pro zdraví, to vám potvrdí každý doktor";
     } else if (returnBeers.length == 1) {
-      return "Nejvíce panáků v aktuální sezoně ${currentSeason.name} padlo v zápase ${returnBeers[0].match!.toStringWithOpponentNameAndDate()} v celkovém počtu ${returnBeers[0].getNumberOfDrinksInMatches(enumDrink, Participant.both, null)} kořalek";
+      return "Nejvíce panáků v aktuální sezoně ${currentSeason.name} padlo v zápase ${returnBeers[0].match!.toStringWithOpponentNameAndDate()} kdy proběhlo ${returnBeers[0].getNumberOfDrinksInMatches(enumDrink, Participant.both, null)} kořalek";
     } else {
       String result =
-          "O pozici zápasu ve kterém padlo nejvíce panáků v aktuální sezoně ${currentSeason.name} se dělí ";
+          "O pozici zápasu ve kterém padlo nejvíce kořalek v aktuální sezoně ${currentSeason.name} se dělí ";
       for (int i = 0; i < returnBeers.length; i++) {
         result += returnBeers[i].match!.toStringWithOpponentNameAndDate();
         if (i == returnBeers.length - 1) {
           result +=
-              " ve kterých padlo ${returnBeers[0].getNumberOfDrinksInMatches(enumDrink, Participant.both, null)} tvrdýho.";
+              " kdy každý z těchto zápasů obsahoval úctihodných ${returnBeers[0].getNumberOfDrinksInMatches(enumDrink, Participant.both, null)} panáčků tvrdýho.";
         } else if (i == returnBeers.length - 2) {
           result += " a ";
         } else {
@@ -1002,7 +1018,7 @@ class RandomFact {
     for (BeerStatsHelperModel beer in returnBeers) {
       liquorNumber += beer.getNumberOfDrinksInMatches(
           Drink.liquor, Participant.player, players);
-      playerNumber += beer.getNumberOfPlayersInMatch(Participant.fan, players);
+      playerNumber += beer.getNumberOfPlayersInMatch(Participant.player, players);
     }
     double average = liquorNumber / playerNumber;
     return "Za celou historii průměrně každý hráč Trusu vypil $average panáků za zápas";
@@ -1028,9 +1044,9 @@ class RandomFact {
     List<BeerStatsHelperModel> returnBeers = beersForMatches!;
     for (BeerStatsHelperModel beer in returnBeers) {
       liquorNumber += beer.getNumberOfDrinksInMatches(
-          Drink.liquor, Participant.fan, players);
+          Drink.liquor, Participant.both, null);
     }
-    double average = liquorNumber / returnBeers.length;
+    double average = liquorNumber / matches!.length;
     return "V naprosto průměrném zápasu Trusu se vypije $average panáků";
   }
 
@@ -1126,7 +1142,10 @@ class RandomFact {
             enumDrink, Participant.both, null);
       }
     }
-    double homeAverage = homeLiquorNumber / homeMatches;
+    double homeAverage = 0;
+    if(homeMatches != 0) {
+      homeAverage = homeLiquorNumber / homeMatches;
+    }
     double awayAverage = awayLiquorNumber / (matches!.length - homeMatches);
     String response =
         "Průměrně se na domácím zápase vypije $homeAverage panáků, oproti venkovním zápasům, kde je průměr $awayAverage panáků na zápas. ";
@@ -1141,7 +1160,7 @@ class RandomFact {
     List<PlayerModel> playersWithBirthday = [];
     for (MatchModel match in matches!) {
       for (PlayerModel player in players!) {
-        if (match.date.isAtSameMomentAs(player.birthday)) {
+        if (match.date.isSameDate(player.birthday)) {
           matchesWithBirthday.add(match);
           playersWithBirthday.add(player);
         }
@@ -1154,13 +1173,11 @@ class RandomFact {
       //nejprve zjišťujeme, zda hráč, který měl narozky v den zápasu, skutečně byl na zápasu přítomen
       List<MatchModel> returnMatches = [];
       List<PlayerModel> returnPlayers = [];
-      for (MatchModel match in matchesWithBirthday) {
-        for (PlayerModel player in playersWithBirthday) {
-          if (match.playerIdList.contains(player.id)) {
-            returnPlayers.add(player);
-            returnMatches.add(match);
+      for (int i = 0; i < matchesWithBirthday.length; i++) {
+          if (matchesWithBirthday[i].playerIdList.contains(playersWithBirthday[i].id)) {
+            returnPlayers.add(playersWithBirthday[i]);
+            returnMatches.add(matchesWithBirthday[i]);
           }
-        }
       }
       //Pokud nikdo s narozkama nebyl na zápase trusu, tak uděláme stěnu hamby
       List<BeerModel> returnBeers =
@@ -1192,7 +1209,7 @@ class RandomFact {
             "Velká společenská událost v podobě oslavy narozek se konala na zápasech ";
         for (int i = 0; i < returnMatches.length; i++) {
           result +=
-              "${returnMatches[i].toStringWithOpponentNameAndDate()}, kdy slavil narozky ${returnPlayers[i].name}, který vypil ${returnBeers[i].beerNumber} piv a ${returnBeers[i].liquorNumber}.";
+              "${returnMatches[i].toStringWithOpponentNameAndDate()}, kdy slavil narozky ${returnPlayers[i].name}, který vypil ${returnBeers[i].beerNumber} piv a ${returnBeers[i].liquorNumber} panáků";
           if (i == returnMatches.length - 1) {
             result += ".";
           } else if (i == returnMatches.length - 2) {
@@ -1204,5 +1221,12 @@ class RandomFact {
         return result;
       }
     }
+  }
+}
+
+extension DateOnlyCompare on DateTime {
+  bool isSameDate(DateTime other) {
+    return year == other.year && month == other.month
+        && day == other.day;
   }
 }

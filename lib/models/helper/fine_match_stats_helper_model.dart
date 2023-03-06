@@ -19,9 +19,10 @@ class FineMatchStatsHelperModel {
     return number*fine.amount;
   }
 
+
   @override
   String toString() {
-    return 'FineMatchHelperModel{id: $id, fine: $fine, number: $number}';
+    return 'FineMatchStatsHelperModel{fine: $fine, id: $id, playerId: $playerId, matchId: $matchId, number: $number}';
   }
 
   @override

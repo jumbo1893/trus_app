@@ -41,7 +41,7 @@ class BeerStatsHelperModel {
   ///parametr players povinný, pokud není participant=both
   int getNumberOfPlayersInMatch(Participant participant, List<PlayerModel>? players) {
     int number = 0;
-    for(String id in getPlayerIdsFromMatchPlayer()) {
+    for(String id in match!.playerIdList) {
       if(participant == Participant.both || (_isPlayer(players!, id) && participant == Participant.player) || (!_isPlayer(players, id) && participant == Participant.fan)) {
         number++;
       }
