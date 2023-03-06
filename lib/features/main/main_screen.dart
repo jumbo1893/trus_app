@@ -110,6 +110,11 @@ class _MainScreenState extends ConsumerState<MainScreen> {
     changeFragment(16);
   }
 
+  void signOut() {
+    ref.read(authControllerProvider).signOut(context);
+    Navigator.pushNamedAndRemoveUntil(context, LoginScreen.routeName, (route) => false);
+  }
+
   void showBottomSheetNavigation() {
     showModalBottomSheet(
         context: context,
@@ -132,21 +137,10 @@ class _MainScreenState extends ConsumerState<MainScreen> {
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        Text(ref.watch(userDataAuthProvider).when(
-                            data: (user) {
-                              if (user == null) {
-                                return "uživatel neznámý trouba";
-                              }
-                              return ("píč ${user.name}");
-                            },
-                            error: (error, trace) {
-                              print(error.toString());
-                              return ("chyba při načítání uživatele");
-                            },
-                            loading: () => "načítám")),
+                        Text(ref.read(authControllerProvider).getCurrentUserName() ?? "Uživatel neznámý trouba"),
+
                         TextButton(
-                          onPressed: () => Navigator.pushNamedAndRemoveUntil(
-                              context, LoginScreen.routeName, (route) => false),
+                          onPressed: () => signOut(),
                           child: const Text("Odhlásit",
                               style: TextStyle(
                                 color: orangeColor,

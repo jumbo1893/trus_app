@@ -32,10 +32,27 @@ class AuthRepository {
     return user;
   }
 
+  String? getCurrentUserName() {
+    return auth.currentUser?.displayName;
+  }
+
+  Future<bool> signOut(BuildContext context) async {
+    try {
+      await auth.signOut();
+      showSnackBar(context: context, content: "Děkujeme, přijďte zas");
+      return true;
+    } on FirebaseAuthException catch(e) {
+      showSnackBarError(context, e);
+    }
+    return false;
+  }
+
   Future<bool> signInWithEmail(BuildContext context, String email, String password) async {
     try {
       await auth.signInWithEmailAndPassword(email: email, password: password);
       showSnackBar(context: context, content: "vítejte pane ${returnUserName()}, přeji příjemné pití");
+      print(auth.currentUser);
+      return true;
     } on FirebaseAuthException catch(e) {
       showSnackBarError(context, e);
     }
@@ -44,10 +61,10 @@ class AuthRepository {
 
   Future<bool> registerWithEmail(BuildContext context, String email, String password) async {
     try {
-      final credential = await FirebaseAuth.instance.createUserWithEmailAndPassword(
+      final credential = await auth.createUserWithEmailAndPassword(
         email: email,
         password: password,
-      );
+      ).whenComplete(() => auth.signInWithEmailAndPassword(email: email, password: password));
       return true;
     } on FirebaseAuthException catch (e) {
       showSnackBarError(context, e);
@@ -61,8 +78,20 @@ class AuthRepository {
       var user = UserModel(name: username, id: id, isOnline: true, mail: returnUserMail());
       await auth.currentUser!.updateDisplayName(username);
       await firestore.collection(userTable).doc(id).set(user.toJson());
+      print(auth.currentUser);
+      showSnackBar(context: context, content: "vítejte pane ${returnUserName()}, přeji příjemné pití");
       return true;
     } on FirebaseAuthException catch (e) {
+      showSnackBarError(context, e);
+    }
+    return false;
+  }
+
+  Future<bool> sendForgottenPassword(BuildContext context, String email) async {
+    try {
+      await auth.sendPasswordResetEmail(email: email);
+      showSnackBar(context: context, content: "Na mail $email, zaslán link pro reset hesla. Stojí tě to přesně jednu rundu");
+    } on FirebaseAuthException catch(e) {
       showSnackBarError(context, e);
     }
     return false;

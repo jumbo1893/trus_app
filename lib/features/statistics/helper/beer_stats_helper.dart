@@ -81,10 +81,7 @@ class BeerStatsHelper {
   List<BeerSeasonHelper> _filterSeasonWithMostBeers(
       List<BeerSeasonHelper> beerSeasons, Drink drink) {
     List<BeerSeasonHelper> mostBeerSeasons = [];
-
     for (BeerSeasonHelper beerSeason in beerSeasons) {
-      print("beerSeasons.length");
-      print(beerSeason.liquorNumber);
       if (mostBeerSeasons.isEmpty) {
         mostBeerSeasons.add(beerSeason);
       } else if ((beerSeason.beerNumber > mostBeerSeasons[0].beerNumber && drink == Drink.beer) || (beerSeason.liquorNumber > mostBeerSeasons[0].liquorNumber && drink == Drink.liquor)) {

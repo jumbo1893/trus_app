@@ -33,6 +33,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   }
 
   Future<void> sendEmailAndPassword() async {
+
     String email = emailController.text.trim();
     String password = passwordController.text.trim();
     setState(() {
@@ -42,6 +43,17 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     if(emailErrorText.isEmpty && passwordErrorText.isEmpty) {
       if(await ref.read(authControllerProvider).signInWithEmail(context, email, password)) {
         Navigator.pushNamedAndRemoveUntil(context, MainScreen.routeName, (route) => false);
+      }
+    }
+  }
+
+  Future<void> sendForgottenPassword() async {
+    String email = emailController.text.trim();
+    setState(() {
+      emailErrorText = validateEmptyField(email);
+    });
+    if(emailErrorText.isEmpty) {
+      if(await ref.read(authControllerProvider).sendForgottenPassword(context, email)) {
       }
     }
   }
@@ -68,7 +80,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
             CustomTextField(textController: passwordController, labelText: "heslo", password: true, errorText: passwordErrorText),
             CustomButton(text: "Přihlaš se", onPressed: () => sendEmailAndPassword()),
             CustomTextButton(text: "Zaregistruj se", onPressed: () => navigateToRegistrationScreen(context)),
-            CustomTextButton(text: "Jako host", onPressed: () => navigateToRegistrationScreen(context)),
+            CustomTextButton(text: "Zapomněl jsem heslo", onPressed: () => sendForgottenPassword()),
           ],
         ),
       ),
