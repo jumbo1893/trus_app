@@ -114,6 +114,13 @@ class _MainScreenState extends ConsumerState<MainScreen> {
     ref.read(authControllerProvider).signOut(context);
     Navigator.pushNamedAndRemoveUntil(context, LoginScreen.routeName, (route) => false);
   }
+  String getUserName() {
+    String? name = ref.read(authControllerProvider).getCurrentUserName();
+    if(name == null) {
+      return "Uživatel neznámý trouba";
+    }
+    return "píč $name";
+  }
 
   void showBottomSheetNavigation() {
     showModalBottomSheet(
@@ -137,8 +144,7 @@ class _MainScreenState extends ConsumerState<MainScreen> {
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        Text(ref.read(authControllerProvider).getCurrentUserName() ?? "Uživatel neznámý trouba"),
-
+                        Text(getUserName()),
                         TextButton(
                           onPressed: () => signOut(),
                           child: const Text("Odhlásit",

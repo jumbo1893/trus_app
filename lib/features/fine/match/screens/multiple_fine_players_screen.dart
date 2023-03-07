@@ -45,7 +45,11 @@ class _FinePlayersScreenState extends ConsumerState<MultipleFinePlayersScreen> {
       players += "${widget.players[j].name}, ";
       for (int i = 0; i < finesNumber.length; i++) {
         if (finesNumber[i] != 0) {
-          addFine(fines[i].fine.id, widget.players[j].id, finesNumber[i]);
+          if (!await addFine(fines[i].fine.id, widget.players[j].id, finesNumber[i])) {
+            hideSnackBar(context);
+            widget.onButtonConfirmPressed.call();
+            return;
+          }
           if(j==0) {
             text += "${fines[i].fine.name} ==> ${finesNumber[i]}\n";
           }
@@ -58,10 +62,12 @@ class _FinePlayersScreenState extends ConsumerState<MultipleFinePlayersScreen> {
     widget.onButtonConfirmPressed.call();
   }
 
-  Future<void> addFine(String fineId, String playerId, int number) async {
+  Future<bool> addFine(String fineId, String playerId, int number) async {
     if (await ref.read(fineMatchControllerProvider).addMultipleFinesInMatch(context,
         widget.match.id, playerId, fineId, number)) {
+      return true;
     }
+    return false;
   }
 
   Future<void> sendNotification(String players, String text) async {

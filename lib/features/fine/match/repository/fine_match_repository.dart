@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:trus_app/models/helper/fine_match_helper_model.dart';
 import 'package:trus_app/models/fine_model.dart';
 
+import '../../../../common/utils/firebase_exception.dart';
 import '../../../../common/utils/utils.dart';
 import '../../../../config.dart';
 import '../../../../models/fine_match_model.dart';
@@ -13,7 +14,7 @@ final fineMatchRepositoryProvider = Provider(
   (ref) => FineMatchRepository(firestore: FirebaseFirestore.instance),
 );
 
-class FineMatchRepository {
+class FineMatchRepository extends CustomFirebaseException {
   final FirebaseFirestore firestore;
 
   FineMatchRepository({required this.firestore});
@@ -48,7 +49,11 @@ class FineMatchRepository {
       String playerId, String matchId) async* {
     final List<FineMatchModel> finesInMatches =
         await _getFinesInMatchForPlayer(playerId, matchId);
-    yield* firestore.collection(fineTable).orderBy("name").snapshots().asyncMap((event) async {
+    yield* firestore
+        .collection(fineTable)
+        .orderBy("name")
+        .snapshots()
+        .asyncMap((event) async {
       List<FineModel> fines = [];
       for (var document in event.docs) {
         var fine = FineModel.fromJson(document.data());
@@ -108,10 +113,12 @@ class FineMatchRepository {
       await document.set(fine.toJson());
       return true;
     } on FirebaseException catch (e) {
-      showSnackBar(
-        context: context,
-        content: e.message!,
-      );
+      if (!showSnackBarOnException(e.code, context)) {
+        showSnackBar(
+          context: context,
+          content: e.message!,
+        );
+      }
     }
     return false;
   }
@@ -129,30 +136,30 @@ class FineMatchRepository {
         if (value.size > 1) {
           showSnackBar(
             context: context,
-            content: "existuje víc než jeden záznam v tabulce!!!! kontaktuj správce",
+            content:
+                "existuje víc než jeden záznam v tabulce!!!! kontaktuj správce",
           );
-        }
-        else if(value.size == 1) {
-          await _addFineNumberInMatch(context, number, FineMatchModel.fromJson(value.docs[0].data()), rewrite);
-        }
-        else {
-          await addFineInMatch(context, FineMatchModel.dummy().id, matchId, fineId, playerId, number);
+        } else if (value.size == 1) {
+          await _addFineNumberInMatch(context, number,
+              FineMatchModel.fromJson(value.docs[0].data()), rewrite);
+        } else {
+          await addFineInMatch(context, FineMatchModel.dummy().id, matchId,
+              fineId, playerId, number);
         }
       });
     } on FirebaseException catch (e) {
-      showSnackBar(
-        context: context,
-        content: e.message!,
-      );
+      if (!showSnackBarOnException(e.code, context)) {
+        showSnackBar(
+          context: context,
+          content: e.message!,
+        );
+      }
     }
     return false;
   }
 
-  Future<bool> _addFineNumberInMatch(
-      BuildContext context,
-      int number,
-      FineMatchModel fineMatchModel,
-      bool rewrite) async {
+  Future<bool> _addFineNumberInMatch(BuildContext context, int number,
+      FineMatchModel fineMatchModel, bool rewrite) async {
     try {
       final document =
           firestore.collection(fineMatchTable).doc(fineMatchModel.id);
@@ -165,10 +172,12 @@ class FineMatchRepository {
       await document.set(fine.toJson());
       return true;
     } on FirebaseException catch (e) {
-      showSnackBar(
-        context: context,
-        content: e.message!,
-      );
+      if (!showSnackBarOnException(e.code, context)) {
+        showSnackBar(
+          context: context,
+          content: e.message!,
+        );
+      }
     }
     return false;
   }
@@ -179,12 +188,15 @@ class FineMatchRepository {
         .collection(fineMatchTable)
         .doc(fineMatchModel.id)
         .delete()
-        .then(
-          (value) => {},
-          onError: (e) => showSnackBar(
-            context: context,
-            content: e.message!,
-          ),
-        );
+        .then((value) => {},
+            onError: (e) => {
+                  if (!showSnackBarOnException(e.code, context))
+                    {
+                      showSnackBar(
+                        context: context,
+                        content: e.message!,
+                      )
+                    }
+                });
   }
 }

@@ -4,6 +4,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:trus_app/models/player_model.dart';
 
+import '../../../common/utils/firebase_exception.dart';
 import '../../../common/utils/utils.dart';
 import '../../../config.dart';
 import '../../../models/notification_model.dart';
@@ -13,7 +14,7 @@ final notificationRepositoryProvider = Provider(
         firestore: FirebaseFirestore.instance),
 );
 
-class NotificationRepository {
+class NotificationRepository extends CustomFirebaseException {
   final FirebaseFirestore firestore;
 
   NotificationRepository({
@@ -38,7 +39,12 @@ class NotificationRepository {
       await document.set(notification.toJson());
       return true;
     } on FirebaseException catch (e) {
-      showSnackBar(context: context, content: e.message!, );
+      if(!showSnackBarOnException(e.code, context)) {
+        showSnackBar(
+          context: context,
+          content: e.message!,
+        );
+      }
     }
     return false;
   }

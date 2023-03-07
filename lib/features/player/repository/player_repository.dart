@@ -4,6 +4,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:trus_app/models/player_model.dart';
 
+import '../../../common/utils/firebase_exception.dart';
 import '../../../common/utils/utils.dart';
 import '../../../config.dart';
 
@@ -12,7 +13,7 @@ final playerRepositoryProvider = Provider(
         firestore: FirebaseFirestore.instance),
 );
 
-class PlayerRepository {
+class PlayerRepository extends CustomFirebaseException {
   final FirebaseFirestore firestore;
 
   PlayerRepository({
@@ -50,7 +51,12 @@ class PlayerRepository {
       showSnackBar(context: context, content: ("${fan ? "Fanoušek " : "Hráč "}$name úspěšně přidán"));
       return true;
     } on FirebaseException catch (e) {
-      showSnackBar(context: context, content: e.message!, );
+      if (!showSnackBarOnException(e.code, context)) {
+        showSnackBar(
+          context: context,
+          content: e.message!,
+        );
+      }
     }
     return false;
   }
@@ -63,7 +69,12 @@ class PlayerRepository {
       showSnackBar(context: context, content: ("${fan ? "Fanoušek " : "Hráč "}$name úspěšně upraven"));
       return true;
     } on FirebaseException catch (e) {
-      showSnackBar(context: context, content: e.message!, );
+      if (!showSnackBarOnException(e.code, context)) {
+        showSnackBar(
+          context: context,
+          content: e.message!,
+        );
+      }
     }
     return false;
   }
@@ -77,17 +88,29 @@ class PlayerRepository {
             content: ("${fan
                 ? "Fanoušek "
                 : "Hráč "}$name úspěšně smazán")),
-        onError: (e) => showSnackBar(context: context, content: e.message!,),);
+        onError: (e) => {
+          if (!showSnackBarOnException(e.code, context))
+            {
+              showSnackBar(
+                context: context,
+                content: e.message!,
+              )
+            }
+        });
   }
 
   Future<void> _deletePlayerFromStatsTables(BuildContext context, String id, String table) async {
     await firestore.collection(table).doc(id).delete().then(
           (value) => {},
-      onError: (e) => showSnackBar(
-        context: context,
-        content: e.message!,
-      ),
-    );
+      onError: (e) => {
+        if (!showSnackBarOnException(e.code, context))
+          {
+            showSnackBar(
+              context: context,
+              content: e.message!,
+            )
+          }
+      });
   }
 
   Future<void> deleteStatsFromTablesByPlayer(

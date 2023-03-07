@@ -27,7 +27,6 @@ class AuthRepository {
     UserModel? user;
     if(userData.data() != null) {
       user = UserModel.fromJson(userData.data()!);
-      print(user);
     }
     return user;
   }
@@ -35,6 +34,17 @@ class AuthRepository {
   String? getCurrentUserName() {
     return auth.currentUser?.displayName;
   }
+
+  /*Future<bool> setUserRole(BuildContext context) async {
+    try {
+      await auth.
+      showSnackBar(context: context, content: "Děkujeme, přijďte zas");
+      return true;
+    } on FirebaseAuthException catch(e) {
+      showSnackBarError(context, e);
+    }
+    return false;
+  }*/
 
   Future<bool> signOut(BuildContext context) async {
     try {
@@ -51,7 +61,6 @@ class AuthRepository {
     try {
       await auth.signInWithEmailAndPassword(email: email, password: password);
       showSnackBar(context: context, content: "vítejte pane ${returnUserName()}, přeji příjemné pití");
-      print(auth.currentUser);
       return true;
     } on FirebaseAuthException catch(e) {
       showSnackBarError(context, e);
@@ -75,10 +84,9 @@ class AuthRepository {
   Future<bool> saveUserDataToFirebase(BuildContext context, String username) async {
     try {
       String id = auth.currentUser!.uid;
-      var user = UserModel(name: username, id: id, isOnline: true, mail: returnUserMail());
+      var user = UserModel(name: username, id: id, writePermission: false, mail: returnUserMail(),);
       await auth.currentUser!.updateDisplayName(username);
       await firestore.collection(userTable).doc(id).set(user.toJson());
-      print(auth.currentUser);
       showSnackBar(context: context, content: "vítejte pane ${returnUserName()}, přeji příjemné pití");
       return true;
     } on FirebaseAuthException catch (e) {

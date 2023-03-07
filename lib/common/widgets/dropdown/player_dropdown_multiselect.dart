@@ -40,7 +40,6 @@ class _PlayerDropdownMultiSelectState
         }
       }
     }
-    print(selectedPlayers);
     if(init) {
       selectedPlayers += returnList;
       init = false;

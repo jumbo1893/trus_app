@@ -87,6 +87,9 @@ class _EditMatchScreenState extends ConsumerState<EditMatchScreen> {
           widget.onButtonConfirmPressed.call();
         }
       }
+      else {
+        widget.onButtonConfirmPressed.call();
+      }
     }
   }
 
@@ -200,8 +203,6 @@ class _EditMatchScreenState extends ConsumerState<EditMatchScreen> {
 
   @override
   Widget build(BuildContext context) {
-    print("playerList");
-    print(playerList);
     const double padding = 8.0;
     final size = MediaQuery.of(context).size;
     switch (screen) {
@@ -341,8 +342,6 @@ class _EditMatchScreenState extends ConsumerState<EditMatchScreen> {
                 if (snapshot.connectionState == ConnectionState.waiting) {
                   return const Loader();
                 }
-                print("playerList gol2");
-                print(playerList);
                 playerStatsList = (snapshot.data!);
                 setNewPlayerStatsNumber(snapshot.data!.length);
                 return Column(
@@ -368,7 +367,6 @@ class _EditMatchScreenState extends ConsumerState<EditMatchScreen> {
                                     child: ListviewAddModel(
                                       onNumberChanged: (number) {
                                         goalNumber[index] = number;
-                                        print(goalNumber);
                                       },
                                       padding: 16,
                                       helperModel: playerStats,

@@ -470,7 +470,6 @@ class RandomFact {
     }
     double homeAverage = 0;
     if(homeMatches != 0) {
-      print(homeMatches);
       homeAverage = homeBeerNumber / homeMatches;
     }
     double awayAverage = 0;

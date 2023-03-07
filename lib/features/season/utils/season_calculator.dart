@@ -10,7 +10,6 @@ SeasonModel calculateAutomaticSeason(List<SeasonModel> allSeasons, DateTime matc
 }
 
 SeasonModel calculateSeasonFromId(String? seasonId, List<SeasonModel> allSeasons) {
-  print("season:" + seasonId!);
   if (seasonId == null) {
     return SeasonModel.automaticSeason();
   }

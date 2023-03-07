@@ -1,13 +1,13 @@
 class UserModel {
   final String name;
   final String id;
-  final bool isOnline;
+  final bool writePermission;
   final String mail;
 
   UserModel(
       {required this.name,
       required this.id,
-      required this.isOnline,
+      required this.writePermission,
       required this.mail,
       });
 
@@ -15,7 +15,7 @@ class UserModel {
     return {
       "name": name,
       "id": id,
-      "isOnline": isOnline,
+      "writePermission": writePermission,
       "mail": mail,
     };
   }
@@ -24,7 +24,7 @@ class UserModel {
     return UserModel(
       name: json["name"] ?? '',
       id: json['id'] ?? '',
-      isOnline: json['isOnline'] ?? false,
+      writePermission: json['writePermission'] ?? false,
       mail: json["mail"] ?? '',
 
     );

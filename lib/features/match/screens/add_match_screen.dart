@@ -83,6 +83,10 @@ class _AddMatchScreenState extends ConsumerState<AddMatchScreen> {
           isHomeChecked,
           (playerList + fansList),
           pickedSeason!.id);
+      if (addedMatch == null) {
+        widget.onAddMatchPressed.call();
+        return;
+      }
       await sendNotification("Přidán zápas $name", "${isHomeChecked ? "Domácí zápas" : "Venkovní zápas"} hraný ${dateTimeToString(pickedDate)}, tedy v sezoně ${pickedSeason!.name}, s celkovým počtem účastníků ${playerList.length+fansList.length}");
       if (addedMatch != null) {
         if (!playerStats) {

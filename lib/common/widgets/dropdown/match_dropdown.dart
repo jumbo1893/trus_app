@@ -96,7 +96,6 @@ class _MatchDropdownState extends ConsumerState<MatchDropdown> {
 
   @override
   Widget build(BuildContext context) {
-    //print(selectedValue?.playerIdList);
     return StreamBuilder<List<MatchModel>>(
         stream: ref.watch(matchControllerProvider).matches(),
         builder: (context, snapshot) {

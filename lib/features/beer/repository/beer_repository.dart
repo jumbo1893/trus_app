@@ -9,6 +9,7 @@ import 'package:trus_app/models/player_model.dart';
 import '../../../../common/utils/utils.dart';
 import '../../../../config.dart';
 import '../../../../models/beer_model.dart';
+import '../../../common/utils/firebase_exception.dart';
 import '../../../models/helper/beer_helper_model.dart';
 import '../../../models/match_model.dart';
 
@@ -16,7 +17,7 @@ final beerRepositoryProvider = Provider(
   (ref) => BeerRepository(firestore: FirebaseFirestore.instance),
 );
 
-class BeerRepository {
+class BeerRepository extends CustomFirebaseException {
   final FirebaseFirestore firestore;
 
   BeerRepository({required this.firestore});
@@ -152,10 +153,12 @@ class BeerRepository {
       await document.set(beer.toJson());
       return true;
     } on FirebaseException catch (e) {
-      showSnackBar(
-        context: context,
-        content: e.message!,
-      );
+      if(!showSnackBarOnException(e.code, context)) {
+        showSnackBar(
+          context: context,
+          content: e.message!,
+        );
+      }
     }
     return false;
   }

@@ -117,7 +117,6 @@ class PkflStatsController {
 
   List<PkflPlayerStats> _initPlayerStatsList(
       List<PkflMatch> matches, String? filterValue) {
-    print(filterValue);
     HashMap<PkflMatchPlayer, PkflPlayerStats> pkflPlayerStatsHashMap =
         HashMap();
     for (PkflMatch pkflMatch in matches) {

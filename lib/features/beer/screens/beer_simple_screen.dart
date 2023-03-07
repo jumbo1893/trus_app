@@ -46,7 +46,11 @@ class _BeerSimpleScreenState extends ConsumerState<BeerSimpleScreen> {
       //pokud počet piv nebo kořalek není -1 (=nezměnily se)
       if (beerNumber[i] != -1 || liquorNumber[i] != -1) {
         //id, id hráče, pokud je počet piv -1, tak dáváme původení počet, pokud ne, tak nový, pokud je počet kořalek -1, tak dáváme původení počet, pokud ne, tak nový
-        addBeer(beers[i].id, beers[i].player.id, beerNumber[i] == -1 ? beers[i].beerNumber : beerNumber[i], liquorNumber[i] == -1 ? beers[i].liquorNumber : liquorNumber[i]);
+        if (!await addBeer(beers[i].id, beers[i].player.id, beerNumber[i] == -1 ? beers[i].beerNumber : beerNumber[i], liquorNumber[i] == -1 ? beers[i].liquorNumber : liquorNumber[i])) {
+          hideSnackBar(context);
+          widget.onButtonConfirmPressed.call();
+          return;
+        }
         //pokud je změna v pivech tak piva
         text += beerNumber[i] == -1 ? "" : "${beers[i].player.name} vypil piv: ${beerNumber[i]}\n";
         //pokud je změna v kořalkách, tak kořalka
@@ -62,10 +66,12 @@ class _BeerSimpleScreenState extends ConsumerState<BeerSimpleScreen> {
     widget.onButtonConfirmPressed.call();
   }
 
-  Future<void> addBeer(String id, String playerId, int beerNumber, int liquorNumber) async {
+  Future<bool> addBeer(String id, String playerId, int beerNumber, int liquorNumber) async {
     if (await ref.read(beerControllerProvider).addBeerInMatch(context, id,
         selectedValue!.id, playerId, beerNumber, liquorNumber)) {
+      return true;
     }
+    return false;
   }
 
   Future<void> sendNotification(String text) async {

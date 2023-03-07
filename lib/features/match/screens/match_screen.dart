@@ -28,7 +28,6 @@ class _MatchScreenState extends ConsumerState<MatchScreen> {
     setState(() {
       selectedValue = seasonModel;
     });
-    print(seasonModel);
   }
 
 
@@ -52,7 +51,6 @@ class _MatchScreenState extends ConsumerState<MatchScreen> {
                     if (snapshot.connectionState == ConnectionState.waiting) {
                       return const Loader();
                     }
-                    print(snapshot.data);
                     return ListView.builder(
                       shrinkWrap: true,
                       itemCount: snapshot.data!.length,

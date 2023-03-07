@@ -6,6 +6,7 @@ import 'package:trus_app/features/beer/controller/beer_controller.dart';
 import 'package:trus_app/models/helper/player_stats_helper_model.dart';
 import 'package:trus_app/models/match_model.dart';
 
+import '../../../common/utils/firebase_exception.dart';
 import '../../../common/utils/utils.dart';
 import '../../../config.dart';
 import '../../../models/player_stats_model.dart';
@@ -15,7 +16,7 @@ final matchRepositoryProvider = Provider(
   (ref) => MatchRepository(firestore: FirebaseFirestore.instance),
 );
 
-class MatchRepository {
+class MatchRepository extends CustomFirebaseException {
   final FirebaseFirestore firestore;
 
   MatchRepository({required this.firestore});
@@ -61,10 +62,12 @@ class MatchRepository {
       showSnackBar(context: context, content: ("Zápas $name úspěšně přidán"));
       return match;
     } on FirebaseException catch (e) {
-      showSnackBar(
-        context: context,
-        content: e.message!,
-      );
+      if (!showSnackBarOnException(e.code, context)) {
+        showSnackBar(
+          context: context,
+          content: e.message!,
+        );
+      }
     }
     return null;
   }
@@ -90,10 +93,12 @@ class MatchRepository {
       showSnackBar(context: context, content: ("Zápas $name úspěšně upraven"));
       return true;
     } on FirebaseException catch (e) {
-      showSnackBar(
-        context: context,
-        content: e.message!,
-      );
+      if (!showSnackBarOnException(e.code, context)) {
+        showSnackBar(
+          context: context,
+          content: e.message!,
+        );
+      }
     }
     return false;
   }
@@ -103,11 +108,15 @@ class MatchRepository {
     await firestore.collection(matchTable).doc(matchModel.id).delete().then(
           (value) => showSnackBar(
               context: context, content: ("Zápas $name úspěšně smazán")),
-          onError: (e) => showSnackBar(
-            context: context,
-            content: e.message!,
-          ),
-        );
+          onError: (e) => {
+            if (!showSnackBarOnException(e.code, context))
+              {
+                showSnackBar(
+                  context: context,
+                  content: e.message!,
+                )
+              }
+          });
   }
 
   Future<List<PlayerModel>> _getPlayers() async {
@@ -201,10 +210,12 @@ class MatchRepository {
       }
       return true;
     } on FirebaseException catch (e) {
-      showSnackBar(
-        context: context,
-        content: e.message!,
-      );
+      if (!showSnackBarOnException(e.code, context)) {
+        showSnackBar(
+          context: context,
+          content: e.message!,
+        );
+      }
     }
     return false;
   }
@@ -212,11 +223,15 @@ class MatchRepository {
   Future<void> _deleteMatchFromStatsTables(BuildContext context, String id, String table) async {
     await firestore.collection(table).doc(id).delete().then(
           (value) => {},
-          onError: (e) => showSnackBar(
-            context: context,
-            content: e.message!,
-          ),
-        );
+          onError: (e) => {
+            if (!showSnackBarOnException(e.code, context))
+              {
+                showSnackBar(
+                  context: context,
+                  content: e.message!,
+                )
+              }
+          });
   }
 
   Future<void> deleteStatsFromTablesByMatch(
