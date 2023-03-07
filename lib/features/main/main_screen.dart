@@ -20,6 +20,7 @@ import 'package:trus_app/models/player_model.dart';
 import 'package:trus_app/models/season_model.dart';
 import '../../models/fine_model.dart';
 import '../auth/controller/auth_controller.dart';
+import '../auth/screens/user_screen.dart';
 import '../beer/screens/beer_simple_screen.dart';
 import '../fine/match/screens/multiple_fine_players_screen.dart';
 import '../fine/screens/add_fine_screen.dart';
@@ -261,14 +262,6 @@ class _MainScreenState extends ConsumerState<MainScreen> {
                     title: const Text("Seznam hráčů"),
                     onTap: () => onModalBottomSheetMenuTapped(18),
                   ),
-                  ListTile(
-                    leading: const Icon(
-                      Icons.point_of_sale,
-                      color: Colors.orange,
-                    ),
-                    title: const Text("Srovnání dluhů hráčů"),
-                    onTap: () {},
-                  ),
                   Row(
                     children: const [
                       Padding(
@@ -345,14 +338,6 @@ class _MainScreenState extends ConsumerState<MainScreen> {
                     title: const Text("Statistiky gólů/asistencí"),
                     onTap: () => onModalBottomSheetMenuTapped(22),
                   ),
-                  ListTile(
-                    leading: const Icon(
-                      Icons.download,
-                      color: Colors.orange,
-                    ),
-                    title: const Text("Tabulka/export statistik"),
-                    onTap: () {},
-                  ),
                   Row(
                     children: const [
                       Padding(
@@ -379,7 +364,7 @@ class _MainScreenState extends ConsumerState<MainScreen> {
                       color: Colors.orange,
                     ),
                     title: const Text("Nastavení uživatele"),
-                    onTap: () {},
+                    onTap: () => onModalBottomSheetMenuTapped(24),
                   ),
                   ListTile(
                     leading: const Icon(
@@ -520,6 +505,9 @@ class _MainScreenState extends ConsumerState<MainScreen> {
           break;
         case 23:
           appBarTitle = "Notifikace";
+          break;
+        case 24:
+          appBarTitle = "Nastavení uživatelů";
           break;
       }
     });
@@ -669,6 +657,9 @@ class _MainScreenState extends ConsumerState<MainScreen> {
                 ),
             const NotificationScreen(
               //23
+            ),
+            const UserScreen(
+              //24
             )
           ],
         ),

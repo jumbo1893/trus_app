@@ -20,6 +20,12 @@ class UserModel {
     };
   }
 
+
+  @override
+  String toString() {
+    return 'uživatel: $name, mail: $mail, práva pro změny: $writePermission';
+  }
+
   factory UserModel.fromJson(Map<String, dynamic> json) {
     return UserModel(
       name: json["name"] ?? '',

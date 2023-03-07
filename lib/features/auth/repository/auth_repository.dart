@@ -7,13 +7,15 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:trus_app/models/user_model.dart';
 import 'package:trus_app/config.dart';
 
+import '../../../common/utils/firebase_exception.dart';
+
 final authRepositoryProvider = Provider(
         (ref) => AuthRepository(
             auth: FirebaseAuth.instance, firestore: FirebaseFirestore.instance
         ),
 );
 
-class AuthRepository {
+class AuthRepository extends CustomFirebaseException {
   final FirebaseAuth auth;
   final FirebaseFirestore firestore;
 
@@ -35,16 +37,31 @@ class AuthRepository {
     return auth.currentUser?.displayName;
   }
 
-  /*Future<bool> setUserRole(BuildContext context) async {
+  Stream<List<UserModel>> getUsers() {
+    return firestore.collection(userTable).orderBy("name", descending: false).snapshots().map((event) {
+      List<UserModel> users = [];
+      for (var document in event.docs) {
+        var user = UserModel.fromJson(document.data());
+        users.add(user);
+      }
+      return users;
+    });
+  }
+
+  Future<bool> setUserWritePermissions(BuildContext context, UserModel user, bool write) async {
     try {
-      await auth.
-      showSnackBar(context: context, content: "Děkujeme, přijďte zas");
+      await firestore.collection(userTable).doc(user.id).update({"writePermission" : write});
       return true;
-    } on FirebaseAuthException catch(e) {
-      showSnackBarError(context, e);
+    } on FirebaseException catch(e) {
+      if (!showSnackBarOnException(e.code, context)) {
+        showSnackBar(
+          context: context,
+          content: e.message!,
+        );
+      }
     }
     return false;
-  }*/
+  }
 
   Future<bool> signOut(BuildContext context) async {
     try {
@@ -161,5 +178,9 @@ class AuthRepository {
 
   String returnUserMail() {
     return auth.currentUser?.email ?? "unknown" ;
+  }
+
+  String returnUserId() {
+    return auth.currentUser?.uid ?? "unknown" ;
   }
 }

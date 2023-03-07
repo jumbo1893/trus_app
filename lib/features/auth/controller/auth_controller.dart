@@ -22,6 +22,18 @@ class AuthController {
     required this.authRepository,
   });
 
+  Stream<List<UserModel>> users() {
+    return authRepository.getUsers();
+  }
+
+  Future<bool> setWritePermissions(
+      BuildContext context, UserModel user, bool write
+      ) async {
+    bool result = await authRepository.setUserWritePermissions(
+        context, user, write);
+    return result;
+  }
+
   Future<UserModel?> getUserData() async {
     UserModel? user = await authRepository.getCurrentUserData();
     return user;
@@ -29,6 +41,10 @@ class AuthController {
 
   String? getCurrentUserName() {
     return authRepository.getCurrentUserName();
+  }
+
+  String getCurrentUserId() {
+    return authRepository.returnUserId();
   }
 
   Future<bool> signInWithEmail(BuildContext context, String email, String password) async {
