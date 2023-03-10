@@ -2,17 +2,14 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:trus_app/common/widgets/listview/listview_beer_add_model.dart';
 import 'package:trus_app/common/widgets/loader.dart';
-import 'package:trus_app/common/widgets/dropdown/match_dropdown.dart';
 import 'package:trus_app/features/beer/controller/beer_controller.dart';
+import 'package:trus_app/features/beer/screens/beer_paint_screen.dart';
 import 'package:trus_app/models/helper/beer_helper_model.dart';
-import 'package:trus_app/models/helper/fine_match_helper_model.dart';
 import 'package:trus_app/models/match_model.dart';
 
 import '../../../../common/widgets/custom_button.dart';
 import '../../../common/utils/utils.dart';
 import '../../../common/widgets/dropdown/match_dropdown_without_stream.dart';
-import '../../../models/player_model.dart';
-import '../../fine/match/controller/fine_match_controller.dart';
 import '../../match/controller/match_controller.dart';
 import '../../notification/controller/notification_controller.dart';
 
@@ -37,7 +34,9 @@ class _BeerSimpleScreenState extends ConsumerState<BeerSimpleScreen> {
   List<int> beerNumber = [];
   List<int> liquorNumber = [];
   List<MatchModel> matches = [];
-  List<String> matchPlayers = []; // list hráčů, kteří se účastnili zápasu
+  List<String> matchPlayers = [];
+  int playerIndex = 0;
+  int paintScreenPlayerIndex = 0;
 
   void changeBeers() async {
     showLoaderSnackBar(context: context);
@@ -100,6 +99,7 @@ class _BeerSimpleScreenState extends ConsumerState<BeerSimpleScreen> {
     widget.setMainMatch(matchModel);
   }
 
+
   @override
   Widget build(BuildContext context) {
     final size = MediaQuery.of(context).size;
@@ -144,55 +144,81 @@ class _BeerSimpleScreenState extends ConsumerState<BeerSimpleScreen> {
                 }
                 beers = snapshot.data!;
                 setNewBeerNumber(snapshot.data!.length);
-                return Column(
-                  children: [
-                    Expanded(
-                      child: ListView.builder(
-                        shrinkWrap: true,
-                        itemCount: snapshot.data!.length,
-                        itemBuilder: (context, index) {
-                          var beerPlayer = snapshot.data![index];
-                          return Column(
-                            children: [
-                              InkWell(
-                                child: Padding(
-                                  padding: const EdgeInsets.only(
-                                      bottom: 8.0, left: 8, right: 8),
-                                  child: Container(
-                                    decoration: const BoxDecoration(
-                                        border: Border(
-                                            bottom: BorderSide(
-                                      color: Colors.grey,
-                                    ))),
-                                    child: ListviewBeerAddModel(
-                                      onBeerNumberChanged: (number) {
-                                        beerNumber[index] = number;
-                                      },
-                                      onLiquorNumberChanged: (number) {
-                                        liquorNumber[index] = number;
-                                      },
-                                      padding: 16,
-                                      helperModel: beerPlayer,
-                                      name: beerPlayer.player.name,
+                if(ref.read(beerControllerProvider).simpleScreen) {
+                  return Column(
+                    children: [
+                      Expanded(
+                        child: ListView.builder(
+                          shrinkWrap: true,
+                          itemCount: snapshot.data!.length,
+                          itemBuilder: (context, index) {
+                            var beerPlayer = snapshot.data![index];
+                            return Column(
+                              children: [
+                                InkWell(
+                                  child: Padding(
+                                    padding: const EdgeInsets.only(
+                                        bottom: 8.0, left: 8, right: 8),
+                                    child: Container(
+                                      decoration: const BoxDecoration(
+                                          border: Border(
+                                              bottom: BorderSide(
+                                                color: Colors.grey,
+                                              ))),
+                                      child: ListviewBeerAddModel(
+                                        onBeerNumberChanged: (number) {
+                                          beerNumber[index] = number;
+                                        },
+                                        onLiquorNumberChanged: (number) {
+                                          liquorNumber[index] = number;
+                                        },
+                                        padding: 16,
+                                        helperModel: beerPlayer,
+                                        name: beerPlayer.player.name,
+                                      ),
                                     ),
                                   ),
-                                ),
-                              )
-                            ],
-                          );
-                        },
+                                )
+                              ],
+                            );
+                          },
+                        ),
                       ),
-                    ),
-                    Padding(
-                      padding: const EdgeInsets.only(bottom: 16.0),
-                      child: CustomButton(text: "Přidej piva", onPressed: changeBeers),
-                    ),
-                  ],
+                      Padding(
+                        padding: const EdgeInsets.only(bottom: 16.0),
+                        child: CustomButton(
+                            text: "Přidej piva", onPressed: changeBeers),
+                      ),
+                    ],
+                  );
+                }
+                return BeerPaintScreen(
+                  beers: snapshot.data!,
+                  newBeerNumber: (number) {
+                    beerNumber[paintScreenPlayerIndex] = number;
+                    print(beerNumber);
+                  },
+                  newLiquorNumber: (number) {
+                    liquorNumber[paintScreenPlayerIndex] = number;
+                  },
+                  pickedPlayer: (number) {
+                    paintScreenPlayerIndex = number;
+                  }, onChangeBeersPressed: changeBeers,
+
+
                 );
               },
             ),
           ),
-        );
+            floatingActionButton: FloatingActionButton(
+              onPressed: () => setState(() {
+                ref.read(beerControllerProvider).simpleScreen =! ref.read(beerControllerProvider).simpleScreen;
+                //simpleScreen = !simpleScreen;
+              }),
+              elevation: 4.0,
+
+              child: const Icon(Icons.change_circle_outlined),
+            ));
       }
     );
   }

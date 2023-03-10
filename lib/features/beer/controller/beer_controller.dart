@@ -26,6 +26,8 @@ class BeerController {
     required this.ref,
   });
 
+  bool simpleScreen = true;
+
   Stream<List<BeerModel>> beersInMatches() {
     return beerRepository.getBeersInMatches();
   }

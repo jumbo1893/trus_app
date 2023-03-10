@@ -660,7 +660,7 @@ class _MainScreenState extends ConsumerState<MainScreen> {
             ),
             const UserScreen(
               //24
-            )
+            ),
           ],
         ),
         floatingActionButton: FloatingActionButton(
