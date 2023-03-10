@@ -50,6 +50,12 @@ dependencies:
   html: ^0.15.1
   http: ^0.13.5
   percent_indicator: ^4.2.2
+  flutter_launcher_icons: ^0.12.0
+
+flutter_icons:
+  android: true
+  ios: true
+  image_path: "images/logo.jpg"
 
 dev_dependencies:
   flutter_test:

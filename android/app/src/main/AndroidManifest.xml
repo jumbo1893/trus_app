@@ -1,7 +1,7 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="com.jumbo.trus_app">
    <application
-        android:label="trus_app"
+        android:label="Trusí appka"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher">
         <activity
