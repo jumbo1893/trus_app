@@ -147,6 +147,7 @@ class FineMatchRepository extends CustomFirebaseException {
               fineId, playerId, number);
         }
       });
+      return true;
     } on FirebaseException catch (e) {
       if (!showSnackBarOnException(e.code, context)) {
         showSnackBar(
