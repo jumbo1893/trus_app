@@ -195,7 +195,7 @@ class _MatchFineStatsScreenState extends ConsumerState<MatchFineStatsScreen> {
                                           padding:
                                               const EdgeInsets.only(bottom: 16),
                                           child: Text(
-                                            match.match!.name,
+                                            match.match!.toStringWithOpponentName(),
                                             style: const TextStyle(
                                                 fontWeight: FontWeight.bold,
                                                 fontSize: 18),

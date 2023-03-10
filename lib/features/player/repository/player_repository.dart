@@ -7,6 +7,7 @@ import 'package:trus_app/models/player_model.dart';
 import '../../../common/utils/firebase_exception.dart';
 import '../../../common/utils/utils.dart';
 import '../../../config.dart';
+import '../../../models/match_model.dart';
 
 final playerRepositoryProvider = Provider(
     (ref) => PlayerRepository(
@@ -115,6 +116,13 @@ class PlayerRepository extends CustomFirebaseException {
 
   Future<void> deleteStatsFromTablesByPlayer(
       BuildContext context, String playerId) async {
+    List<MatchModel> matchList = await _getMatches();
+    for(MatchModel matchModel in matchList) {
+      if(matchModel.playerIdList.contains(playerId)) {
+        matchModel.playerIdList.remove(playerId);
+        await _deletePlayerFromMatch(context, matchModel);
+      }
+    }
     await firestore
         .collection(playerStatsTable)
         .where("playerId", isEqualTo: playerId)
@@ -142,5 +150,42 @@ class PlayerRepository extends CustomFirebaseException {
         await _deletePlayerFromStatsTables(context, document.id, beerTable);
       }
     });
+  }
+
+  Future<bool> _deletePlayerFromMatch(
+      BuildContext context,
+      MatchModel matchModel) async {
+    try {
+      final document = firestore.collection(matchTable).doc(matchModel.id);
+      MatchModel match = MatchModel(
+          name: matchModel.name,
+          id: matchModel.id,
+          date: matchModel.date,
+          home: matchModel.home,
+          playerIdList: matchModel.playerIdList,
+          seasonId: matchModel.seasonId);
+      await document.set(match.toJson());
+      return true;
+    } on FirebaseException catch (e) {
+      if (!showSnackBarOnException(e.code, context)) {
+        showSnackBar(
+          context: context,
+          content: e.message!,
+        );
+      }
+    }
+    return false;
+  }
+
+  Future<List<MatchModel>> _getMatches() async {
+    List<MatchModel> matches = [];
+    var docRef = firestore.collection(matchTable);
+    await docRef.get().then((res) {
+      for (var doc in res.docs) {
+        var match = MatchModel.fromJson(doc.data());
+        matches.add(match);
+      }
+    });
+    return matches;
   }
 }

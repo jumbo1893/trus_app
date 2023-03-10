@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:trus_app/common/utils/utils.dart';
+import 'package:trus_app/common/widgets/error.dart';
 import 'package:trus_app/features/beer/lines/player_lines.dart';
 import 'package:trus_app/models/helper/beer_helper_model.dart';
 
@@ -188,99 +189,108 @@ class _BeerPaintScreenState extends ConsumerState<BeerPaintScreen>
 
   @override
   Widget build(BuildContext context) {
-    final size = MediaQuery.of(context).size;
-    return FutureBuilder<ui.Image>(
-        future: _loadImage(),
-        builder: (context, snapshot) {
-          if (_image == null &&
-              snapshot.connectionState == ConnectionState.waiting) {
-            return const Loader();
-          }
-          _image = snapshot.data!;
-          Painter painter = Painter(playerLinesList[playerIndex],
-              newPlayerLinesCalculator, _progress, snapshot.data!);
+    final size = MediaQuery
+        .of(context)
+        .size;
+    if (playerLinesList.isNotEmpty) {
+      return FutureBuilder<ui.Image>(
+          future: _loadImage(),
+          builder: (context, snapshot) {
+            if (_image == null &&
+                snapshot.connectionState == ConnectionState.waiting) {
+              return const Loader();
+            }
+            _image = snapshot.data!;
+            Painter painter = Painter(playerLinesList[playerIndex],
+                newPlayerLinesCalculator, _progress, snapshot.data!);
 
-          return Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              SizedBox(
-                height: 50,
-                child: Row(
+            return Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                SizedBox(
+                  height: 50,
+                  child: Row(
+                    children: [
+                      SizedBox(
+                          width: size.width / 6,
+                          child: IconButton(
+                            icon: const Icon(Icons.arrow_back),
+                            onPressed: () {
+                              setPreviousPlayer();
+                            },
+                            color: orangeColor,
+                          )),
+                      SizedBox(
+                          width: size.width / 1.5,
+                          child: Text(
+                            widget.beers[playerIndex].player.name,
+                            style: const TextStyle(
+                                color: blackColor,
+                                fontSize: 18,
+                                fontWeight: FontWeight.normal),
+                          )),
+                      SizedBox(
+                          width: size.width / 6,
+                          child: IconButton(
+                            icon: const Icon(Icons.arrow_forward),
+                            onPressed: () {
+                              setNextPlayer();
+                            },
+                            color: orangeColor,
+                          )),
+                    ],
+                  ),
+                ),
+                Expanded(
+                  child: GestureDetector(
+                    onVerticalDragEnd: (dragEndDetails) {
+                      if (dragEndDetails.primaryVelocity! > 0) {
+                        addBeer();
+                      } else if (dragEndDetails.primaryVelocity! < 0) {
+                        setState(() {
+                          removeBeer();
+                        });
+                      }
+                    },
+                    onHorizontalDragEnd: (dragEndDetails) {
+                      if (dragEndDetails.primaryVelocity! > 0) {
+                        addLiquor();
+                      } else if (dragEndDetails.primaryVelocity! < 0) {
+                        setState(() {
+                          removeLiquor();
+                        });
+                      }
+                    },
+                    child: CustomPaint(
+                      painter: painter,
+                      child: Container(),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 50,),
+                Row(
                   children: [
                     SizedBox(
                         width: size.width / 6,
-                        child: IconButton(
-                          icon: const Icon(Icons.arrow_back),
-                          onPressed: () {
-                            setPreviousPlayer();
-                          },
-                          color: orangeColor,
-                        )),
+                        child: const Icon(
+                          Icons.info_outline, color: Colors.black,)),
                     SizedBox(
-                        width: size.width / 1.5,
-                        child: Text(
-                          widget.beers[playerIndex].player.name,
-                          style: const TextStyle(
-                              color: blackColor,
-                              fontSize: 18,
-                              fontWeight: FontWeight.normal),
-                        )),
-                    SizedBox(
-                        width: size.width / 6,
-                        child: IconButton(
-                          icon: const Icon(Icons.arrow_forward),
-                          onPressed: () {
-                            setNextPlayer();
-                          },
-                          color: orangeColor,
-                        )),
+                        width: size.width / 1.3,
+                        child: const Text(
+                            "Vertikálním čárkováním se zapisují piva, horizontálním panáky"))
                   ],
                 ),
-              ),
-              Expanded(
-                child: GestureDetector(
-                  onVerticalDragEnd: (dragEndDetails) {
-                    if (dragEndDetails.primaryVelocity! > 0) {
-                      addBeer();
-                    } else if (dragEndDetails.primaryVelocity! < 0) {
-                      setState(() {
-                        removeBeer();
-                      });
-                    }
-                  },
-                  onHorizontalDragEnd: (dragEndDetails) {
-                    if (dragEndDetails.primaryVelocity! > 0) {
-                      addLiquor();
-                    } else if (dragEndDetails.primaryVelocity! < 0) {
-                      setState(() {
-                        removeLiquor();
-                      });
-                    }
-                  },
-                  child: CustomPaint(
-                    painter: painter,
-                    child: Container(),
-                  ),
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 16.0),
+                  child: CustomButton(
+                      text: "Přidej piva", onPressed: changeBeers),
                 ),
-              ),
-              const SizedBox(height: 50,),
-              Row(
-                children: [
-                  SizedBox(
-                    width: size.width/6,
-                      child: const Icon(Icons.info_outline, color: Colors.black,)),
-                  SizedBox(
-                    width: size.width/1.3,
-                      child: const Text("Vertikálním čárkováním se zapisují piva, horizontálním panáky"))
-                ],
-              ),
-              Padding(
-                padding: const EdgeInsets.only(bottom: 16.0),
-                child: CustomButton(
-                    text: "Přidej piva", onPressed: changeBeers),
-              ),
-            ],
-          );
-        });
+              ],
+            );
+          });
+    }
+    return const ErrorScreen(error: 'Není dostatečný počet hráčů!',
+
+    );
   }
 }

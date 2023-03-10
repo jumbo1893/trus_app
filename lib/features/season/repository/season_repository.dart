@@ -18,7 +18,7 @@ class SeasonRepository extends CustomFirebaseException {
   SeasonRepository({required this.firestore});
 
   Stream<List<SeasonModel>> getSeasons() {
-    return firestore.collection(seasonTable).snapshots().map((event) {
+    return firestore.collection(seasonTable).orderBy("fromDate", descending: true).snapshots().map((event) {
       List<SeasonModel> seasons = [];
       for (var document in event.docs) {
         var season = SeasonModel.fromJson(document.data());

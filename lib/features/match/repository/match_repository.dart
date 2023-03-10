@@ -21,7 +21,7 @@ class MatchRepository extends CustomFirebaseException {
   MatchRepository({required this.firestore});
 
   Stream<List<MatchModel>> getMatches() {
-    return firestore.collection(matchTable).snapshots().map((event) {
+    return firestore.collection(matchTable).orderBy("date", descending: true).snapshots().map((event) {
       List<MatchModel> matches = [];
       for (var document in event.docs) {
         var match = MatchModel.fromJson(document.data());
@@ -35,6 +35,7 @@ class MatchRepository extends CustomFirebaseException {
     return firestore
         .collection(matchTable)
         .where("seasonId", isEqualTo: seasonId)
+        .orderBy("date", descending: true)
         .snapshots()
         .map((event) {
       List<MatchModel> matches = [];
@@ -105,17 +106,17 @@ class MatchRepository extends CustomFirebaseException {
   Future<void> deleteMatch(BuildContext context, MatchModel matchModel) async {
     String name = matchModel.name;
     await firestore.collection(matchTable).doc(matchModel.id).delete().then(
-          (value) => showSnackBar(
-              context: context, content: ("Zápas $name úspěšně smazán")),
-          onError: (e) => {
-            if (!showSnackBarOnException(e.code, context))
-              {
-                showSnackBar(
-                  context: context,
-                  content: e.message!,
-                )
-              }
-          });
+        (value) => showSnackBar(
+            context: context, content: ("Zápas $name úspěšně smazán")),
+        onError: (e) => {
+              if (!showSnackBarOnException(e.code, context))
+                {
+                  showSnackBar(
+                    context: context,
+                    content: e.message!,
+                  )
+                }
+            });
   }
 
   Future<List<PlayerModel>> _getPlayers() async {
@@ -203,7 +204,8 @@ class MatchRepository extends CustomFirebaseException {
         );
       }
       if (goalNumber == 0 && assistNumber == 0) {
-        await _deleteMatchFromStatsTables(context, document.id, playerStatsTable);
+        await _deleteMatchFromStatsTables(
+            context, document.id, playerStatsTable);
       } else {
         await document.set(playerStatsModel.toJson());
       }
@@ -219,18 +221,18 @@ class MatchRepository extends CustomFirebaseException {
     return false;
   }
 
-  Future<void> _deleteMatchFromStatsTables(BuildContext context, String id, String table) async {
-    await firestore.collection(table).doc(id).delete().then(
-          (value) => {},
-          onError: (e) => {
-            if (!showSnackBarOnException(e.code, context))
-              {
-                showSnackBar(
-                  context: context,
-                  content: e.message!,
-                )
-              }
-          });
+  Future<void> _deleteMatchFromStatsTables(
+      BuildContext context, String id, String table) async {
+    await firestore.collection(table).doc(id).delete().then((value) => {},
+        onError: (e) => {
+              if (!showSnackBarOnException(e.code, context))
+                {
+                  showSnackBar(
+                    context: context,
+                    content: e.message!,
+                  )
+                }
+            });
   }
 
   Future<void> deleteStatsFromTablesByMatch(
@@ -241,7 +243,8 @@ class MatchRepository extends CustomFirebaseException {
         .get()
         .then((value) async {
       for (var document in value.docs) {
-        await _deleteMatchFromStatsTables(context, document.id, playerStatsTable);
+        await _deleteMatchFromStatsTables(
+            context, document.id, playerStatsTable);
       }
     });
     await firestore

@@ -71,7 +71,7 @@ class _MatchScreenState extends ConsumerState<MatchScreen> {
                                     padding:
                                         const EdgeInsets.only(bottom: padding*2),
                                     child: Text(
-                                      match.name,
+                                      match.toStringWithOpponentName(),
                                       style: const TextStyle(
                                           fontWeight: FontWeight.bold,
                                           fontSize: 18),

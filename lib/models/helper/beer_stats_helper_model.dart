@@ -41,6 +41,7 @@ class BeerStatsHelperModel {
   int getNumberOfPlayersInMatch(Participant participant, List<PlayerModel>? players) {
     int number = 0;
     for(String id in match!.playerIdList) {
+
       if(participant == Participant.both || (_isPlayer(players!, id) && participant == Participant.player) || (!_isPlayer(players, id) && participant == Participant.fan)) {
         number++;
       }
@@ -48,7 +49,17 @@ class BeerStatsHelperModel {
     return number;
   }
 
+  bool isPlayerInPlayerList(String id, List<PlayerModel> players) {
+    List<String> playerIds = [];
+    for (PlayerModel player in players) {
+      playerIds.add(player.id);
+    }
+
+    return playerIds.contains(id);
+  }
+
   bool _isPlayer(List<PlayerModel> players, String playerId) {
+    
     return !players
         .firstWhere((element) => (element.id == playerId))
         .fan;

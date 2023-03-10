@@ -63,7 +63,7 @@ class StatsRepository {
   Future<List<String>> _getMatchIdsBySeason(String seasonId) async {
     List<String> matchIds = [];
     var docRef = firestore.collection(matchTable).where(
-        "seasonId", isEqualTo: seasonId);
+        "seasonId", isEqualTo: seasonId).orderBy("date", descending: true);
     if(seasonId == SeasonModel.allSeason().id) {
       docRef = firestore.collection(matchTable);
     }
@@ -78,7 +78,7 @@ class StatsRepository {
   Future<List<MatchModel>> _getMatchesBySeason(String seasonId) async {
     List<MatchModel> matches = [];
     var docRef = firestore.collection(matchTable).where(
-        "seasonId", isEqualTo: seasonId);
+        "seasonId", isEqualTo: seasonId).orderBy("date", descending: true);
     if(seasonId == SeasonModel.allSeason().id) {
       docRef = firestore.collection(matchTable);
     }
