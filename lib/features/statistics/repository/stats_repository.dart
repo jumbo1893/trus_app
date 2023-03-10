@@ -16,6 +16,7 @@ import '../../../../config.dart';
 import '../../../../models/beer_model.dart';
 import '../../../models/helper/fine_stats_helper_model.dart';
 import '../../../models/match_model.dart';
+import '../utils.dart';
 
 final statsRepositoryProvider = Provider(
   (ref) => StatsRepository(firestore: FirebaseFirestore.instance),
@@ -63,7 +64,7 @@ class StatsRepository {
   Future<List<String>> _getMatchIdsBySeason(String seasonId) async {
     List<String> matchIds = [];
     var docRef = firestore.collection(matchTable).where(
-        "seasonId", isEqualTo: seasonId).orderBy("date", descending: true);
+        "seasonId", isEqualTo: seasonId);
     if(seasonId == SeasonModel.allSeason().id) {
       docRef = firestore.collection(matchTable);
     }
@@ -78,7 +79,7 @@ class StatsRepository {
   Future<List<MatchModel>> _getMatchesBySeason(String seasonId) async {
     List<MatchModel> matches = [];
     var docRef = firestore.collection(matchTable).where(
-        "seasonId", isEqualTo: seasonId).orderBy("date", descending: true);
+        "seasonId", isEqualTo: seasonId);
     if(seasonId == SeasonModel.allSeason().id) {
       docRef = firestore.collection(matchTable);
     }
@@ -88,7 +89,7 @@ class StatsRepository {
         matches.add(match);
       }
     });
-    return matches;
+    return sortMatchesByDate(matches, true);
   }
 
   Future<List<MatchModel>> getMatchesById(List<String> matchListId) async {
