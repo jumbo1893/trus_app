@@ -1,4 +1,3 @@
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:trus_app/common/widgets/error.dart';
 import 'package:trus_app/features/auth/screens/login_screen.dart';
