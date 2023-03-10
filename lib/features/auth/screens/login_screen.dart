@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:trus_app/colors.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:trus_app/common/widgets/custom_text_button.dart';
 import 'package:trus_app/common/widgets/custom_text_field.dart';
@@ -63,7 +62,6 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   }
   @override
   Widget build(BuildContext context) {
-    final size = MediaQuery.of(context).size;
     return Scaffold(
       body: SafeArea(
         child: Column(

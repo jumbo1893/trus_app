@@ -16,11 +16,6 @@ class CustomButton extends StatelessWidget {
       padding: const EdgeInsets.all(15.0),
       child: ElevatedButton(
         onPressed: onPressed,
-        /*style: ElevatedButton.styleFrom(
-          backgroundColor: Colors.orange,
-          minimumSize: const Size(double.infinity, 50),
-
-        ),*/
         style: ButtonStyle(
           backgroundColor: MaterialStateProperty.all<Color>(Colors.orange),
           minimumSize: MaterialStateProperty.all(const Size(double.infinity, 50)),
@@ -30,7 +25,6 @@ class CustomButton extends StatelessWidget {
               side: const BorderSide(color: Colors.orange),
             )
           ),
-          //minimumSize: const Size(double.infinity, 50),
         ),
           child: Text(
               text,

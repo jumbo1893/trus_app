@@ -2,8 +2,6 @@ import 'package:flutter/material.dart';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:trus_app/models/helper/fine_match_helper_model.dart';
-import 'package:trus_app/models/fine_model.dart';
 import 'package:trus_app/models/player_model.dart';
 
 import '../../../../common/utils/utils.dart';
@@ -76,33 +74,6 @@ class BeerRepository extends CustomFirebaseException {
       }
       return beersWithPlayers;
     });
-  }
-
-  Future<List<BeerModel>> _getBeerInMatchForPlayer(
-      String playerId, String matchId) async {
-    final docRef =
-        firestore.collection(beerTable).where("matchId", isEqualTo: matchId);
-    List<BeerModel> beerInMatches = [];
-    await docRef.get().then((res) {
-      for (var doc in res.docs) {
-        var beer = BeerModel.fromJson(doc.data());
-        beerInMatches.add(beer);
-      }
-    });
-    return beerInMatches;
-  }
-
-  Future<List<PlayerModel>> _getPlayers() async {
-    final docRef = firestore.collection(playerTable);
-    List<PlayerModel> players = [];
-    await docRef.get().then((res) {
-      for (var doc in res.docs) {
-        var player = PlayerModel.fromJson(doc.data());
-
-        players.add(player);
-      }
-    });
-    return players;
   }
 
   Future<List<PlayerModel>> _getPlayersById(List<String> playerListId) async {

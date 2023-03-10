@@ -1,9 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:trus_app/colors.dart';
 import 'package:trus_app/common/widgets/loader.dart';
-import 'package:trus_app/features/player/controller/player_controller.dart';
-import 'package:trus_app/models/player_model.dart';
 
 import '../../../common/widgets/notification_list_tile.dart';
 import '../../../models/notification_model.dart';

@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:trus_app/colors.dart';
 
 class CustomText extends StatelessWidget {
   final String text;

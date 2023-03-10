@@ -1,5 +1,4 @@
 
-import '../fine_model.dart';
 import '../player_model.dart';
 
 class BeerHelperModel {

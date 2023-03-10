@@ -107,7 +107,6 @@ class PlayerModel {
   @override
   String toString() {
     return 'PlayerModel{id: $id, name: $name, birthday: $birthday, fan: $fan}';
-    return name;
   }
 
   String toStringForPlayerList() {

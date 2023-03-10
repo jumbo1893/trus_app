@@ -1,9 +1,6 @@
 import 'dart:async';
 
-import 'package:flutter/cupertino.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:trus_app/models/helper/beer_stats_helper_model.dart';
-import 'package:trus_app/models/helper/fine_stats_helper_model.dart';
 import 'package:trus_app/models/match_model.dart';
 import 'package:trus_app/models/player_model.dart';
 

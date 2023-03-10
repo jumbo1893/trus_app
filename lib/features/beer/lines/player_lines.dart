@@ -28,7 +28,6 @@ class PlayerLines {
   }
 
   void removeLastBeerPosition() {
-    print(x1.length);
     if (x1.isNotEmpty) {
       x1.removeLast();
       x2.removeLast();

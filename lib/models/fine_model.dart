@@ -1,6 +1,3 @@
-import 'package:age_calculator/age_calculator.dart';
-import 'package:trus_app/common/utils/calendar.dart';
-
 class FineModel {
   final String id;
   final String name;

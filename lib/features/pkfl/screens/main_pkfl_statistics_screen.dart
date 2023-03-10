@@ -10,7 +10,6 @@ import '../../../common/utils/utils.dart';
 import '../../../common/widgets/custom_text.dart';
 import '../../../common/widgets/dropdown/pkfl_stats_dropdown.dart';
 import '../../../common/widgets/icon_text_field.dart';
-import '../../../common/widgets/loader.dart';
 import '../controller/pkfl_stats_controller.dart';
 
 class MainPkflStatisticsScreen extends ConsumerStatefulWidget {

@@ -1,15 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:percent_indicator/circular_percent_indicator.dart';
 import 'package:trus_app/colors.dart';
 import 'package:trus_app/models/enum/spinner_options.dart';
-import 'package:trus_app/models/helper/percentage_loader_model.dart';
 import 'package:trus_app/models/helper/player_stats_helper_model.dart';
-import 'package:trus_app/models/pkfl/pkfl_player_stats.dart';
 
-import '../../../../common/utils/utils.dart';
 import '../../../../common/widgets/custom_text.dart';
-import '../../../../common/widgets/dropdown/pkfl_stats_dropdown.dart';
 import '../../../../common/widgets/dropdown/season_dropdown.dart';
 import '../../../../common/widgets/icon_text_field.dart';
 import '../../../../common/widgets/loader.dart';

@@ -1,7 +1,6 @@
 
 import 'package:trus_app/models/helper/helper_model.dart';
 
-import '../fine_model.dart';
 import '../player_model.dart';
 
 class PlayerStatsHelperModel implements IHelperModel {

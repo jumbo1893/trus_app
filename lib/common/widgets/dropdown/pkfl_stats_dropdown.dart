@@ -1,10 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:trus_app/common/widgets/loader.dart';
 import 'package:trus_app/models/enum/spinner_options.dart';
-import 'package:trus_app/features/season/controller/season_controller.dart';
 import 'package:dropdown_button2/dropdown_button2.dart';
-import 'package:trus_app/models/season_model.dart';
 
 class PkflStatsDropdown extends ConsumerStatefulWidget {
   final Function(SpinnerOption? spinnerOption) onValueSelected;

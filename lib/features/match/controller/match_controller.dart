@@ -5,7 +5,6 @@ import 'package:trus_app/features/match/repository/match_repository.dart';
 import 'package:trus_app/features/pkfl/repository/pkfl_repository.dart';
 import 'package:trus_app/models/helper/player_stats_helper_model.dart';
 import 'package:trus_app/models/match_model.dart';
-import 'package:trus_app/models/pkfl/pkfl_player_stats.dart';
 
 import '../../../models/pkfl/pkfl_match.dart';
 import '../../../models/season_model.dart';

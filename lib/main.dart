@@ -38,7 +38,6 @@ class MyApp extends ConsumerWidget {
           if (user == null) {
             return const LoginScreen();
           }
-          print("user prihlasen");
           return const MainScreen();
       }, error: (error, trace) {
           return ErrorScreen(error: error.toString(),);

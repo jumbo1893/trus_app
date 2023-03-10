@@ -1,8 +1,6 @@
 import 'package:flutter/material.dart';
 
 import '../../../colors.dart';
-import '../custom_text.dart';
-import '../custom_text_field.dart';
 
 class RowBackOrForward extends StatelessWidget {
   final double padding;

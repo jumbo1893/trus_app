@@ -1,6 +1,5 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:trus_app/features/fine/repository/fine_repository.dart';
 import 'package:trus_app/models/fine_match_model.dart';
 import 'package:trus_app/models/fine_model.dart';
 

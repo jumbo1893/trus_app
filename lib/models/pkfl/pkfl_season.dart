@@ -1,7 +1,6 @@
 
 import 'dart:core';
 
-import 'package:trus_app/models/pkfl/pkfl_match_player.dart';
 
 class PkflSeason {
   final String url;

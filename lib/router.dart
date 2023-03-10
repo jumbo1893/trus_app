@@ -6,8 +6,6 @@ import 'package:trus_app/features/auth/screens/registration_screen.dart';
 import 'package:trus_app/features/auth/screens/user_information_screen.dart';
 
 import 'features/main/main_screen.dart';
-import 'features/player/screens/edit_player_screen.dart';
-import 'models/player_model.dart';
 
 Route<dynamic> generateRoute(RouteSettings settings) {
   switch(settings.name) {

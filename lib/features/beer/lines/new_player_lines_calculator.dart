@@ -1,7 +1,5 @@
 import 'dart:ui';
 
-import 'package:trus_app/features/beer/lines/player_lines.dart';
-
 class NewPlayerLinesCalculator {
   double x1 = 0;
   double x2 = 0;

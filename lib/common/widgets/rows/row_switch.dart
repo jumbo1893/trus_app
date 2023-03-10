@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 
 import '../../../colors.dart';
 import '../custom_text.dart';
-import '../custom_text_field.dart';
 
 class RowSwitch extends StatelessWidget {
   final Size size;

@@ -1,8 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:trus_app/models/notification_model.dart';
 
-import 'custom_text.dart';
-
 class NotificationListTile extends StatelessWidget {
   final NotificationModel notificationModel;
   final double padding;
@@ -24,7 +22,7 @@ class NotificationListTile extends StatelessWidget {
               children: [
                 CircleAvatar(
                   backgroundColor: Colors.black12,
-                    child: Text(notificationModel.userName.substring(0,1).toUpperCase(), style: TextStyle(color: Colors.orange, fontWeight: FontWeight.bold),),
+                    child: Text(notificationModel.userName.substring(0,1).toUpperCase(), style: const TextStyle(color: Colors.orange, fontWeight: FontWeight.bold),),
                 ),
                 Text(notificationModel.userName),
               ],

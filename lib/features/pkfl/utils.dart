@@ -1,6 +1,4 @@
-import 'package:trus_app/models/enum/spinner_options.dart';
 import 'package:trus_app/models/pkfl/pkfl_match.dart';
-import 'package:trus_app/models/pkfl/pkfl_player_stats.dart';
 
 import '../../models/pkfl/pkfl_team.dart';
 

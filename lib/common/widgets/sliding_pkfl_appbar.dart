@@ -61,7 +61,7 @@ class _SlidingPkflAppBarState extends State<SlidingPkflAppBar>
         child: AppBar(
             title: Text(
                 "Načíst poslední zápas\n${widget.pkflMatch?.toStringNameWithOpponent() ?? ""}?",
-                style: TextStyle(fontSize: 13)),
+                style: const TextStyle(fontSize: 13)),
             actions: [
               IconButton(
                   onPressed: () => {hideAppBar(), widget.onConfirmPressed()},

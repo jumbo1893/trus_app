@@ -1,6 +1,3 @@
-import 'dart:convert';
-
-import 'package:age_calculator/age_calculator.dart';
 import 'package:trus_app/common/utils/calendar.dart';
 
 class MatchModel {
@@ -64,7 +61,7 @@ class MatchModel {
       name: json["name"] ?? "",
       id: json["id"] ?? "",
       home: json["home"] ?? true,
-      playerIdList: List<String>.from((json['playerIdList'])) ?? [],
+      playerIdList: List<String>.from((json['playerIdList'])),
       seasonId: json["seasonId"] ?? "",
     );
   }

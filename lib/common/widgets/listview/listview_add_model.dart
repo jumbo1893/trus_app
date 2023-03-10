@@ -1,23 +1,17 @@
-import 'package:dropdown_button2/dropdown_button2.dart';
 import 'package:flutter/material.dart';
-import 'package:trus_app/models/helper/fine_match_helper_model.dart';
 import 'package:trus_app/models/helper/helper_model.dart';
-import 'package:trus_app/models/season_model.dart';
 
 import '../../../colors.dart';
-import '../../../features/season/utils/season_calculator.dart';
 
 class ListviewAddModel extends StatefulWidget {
   final IHelperModel helperModel;
   final String? fieldName;
-  //final String subtitle;
   final double padding;
   final Function(int number) onNumberChanged;
   const ListviewAddModel(
       {Key? key,
         required this.padding,
         required this.onNumberChanged,
-        //required this.subtitle,
       this.fieldName,
       required this.helperModel})
       : super(key: key);
@@ -33,7 +27,6 @@ class _ListviewAddModel extends State<ListviewAddModel> {
   @override
   void dispose() {
     textEditingController.dispose();
-    // TODO: implement dispose
     super.dispose();
   }
 

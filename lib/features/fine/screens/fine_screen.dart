@@ -4,7 +4,6 @@ import 'package:trus_app/colors.dart';
 import 'package:trus_app/common/widgets/loader.dart';
 import 'package:trus_app/models/fine_model.dart';
 
-import '../../../models/season_model.dart';
 import '../controller/fine_controller.dart';
 
 class FineScreen extends ConsumerWidget {

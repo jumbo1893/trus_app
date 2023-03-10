@@ -196,7 +196,6 @@ class _BeerSimpleScreenState extends ConsumerState<BeerSimpleScreen> {
                   beers: snapshot.data!,
                   newBeerNumber: (number) {
                     beerNumber[paintScreenPlayerIndex] = number;
-                    print(beerNumber);
                   },
                   newLiquorNumber: (number) {
                     liquorNumber[paintScreenPlayerIndex] = number;

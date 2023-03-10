@@ -1,6 +1,5 @@
 import 'dart:async';
 
-import 'package:flutter/cupertino.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:trus_app/features/beer/repository/beer_repository.dart';
 import 'package:trus_app/features/fine/match/repository/fine_match_repository.dart';
@@ -11,7 +10,6 @@ import 'package:trus_app/features/season/repository/season_repository.dart';
 import 'package:trus_app/features/statistics/repository/stats_repository.dart';
 import 'package:trus_app/models/helper/player_stats_helper_model.dart';
 import 'package:trus_app/models/match_model.dart';
-import 'package:trus_app/models/pkfl/pkfl_player_stats.dart';
 import 'package:trus_app/models/player_model.dart';
 
 import '../../../models/enum/model.dart';

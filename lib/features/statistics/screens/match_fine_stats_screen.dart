@@ -1,12 +1,9 @@
-import 'dart:math';
-
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:trus_app/colors.dart';
 import 'package:trus_app/common/widgets/custom_text.dart';
 import 'package:trus_app/common/widgets/loader.dart';
 import 'package:trus_app/models/helper/fine_stats_helper_model.dart';
-import 'package:trus_app/models/match_model.dart';
 import 'package:trus_app/models/player_model.dart';
 import 'package:trus_app/models/season_model.dart';
 import '../../../common/widgets/dropdown/season_dropdown.dart';

@@ -1,20 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:trus_app/colors.dart';
 import 'package:trus_app/common/widgets/listview/listview_add_model.dart';
 import 'package:trus_app/common/widgets/loader.dart';
-import 'package:trus_app/common/widgets/dropdown/match_dropdown.dart';
-import 'package:trus_app/features/match/controller/match_controller.dart';
-import 'package:trus_app/features/player/utils.dart';
 import 'package:trus_app/models/helper/fine_match_helper_model.dart';
 import 'package:trus_app/models/match_model.dart';
 
 import '../../../../common/widgets/custom_button.dart';
-import '../../../../models/fine_model.dart';
 import '../../../../models/player_model.dart';
 import '../../../notification/controller/notification_controller.dart';
-import '../../../player/controller/player_controller.dart';
-import '../../controller/fine_controller.dart';
 import '../controller/fine_match_controller.dart';
 
 class FinePlayerScreen extends ConsumerStatefulWidget {

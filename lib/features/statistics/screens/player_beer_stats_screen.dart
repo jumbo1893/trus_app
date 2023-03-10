@@ -3,19 +3,14 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:trus_app/colors.dart';
 import 'package:trus_app/common/widgets/custom_text.dart';
 import 'package:trus_app/common/widgets/loader.dart';
-import 'package:trus_app/features/match/controller/match_controller.dart';
-import 'package:trus_app/features/statistics/repository/stats_repository.dart';
 import 'package:trus_app/models/helper/beer_stats_helper_model.dart';
 import 'package:trus_app/models/match_model.dart';
 import 'package:trus_app/models/season_model.dart';
 
-import '../../../common/widgets/custom_text_field.dart';
 import '../../../common/widgets/dropdown/season_dropdown.dart';
 import '../../../common/widgets/icon_text_field.dart';
-import '../../../models/beer_model.dart';
 import '../../../models/enum/drink.dart';
 import '../../../models/enum/participant.dart';
-import '../../../models/helper/beer_helper_model.dart';
 import '../controller/stats_controller.dart';
 import '../utils.dart';
 
@@ -241,7 +236,7 @@ class _PlayerBeerStatsScreenState extends ConsumerState<PlayerBeerStatsScreen> {
               children: [
                 SizedBox(
                     child: IconButton(
-                      icon: Icon(Icons.arrow_back),
+                      icon: const Icon(Icons.arrow_back),
 
                       onPressed: () {
                         changeScreens(false);

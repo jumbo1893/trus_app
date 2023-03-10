@@ -5,14 +5,10 @@ import 'package:trus_app/features/beer/lines/player_lines.dart';
 import 'package:trus_app/features/beer/lines/player_lines_calculator.dart';
 import 'dart:ui' as ui;
 
-import '../../../models/helper/beer_helper_model.dart';
 import 'new_player_lines_calculator.dart';
 
 class Painter extends CustomPainter{
 
-  //List<BeerHelperModel> beers = [];
-  //List<int> beerNumber = [];
-  //List<int> liquorNumber = [];
   late final Paint borderPaint;
   late final Paint whitePaint;
   late final Paint linePaint;
@@ -21,9 +17,7 @@ class Painter extends CustomPainter{
   final PlayerLines playerLines;
   bool liquerDraw = false;
   final Random random = Random();
-  //List<Point> listOfPoints = [];
   final double _progress;
-  //List<double> newLineCoordinates;
   final NewPlayerLinesCalculator? newPlayerLinesCalculator;
   ui.Image image;
 

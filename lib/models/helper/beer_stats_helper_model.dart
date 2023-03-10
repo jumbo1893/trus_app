@@ -2,7 +2,6 @@
 import '../enum/drink.dart';
 import '../beer_model.dart';
 import '../enum/participant.dart';
-import '../fine_model.dart';
 import '../match_model.dart';
 import '../player_model.dart';
 

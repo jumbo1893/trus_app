@@ -1,16 +1,11 @@
-import 'package:dropdown_button2/dropdown_button2.dart';
 import 'package:flutter/material.dart';
 import 'package:trus_app/models/helper/beer_helper_model.dart';
-import 'package:trus_app/models/helper/fine_match_helper_model.dart';
-import 'package:trus_app/models/season_model.dart';
 
 import '../../../colors.dart';
-import '../../../features/season/utils/season_calculator.dart';
 
 class ListviewBeerAddModel extends StatefulWidget {
   final BeerHelperModel helperModel;
   final String name;
-  //final String subtitle;
   final double padding;
   final Function(int number) onBeerNumberChanged;
   final Function(int number) onLiquorNumberChanged;
@@ -19,7 +14,6 @@ class ListviewBeerAddModel extends StatefulWidget {
         required this.padding,
         required this.onBeerNumberChanged,
         required this.onLiquorNumberChanged,
-        //required this.subtitle,
       required this.name,
       required this.helperModel})
       : super(key: key);
@@ -37,7 +31,6 @@ class _ListviewBeerAddModel extends State<ListviewBeerAddModel> {
   void dispose() {
     beerEditingController.dispose();
     liquorEditingController.dispose();
-    // TODO: implement dispose
     super.dispose();
   }
 
@@ -64,13 +57,13 @@ class _ListviewBeerAddModel extends State<ListviewBeerAddModel> {
       children: [
         SizedBox(
             width: (sizeFragment.width*10) - widget.padding ,
-            child: Text(widget.name, style: TextStyle(fontSize: 16))),
+            child: Text(widget.name, style: const TextStyle(fontSize: 16))),
 
         SizedBox(width: sizeFragment.width*2,),
 
         SizedBox(
             width: (sizeFragment.width*2.0),
-            child: Icon(Icons.sports_bar, color: blackColor,)),
+            child: const Icon(Icons.sports_bar, color: blackColor,)),
 
         SizedBox(
             width: (sizeFragment.width*2),
@@ -93,7 +86,7 @@ class _ListviewBeerAddModel extends State<ListviewBeerAddModel> {
         ),
         SizedBox(
             width: (sizeFragment.width*2),
-            child: Icon(Icons.liquor, color: blackColor,)),
+            child: const Icon(Icons.liquor, color: blackColor,)),
         SizedBox(
             width: (sizeFragment.width*2),
             child: IconButton(onPressed: () {widget.helperModel.addLiquorNumber(); refreshText(); sendLiquorCallback(widget.helperModel.liquorNumber);}, icon: const Icon(Icons.add, color: Colors.green,))),

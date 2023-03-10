@@ -1,4 +1,3 @@
-import 'dart:convert';
 import 'dart:math';
 import 'dart:ui' as ui;
 
@@ -9,7 +8,6 @@ import 'package:trus_app/common/utils/utils.dart';
 import 'package:trus_app/features/beer/lines/player_lines.dart';
 import 'package:trus_app/models/helper/beer_helper_model.dart';
 
-import 'package:trus_app/models/match_model.dart';
 
 import '../../../colors.dart';
 import '../../../common/widgets/custom_button.dart';
@@ -265,15 +263,15 @@ class _BeerPaintScreenState extends ConsumerState<BeerPaintScreen>
                   ),
                 ),
               ),
-              SizedBox(height: 50,),
+              const SizedBox(height: 50,),
               Row(
                 children: [
                   SizedBox(
                     width: size.width/6,
-                      child: Icon(Icons.info_outline, color: Colors.black,)),
+                      child: const Icon(Icons.info_outline, color: Colors.black,)),
                   SizedBox(
                     width: size.width/1.3,
-                      child: Text("Vertikálním čárkováním se zapisují piva, horizontálním panáky"))
+                      child: const Text("Vertikálním čárkováním se zapisují piva, horizontálním panáky"))
                 ],
               ),
               Padding(

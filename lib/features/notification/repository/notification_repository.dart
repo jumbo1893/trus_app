@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:trus_app/models/player_model.dart';
 
 import '../../../common/utils/firebase_exception.dart';
 import '../../../common/utils/utils.dart';

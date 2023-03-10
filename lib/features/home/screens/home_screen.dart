@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:trus_app/colors.dart';
-import 'package:trus_app/common/widgets/custom_button.dart';
 
 import '../../../common/widgets/random_fact_box.dart';
 import '../../../common/widgets/loader.dart';

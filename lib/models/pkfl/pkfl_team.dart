@@ -1,6 +1,4 @@
 
-import 'package:trus_app/models/pkfl/pkfl_match_detail.dart';
-import 'package:trus_app/models/pkfl/pkfl_match_player.dart';
 
 class PkflTeam {
   final int order;

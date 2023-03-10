@@ -1,5 +1,4 @@
 import '../enum/fine.dart';
-import '../enum/participant.dart';
 import '../match_model.dart';
 import '../player_model.dart';
 import 'fine_match_stats_helper_model.dart';

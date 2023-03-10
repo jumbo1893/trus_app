@@ -1,7 +1,5 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:trus_app/features/player/repository/player_repository.dart';
-import 'package:trus_app/models/player_model.dart';
 import 'package:trus_app/models/season_model.dart';
 
 import '../repository/season_repository.dart';
