@@ -79,30 +79,29 @@ class _RandomFactBoxState extends State<RandomFactBox> with SingleTickerProvider
         child: Row(
           children: [
             Expanded(
-              child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                children: [
-                  const Text('Náhodná zajímavost:',
-                      style: TextStyle(
-                        fontWeight: FontWeight.bold,
-                        fontSize: 16,
-                      )),
-                  StreamBuilder<List<String>>(
-                      stream: widget.randomFactStream,
-                      builder: (context, snapshot) {
-                        if (snapshot.connectionState ==
-                            ConnectionState.waiting) {
-                          return const Loader();
-                        }
-                        List<String> randomFactList = snapshot.data!;
-                        listLength = randomFactList.length;
-                        if (randomFactNumber == -1) {
-                          setNewRandomFactNumber(randomFactList.length);
-                        }
-                        return Flexible(
+              child: StreamBuilder<List<String>>(
+                  stream: widget.randomFactStream,
+                  builder: (context, snapshot) {
+                    if (snapshot.connectionState ==
+                        ConnectionState.waiting) {
+                      return const Loader();
+                    }
+                    List<String> randomFactList = snapshot.data!;
+                    listLength = randomFactList.length;
+                    if (randomFactNumber == -1) {
+                      setNewRandomFactNumber(randomFactList.length);
+                    }
+                    return Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text('Náhodná zajímavost #${randomFactNumber+1}',
+                            style: const TextStyle(
+                              fontWeight: FontWeight.bold,
+                              fontSize: 16,
+                            )),
+                        Flexible(
                           child: GestureDetector(
                             onHorizontalDragEnd: (dragEndDetails) {
-                              int sensitivity = 5;
                               if (dragEndDetails.primaryVelocity! < 0) {
                                 setState(() {
                                   setNextRandomFactNumber(true);
@@ -118,10 +117,10 @@ class _RandomFactBoxState extends State<RandomFactBox> with SingleTickerProvider
                               textAlign: TextAlign.center,
                             ),
                           ),
-                        );
-                      }),
-                ],
-              ),
+                        ),
+                      ],
+                    );
+                  }),
             ),
             RotationTransition(
               turns: _animation,

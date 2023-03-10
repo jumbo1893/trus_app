@@ -10,7 +10,6 @@ import 'package:trus_app/models/match_model.dart';
 import 'package:trus_app/models/player_model.dart';
 import 'package:trus_app/models/season_model.dart';
 
-import '../../common/utils/calendar.dart';
 import '../../models/enum/drink.dart';
 import '../../models/enum/fine.dart';
 import '../../models/enum/model.dart';
@@ -140,9 +139,6 @@ class RandomFact {
       randomFactList.add(getSeasonWithMostFines());
       randomFactList.add(getSeasonWithMostFinesAmount());
       randomFactList.add(getSeasonWithMostLiquors()); //40
-      for (int i = 0; i < randomFactList.length; i++) {
-        randomFactList[i] += i.toString();
-      }
       randomFactListStream.add(randomFactList);
     }
   }
