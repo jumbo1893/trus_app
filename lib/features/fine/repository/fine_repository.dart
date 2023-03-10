@@ -35,7 +35,7 @@ class FineRepository extends CustomFirebaseException {
   Future<bool> addFine(BuildContext context, String name, int amount) async {
     try {
       final document = firestore.collection(fineTable).doc();
-      FineModel fine = FineModel(name: name, id: document.id, amount: amount);
+      FineModel fine = FineModel(name: name, id: document.id, amount: amount, toDelete: true);
       await document.set(fine.toJson());
       showSnackBar(context: context, content: ("Pokuta $name úspěšně přidána"));
       return true;
@@ -54,7 +54,7 @@ class FineRepository extends CustomFirebaseException {
       FineModel fineModel) async {
     try {
       final document = firestore.collection(fineTable).doc(fineModel.id);
-      FineModel fine = FineModel(name: name, id: fineModel.id, amount: amount);
+      FineModel fine = FineModel(name: name, id: fineModel.id, amount: amount, toDelete: true);
       await document.set(fine.toJson());
       showSnackBar(
           context: context, content: ("Pokuta $name úspěšně upravena"));
@@ -72,17 +72,26 @@ class FineRepository extends CustomFirebaseException {
 
   Future<void> deleteFine(BuildContext context, FineModel fineModel) async {
     String name = fineModel.name;
-    await firestore.collection(fineTable).doc(fineModel.id).delete().then(
-        (value) => showSnackBar(
-            context: context, content: ("Pokuta $name úspěšně smazána")),
-        onError: (e) => {
-              if (!showSnackBarOnException(e.code, context))
-                {
-                  showSnackBar(
-                    context: context,
-                    content: e.message!,
-                  )
-                }
-            });
+    if (fineModel.toDelete) {
+      await firestore.collection(fineTable).doc(fineModel.id).delete().then(
+              (value) =>
+              showSnackBar(
+                  context: context, content: ("Pokuta $name úspěšně smazána")),
+          onError: (e) =>
+          {
+            if (!showSnackBarOnException(e.code, context))
+              {
+                showSnackBar(
+                  context: context,
+                  content: e.message!,
+                )
+              }
+          });
+    }
+    else {
+      showSnackBar(
+          context: context,
+          content: "Tuto pokutu nelze smazat",);
+    }
   }
 }

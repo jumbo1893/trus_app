@@ -5,23 +5,26 @@ class FineModel {
   final String id;
   final String name;
   final int amount;
-
+  final bool toDelete;
 
   FineModel(
       {required this.name,
       required this.id,
-      required this.amount,});
+      required this.amount,
+        required this.toDelete,});
 
   FineModel.dummy()
       : id = "dummy",
         name = "dummy",
-        amount = 0;
+        amount = 0,
+        toDelete = true;
 
   Map<String, dynamic> toJson() {
     return {
       "name": name,
       "id": id,
       "amount": amount,
+      "toDelete": toDelete,
     };
   }
 
@@ -40,6 +43,7 @@ class FineModel {
       amount: json['amount'] ?? 0,
       name: json["name"] ?? "",
       id: json["id"] ?? "",
+      toDelete: json["toDelete"] ?? true,
     );
   }
 

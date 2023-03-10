@@ -71,6 +71,7 @@ class _MainScreenState extends ConsumerState<MainScreen> {
     name: "name",
     id: "id",
     amount: 1,
+    toDelete: true,
   );
 
   MatchModel mainMatch = MatchModel.dummyMainMatch();
