@@ -37,17 +37,21 @@ class _BeerSimpleScreenState extends ConsumerState<BeerSimpleScreen> {
   List<String> matchPlayers = [];
   int playerIndex = 0;
   int paintScreenPlayerIndex = 0;
+  bool commit = false;
 
   void changeBeers() async {
+    commit = true;
     showLoaderSnackBar(context: context);
     String text = "";
     for (int i = 0; i < beerNumber.length; i++) {
+      print(i.toString() + beerNumber.toString());
       //pokud počet piv nebo kořalek není -1 (=nezměnily se)
       if (beerNumber[i] != -1 || liquorNumber[i] != -1) {
         //id, id hráče, pokud je počet piv -1, tak dáváme původení počet, pokud ne, tak nový, pokud je počet kořalek -1, tak dáváme původení počet, pokud ne, tak nový
         if (!await addBeer(beers[i].id, beers[i].player.id, beerNumber[i] == -1 ? beers[i].beerNumber : beerNumber[i], liquorNumber[i] == -1 ? beers[i].liquorNumber : liquorNumber[i])) {
           hideSnackBar(context);
           widget.onButtonConfirmPressed.call();
+          commit = false;
           return;
         }
         //pokud je změna v pivech tak piva
@@ -62,6 +66,7 @@ class _BeerSimpleScreenState extends ConsumerState<BeerSimpleScreen> {
       context: context,
       content: "Stavy pivek a jiných pochutin úspěšně změněny",
     );
+    commit = false;
     widget.onButtonConfirmPressed.call();
   }
 
@@ -143,7 +148,9 @@ class _BeerSimpleScreenState extends ConsumerState<BeerSimpleScreen> {
                   return const Loader();
                 }
                 beers = snapshot.data!;
-                setNewBeerNumber(snapshot.data!.length);
+                if(!commit) {
+                  setNewBeerNumber(snapshot.data!.length);
+                }
                 if(ref.read(beerControllerProvider).simpleScreen) {
                   return Column(
                     children: [
