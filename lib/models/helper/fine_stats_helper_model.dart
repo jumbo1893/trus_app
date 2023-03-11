@@ -73,7 +73,9 @@ class FineStatsHelperModel {
   List<String> getPlayerIdsFromMatchPlayer() {
     List<String> playerIds = [];
     for (FineMatchStatsHelperModel fineModel in listOfFines) {
-      playerIds.add(fineModel.playerId);
+      if(!playerIds.contains(fineModel.playerId)) {
+        playerIds.add(fineModel.playerId);
+      }
     }
     return playerIds;
   }

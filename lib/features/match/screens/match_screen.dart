@@ -51,43 +51,41 @@ class _MatchScreenState extends ConsumerState<MatchScreen> {
                     if (snapshot.connectionState == ConnectionState.waiting) {
                       return const Loader();
                     }
-                    return ListView.builder(
-                      shrinkWrap: true,
-                      itemCount: snapshot.data!.length,
-                      itemBuilder: (context, index) {
-                        var match = snapshot.data![index];
-                        return Column(
-                          children: [
-                            InkWell(
-                              onTap: () => widget.setMatch(match),
-                              child: Container(
-                                decoration: const BoxDecoration(
-                                    border: Border(
-                                        bottom: BorderSide(
-                                  color: Colors.grey,
-                                ))),
-                                child: ListTile(
-                                  title: Padding(
-                                    padding:
-                                        const EdgeInsets.only(bottom: padding*2),
-                                    child: Text(
-                                      match.toStringWithOpponentName(),
-                                      style: const TextStyle(
-                                          fontWeight: FontWeight.bold,
-                                          fontSize: 18),
-                                    ),
-                                  ),
-                                  subtitle: Text(
-                                    match.toStringForMatchList(),
+                    return Expanded(
+                      child: ListView.builder(
+                        shrinkWrap: true,
+                        itemCount: snapshot.data!.length,
+                        itemBuilder: (context, index) {
+                          var match = snapshot.data![index];
+                          return InkWell(
+                            onTap: () => widget.setMatch(match),
+                            child: Container(
+                              decoration: const BoxDecoration(
+                                  border: Border(
+                                      bottom: BorderSide(
+                                color: Colors.grey,
+                              ))),
+                              child: ListTile(
+                                title: Padding(
+                                  padding:
+                                      const EdgeInsets.only(bottom: padding*2),
+                                  child: Text(
+                                    match.toStringWithOpponentName(),
                                     style: const TextStyle(
-                                        color: listviewSubtitleColor),
+                                        fontWeight: FontWeight.bold,
+                                        fontSize: 18),
                                   ),
                                 ),
+                                subtitle: Text(
+                                  match.toStringForMatchList(),
+                                  style: const TextStyle(
+                                      color: listviewSubtitleColor),
+                                ),
                               ),
-                            )
-                          ],
-                        );
-                      },
+                            ),
+                          );
+                        },
+                      ),
                     );
                   }),
             ],

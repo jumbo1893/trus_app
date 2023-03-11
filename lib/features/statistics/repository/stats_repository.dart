@@ -198,27 +198,51 @@ class StatsRepository {
 
   Stream<List<FineStatsHelperModel>> getFinesForMatchesInSeason(SeasonModel? season) async* {
     List<MatchModel> matches = [];
-    season ??= await getCurrentSeason();
-    matches =
-    await _getMatchesBySeason(season.id);
-    yield*
-    firestore
-        .collection(fineMatchTable)
-        .where("matchId", whereIn: _getListOfIdsFromMatches(matches))
-        .snapshots()
-        .asyncMap((event) async {
-      List<FineMatchModel> finesMatch = [];
-      List<String> finesIds = [];
-      List<FineModel> fines = [];
-      for (var document in event.docs) {
-        var fine = FineMatchModel.fromJson(document.data());
-        finesMatch.add(fine);
-        finesIds.add(fine.fineId);
-      }
-      fines = await getFinesById(finesIds);
-      FineStatsHelper fineStatsHelper = FineStatsHelper(fines, finesMatch);
-      return fineStatsHelper.convertFineModelToFineStatsHelperModelForMatches(matches);
-    });
+
+      season ??= await getCurrentSeason();
+      matches =
+      await _getMatchesBySeason(season.id);
+    if(season != SeasonModel.allSeason()) {
+      yield*
+      firestore
+          .collection(fineMatchTable)
+          .where("matchId", whereIn: _getListOfIdsFromMatches(matches))
+          .snapshots()
+          .asyncMap((event) async {
+        List<FineMatchModel> finesMatch = [];
+        List<String> finesIds = [];
+        List<FineModel> fines = [];
+        for (var document in event.docs) {
+          var fine = FineMatchModel.fromJson(document.data());
+          finesMatch.add(fine);
+          finesIds.add(fine.fineId);
+        }
+        fines = await getFinesById(finesIds);
+        FineStatsHelper fineStatsHelper = FineStatsHelper(fines, finesMatch);
+        return fineStatsHelper.convertFineModelToFineStatsHelperModelForMatches(
+            matches);
+      });
+    }
+    else {
+      yield*
+      firestore
+          .collection(fineMatchTable)
+          .snapshots()
+          .asyncMap((event) async {
+        List<FineMatchModel> finesMatch = [];
+        List<String> finesIds = [];
+        List<FineModel> fines = [];
+        for (var document in event.docs) {
+          var fine = FineMatchModel.fromJson(document.data());
+          finesMatch.add(fine);
+          finesIds.add(fine.fineId);
+        }
+        fines = await getFinesById(finesIds);
+        FineStatsHelper fineStatsHelper = FineStatsHelper(fines, finesMatch);
+        return fineStatsHelper.convertFineModelToFineStatsHelperModelForMatches(
+            matches);
+      });
+    }
   }
 
   Future<List<FineModel>> getFinesById(List<String> finesListId) async {
