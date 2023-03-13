@@ -29,7 +29,7 @@ class StatsRepository {
 
   List<String> _getListOfIdsFromMatches(List<MatchModel> matches) {
     List<String> matchIds = [];
-    for(MatchModel matchModel in matches) {
+    for (MatchModel matchModel in matches) {
       matchIds.add(matchModel.id);
     }
     return matchIds;
@@ -49,7 +49,8 @@ class StatsRepository {
   }
 
   Future<List<PlayerModel>> _getPlayersWithoutFans() async {
-    final docRef = firestore.collection(playerTable).where("fan", isEqualTo: false);
+    final docRef =
+        firestore.collection(playerTable).where("fan", isEqualTo: false);
     List<PlayerModel> players = [];
     await docRef.get().then((res) {
       for (var doc in res.docs) {
@@ -63,9 +64,9 @@ class StatsRepository {
 
   Future<List<String>> _getMatchIdsBySeason(String seasonId) async {
     List<String> matchIds = [];
-    var docRef = firestore.collection(matchTable).where(
-        "seasonId", isEqualTo: seasonId);
-    if(seasonId == SeasonModel.allSeason().id) {
+    var docRef =
+        firestore.collection(matchTable).where("seasonId", isEqualTo: seasonId);
+    if (seasonId == SeasonModel.allSeason().id) {
       docRef = firestore.collection(matchTable);
     }
     await docRef.get().then((res) {
@@ -78,9 +79,9 @@ class StatsRepository {
 
   Future<List<MatchModel>> _getMatchesBySeason(String seasonId) async {
     List<MatchModel> matches = [];
-    var docRef = firestore.collection(matchTable).where(
-        "seasonId", isEqualTo: seasonId);
-    if(seasonId == SeasonModel.allSeason().id) {
+    var docRef =
+        firestore.collection(matchTable).where("seasonId", isEqualTo: seasonId);
+    if (seasonId == SeasonModel.allSeason().id) {
       docRef = firestore.collection(matchTable);
     }
     await docRef.get().then((res) {
@@ -97,9 +98,8 @@ class StatsRepository {
     for (String matchId in matchListId) {
       final docRef = firestore.collection(matchTable).doc(matchId);
       await docRef.get().then(
-            (DocumentSnapshot doc) {
-          final match =
-          MatchModel.fromJson(doc.data() as Map<String, dynamic>);
+        (DocumentSnapshot doc) {
+          final match = MatchModel.fromJson(doc.data() as Map<String, dynamic>);
           matches.add(match);
         },
         onError: (e) => print("Error getting document: $e"),
@@ -113,9 +113,9 @@ class StatsRepository {
     for (String playerId in playerListId) {
       final docRef = firestore.collection(playerTable).doc(playerId);
       await docRef.get().then(
-            (DocumentSnapshot doc) {
+        (DocumentSnapshot doc) {
           final player =
-          PlayerModel.fromJson(doc.data() as Map<String, dynamic>);
+              PlayerModel.fromJson(doc.data() as Map<String, dynamic>);
           players.add(player);
         },
         onError: (e) => print("Error getting document: $e"),
@@ -124,16 +124,14 @@ class StatsRepository {
     return players;
   }
 
-  Stream<List<BeerStatsHelperModel>> getBeersForPlayersInSeason(SeasonModel? season) async* {
-    final List<PlayerModel> players =
-    await _getPlayers();
+  Stream<List<BeerStatsHelperModel>> getBeersForPlayersInSeason(
+      SeasonModel? season) async* {
+    final List<PlayerModel> players = await _getPlayers();
     List<String> matchIds = [];
     season ??= await getCurrentSeason();
-    matchIds =
-    await _getMatchIdsBySeason(season.id);
-
-    yield*
-    firestore
+    matchIds = await _getMatchIdsBySeason(season.id);
+    if (season != SeasonModel.allSeason()) {
+    yield* firestore
         .collection(beerTable)
         .where("matchId", whereIn: matchIds)
         .snapshots()
@@ -144,17 +142,33 @@ class StatsRepository {
         beers.add(beer);
       }
       BeerStatsHelper beerStatsHelper = BeerStatsHelper(beers);
-      return beerStatsHelper.convertBeerModelToBeerStatsHelperModelForPlayers(players);
+      return beerStatsHelper
+          .convertBeerModelToBeerStatsHelperModelForPlayers(players);
     });
+    } else {
+      yield* firestore
+          .collection(beerTable)
+          .snapshots()
+          .asyncMap((event) async {
+        List<BeerModel> beers = [];
+        for (var document in event.docs) {
+          var beer = BeerModel.fromJson(document.data());
+          beers.add(beer);
+        }
+        BeerStatsHelper beerStatsHelper = BeerStatsHelper(beers);
+        return beerStatsHelper
+            .convertBeerModelToBeerStatsHelperModelForPlayers(players);
+      });
+    }
   }
 
-  Stream<List<BeerStatsHelperModel>> getBeersForMatchesInSeason(SeasonModel? season) async* {
+  Stream<List<BeerStatsHelperModel>> getBeersForMatchesInSeason(
+      SeasonModel? season) async* {
     List<MatchModel> matches = [];
     season ??= await getCurrentSeason();
-    matches =
-    await _getMatchesBySeason(season.id);
-    yield*
-    firestore
+    matches = await _getMatchesBySeason(season.id);
+    if (season != SeasonModel.allSeason()) {
+    yield* firestore
         .collection(beerTable)
         .where("matchId", whereIn: _getListOfIdsFromMatches(matches))
         .snapshots()
@@ -165,19 +179,34 @@ class StatsRepository {
         beers.add(beer);
       }
       BeerStatsHelper beerStatsHelper = BeerStatsHelper(beers);
-      return beerStatsHelper.convertBeerModelToBeerStatsHelperModelForMatches(matches);
+      return beerStatsHelper
+          .convertBeerModelToBeerStatsHelperModelForMatches(matches);
     });
+    } else {
+      yield* firestore
+          .collection(beerTable)
+          .snapshots()
+          .asyncMap((event) async {
+        List<BeerModel> beers = [];
+        for (var document in event.docs) {
+          var beer = BeerModel.fromJson(document.data());
+          beers.add(beer);
+        }
+        BeerStatsHelper beerStatsHelper = BeerStatsHelper(beers);
+        return beerStatsHelper
+            .convertBeerModelToBeerStatsHelperModelForMatches(matches);
+      });
+    }
   }
 
-  Stream<List<FineStatsHelperModel>> getFinesForPlayersInSeason(SeasonModel? season) async* {
-    final List<PlayerModel> players =
-    await _getPlayersWithoutFans();
+  Stream<List<FineStatsHelperModel>> getFinesForPlayersInSeason(
+      SeasonModel? season) async* {
+    final List<PlayerModel> players = await _getPlayersWithoutFans();
     List<String> matchIds = [];
     season ??= await getCurrentSeason();
-    matchIds =
-    await _getMatchIdsBySeason(season.id);
-    yield*
-    firestore
+    matchIds = await _getMatchIdsBySeason(season.id);
+    if (season != SeasonModel.allSeason()) {
+    yield* firestore
         .collection(fineMatchTable)
         .where("matchId", whereIn: matchIds)
         .snapshots()
@@ -192,19 +221,38 @@ class StatsRepository {
       }
       fines = await getFinesById(finesIds);
       FineStatsHelper fineStatsHelper = FineStatsHelper(fines, finesMatch);
-      return fineStatsHelper.convertFineModelToFineStatsHelperModelForPlayers(players);
+      return fineStatsHelper
+          .convertFineModelToFineStatsHelperModelForPlayers(players);
     });
+    } else {
+      yield* firestore
+          .collection(fineMatchTable)
+          .snapshots()
+          .asyncMap((event) async {
+        List<FineMatchModel> finesMatch = [];
+        List<String> finesIds = [];
+        List<FineModel> fines = [];
+        for (var document in event.docs) {
+          var fine = FineMatchModel.fromJson(document.data());
+          finesMatch.add(fine);
+          finesIds.add(fine.fineId);
+        }
+        fines = await getFinesById(finesIds);
+        FineStatsHelper fineStatsHelper = FineStatsHelper(fines, finesMatch);
+        return fineStatsHelper
+            .convertFineModelToFineStatsHelperModelForPlayers(players);
+      });
+    }
   }
 
-  Stream<List<FineStatsHelperModel>> getFinesForMatchesInSeason(SeasonModel? season) async* {
+  Stream<List<FineStatsHelperModel>> getFinesForMatchesInSeason(
+      SeasonModel? season) async* {
     List<MatchModel> matches = [];
 
-      season ??= await getCurrentSeason();
-      matches =
-      await _getMatchesBySeason(season.id);
-    if(season != SeasonModel.allSeason()) {
-      yield*
-      firestore
+    season ??= await getCurrentSeason();
+    matches = await _getMatchesBySeason(season.id);
+    if (season != SeasonModel.allSeason()) {
+      yield* firestore
           .collection(fineMatchTable)
           .where("matchId", whereIn: _getListOfIdsFromMatches(matches))
           .snapshots()
@@ -219,13 +267,11 @@ class StatsRepository {
         }
         fines = await getFinesById(finesIds);
         FineStatsHelper fineStatsHelper = FineStatsHelper(fines, finesMatch);
-        return fineStatsHelper.convertFineModelToFineStatsHelperModelForMatches(
-            matches);
+        return fineStatsHelper
+            .convertFineModelToFineStatsHelperModelForMatches(matches);
       });
-    }
-    else {
-      yield*
-      firestore
+    } else {
+      yield* firestore
           .collection(fineMatchTable)
           .snapshots()
           .asyncMap((event) async {
@@ -239,8 +285,8 @@ class StatsRepository {
         }
         fines = await getFinesById(finesIds);
         FineStatsHelper fineStatsHelper = FineStatsHelper(fines, finesMatch);
-        return fineStatsHelper.convertFineModelToFineStatsHelperModelForMatches(
-            matches);
+        return fineStatsHelper
+            .convertFineModelToFineStatsHelperModelForMatches(matches);
       });
     }
   }
@@ -250,9 +296,8 @@ class StatsRepository {
     for (String finesId in finesListId) {
       final docRef = firestore.collection(fineTable).doc(finesId);
       await docRef.get().then(
-            (DocumentSnapshot doc) {
-          final fine =
-          FineModel.fromJson(doc.data() as Map<String, dynamic>);
+        (DocumentSnapshot doc) {
+          final fine = FineModel.fromJson(doc.data() as Map<String, dynamic>);
           fines.add(fine);
         },
         onError: (e) => print("Error getting document: $e"),
@@ -263,48 +308,54 @@ class StatsRepository {
 
   Future<SeasonModel> getCurrentSeason() async {
     List<SeasonModel> seasons = [];
-    final docRef = firestore.collection(seasonTable).where("fromDate", isLessThanOrEqualTo: DateTime.now().millisecondsSinceEpoch).orderBy("fromDate");
+    final docRef = firestore
+        .collection(seasonTable)
+        .where("fromDate",
+            isLessThanOrEqualTo: DateTime.now().millisecondsSinceEpoch)
+        .orderBy("fromDate");
     await docRef.get().then((res) {
       for (var doc in res.docs) {
         var season = SeasonModel.fromJson(doc.data());
         seasons.add(season);
       }
     });
-      return seasons.firstWhere((element) => !element.toDate.isBefore(DateTime.now()), orElse: () => SeasonModel.otherSeason());
+    return seasons.firstWhere(
+        (element) => !element.toDate.isBefore(DateTime.now()),
+        orElse: () => SeasonModel.otherSeason());
   }
 
-  Stream<List<PlayerStatsHelperModel>> getPlayerStatsForPlayersInSeason(SeasonModel? season) async* {
-    final List<PlayerModel> players =
-    await _getPlayers();
+  Stream<List<PlayerStatsHelperModel>> getPlayerStatsForPlayersInSeason(
+      SeasonModel? season) async* {
+    final List<PlayerModel> players = await _getPlayers();
     List<String> matchIds = [];
     season ??= await getCurrentSeason();
-    matchIds =
-    await _getMatchIdsBySeason(season.id);
+    matchIds = await _getMatchIdsBySeason(season.id);
 
-    yield*
-    firestore
+    yield* firestore
         .collection(playerStatsTable)
         .where("matchId", whereIn: matchIds)
         .snapshots()
         .asyncMap((event) async {
-      final HashMap<String, PlayerStatsHelperModel> playerStatsHashMap = HashMap();
-      PlayerModel findPlayer(String id) =>
-          players.firstWhere((e) => e.id == id,
-              orElse: () => PlayerModel.dummy());
+      final HashMap<String, PlayerStatsHelperModel> playerStatsHashMap =
+          HashMap();
+      PlayerModel findPlayer(String id) => players.firstWhere((e) => e.id == id,
+          orElse: () => PlayerModel.dummy());
       for (var document in event.docs) {
         var player = PlayerStatsModel.fromJson(document.data());
-        if(playerStatsHashMap[player.playerId] == null) {
-          playerStatsHashMap.addAll({player.playerId : PlayerStatsHelperModel(id: player.id,
-              player: findPlayer(player.playerId),
-              goalNumber: player.goalNumber,
-              assistNumber: player.assistNumber)});
-        }
-        else {
-          playerStatsHashMap[player.playerId]!.addAssistAndGoalNumber(player.assistNumber, player.goalNumber);
+        if (playerStatsHashMap[player.playerId] == null) {
+          playerStatsHashMap.addAll({
+            player.playerId: PlayerStatsHelperModel(
+                id: player.id,
+                player: findPlayer(player.playerId),
+                goalNumber: player.goalNumber,
+                assistNumber: player.assistNumber)
+          });
+        } else {
+          playerStatsHashMap[player.playerId]!
+              .addAssistAndGoalNumber(player.assistNumber, player.goalNumber);
         }
       }
       return playerStatsHashMap.values.toList();
     });
   }
-
 }
