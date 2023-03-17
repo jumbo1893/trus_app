@@ -35,7 +35,7 @@ class _UserInformationScreenState extends ConsumerState<UserInformationScreen> {
     });
     if(errorText.isEmpty) {
       if(await ref.read(authControllerProvider).saveUserDataToFirebase(context, name)) {
-        await ref.read(notificationControllerProvider).addAdminNotification(context, "Nová registrace", "Zaregistrován nový píč $name");
+        //await ref.read(notificationControllerProvider).addAdminNotification(context, "Nová registrace", "Zaregistrován nový píč $name");
         Navigator.pushNamedAndRemoveUntil(context, MainScreen.routeName, (route) => false);
       }
     }
