@@ -1,4 +1,3 @@
-
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:trus_app/common/widgets/custom_button.dart';
@@ -8,19 +7,27 @@ import 'package:trus_app/features/season/controller/season_controller.dart';
 
 import '../../../common/utils/calendar.dart';
 import '../../../common/utils/field_validator.dart';
+import '../../../common/utils/utils.dart';
+import '../../../common/widgets/builder/column_future_builder.dart';
+import '../../../common/widgets/button/crud_button.dart';
 import '../../../common/widgets/confirmation_dialog.dart';
+import '../../../common/widgets/rows/stream/row_calendar_stream.dart';
+import '../../../common/widgets/rows/stream/row_text_field_stream.dart';
+import '../../../models/api/season_api_model.dart';
+import '../../../models/enum/crud.dart';
 import '../../../models/season_model.dart';
 import '../../notification/controller/notification_controller.dart';
+import '../controller/season_controller.dart';
 
 class EditSeasonScreen extends ConsumerStatefulWidget {
   final VoidCallback onButtonConfirmPressed;
-  final SeasonModel? seasonModel;
-  bool init;
-  EditSeasonScreen(
-      this.seasonModel, {
+  final SeasonApiModel? seasonModel;
+  final bool isFocused;
+  const EditSeasonScreen(
+    this.seasonModel, {
     Key? key,
-    this.init = true,
     required this.onButtonConfirmPressed,
+    required this.isFocused,
   }) : super(key: key);
 
   @override
@@ -28,126 +35,77 @@ class EditSeasonScreen extends ConsumerStatefulWidget {
 }
 
 class _EditSeasonScreenState extends ConsumerState<EditSeasonScreen> {
-  final _nameController = TextEditingController();
-  final _calendarFromController = TextEditingController();
-  final _calendarToController = TextEditingController();
-  String nameErrorText = "";
-  String calendarFromErrorText = "";
-  String calendarToErrorText = "";
-
-  DateTime pickedDateFrom = DateTime.now();
-  DateTime pickedDateTo = DateTime.now();
-
-  List<SeasonModel> allSeasons = [];
-  @override
-  void dispose() {
-    _nameController.dispose();
-    super.dispose();
-  }
-
-  Future<void> readSeasonsFromDB() async {
-    allSeasons = await ref.read(seasonControllerProvider).seasons().first;
-  }
-
-  Future<void> editSeason() async {
-    String name = _nameController.text.trim();
-    setState(() {
-      nameErrorText = validateEmptyField(name);
-      calendarFromErrorText = validateSeasons(allSeasons, pickedDateFrom, pickedDateTo, widget.seasonModel);
-    });
-    if (nameErrorText.isEmpty && calendarFromErrorText.isEmpty) {
-      if (await ref.read(seasonControllerProvider).editSeason(
-          context, name, pickedDateFrom, pickedDateTo, widget.seasonModel!)) {
-        await sendNotification("Upravena sezona $name", 'Začátek sezony: ${dateTimeToString(pickedDateFrom)}, konec sezony: ${dateTimeToString(pickedDateTo)}');
-        widget.onButtonConfirmPressed.call();
-      }
-    }
-  }
-
-  void showDeleteConfirmation() {
-    var dialog = ConfirmationDialog("opravdu chcete smazat tuto sezonu?", () { deleteSeason();});
-    showDialog(context: context, builder: (BuildContext context) => dialog);
-  }
-
-  Future<void> deleteSeason() async {
-    final String name = widget.seasonModel!.name;
-    final String text = widget.seasonModel!.toStringForSeasonList();
-    await ref
-        .read(seasonControllerProvider)
-        .deleteSeason(context, widget.seasonModel!);
-    await sendNotification("Smazána sezona $name", text);
-    widget.onButtonConfirmPressed.call();
-  }
-
-  Future<void> sendNotification(String title, String text) async {
-    if(text.isNotEmpty) {
-      await ref.read(notificationControllerProvider).addNotification(
-          context, title, text);
-    }
-  }
-
-  void setSeason(SeasonModel? season) {
-    if (widget.init) {
-      _nameController.text = season?.name ?? "";
-      pickedDateTo = season?.toDate ?? DateTime.now();
-      pickedDateFrom = season?.fromDate ?? DateTime.now();
-      _calendarFromController.text = dateTimeToString(pickedDateFrom);
-      _calendarToController.text = dateTimeToString(pickedDateTo);
-      widget.init = false;
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
-    readSeasonsFromDB();
-    const double padding = 8.0;
-    final size = MediaQuery.of(context).size;
-    setSeason(widget.seasonModel);
-    return Scaffold(
-      body: Padding(
-        padding: const EdgeInsets.all(padding),
-        child: SafeArea(
-          child: Column(
-            children: [
-              RowTextField(
-                  size: size,
-                  padding: padding,
-                  textController: _nameController,
-                  errorText: nameErrorText,
-                  labelText: "název",
-                  textFieldText: "Název sezony:"),
-              const SizedBox(height: 10),
-              RowCalendar(
-                pickedDate: pickedDateFrom,
-                size: size,
-                padding: padding,
-                errorText: calendarFromErrorText,
-                calendarController: _calendarFromController,
-                textFieldText: "Začátek sezony",
-                onDateChanged: (date) {
-                  setState(() => pickedDateFrom = date);
-                },
-              ),
-              const SizedBox(height: 10),
-              RowCalendar(
-                pickedDate: pickedDateTo,
-                size: size,
-                padding: padding,
-                errorText: calendarToErrorText,
-                calendarController: _calendarToController,
-                textFieldText: "Konec sezony",
-                onDateChanged: (date) {
-                  setState(() => pickedDateTo = date);
-                },
-              ),
-              const SizedBox(height: 10),
-              const SizedBox(height: 10),
-              CustomButton(text: "Potvrď změny", onPressed: editSeason),
-              CustomButton(text: "Smaž sezonu", onPressed: showDeleteConfirmation)
-            ],
+    if (widget.isFocused) {
+      const double padding = 8.0;
+      final size =
+          MediaQueryData.fromWindow(WidgetsBinding.instance.window).size;
+      return ColumnFutureBuilder(
+        loadModelFuture:
+            ref.watch(seasonControllerProvider).season(widget.seasonModel!),
+        columns: [
+          RowTextFieldStream(
+            size: size,
+            labelText: "název",
+            padding: padding,
+            textFieldText: "Název sezony:",
+            textStream: ref.watch(seasonControllerProvider).name(),
+            errorTextStream:
+                ref.watch(seasonControllerProvider).nameErrorText(),
+            onTextChanged: (name) =>
+                {ref.watch(seasonControllerProvider).setName(name)},
           ),
-        ),
-      ),
-    );
+          const SizedBox(height: 10),
+          RowCalendarStream(
+            size: size,
+            padding: padding,
+            textFieldText: "Začátek sezony:",
+            onDateChanged: (date) {
+              ref.watch(seasonControllerProvider).setFromDate(date);
+            },
+            dateStream: ref.watch(seasonControllerProvider).fromDate(),
+            errorTextStream: ref.watch(seasonControllerProvider).fromDateErrorText(),
+          ),
+          const SizedBox(height: 10),
+          RowCalendarStream(
+            size: size,
+            padding: padding,
+            textFieldText: "Konec sezony:",
+            onDateChanged: (date) {
+              ref.watch(seasonControllerProvider).setToDate(date);
+            },
+            dateStream: ref.watch(seasonControllerProvider).toDate(),
+            errorTextStream: ref.watch(seasonControllerProvider).toDateErrorText(),
+          ),
+          const SizedBox(height: 10),
+          const SizedBox(height: 10),
+          CrudButton(
+            text: "Potvrď změny",
+            context: context,
+            crud: Crud.update,
+            crudOperations: ref.read(seasonControllerProvider),
+            onOperationComplete: (id) {
+              widget.onButtonConfirmPressed();
+            },
+            id: widget.seasonModel!.id!,
+          ),
+          CrudButton(
+            text: "Smaž sezonu",
+            context: context,
+            crud: Crud.delete,
+            crudOperations: ref.read(seasonControllerProvider),
+            onOperationComplete: (id) {
+              widget.onButtonConfirmPressed();
+            },
+            id: widget.seasonModel!.id!,
+            modelToString: widget.seasonModel!,
+          ),
+        ],
+        loadingScreen: null,
+      );
+    } else {
+      return Container();
+    }
   }
 }

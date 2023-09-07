@@ -5,6 +5,7 @@ import 'package:trus_app/features/auth/screens/login_screen.dart';
 import 'package:trus_app/features/fine/match/screens/fine_match_screen.dart';
 import 'package:trus_app/features/fine/match/screens/fine_player_screen.dart';
 import 'package:trus_app/features/fine/screens/fine_screen.dart';
+import 'package:trus_app/features/goal/screen/goal_screen.dart';
 import 'package:trus_app/features/match/screens/add_match_screen.dart';
 import 'package:trus_app/features/match/screens/edit_match_screen.dart';
 import 'package:trus_app/features/match/screens/match_screen.dart';
@@ -15,22 +16,28 @@ import 'package:trus_app/features/player/screens/edit_player_screen.dart';
 import 'package:trus_app/features/player/screens/player_screen.dart';
 import 'package:trus_app/features/season/screens/edit_season_screen.dart';
 import 'package:trus_app/features/season/screens/season_screen.dart';
+import 'package:trus_app/models/api/fine_api_model.dart';
+import 'package:trus_app/models/api/match/match_api_model.dart';
 import 'package:trus_app/models/match_model.dart';
 import 'package:trus_app/models/player_model.dart';
-import 'package:trus_app/models/season_model.dart';
-import '../../models/fine_model.dart';
+import '../../common/utils/utils.dart';
+import '../../models/api/player_api_model.dart';
+import '../../models/api/season_api_model.dart';
 import '../auth/controller/auth_controller.dart';
 import '../auth/screens/user_screen.dart';
 import '../beer/screens/beer_simple_screen.dart';
 import '../fine/match/screens/multiple_fine_players_screen.dart';
 import '../fine/screens/add_fine_screen.dart';
 import '../fine/screens/edit_fine_screen.dart';
+import '../general/error/api_executor.dart';
 import '../home/screens/home_screen.dart';
 import '../notification/screen/notification_screen.dart';
 import '../pkfl/screens/pkfl_table_screens.dart';
 import '../season/screens/add_season_screen.dart';
-import '../statistics/playerstats/screens/player_stats_stats_screen.dart';
+import '../statistics/screens/goal/main_goal_statistics_screen.dart';
 import '../statistics/screens/main_statistics_screen.dart';
+import 'bottom_sheet_navigation_manager.dart';
+import 'appbar_title_manager.dart';
 
 class MainScreen extends ConsumerStatefulWidget {
   const MainScreen({Key? key}) : super(key: key);
@@ -43,52 +50,48 @@ class MainScreen extends ConsumerStatefulWidget {
 class _MainScreenState extends ConsumerState<MainScreen> {
   int _selectedBottomSheetIndex = 0;
   PageController pageController = PageController();
-  String appBarTitle = "Trusí appka";
   final List<int> fragmentList = [];
   bool backButtonVisibility = false;
   int _currentIndex = 0;
+  late BottomSheetNavigationManager _bottomSheetNavigationManager;
+  late AppBarTitleManager _appBarTitleManager;
+
+  @override
+  void initState() {
+    super.initState();
+    _bottomSheetNavigationManager = BottomSheetNavigationManager(context);
+    _appBarTitleManager = AppBarTitleManager();
+  }
 
   //dummy modely , které se předávají na další obrazovky
-  PlayerModel playerModel = PlayerModel(
+  PlayerApiModel playerModel = PlayerApiModel(
       name: "name",
-      id: "id",
+      id: 0,
       birthday: DateTime.now(),
       fan: false,
-      isActive: true);
+      active: true,);
 
-  SeasonModel seasonModel = SeasonModel(
-      name: "name", id: "id", fromDate: DateTime.now(), toDate: DateTime.now());
+  SeasonApiModel seasonModel = SeasonApiModel.dummy();
 
-  MatchModel matchModel = MatchModel(
-      name: "name",
-      id: "id",
-      date: DateTime.now(),
-      home: true,
-      playerIdList: ["id"],
-      seasonId: "id");
+  MatchApiModel matchModel = MatchApiModel.dummy();
 
-  FineModel fineModel = FineModel(
-    name: "name",
-    id: "id",
-    amount: 1,
-    toDelete: true,
-  );
+  FineApiModel fineModel = FineApiModel.dummy();
 
   MatchModel mainMatch = MatchModel.dummyMainMatch();
 
-  List<PlayerModel> playerListModel = [];
+  List<int> playerIdListModel = [];
 
-  void onPickedPlayerChange(PlayerModel newPlayerModel) {
+  void onPickedPlayerChange(PlayerApiModel newPlayerModel) {
     setState(() => playerModel = newPlayerModel);
     changeFragment(5);
   }
 
-  void onPickedSeasonChange(SeasonModel newSeasonModel) {
+  void onPickedSeasonChange(SeasonApiModel newSeasonModel) {
     setState(() => seasonModel = newSeasonModel);
     changeFragment(8);
   }
 
-  void onPickedMatchChange(MatchModel newMatchModel) {
+  void onPickedMatchChange(MatchApiModel newMatchModel) {
     setState(() => matchModel = newMatchModel);
     changeFragment(11);
   }
@@ -97,24 +100,33 @@ class _MainScreenState extends ConsumerState<MainScreen> {
     mainMatch = newMatchModel;
   }
 
-  void onPickedFineChange(FineModel newFineModel) {
+  void onPickedFineChange(FineApiModel newFineModel) {
     setState(() => fineModel = newFineModel);
     changeFragment(14);
   }
 
-  void onPickedPlayerFinesChange(PlayerModel newPlayerModel) {
+  void onPickedPlayerFinesChange(PlayerApiModel newPlayerModel) {
     setState(() => playerModel = newPlayerModel);
     changeFragment(15);
   }
 
-  void onPickedPlayersFinesChange(List<PlayerModel> newPlayerList) {
-    setState(() => playerListModel = newPlayerList);
+  void onPickedPlayersFinesChange(List<int> newPlayerList) {
+    setState(() => playerIdListModel = newPlayerList);
     changeFragment(16);
   }
 
-  void signOut() {
+  /*void signOut() {
     ref.read(authControllerProvider).signOut(context);
     Navigator.pushNamedAndRemoveUntil(context, LoginScreen.routeName, (route) => false);
+  }*/
+  Future<void> signOut() async {
+    bool? result = await executeApi<bool?>(() async {
+      return await ref.read(authControllerProvider).signOut();
+    },() => showBottomSheetNavigation(), context, true);
+    if (result != null && result) {
+      Navigator.pushNamedAndRemoveUntil(context, LoginScreen.routeName, (route) => false);
+      showSnackBarWithPostFrame(context: context, content: "Děkujeme, přijďte zas");
+    }
   }
   String getUserName() {
     String? name = ref.read(authControllerProvider).getCurrentUserName();
@@ -124,264 +136,20 @@ class _MainScreenState extends ConsumerState<MainScreen> {
     return "píč $name";
   }
 
+
   void showBottomSheetNavigation() {
-    showModalBottomSheet(
-        context: context,
-        isScrollControlled: true,
-        isDismissible: true,
-        builder: (context) => SizedBox(
-              height: MediaQuery.of(context).copyWith().size.height * (3 / 4),
-              child: ListView(
-                children: <Widget>[
-                  InkWell(
-                    onTap: () => Navigator.of(context).pop(),
-                    onLongPress: () => Navigator.of(context).pop(),
-                    child: Container(
-                      color: Colors.grey,
-                      height: 10,
-                    ),
-                  ),
-                  Padding(
-                    padding: const EdgeInsets.only(left: 16.0, right: 16.0),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Text(getUserName()),
-                        TextButton(
-                          onPressed: () => signOut(),
-                          child: const Text("Odhlásit",
-                              style: TextStyle(
-                                color: orangeColor,
-                              )),
-                        )
-                      ],
-                    ),
-                  ),
-                  Container(
-                      decoration: const BoxDecoration(
-                          border: Border(
-                              bottom: BorderSide(
-                    color: Colors.black,
-                  )))),
-                  ListTile(
-                    leading: const Icon(
-                      Icons.home,
-                      color: Colors.orange,
-                    ),
-                    title: const Text("Přehled"),
-                    onTap: () => onModalBottomSheetMenuTapped(0),
-                  ),
-                  Row(
-                    children: const [
-                      Padding(
-                        padding: EdgeInsets.only(left: 10.0),
-                        child: Text(
-                          "ZÁPASY",
-                          textAlign: TextAlign.left,
-                          style: TextStyle(color: Colors.black54, fontSize: 14),
-                        ),
-                      ),
-                    ],
-                  ),
-                  ListTile(
-                    leading: const Icon(
-                      Icons.add,
-                      color: Colors.orange,
-                    ),
-                    title: const Text("Přidat zápas"),
-                    onTap: () => onModalBottomSheetMenuTapped(10),
-                  ),
-                  ListTile(
-                    leading: const Icon(
-                      Icons.list_outlined,
-                      color: Colors.orange,
-                    ),
-                    title: const Text("Seznam zápasů"),
-                    onTap: () => onModalBottomSheetMenuTapped(9),
-                  ),
-                  Row(
-                    children: const [
-                      Padding(
-                        padding: EdgeInsets.only(left: 10.0),
-                        child: Text(
-                          "PKFL",
-                          textAlign: TextAlign.left,
-                          style: TextStyle(color: Colors.black54, fontSize: 14),
-                        ),
-                      ),
-                    ],
-                  ),
-                  ListTile(
-                    leading: const Icon(
-                      Icons.sports_soccer,
-                      color: Colors.orange,
-                    ),
-                    title: const Text("Seznam PKFL zápasů"),
-                    onTap: () => onModalBottomSheetMenuTapped(19),
-                  ),
-                  ListTile(
-                    leading: const Icon(
-                      Icons.scoreboard_rounded,
-                      color: Colors.orange,
-                    ),
-                    title: const Text("PKFL tabulka"),
-                    onTap: () => onModalBottomSheetMenuTapped(21),
-                  ),
-                  ListTile(
-                    leading: const Icon(
-                      Icons.equalizer,
-                      color: Colors.orange,
-                    ),
-                    title: const Text("Statistiky z PKFL"),
-                    onTap: () => onModalBottomSheetMenuTapped(20),
-                  ),
-                  Row(
-                    children: const [
-                      Padding(
-                        padding: EdgeInsets.only(left: 10.0),
-                        child: Text(
-                          "HRÁČI",
-                          textAlign: TextAlign.left,
-                          style: TextStyle(color: Colors.black54, fontSize: 14),
-                        ),
-                      ),
-                    ],
-                  ),
-                  ListTile(
-                    leading: const Icon(
-                      Icons.person_add,
-                      color: Colors.orange,
-                    ),
-                    title: const Text("Přidat hráče"),
-                    onTap: () => onModalBottomSheetMenuTapped(4),
-                  ),
-                  ListTile(
-                    leading: const Icon(
-                      Icons.group,
-                      color: Colors.orange,
-                    ),
-                    title: const Text("Seznam hráčů"),
-                    onTap: () => onModalBottomSheetMenuTapped(18),
-                  ),
-                  Row(
-                    children: const [
-                      Padding(
-                        padding: EdgeInsets.only(left: 10.0),
-                        child: Text(
-                          "POKUTY",
-                          textAlign: TextAlign.left,
-                          style: TextStyle(color: Colors.black54, fontSize: 14),
-                        ),
-                      ),
-                    ],
-                  ),
-                  ListTile(
-                    leading: const Icon(
-                      Icons.attach_money,
-                      color: Colors.orange,
-                    ),
-                    title: const Text("Přidat/upravit pokutu"),
-                    onTap: () => onModalBottomSheetMenuTapped(12),
-                  ),
-                  ListTile(
-                    leading: const Icon(
-                      Icons.savings,
-                      color: Colors.orange,
-                    ),
-                    title: const Text("Přidat pokutu v zápase"),
-                    onTap: () => onModalBottomSheetMenuTapped(1),
-                  ),
-                  Row(
-                    children: const [
-                      Padding(
-                        padding: EdgeInsets.only(left: 10.0),
-                        child: Text(
-                          "PIVA",
-                          textAlign: TextAlign.left,
-                          style: TextStyle(color: Colors.black54, fontSize: 14),
-                        ),
-                      ),
-                    ],
-                  ),
-                  ListTile(
-                    leading: const Icon(
-                      Icons.sports_bar,
-                      color: Colors.orange,
-                    ),
-                    title: const Text("Přidat pivo v zápase"),
-                    onTap: () => onModalBottomSheetMenuTapped(17),
-                  ),
-                  Row(
-                    children: const [
-                      Padding(
-                        padding: EdgeInsets.only(left: 10.0),
-                        child: Text(
-                          "STATISTIKY",
-                          textAlign: TextAlign.left,
-                          style: TextStyle(color: Colors.black54, fontSize: 14),
-                        ),
-                      ),
-                    ],
-                  ),
-                  ListTile(
-                    leading: const Icon(
-                      Icons.equalizer,
-                      color: Colors.orange,
-                    ),
-                    title: const Text("Statistiky piv/pokut"),
-                    onTap: () => onModalBottomSheetMenuTapped(3),
-                  ),
-                  ListTile(
-                    leading: const Icon(
-                      Icons.query_stats,
-                      color: Colors.orange,
-                    ),
-                    title: const Text("Statistiky gólů/asistencí"),
-                    onTap: () => onModalBottomSheetMenuTapped(22),
-                  ),
-                  Row(
-                    children: const [
-                      Padding(
-                        padding: EdgeInsets.only(left: 10.0),
-                        child: Text(
-                          "NASTAVENÍ",
-                          textAlign: TextAlign.left,
-                          style: TextStyle(color: Colors.black54, fontSize: 14),
-                        ),
-                      ),
-                    ],
-                  ),
-                  ListTile(
-                    leading: const Icon(
-                      Icons.info,
-                      color: Colors.orange,
-                    ),
-                    title: const Text("Informace o appce"),
-                    onTap: () {},
-                  ),
-                  ListTile(
-                    leading: const Icon(
-                      Icons.manage_accounts,
-                      color: Colors.orange,
-                    ),
-                    title: const Text("Nastavení uživatele"),
-                    onTap: () => onModalBottomSheetMenuTapped(24),
-                  ),
-                  ListTile(
-                    leading: const Icon(
-                      Icons.edit_calendar,
-                      color: Colors.orange,
-                    ),
-                    title: const Text("Nastavení sezon"),
-                    onTap: () => onModalBottomSheetMenuTapped(6),
-                  ),
-                ],
-              ),
-            ));
+    _bottomSheetNavigationManager.showBottomSheetNavigation((index) => onModalBottomSheetMenuTapped(index), getUserName(), () { signOut();});
   }
 
   void changeFragment(int index) {
     manageBackButton(index, false);
+    setAppBarTitle(index);
+    changeBottomSheetColor(index);
+    pageController.jumpToPage(index);
+  }
+
+  void changeFragmentAndDeletePage(int index) {
+    manageBackButton(index, true);
     setAppBarTitle(index);
     changeBottomSheetColor(index);
     pageController.jumpToPage(index);
@@ -437,80 +205,7 @@ class _MainScreenState extends ConsumerState<MainScreen> {
 
   void setAppBarTitle(int index) {
     setState(() {
-      switch (index) {
-        case 0:
-          appBarTitle = "Trusí appka";
-          break;
-        case 1:
-          appBarTitle = "Přidání pokut";
-          break;
-        case 3:
-          appBarTitle = "Statistiky pokut/piv";
-          break;
-        case 4:
-          appBarTitle = "Přidat hráče";
-          break;
-        case 5:
-          appBarTitle = "Upravit hráče";
-          break;
-        case 6:
-          appBarTitle = "Sezony";
-          break;
-        case 7:
-          appBarTitle = "Přidat sezonu";
-          break;
-        case 8:
-          appBarTitle = "Upravit sezonu";
-          break;
-        case 9:
-          appBarTitle = "Zápasy";
-          break;
-        case 10:
-          appBarTitle = "Přidat zápas";
-          break;
-        case 11:
-          appBarTitle = "Upravit zápas";
-          break;
-        case 12:
-          appBarTitle = "Pokuty";
-          break;
-        case 13:
-          appBarTitle = "Přidat pokutu";
-          break;
-        case 14:
-          appBarTitle = "Upravit pokutu";
-          break;
-        case 15:
-          appBarTitle = "Přidat pokutu hráči";
-          break;
-        case 16:
-          appBarTitle = "Přidat pokutu více hráčům";
-          break;
-        case 17:
-          appBarTitle = "Přidat pivo";
-          break;
-        case 18:
-          appBarTitle = "Hráči";
-          break;
-        case 19:
-          appBarTitle = "Seznam PKFL zápasů";
-          break;
-        case 20:
-          appBarTitle = "Statistika PKFL";
-          break;
-        case 21:
-          appBarTitle = "Tabulka PKFL";
-          break;
-        case 22:
-          appBarTitle = "Statistika gólů/asistencí";
-          break;
-        case 23:
-          appBarTitle = "Notifikace";
-          break;
-        case 24:
-          appBarTitle = "Nastavení uživatelů";
-          break;
-      }
+      _appBarTitleManager.setAppBarTitle(index);
     });
   }
 
@@ -532,6 +227,10 @@ class _MainScreenState extends ConsumerState<MainScreen> {
     return false;
   }
 
+  bool isFocused(pageIndex) {
+    return pageIndex == _currentIndex;
+  }
+
   @override
   Widget build(BuildContext context) {
     return WillPopScope(
@@ -541,7 +240,7 @@ class _MainScreenState extends ConsumerState<MainScreen> {
             false, //pak nelítá prostřední tlačítko z dolního menu nahoru
         appBar: AppBar(
           leading: backButtonVisibility ? BackButton(color: Colors.white, onPressed: () => onBackButtonTap(),): null,
-          title: Text(appBarTitle),
+          title: Text(_appBarTitleManager.appBarTitle),
           actions: [
             IconButton(
                 onPressed: () => changeFragment(10), icon: const Icon(Icons.add)),
@@ -557,11 +256,12 @@ class _MainScreenState extends ConsumerState<MainScreen> {
                 ),
             FineMatchScreen(
               //1
-              mainMatch: mainMatch,
-              playerListToChangeFines: (players) =>
+              mainMatch: matchModel,
+              playerIdListToChangeFines: (players) =>
                   onPickedPlayersFinesChange(players),
-              setMainMatch: (match) => onPickedMainMatch(match),
+              setMatch: (newMatch) => matchModel = newMatch,
               setPlayer: (player) => onPickedPlayerFinesChange(player),
+              isFocused: isFocused(1),
             ),
             Container(
               //2
@@ -573,76 +273,99 @@ class _MainScreenState extends ConsumerState<MainScreen> {
             AddPlayerScreen(
               //4
               onAddPlayerPressed: () => changeFragment(0),
+              isFocused: isFocused(4),
             ),
             EditPlayerScreen(
               //5
               playerModel,
               onButtonConfirmPressed: () => changeFragment(0),
+              isFocused: isFocused(5),
             ),
             SeasonScreen(
               //6
               onPlusButtonPressed: () => changeFragment(7),
+              backToMainMenu: () => changeFragment(0),
               setSeason: (season) => onPickedSeasonChange(season),
+              isFocused: isFocused(6),
             ),
             AddSeasonScreen(
               //7
               onAddSeasonPressed: () => changeFragment(6),
+              isFocused: isFocused(7),
             ),
             EditSeasonScreen(
               //8
               seasonModel,
               onButtonConfirmPressed: () => changeFragment(6),
+              isFocused: isFocused(8),
             ),
             MatchScreen(
               //9
               onPlusButtonPressed: () => changeFragment(10),
               setMatch: (match) => onPickedMatchChange(match),
+              backToMainMenu: () => changeFragment(0),
+              isFocused: isFocused(9),
             ),
             AddMatchScreen(
               //10
               onAddMatchPressed: () => changeFragment(9),
+              isFocused: isFocused(10),
+              setMatchId: (int id) {matchModel.id = id;},
+              onChangePlayerGoalsPressed: () => changeFragment(25),
             ),
             EditMatchScreen(
               //11
               matchModel: matchModel,
-              onButtonConfirmPressed: () => changeFragment(9),
+              onButtonConfirmPressed: () => changeFragmentAndDeletePage(9),
+              isFocused: isFocused(11),
+              setMatchId: (int id) {matchModel.id = id;},
+              onChangePlayerGoalsPressed: () => changeFragment(25),
             ),
             FineScreen(
               //12
               onPlusButtonPressed: () => changeFragment(13),
+              backToMainMenu: () => changeFragment(0),
               setFine: (fine) => onPickedFineChange(fine),
+              isFocused: isFocused(12),
             ),
             AddFineScreen(
               //13
               onAddFinePressed: () => changeFragment(12),
+              isFocused: isFocused(13),
             ),
             EditFineScreen(
               //14
               fineModel,
               onButtonConfirmPressed: () => changeFragment(12),
+              isFocused: isFocused(14),
             ),
             FinePlayerScreen(
               //15
-              matchModel: mainMatch,
+              matchModel: matchModel,
               playerModel: playerModel,
               onButtonConfirmPressed: () => changeFragment(1),
+              isFocused: isFocused(15),
             ),
             MultipleFinePlayersScreen(
               //16
-              match: mainMatch,
-              players: playerListModel,
+              matchModel: matchModel,
+              playerIdList: playerIdListModel,
               onButtonConfirmPressed: () => changeFragment(1),
+              isFocused: isFocused(16),
             ),
             BeerSimpleScreen(
               //17
-              mainMatch: mainMatch,
-              setMainMatch: (match) => onPickedMainMatch(match),
+              mainMatch: matchModel,
+              setMatch: (newMatch) => matchModel = newMatch,
               onButtonConfirmPressed: () => changeFragment(0),
+              isFocused: isFocused(17),
             ),
             PlayerScreen(
               //18
               onPlusButtonPressed: () => changeFragment(4),
+              backToMainMenu: () => changeFragment(0),
               setPlayer: (player) => onPickedPlayerChange(player),
+              isFocused: isFocused(18),
             ),
             const PkflMatchScreen(
                 //19
@@ -653,14 +376,22 @@ class _MainScreenState extends ConsumerState<MainScreen> {
             const PkflTableScreen(
                 //21
                 ),
-            const PlayerStatsStatsScreen(
+            const MainGoalStatisticsScreen(
                 //22
                 ),
             const NotificationScreen(
               //23
             ),
-            const UserScreen(
+            UserScreen(
               //24
+              isFocused: isFocused(24),
+              backToMainMenu: () => changeFragment(0),
+            ),
+            GoalScreen(
+              //25
+              onAddGoalsPressed: () => changeFragment(4),
+              isFocused: isFocused(25),
+              matchId: matchModel.id!,
             ),
           ],
         ),

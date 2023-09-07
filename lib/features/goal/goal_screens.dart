@@ -1,0 +1,4 @@
+enum GoalScreens {
+  addGoals,
+  addAssists
+}

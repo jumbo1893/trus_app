@@ -6,6 +6,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:trus_app/common/utils/utils.dart';
 import 'package:trus_app/common/widgets/error.dart';
+import 'package:trus_app/features/beer/controller/beer_controller.dart';
 import 'package:trus_app/features/beer/lines/player_lines.dart';
 import 'package:trus_app/models/helper/beer_helper_model.dart';
 
@@ -17,18 +18,9 @@ import '../lines/new_player_lines_calculator.dart';
 import '../lines/painter.dart';
 
 class BeerPaintScreen extends ConsumerStatefulWidget {
-  final List<BeerHelperModel> beers;
-  final Function(int) newBeerNumber;
-  final Function(int) newLiquorNumber;
-  final Function(int) pickedPlayer;
-  final VoidCallback onChangeBeersPressed;
+
   const BeerPaintScreen({
     Key? key,
-    required this.beers,
-    required this.newBeerNumber,
-    required this.newLiquorNumber,
-    required this.pickedPlayer,
-    required this.onChangeBeersPressed,
   }) : super(key: key);
 
   @override
@@ -37,11 +29,11 @@ class BeerPaintScreen extends ConsumerStatefulWidget {
 
 class _BeerPaintScreenState extends ConsumerState<BeerPaintScreen>
     with SingleTickerProviderStateMixin {
-  int playerIndex = 0;
+  //int playerIndex = 0;
   double _progress = 0.0;
   late Size size;
   late Animation<double> animation;
-  List<PlayerLines> playerLinesList = [];
+  //List<PlayerLines> playerLinesList = [];
   final Random random = Random();
   late AnimationController controller;
   NewPlayerLinesCalculator? newPlayerLinesCalculator;
@@ -50,7 +42,7 @@ class _BeerPaintScreenState extends ConsumerState<BeerPaintScreen>
   @override
   void initState() {
     super.initState();
-    _initPlayerLines();
+    ref.read(beerControllerProvider).initPlayerLines();
     controller = AnimationController(
         duration: const Duration(milliseconds: 500), vsync: this);
     animation = Tween(begin: 1.0, end: 0.0).animate(controller)
@@ -79,46 +71,46 @@ class _BeerPaintScreenState extends ConsumerState<BeerPaintScreen>
   void setNextPlayer() {
     if(!controller.isAnimating) {
       setState(() {
-        if (!(playerIndex == widget.beers.length - 1)) {
-          playerIndex++;
+        if (!(ref.read(beerControllerProvider).playerIndex == ref.read(beerControllerProvider).beerList.length - 1)) {
+          ref.read(beerControllerProvider).playerIndex++;
         } else {
-          playerIndex = 0;
+          ref.read(beerControllerProvider).playerIndex = 0;
         }
+        ref.read(beerControllerProvider).initStreamPaint();
       });
-      widget.pickedPlayer(playerIndex);
+
     }
   }
 
   void setPreviousPlayer() {
     if(!controller.isAnimating) {
       setState(() {
-        if (playerIndex > 0) {
-          playerIndex--;
+        if (ref.read(beerControllerProvider).playerIndex > 0) {
+          ref.read(beerControllerProvider).playerIndex--;
         } else {
-          playerIndex = widget.beers.length - 1;
+          ref.read(beerControllerProvider).playerIndex = ref.read(beerControllerProvider).beerList.length - 1;
         }
+        ref.read(beerControllerProvider).initStreamPaint();
       });
     }
-    widget.pickedPlayer(playerIndex);
   }
 
   void addBeer() {
     if(!controller.isAnimating) {
-      if (widget.beers[playerIndex].beerNumber < 30) {
+      if (ref.read(beerControllerProvider).beerList[ref.read(beerControllerProvider).playerIndex].beerNumber < 30) {
         newPlayerLinesCalculator = NewPlayerLinesCalculator(
             returnRandomNumbersForLines(), true,
-            widget.beers[playerIndex].beerNumber);
-        widget.beers[playerIndex].addBeerNumber();
+            ref.read(beerControllerProvider).beerList[ref.read(beerControllerProvider).playerIndex].beerNumber);
+        ref.read(beerControllerProvider).beerList[ref.read(beerControllerProvider).playerIndex].addNumber(true);
         controller.forward(from: 0).whenComplete(() =>
             setState(() {
-              playerLinesList[playerIndex].addAllBeerPositions(
+              ref.read(beerControllerProvider).playerLinesList[ref.read(beerControllerProvider).playerIndex].addAllBeerPositions(
                   newPlayerLinesCalculator!.newLineCoordinates);
               newPlayerLinesCalculator = null;
             }));
-        widget.newBeerNumber(widget.beers[playerIndex].beerNumber);
       }
       else {
-        showSnackBar(context: context, content: "Víc jak 30 piv nelze načárkovat!");
+        showSnackBarWithPostFrame(context: context, content: "Víc jak 30 piv nelze načárkovat!");
       }
     }
   }
@@ -126,31 +118,29 @@ class _BeerPaintScreenState extends ConsumerState<BeerPaintScreen>
   void removeBeer() {
     if(!controller.isAnimating) {
       setState(() {
-        widget.beers[playerIndex].removeBeerNumber();
-        playerLinesList[playerIndex].removeLastBeerPosition();
+        ref.read(beerControllerProvider).beerList[ref.read(beerControllerProvider).playerIndex].removeNumber(true);
+        ref.read(beerControllerProvider).playerLinesList[ref.read(beerControllerProvider).playerIndex].removeLastBeerPosition();
       });
-      widget.newBeerNumber(widget.beers[playerIndex].beerNumber);
     }
   }
 
   void addLiquor() {
     if(!controller.isAnimating) {
-      if (widget.beers[playerIndex].liquorNumber < 20) {
+      if (ref.read(beerControllerProvider).beerList[ref.read(beerControllerProvider).playerIndex].liquorNumber < 20) {
         newPlayerLinesCalculator = NewPlayerLinesCalculator(
             returnRandomNumbersForLines(), false,
-            widget.beers[playerIndex].liquorNumber);
-        widget.beers[playerIndex].addLiquorNumber();
+            ref.read(beerControllerProvider).beerList[ref.read(beerControllerProvider).playerIndex].liquorNumber);
+        ref.read(beerControllerProvider).beerList[ref.read(beerControllerProvider).playerIndex].addNumber(false);
         controller.forward(from: 0).whenComplete(() =>
             setState(() {
-              playerLinesList[playerIndex]
+              ref.read(beerControllerProvider).playerLinesList[ref.read(beerControllerProvider).playerIndex]
                   .addAllLiquorPositions(
                   newPlayerLinesCalculator!.newLineCoordinates);
               newPlayerLinesCalculator = null;
             }));
-        widget.newLiquorNumber(widget.beers[playerIndex].beerNumber);
       }
       else {
-        showSnackBar(context: context, content: "Víc jak 20 paňáků nelze načárkovat!");
+        showSnackBarWithPostFrame(context: context, content: "Víc jak 20 paňáků nelze načárkovat!");
       }
     }
   }
@@ -158,33 +148,28 @@ class _BeerPaintScreenState extends ConsumerState<BeerPaintScreen>
   void removeLiquor() {
     if(!controller.isAnimating) {
       setState(() {
-        widget.beers[playerIndex].removeLiquorNumber();
-        playerLinesList[playerIndex].removeLastLiquorPosition();
+        ref.read(beerControllerProvider).beerList[ref.read(beerControllerProvider).playerIndex].removeNumber(false);
+        ref.read(beerControllerProvider).playerLinesList[ref.read(beerControllerProvider).playerIndex].removeLastLiquorPosition();
       });
-      widget.newLiquorNumber(widget.beers[playerIndex].beerNumber);
     }
   }
 
-  void _initPlayerLines() {
+  /*void _initPlayerLines() {
     playerLinesList = [];
-    for (int i = 0; i < widget.beers.length; i++) {
+    for (int i = 0; i < ref.read(beerControllerProvider).beerList.length; i++) {
       playerLinesList.add(PlayerLines());
-      for (int j = 0; j < widget.beers[i].beerNumber; j++) {
+      for (int j = 0; j < ref.read(beerControllerProvider).beerList[i].beerNumber; j++) {
         playerLinesList[i].addAllBeerPositions(returnRandomNumbersForLines());
       }
-      for (int j = 0; j < widget.beers[i].liquorNumber; j++) {
+      for (int j = 0; j < ref.read(beerControllerProvider).beerList[i].liquorNumber; j++) {
         playerLinesList[i]
             .addAllLiquorPositions(returnRandomNumbersForLines());
       }
     }
-  }
+  }*/
 
   List<double> returnRandomNumbersForLines() {
     return [random.nextDouble(), random.nextDouble(), random.nextDouble(), random.nextDouble()];
-  }
-
-  void changeBeers() {
-    widget.onChangeBeersPressed();
   }
 
   @override
@@ -192,7 +177,7 @@ class _BeerPaintScreenState extends ConsumerState<BeerPaintScreen>
     final size = MediaQuery
         .of(context)
         .size;
-    if (playerLinesList.isNotEmpty) {
+    if (ref.read(beerControllerProvider).playerLinesList.isNotEmpty) {
       return FutureBuilder<ui.Image>(
           future: _loadImage(),
           builder: (context, snapshot) {
@@ -201,91 +186,95 @@ class _BeerPaintScreenState extends ConsumerState<BeerPaintScreen>
               return const Loader();
             }
             _image = snapshot.data!;
-            Painter painter = Painter(playerLinesList[playerIndex],
+            Painter painter = Painter(ref.read(beerControllerProvider).playerLinesList[ref.read(beerControllerProvider).playerIndex],
                 newPlayerLinesCalculator, _progress, snapshot.data!);
 
-            return Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                SizedBox(
-                  height: 50,
-                  child: Row(
-                    children: [
-                      SizedBox(
-                          width: size.width / 6,
-                          child: IconButton(
-                            icon: const Icon(Icons.arrow_back),
-                            onPressed: () {
-                              setPreviousPlayer();
-                            },
-                            color: orangeColor,
-                          )),
-                      SizedBox(
-                          width: size.width / 1.5,
-                          child: Text(
-                            widget.beers[playerIndex].player.name,
-                            style: const TextStyle(
-                                color: blackColor,
-                                fontSize: 18,
-                                fontWeight: FontWeight.normal),
-                          )),
-                      SizedBox(
-                          width: size.width / 6,
-                          child: IconButton(
-                            icon: const Icon(Icons.arrow_forward),
-                            onPressed: () {
-                              setNextPlayer();
-                            },
-                            color: orangeColor,
-                          )),
-                    ],
-                  ),
-                ),
-                Expanded(
-                  child: GestureDetector(
-                    onVerticalDragEnd: (dragEndDetails) {
-                      if (dragEndDetails.primaryVelocity! > 0) {
-                        addBeer();
-                      } else if (dragEndDetails.primaryVelocity! < 0) {
-                        setState(() {
-                          removeBeer();
-                        });
-                      }
-                    },
-                    onHorizontalDragEnd: (dragEndDetails) {
-                      if (dragEndDetails.primaryVelocity! > 0) {
-                        addLiquor();
-                      } else if (dragEndDetails.primaryVelocity! < 0) {
-                        setState(() {
-                          removeLiquor();
-                        });
-                      }
-                    },
-                    child: CustomPaint(
-                      painter: painter,
-                      child: Container(),
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 50,),
-                Row(
+            return StreamBuilder<PlayerLines>(
+              stream: ref.watch(beerControllerProvider).reload(),
+              builder: (context, ssnapshot) {
+                if (ssnapshot.connectionState != ConnectionState.waiting) {
+                  painter = Painter(ssnapshot.data!,
+                      newPlayerLinesCalculator, _progress, snapshot.data!);
+                }
+                return Column(
+                  mainAxisSize: MainAxisSize.min,
                   children: [
                     SizedBox(
-                        width: size.width / 6,
-                        child: const Icon(
-                          Icons.info_outline, color: Colors.black,)),
-                    SizedBox(
-                        width: size.width / 1.3,
-                        child: const Text(
-                            "Vertikálním čárkováním se zapisují piva, horizontálním panáky"))
+                      height: 50,
+                      child: Row(
+                        children: [
+                          SizedBox(
+                              width: size.width / 6,
+                              child: IconButton(
+                                icon: const Icon(Icons.arrow_back),
+                                onPressed: () {
+                                  setPreviousPlayer();
+                                },
+                                color: orangeColor,
+                              )),
+                          SizedBox(
+                              width: size.width / 1.5,
+                              child: Text(
+                                ref.read(beerControllerProvider).beerList[ref.read(beerControllerProvider).playerIndex].player.name,
+                                style: const TextStyle(
+                                    color: blackColor,
+                                    fontSize: 18,
+                                    fontWeight: FontWeight.normal),
+                              )),
+                          SizedBox(
+                              width: size.width / 6,
+                              child: IconButton(
+                                icon: const Icon(Icons.arrow_forward),
+                                onPressed: () {
+                                  setNextPlayer();
+                                },
+                                color: orangeColor,
+                              )),
+                        ],
+                      ),
+                    ),
+                    Expanded(
+                      child: GestureDetector(
+                        onVerticalDragEnd: (dragEndDetails) {
+                          if (dragEndDetails.primaryVelocity! > 0) {
+                            addBeer();
+                          } else if (dragEndDetails.primaryVelocity! < 0) {
+                            setState(() {
+                              removeBeer();
+                            });
+                          }
+                        },
+                        onHorizontalDragEnd: (dragEndDetails) {
+                          if (dragEndDetails.primaryVelocity! > 0) {
+                            addLiquor();
+                          } else if (dragEndDetails.primaryVelocity! < 0) {
+                            setState(() {
+                              removeLiquor();
+                            });
+                          }
+                        },
+                        child: CustomPaint(
+                          painter: painter,
+                          child: Container(),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 50,),
+                    Row(
+                      children: [
+                        SizedBox(
+                            width: size.width / 6,
+                            child: const Icon(
+                              Icons.info_outline, color: Colors.black,)),
+                        SizedBox(
+                            width: size.width / 1.3,
+                            child: const Text(
+                                "Vertikálním čárkováním se zapisují piva, horizontálním panáky"))
+                      ],
+                    ),
                   ],
-                ),
-                Padding(
-                  padding: const EdgeInsets.only(bottom: 16.0),
-                  child: CustomButton(
-                      text: "Přidej piva", onPressed: changeBeers),
-                ),
-              ],
+                );
+              }
             );
           });
     }

@@ -15,7 +15,7 @@ class CustomButton extends StatelessWidget {
     return Padding(
       padding: const EdgeInsets.all(15.0),
       child: ElevatedButton(
-        onPressed: onPressed,
+        onPressed: () => {onPressed(), FocusManager.instance.primaryFocus?.unfocus()},
         style: ButtonStyle(
           backgroundColor: MaterialStateProperty.all<Color>(Colors.orange),
           minimumSize: MaterialStateProperty.all(const Size(double.infinity, 50)),

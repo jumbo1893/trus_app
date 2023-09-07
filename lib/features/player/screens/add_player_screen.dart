@@ -1,21 +1,26 @@
-
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:trus_app/common/widgets/custom_button.dart';
-import 'package:trus_app/common/widgets/rows/row_calendar.dart';
-import 'package:trus_app/common/widgets/rows/row_switch.dart';
-import 'package:trus_app/common/widgets/rows/row_text_field.dart';
+import 'package:trus_app/common/utils/utils.dart';
 
 import '../../../common/utils/calendar.dart';
 import '../../../common/utils/field_validator.dart';
+import '../../../common/widgets/builder/column_future_builder.dart';
+import '../../../common/widgets/button/crud_button.dart';
+import '../../../common/widgets/rows/stream/row_calendar_stream.dart';
+import '../../../common/widgets/rows/stream/row_switch_stream.dart';
+import '../../../common/widgets/rows/stream/row_text_field_stream.dart';
+import '../../../models/api/player_api_model.dart';
+import '../../../models/enum/crud.dart';
 import '../../notification/controller/notification_controller.dart';
 import '../controller/player_controller.dart';
 
 class AddPlayerScreen extends ConsumerStatefulWidget {
   final VoidCallback onAddPlayerPressed;
+  final bool isFocused;
   const AddPlayerScreen({
     Key? key,
     required this.onAddPlayerPressed,
+    required this.isFocused,
   }) : super(key: key);
 
   @override
@@ -23,98 +28,72 @@ class AddPlayerScreen extends ConsumerStatefulWidget {
 }
 
 class _AddPlayerScreenState extends ConsumerState<AddPlayerScreen> {
-  final _nameController = TextEditingController();
-  final _calendarController = TextEditingController();
-  String nameErrorText = "";
-
-  DateTime pickedDate = DateTime.now();
-  bool isFanChecked = false;
-  bool isActiveChecked = true;
-
-  @override
-  void dispose() {
-    _nameController.dispose();
-    super.dispose();
-  }
-
-  Future<void> addPlayer() async {
-    String name = _nameController.text.trim();
-    setState(() {
-      nameErrorText = validateEmptyField(name);
-    });
-    if (nameErrorText.isEmpty) {
-      if (await ref
-          .read(playerControllerProvider)
-          .addPlayer(context, name, pickedDate, isFanChecked, isActiveChecked)) {
-        await sendNotification(name, "${isFanChecked ? "Fanoušek" : "Hráč"} s datem narození: ${dateTimeToString(pickedDate)} Kč");
-        widget.onAddPlayerPressed.call();
-      }
-    }
-  }
-
-  Future<void> sendNotification(String player, String text) async {
-    if(text.isNotEmpty) {
-      String title = "Přidán $player";
-      await ref.read(notificationControllerProvider).addNotification(
-          context, title, text);
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
-    _calendarController.text = dateTimeToString(pickedDate);
-    const double padding = 8.0;
-    final size = MediaQuery.of(context).size;
-    return Scaffold(
-      body: Padding(
-        padding: const EdgeInsets.all(padding),
-        child: SafeArea(
-          child: Column(
-            children: [
-              RowTextField(
-                  size: size,
-                  padding: padding,
-                  textController: _nameController,
-                  errorText: nameErrorText,
-                  labelText: "jméno",
-                  textFieldText: "Jméno hráče:"),
-              const SizedBox(height: 10),
-              RowCalendar(
-                pickedDate: pickedDate,
-                size: size,
-                padding: padding,
-                calendarController: _calendarController,
-                textFieldText: "Datum narození:",
-                onDateChanged: (date) {
-                  setState(() => pickedDate = date);
-                },
-              ),
-              const SizedBox(height: 10),
-              RowSwitch(
-                size: size,
-                padding: padding,
-                textFieldText: "fanoušek?",
-                initChecked: isFanChecked,
-                onChecked: (fan) {
-                  setState(() => isFanChecked = fan);
-                },
-              ),
-              const SizedBox(height: 10),
-              RowSwitch(
-                size: size,
-                padding: padding,
-                textFieldText: "aktivní?",
-                initChecked: isActiveChecked,
-                onChecked: (active) {
-                  setState(() => isActiveChecked = active);
-                },
-              ),
-              const SizedBox(height: 10),
-              CustomButton(text: "Přidej hráče", onPressed: addPlayer)
-            ],
+    if (widget.isFocused) {
+      const double padding = 8.0;
+      final size =
+          MediaQueryData.fromWindow(WidgetsBinding.instance.window).size;
+      return ColumnFutureBuilder(
+        loadModelFuture: ref.watch(playerControllerProvider).newPlayer(),
+        columns: [
+          RowTextFieldStream(
+            size: size,
+            labelText: "jméno",
+            textFieldText: "Jméno hráče:",
+            padding: padding,
+            textStream: ref.watch(playerControllerProvider).name(),
+            errorTextStream:
+                ref.watch(playerControllerProvider).nameErrorText(),
+            onTextChanged: (name) =>
+                {ref.watch(playerControllerProvider).setName(name)},
           ),
-        ),
-      ),
-    );
+          const SizedBox(height: 10),
+          RowCalendarStream(
+            size: size,
+            padding: padding,
+            textFieldText: "Datum narození:",
+            onDateChanged: (date) {
+              ref.watch(playerControllerProvider).setDate(date);
+            },
+            dateStream: ref.watch(playerControllerProvider).date(),
+            errorTextStream: null,
+          ),
+          const SizedBox(height: 10),
+          RowSwitchStream(
+            size: size,
+            padding: padding,
+            textFieldText: "fanoušek?",
+            stream: ref.watch(playerControllerProvider).fan(),
+            onChecked: (fan) {
+              ref.watch(playerControllerProvider).setFan(fan);
+            },
+          ),
+          const SizedBox(height: 10),
+          RowSwitchStream(
+            size: size,
+            padding: padding,
+            textFieldText: "aktivní?",
+            stream: ref.watch(playerControllerProvider).active(),
+            onChecked: (active) {
+              ref.watch(playerControllerProvider).setActive(active);
+            },
+          ),
+          const SizedBox(height: 10),
+          CrudButton(
+            text: "Přidej hráče",
+            context: context,
+            crud: Crud.create,
+            crudOperations: ref.read(playerControllerProvider),
+            onOperationComplete: (id) {
+              widget.onAddPlayerPressed();
+            },
+          )
+        ],
+        loadingScreen: null,
+      );
+    } else {
+      return Container();
+    }
   }
 }

@@ -114,7 +114,7 @@ class FineMatchRepository extends CustomFirebaseException {
       return true;
     } on FirebaseException catch (e) {
       if (!showSnackBarOnException(e.code, context)) {
-        showSnackBar(
+        showSnackBarWithPostFrame(
           context: context,
           content: e.message!,
         );
@@ -134,7 +134,7 @@ class FineMatchRepository extends CustomFirebaseException {
           .get()
           .then((value) async {
         if (value.size > 1) {
-          showSnackBar(
+          showSnackBarWithPostFrame(
             context: context,
             content:
                 "existuje víc než jeden záznam v tabulce!!!! kontaktuj správce",
@@ -150,7 +150,7 @@ class FineMatchRepository extends CustomFirebaseException {
       return true;
     } on FirebaseException catch (e) {
       if (!showSnackBarOnException(e.code, context)) {
-        showSnackBar(
+        showSnackBarWithPostFrame(
           context: context,
           content: e.message!,
         );
@@ -174,7 +174,7 @@ class FineMatchRepository extends CustomFirebaseException {
       return true;
     } on FirebaseException catch (e) {
       if (!showSnackBarOnException(e.code, context)) {
-        showSnackBar(
+        showSnackBarWithPostFrame(
           context: context,
           content: e.message!,
         );
@@ -193,7 +193,7 @@ class FineMatchRepository extends CustomFirebaseException {
             onError: (e) => {
                   if (!showSnackBarOnException(e.code, context))
                     {
-                      showSnackBar(
+                      showSnackBarWithPostFrame(
                         context: context,
                         content: e.message!,
                       )

@@ -45,12 +45,14 @@ dependencies:
   freezed_annotation: ^2.2.0
   json_serializable: ^6.5.4
   age_calculator: ^1.0.0
-  dropdown_button2: ^1.8.9
+  dropdown_button2: ^2.1.3
   multi_select_flutter: ^4.1.3
   html: ^0.15.1
   http: ^0.13.5
   percent_indicator: ^4.2.2
   flutter_launcher_icons: ^0.12.0
+  sse_channel: ^0.0.3
+  cookie_jar: ^3.0.1
 
 flutter_icons:
   android: true

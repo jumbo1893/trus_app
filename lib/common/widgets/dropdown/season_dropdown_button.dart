@@ -52,7 +52,7 @@ class _SeasonDropdown extends State<SeasonDropdownButton> {
         'Vyber sezonu',
         style: TextStyle(fontSize: 14),
       ),
-      icon: const Icon(
+      /*icon: const Icon(
         Icons.arrow_drop_down,
         color: orangeColor,
       ),
@@ -61,7 +61,7 @@ class _SeasonDropdown extends State<SeasonDropdownButton> {
       buttonPadding: const EdgeInsets.only(left: 20, right: 10),
       dropdownDecoration: BoxDecoration(
         borderRadius: BorderRadius.circular(15),
-      ),
+      ),*/
       items: widget.items
           .map((item) => DropdownMenuItem<SeasonModel>(
                 value: item,

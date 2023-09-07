@@ -1,38 +1,33 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:trus_app/common/widgets/custom_button.dart';
-import 'package:trus_app/common/widgets/rows/row_calendar.dart';
-import 'package:trus_app/common/widgets/rows/row_switch.dart';
-import 'package:trus_app/common/widgets/rows/row_text_field.dart';
 import 'package:trus_app/features/match/controller/match_controller.dart';
-import 'package:trus_app/models/match_model.dart';
-import 'package:trus_app/models/season_model.dart';
 
-import '../../../common/utils/calendar.dart';
-import '../../../common/utils/field_validator.dart';
 import '../../../common/utils/utils.dart';
-import '../../../common/widgets/appbar_headline.dart';
-import '../../../common/widgets/confirmation_dialog.dart';
-import '../../../common/widgets/custom_text.dart';
-import '../../../common/widgets/listview/listview_add_model.dart';
+import '../../../common/widgets/builder/column_future_builder.dart';
+import '../../../common/widgets/button/crud_button.dart';
 import '../../../common/widgets/loader.dart';
-import '../../../common/widgets/dropdown/player_dropdown_multiselect.dart';
-import '../../../common/widgets/dropdown/season_dropdown_button.dart';
-import '../../../models/helper/player_stats_helper_model.dart';
-import '../../notification/controller/notification_controller.dart';
-import '../../season/controller/season_controller.dart';
-import '../../season/utils/season_calculator.dart';
-import '../match_screens.dart';
+import '../../../common/widgets/rows/stream/row_calendar_stream.dart';
+import '../../../common/widgets/rows/stream/row_player_list_stream.dart';
+import '../../../common/widgets/rows/stream/row_season_stream.dart';
+import '../../../common/widgets/rows/stream/row_switch_stream.dart';
+import '../../../common/widgets/rows/stream/row_text_field_stream.dart';
+import '../../../models/api/match/match_api_model.dart';
+import '../../../models/enum/crud.dart';
 
 class EditMatchScreen extends ConsumerStatefulWidget {
   final VoidCallback onButtonConfirmPressed;
-  final MatchModel? matchModel;
-  bool init;
-  EditMatchScreen({
+  final MatchApiModel? matchModel;
+  final Function(int id) setMatchId;
+  final VoidCallback onChangePlayerGoalsPressed;
+  final bool isFocused;
+  const EditMatchScreen({
     Key? key,
-    this.init = true,
     required this.onButtonConfirmPressed,
     required this.matchModel,
+    required this.setMatchId,
+    required this.onChangePlayerGoalsPressed,
+    required this.isFocused,
   }) : super(key: key);
 
   @override
@@ -40,435 +35,143 @@ class EditMatchScreen extends ConsumerStatefulWidget {
 }
 
 class _EditMatchScreenState extends ConsumerState<EditMatchScreen> {
-  final _nameController = TextEditingController();
-  final _calendarController = TextEditingController();
-  String nameErrorText = "";
-  String seasonErrorText = "";
-  bool writeToFines = true;
-  DateTime pickedDate = DateTime.now();
-  bool isHomeChecked = false;
-  SeasonModel? pickedSeason;
-  List<String> fanList = [];
-  List<String> playerList = [];
-  List<SeasonModel> allSeasons = [];
-  List<String> initPlayerIdList = [];
-  String? initSeasonId;
-  List<PlayerStatsHelperModel> playerStatsList = [];
-  List<int> goalNumber = [];
-  List<int> assistNumber = [];
-  MatchScreens screen = MatchScreens.editMatch;
-
-  @override
-  void dispose() {
-    _nameController.dispose();
-    _calendarController.dispose();
-    super.dispose();
-  }
-
-  Future<void> editMatch(bool playerStats) async {
-    String name = _nameController.text.trim();
-    setState(() {
-      nameErrorText = validateEmptyField(name);
-    });
-    if (pickedSeason == null || pickedSeason == SeasonModel.automaticSeason()) {
-      pickedSeason = calculateAutomaticSeason(allSeasons, pickedDate);
-    }
-    if (nameErrorText.isEmpty) {
-      if (await ref.read(matchControllerProvider).editMatch(
-          context,
-          name,
-          pickedDate,
-          isHomeChecked,
-          (playerList + fanList),
-          pickedSeason!.id,
-          widget.matchModel!)) {
-        await sendNotification("Upraven zápas $name na", "${isHomeChecked ? "Domácí zápas" : "Venkovní zápas"} hraný ${dateTimeToString(pickedDate)}, tedy v sezoně ${pickedSeason!.name}, s celkovým počtem účastníků ${playerList.length+fanList.length}");
-        if (!playerStats) {
-          widget.onButtonConfirmPressed.call();
-        }
-      }
-      else {
-        widget.onButtonConfirmPressed.call();
-      }
-    }
-  }
-
-  void showDeleteConfirmation() {
-    var dialog = ConfirmationDialog("opravdu chcete smazat tento zápas?", () {
-      deleteMatch();
-    });
-    showDialog(context: context, builder: (BuildContext context) => dialog);
-  }
-
-  Future<void> deleteMatch() async {
-    final String name = widget.matchModel!.toStringWithOpponentName();
-    final String text = widget.matchModel!.toStringWithOpponentNameAndDate();
-    await ref
-        .read(matchControllerProvider)
-        .deleteMatch(context, widget.matchModel!);
-    await sendNotification("Smazán zápas $name", text);
-    widget.onButtonConfirmPressed.call();
-  }
-
-  void setMatch(MatchModel? match) {
-    if (widget.init) {
-      _nameController.text = match?.name ?? "";
-      pickedDate = match?.date ?? DateTime.now();
-      isHomeChecked = match?.home ?? false;
-      _calendarController.text = dateTimeToString(pickedDate);
-      initSeasonId = match?.seasonId ?? SeasonModel.automaticSeason().id;
-      initPlayerIdList = match?.playerIdList ?? [];
-      widget.init = false;
-    }
-  }
-
-  void setNewPlayerStatsNumber(int length) {
-    goalNumber.clear();
-    assistNumber.clear();
-    for (int i = 0; i < length; i++) {
-      goalNumber.add(-1);
-      assistNumber.add(-1);
-    }
-  }
-
-  void changeScreens(MatchScreens screen) {
-    setState(() {
-      this.screen = screen;
-    });
-  }
-
-  Future<void> editMatchWithPlayerStats() async {
-    await editMatch(true);
-    await changePlayerStats();
-  }
-
-  Future<void> changePlayerStats() async {
-    showLoaderSnackBar(context: context);
-    String text = "";
-    List playerStatsListClone = [...playerStatsList];
-    for (int i = 0; i < goalNumber.length; i++) {
-      if (goalNumber[i] != -1 || assistNumber[i] != -1) {
-        if (await addPlayerStats(
-                playerStatsList[i].id,
-                playerStatsList[i].player.id,
-                goalNumber[i] == -1
-                    ? playerStatsList[i].goalNumber
-                    : goalNumber[i],
-                assistNumber[i] == -1
-                    ? playerStatsList[i].assistNumber
-                    : assistNumber[i]) &&
-            writeToFines) {
-          await rewriteFinesForPlayer(
-              playerStatsList[i].player.id,
-              goalNumber[i] == -1
-                  ? playerStatsList[i].goalNumber
-                  : goalNumber[i]);
-        }
-        //pokud je změna v golech tak góly
-        text += goalNumber[i] == -1 ? "" : "${playerStatsListClone[i].player.name} dal gólů: ${goalNumber[i]}\n";
-        //pokud je změna v asistencích, tak přidáme asistence
-        text += assistNumber[i] == -1 ? "" : "${playerStatsListClone[i].player.name} dal asistencí: ${assistNumber[i]}\n";
-      }
-    }
-    if(writeToFines) {
-      text += "Výše zmíněné změny byly propsány i do pokut";
-    }
-    await sendNotification("Změněny hráčské statistiky v zápase ${_nameController.text.trim()}", text);
-    hideSnackBar(context);
-    showSnackBar(
-      context: context,
-      content: "Stavy gólů a asistencí úspěšně změněny",
-    );
-    widget.onButtonConfirmPressed.call();
-  }
-
-  Future<bool> addPlayerStats(
-      String id, String playerId, int goalNumber, int assistNumber) async {
-    return await ref.read(matchControllerProvider).addPlayerStatsInMatch(
-        context, id, widget.matchModel!.id, playerId, goalNumber, assistNumber);
-  }
-
-  //TODO pokuta gol a hattrick natvrdo
-  Future<void> rewriteFinesForPlayer(String playerId, int number) async {
-    if (await ref.read(matchControllerProvider).addFinesInMatch(context,
-        widget.matchModel!.id, playerId, "ubSjhRc8KThXHo3yIEQc", number)) {}
-  }
-
-  Future<void> sendNotification(String title, String text) async {
-    if(text.isNotEmpty) {
-      await ref.read(notificationControllerProvider).addNotification(
-          context, title, text);
-    }
-  }
 
   @override
   Widget build(BuildContext context) {
-    const double padding = 8.0;
-    final size = MediaQuery.of(context).size;
-    switch (screen) {
-      case MatchScreens.editMatch:
-        _calendarController.text = dateTimeToString(pickedDate);
-        setMatch(widget.matchModel);
-        return Scaffold(
-          body: Padding(
-            padding: const EdgeInsets.all(padding),
-            child: SafeArea(
-              child: ListView(
-                children: [
-                  RowTextField(
-                      size: size,
-                      padding: padding,
-                      textController: _nameController,
-                      errorText: nameErrorText,
-                      labelText: "jméno",
-                      textFieldText: "Jméno soupeře:"),
-                  const SizedBox(height: 10),
-                  RowCalendar(
-                    pickedDate: pickedDate,
-                    size: size,
-                    padding: padding,
-                    calendarController: _calendarController,
-                    textFieldText: "Datum zápasu:",
-                    onDateChanged: (date) {
-                      setState(() => pickedDate = date);
-                    },
-                  ),
-                  const SizedBox(height: 10),
-                  RowSwitch(
-                    size: size,
-                    padding: padding,
-                    textFieldText: "Domácí zápas?",
-                    initChecked: isHomeChecked,
-                    onChecked: (home) {
-                      setState(() => isHomeChecked = home);
-                    },
-                  ),
-                  const SizedBox(height: 10),
-                  Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        SizedBox(
-                            width: (size.width / 3) - padding,
-                            child: CustomText(text: "Vyber sezonu:")),
-                        SizedBox(
-                          width: (size.width / 1.5) - padding,
-                          child: StreamBuilder<List<SeasonModel>>(
-                              stream:
-                                  ref.watch(seasonControllerProvider).seasons(),
-                              builder: (context, snapshot) {
-                                if (snapshot.connectionState ==
-                                    ConnectionState.waiting) {
-                                  return const Loader();
-                                }
-                                List<SeasonModel> seasons = snapshot.data!;
-                                allSeasons = snapshot.data!;
-                                seasons.add(SeasonModel.otherSeason());
-
-                                seasons.insert(
-                                    0, SeasonModel.automaticSeason());
-
-                                return SeasonDropdownButton(
-                                  errorText: seasonErrorText,
-                                  items: seasons,
-                                  seasonId: initSeasonId,
-                                  onSeasonSelected: (season) {
-                                    pickedSeason = season;
-                                  },
-                                );
-                              }),
-                        ),
-                      ]),
-                  const SizedBox(height: 10),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      SizedBox(
-                          width: (size.width / 3) - padding,
-                          child: CustomText(text: "Vyber hráče:")),
-                      SizedBox(
-                          width: (size.width / 1.5) - padding,
-                          child: PlayerDropdownMultiSelect(
-                            onPlayersSelected: (players) {
-                              playerList = players;
-                            },
-                            fan: false,
-                            initPlayers: initPlayerIdList,
-                          )),
-                    ],
-                  ),
-                  const SizedBox(height: 10),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      SizedBox(
-                          width: (size.width / 3) - padding,
-                          child: CustomText(text: "Vyber fanoušky:")),
-                      SizedBox(
-                          width: (size.width / 1.5) - padding,
-                          child: PlayerDropdownMultiSelect(
-                            onPlayersSelected: (players) {
-                              fanList = players;
-                            },
-                            fan: true,
-                            initPlayers: initPlayerIdList,
-                          )),
-                    ],
-                  ),
-                  const SizedBox(height: 10),
-                  CustomButton(
-                      text: "Potvrď změny", onPressed: () => editMatch(false)),
-                  CustomButton(
-                      text: "Pokračuj k hráčům",
-                      onPressed: () => changeScreens(MatchScreens.addGoals)),
-                  CustomButton(
-                      text: "Smaž zápas", onPressed: showDeleteConfirmation),
-                ],
-              ),
-            ),
-          ),
-        );
-      case MatchScreens.addGoals:
-        return Scaffold(
-          appBar: const AppBarHeadline(
-            text: "Přidej góly",
-          ),
-          body: Padding(
-            padding: const EdgeInsets.only(top: 8.0),
-            child: StreamBuilder<List<PlayerStatsHelperModel>>(
-              stream: ref
-                  .watch(matchControllerProvider)
-                  .playersStatsInMatch(playerList, widget.matchModel!.id),
-              builder: (context, snapshot) {
-                if (snapshot.connectionState == ConnectionState.waiting) {
-                  return const Loader();
-                }
-                playerStatsList = (snapshot.data!);
-                setNewPlayerStatsNumber(snapshot.data!.length);
-                return Column(
-                  children: [
-                    Expanded(
-                      child: ListView.builder(
-                        shrinkWrap: true,
-                        itemCount: snapshot.data!.length,
-                        itemBuilder: (context, index) {
-                          var playerStats = playerStatsList[index];
-                          return Column(
-                            children: [
-                              InkWell(
-                                child: Padding(
-                                  padding: const EdgeInsets.only(
-                                      bottom: 8.0, left: 8, right: 8),
-                                  child: Container(
-                                    decoration: const BoxDecoration(
-                                        border: Border(
-                                            bottom: BorderSide(
-                                      color: Colors.grey,
-                                    ))),
-                                    child: ListviewAddModel(
-                                      onNumberChanged: (number) {
-                                        goalNumber[index] = number;
-                                      },
-                                      padding: 16,
-                                      helperModel: playerStats,
-                                      fieldName: "goal",
-                                    ),
-                                  ),
-                                ),
-                              )
-                            ],
-                          );
-                        },
-                      ),
-                    ),
-                    Padding(
-                      padding: const EdgeInsets.only(bottom: 16.0),
-                      child: CustomButton(
-                          text: "Pokračuj k asistencím",
-                          onPressed: () =>
-                              changeScreens(MatchScreens.addAssists)),
-                    ),
-                  ],
-                );
-              },
-            ),
-          ),
-        );
-      case MatchScreens.addAssists:
-        return Scaffold(
-          appBar: const AppBarHeadline(
-            text: "Přidej asistence",
-          ),
-          body: Padding(
-            padding: const EdgeInsets.only(top: 8.0),
-            child: StreamBuilder<List<PlayerStatsHelperModel>>(
-              stream: ref
-                  .watch(matchControllerProvider)
-                  .playersStatsInMatch(playerList, widget.matchModel!.id),
-              builder: (context, snapshot) {
-                if (snapshot.connectionState == ConnectionState.waiting) {
-                  return const Loader();
-                }
-                playerStatsList = (snapshot.data!);
-                return Column(
-                  children: [
-                    Expanded(
-                      child: ListView.builder(
-                        shrinkWrap: true,
-                        itemCount: snapshot.data!.length,
-                        itemBuilder: (context, index) {
-                          var playerStats = playerStatsList[index];
-                          return Column(
-                            children: [
-                              InkWell(
-                                child: Padding(
-                                  padding: const EdgeInsets.only(
-                                      bottom: 8.0, left: 8, right: 8),
-                                  child: Container(
-                                    decoration: const BoxDecoration(
-                                        border: Border(
-                                            bottom: BorderSide(
-                                      color: Colors.grey,
-                                    ))),
-                                    child: ListviewAddModel(
-                                      onNumberChanged: (number) {
-                                        assistNumber[index] = number;
-                                      },
-                                      padding: 16,
-                                      helperModel: playerStats,
-                                      fieldName: "assist",
-                                    ),
-                                  ),
-                                ),
-                              )
-                            ],
-                          );
-                        },
-                      ),
-                    ),
-                    Padding(
-                      padding: const EdgeInsets.all(padding),
-                      child: RowSwitch(
-                        size: size,
-                        padding: padding,
-                        textFieldText: "Propsat do pokut?",
-                        initChecked: writeToFines,
-                        onChecked: (write) {
-                          setState(() => writeToFines = write);
-                        },
-                      ),
-                    ),
-                    Padding(
-                      padding: const EdgeInsets.only(bottom: 16.0),
-                      child: CustomButton(
-                          text: "Uprav zápas a statistiky",
-                          onPressed: () => editMatchWithPlayerStats()),
-                    ),
-                  ],
-                );
-              },
-            ),
-          ),
-        );
+    if (widget.isFocused) {
+      const double padding = 8.0;
+      final size = MediaQueryData
+          .fromWindow(WidgetsBinding.instance.window)
+          .size;
+      return FutureBuilder<void>(
+          future: ref.watch(matchControllerProvider).setupEditMatch(
+              widget.matchModel!.id!),
+          builder: (context, snapshot) {
+            if (snapshot.connectionState == ConnectionState.waiting) {
+              return const Loader();
+            }
+            else if (snapshot.hasError) {
+              Future.delayed(Duration.zero, () => showErrorDialog(
+                  snapshot.error!.toString(), widget.onButtonConfirmPressed,
+                  context));
+              return const Loader();
+            }
+            return ColumnFutureBuilder(
+              loadModelFuture: ref.watch(matchControllerProvider).editMatch(),
+              columns: [
+                RowTextFieldStream(
+                  size: size,
+                  labelText: "jméno",
+                  textFieldText: "Jméno soupeře:",
+                  padding: padding,
+                  textStream: ref.watch(matchControllerProvider).name(),
+                  errorTextStream: ref.watch(matchControllerProvider)
+                      .nameErrorText(),
+                  onTextChanged: (name) =>
+                  {ref.watch(matchControllerProvider).setName(name)},
+                ),
+                const SizedBox(height: 10),
+                RowCalendarStream(
+                  size: size,
+                  padding: padding,
+                  textFieldText: "Datum zápasu:",
+                  onDateChanged: (date) {
+                    ref.watch(matchControllerProvider).setDate(date);
+                  },
+                  dateStream: ref.watch(matchControllerProvider).date(),
+                ),
+                const SizedBox(height: 10),
+                RowSwitchStream(
+                  size: size,
+                  padding: padding,
+                  textFieldText: "domácí zápas?",
+                  stream: ref.watch(matchControllerProvider).home(),
+                  onChecked: (fan) {
+                    ref.watch(matchControllerProvider).setHome(fan);
+                  },
+                ),
+                const SizedBox(height: 10),
+                RowSeasonStream(
+                  size: size,
+                  padding: padding,
+                  seasonList: ref.watch(matchControllerProvider).seasonList(),
+                  pickedSeason: ref.watch(matchControllerProvider).season(),
+                  onSeasonChanged: (season) {
+                    ref.watch(matchControllerProvider).setSeason(season);
+                  },
+                  initData: () =>
+                      ref.watch(matchControllerProvider).initSeason(),
+                ),
+                const SizedBox(height: 10),
+                RowPlayerListStream(
+                  size: size,
+                  padding: padding,
+                  playerList: ref.watch(matchControllerProvider).playerList(),
+                  checkedPlayerList: ref.watch(matchControllerProvider)
+                      .checkedPlayers(),
+                  textFieldText: "Vyber hráče",
+                  errorTextStream: ref.watch(matchControllerProvider)
+                      .playerErrorText(),
+                  initData: () =>
+                      ref.watch(matchControllerProvider).initCheckedPlayers(),
+                  onPlayersChanged: (players) {
+                    ref.watch(matchControllerProvider).setPlayers(players);
+                  },
+                ),
+                const SizedBox(height: 10),
+                RowPlayerListStream(
+                  size: size,
+                  padding: padding,
+                  playerList: ref.watch(matchControllerProvider).fanList(),
+                  checkedPlayerList: ref.watch(matchControllerProvider)
+                      .checkedFans(),
+                  textFieldText: "Vyber fanoušky",
+                  initData: () =>
+                      ref.watch(matchControllerProvider).initCheckedFans(),
+                  onPlayersChanged: (players) {
+                    ref.watch(matchControllerProvider).setFans(players);
+                  },
+                ),
+                const SizedBox(height: 10),
+                CrudButton(
+                  text: "Potvrď změny",
+                  context: context,
+                  crud: Crud.update,
+                  crudOperations: ref.read(matchControllerProvider),
+                  onOperationComplete: (id) {
+                    widget.onButtonConfirmPressed();
+                  },
+                  id: widget.matchModel!.id!,
+                ),
+                CrudButton(
+                  text: "Smaž zápas",
+                  context: context,
+                  crud: Crud.delete,
+                  crudOperations: ref.read(matchControllerProvider),
+                  onOperationComplete: (id) {
+                    widget.onButtonConfirmPressed();
+                  },
+                  id: widget.matchModel!.id!,
+                  modelToString: widget.matchModel!,
+                ),
+                CrudButton(
+                  text: "Uprav statistiky",
+                  context: context,
+                  crud: Crud.update,
+                  id: widget.matchModel!.id!,
+                  crudOperations: ref.read(matchControllerProvider),
+                  onOperationComplete: (id) {
+                    widget.setMatchId(id);
+                    widget.onChangePlayerGoalsPressed();
+                  },
+                ),
+              ],
+            );
+          }
+      );
+    }
+    else {
+      return Container();
     }
   }
 }

@@ -162,4 +162,9 @@ class FineStatsHelper {
         .firstWhere((element) => (element.id == playerId))
         .fan;
   }
+
+  @override
+  String toString() {
+    return 'FineStatsHelper{fines: $fines, matchFines: $matchFines}';
+  }
 }

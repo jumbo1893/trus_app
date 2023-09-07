@@ -6,95 +6,75 @@ import 'package:trus_app/features/match/controller/match_controller.dart';
 import 'package:trus_app/models/match_model.dart';
 import 'package:trus_app/models/season_model.dart';
 
+import '../../../common/widgets/builder/models_error_future_builder.dart';
+import '../../../common/widgets/builder/error_future_builder.dart';
+import '../../../common/widgets/dropdown/season_api_dropdown.dart';
 import '../../../common/widgets/dropdown/season_dropdown.dart';
+import '../../../models/api/match/match_api_model.dart';
+import '../controller/match_screen_controller.dart';
 
-class MatchScreen extends ConsumerStatefulWidget {
+class MatchScreen extends ConsumerWidget {
   final VoidCallback onPlusButtonPressed;
-  final Function(MatchModel matchModel) setMatch;
+  final VoidCallback backToMainMenu;
+  final Function(MatchApiModel matchModel) setMatch;
+  final bool isFocused;
   const MatchScreen({
     Key? key,
     required this.onPlusButtonPressed,
     required this.setMatch,
+    required this.backToMainMenu,
+    required this.isFocused,
   }) : super(key: key);
 
   @override
-  ConsumerState<MatchScreen> createState() => _MatchScreenState();
-}
-
-class _MatchScreenState extends ConsumerState<MatchScreen> {
-  SeasonModel? selectedValue;
-
-  void setSelectedSeason(SeasonModel seasonModel) {
-    setState(() {
-      selectedValue = seasonModel;
-    });
-  }
-
-
-  @override
-  Widget build(BuildContext context) {
-    final size = MediaQuery.of(context).size;
-    const double padding = 8.0;
-    return Scaffold(
-        body: Padding(
-          padding: const EdgeInsets.all(padding),
-          child: Column(
-            children: [
-              Row(
-                children: [
-                  SizedBox(width: size.width/2-padding, child: SeasonDropdown(onSeasonSelected: (seasonModel) => setSelectedSeason(seasonModel!), allSeasons: true, otherSeason: true,)),
-                ],
-              ),
-              StreamBuilder<List<MatchModel>>(
-                  stream: ref.watch(matchControllerProvider).matchesBySeason(selectedValue?.id ?? ""),
-                  builder: (context, snapshot) {
-                    if (snapshot.connectionState == ConnectionState.waiting) {
-                      return const Loader();
-                    }
-                    return Expanded(
-                      child: ListView.builder(
-                        shrinkWrap: true,
-                        itemCount: snapshot.data!.length,
-                        itemBuilder: (context, index) {
-                          var match = snapshot.data![index];
-                          return InkWell(
-                            onTap: () => widget.setMatch(match),
-                            child: Container(
-                              decoration: const BoxDecoration(
-                                  border: Border(
-                                      bottom: BorderSide(
-                                color: Colors.grey,
-                              ))),
-                              child: ListTile(
-                                title: Padding(
-                                  padding:
-                                      const EdgeInsets.only(bottom: padding*2),
-                                  child: Text(
-                                    match.toStringWithOpponentName(),
-                                    style: const TextStyle(
-                                        fontWeight: FontWeight.bold,
-                                        fontSize: 18),
-                                  ),
-                                ),
-                                subtitle: Text(
-                                  match.toStringForMatchList(),
-                                  style: const TextStyle(
-                                      color: listviewSubtitleColor),
-                                ),
-                              ),
-                            ),
-                          );
-                        },
-                      ),
-                    );
-                  }),
-            ],
+  Widget build(BuildContext context, WidgetRef ref) {
+    if (isFocused) {
+      final size = MediaQuery
+          .of(context)
+          .size;
+      const double padding = 8.0;
+      return Scaffold(
+          body: Padding(
+            padding: const EdgeInsets.all(padding),
+            child: Column(
+              children: [
+                Row(
+                  children: [
+                    SizedBox(
+                        width: size.width / 2 - padding,
+                        child: SeasonApiDropdown(
+                          onSeasonSelected: (season) =>
+                              ref.watch(matchScreenControllerProvider)
+                                  .setPickedSeason(season),
+                          seasonList: ref.watch(matchScreenControllerProvider)
+                              .getSeasons(),
+                          pickedSeason: ref.watch(matchScreenControllerProvider)
+                              .pickedSeason(),
+                          initData: () =>
+                              ref.watch(matchScreenControllerProvider)
+                                  .setCurrentSeason(),
+                        )),
+                  ],
+                ),
+                ModelsErrorFutureBuilder(
+                  future: ref.watch(matchScreenControllerProvider).getModels(),
+                  rebuildStream: ref.watch(matchScreenControllerProvider)
+                      .streamMatches(),
+                  onPressed: (match) => {setMatch(match as MatchApiModel)},
+                  onDialogCancel: () => backToMainMenu.call(),
+                  context: context,
+                ),
+              ],
+            ),
           ),
-        ),
-        floatingActionButton: FloatingActionButton(
-          onPressed: widget.onPlusButtonPressed,
-          elevation: 4.0,
-          child: const Icon(Icons.add),
-        ));
+          floatingActionButton: FloatingActionButton(
+            onPressed: onPlusButtonPressed,
+            elevation: 4.0,
+            child: const Icon(Icons.add),
+          ));
+    }
+    else {
+      return Container();
+    }
   }
 }

@@ -45,10 +45,10 @@ class PkflRepository {
     try {
       final document = firestore.collection(pkflTable).doc("url");
       await document.update({"table_url": tableUrl});
-      showSnackBar(context: context, content: ("url pro tabulku úspěšně upravena"));
+      showSnackBarWithPostFrame(context: context, content: ("url pro tabulku úspěšně upravena"));
       return true;
     } on FirebaseException catch (e) {
-      showSnackBar(context: context, content: e.message!, );
+      showSnackBarWithPostFrame(context: context, content: e.message!, );
     }
     return false;
   }

@@ -1,19 +1,22 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:trus_app/colors.dart';
-import 'package:trus_app/common/widgets/custom_text.dart';
+import 'package:trus_app/common/widgets/dropdown/season_api_dropdown.dart';
 import 'package:trus_app/common/widgets/loader.dart';
-import 'package:trus_app/models/helper/fine_stats_helper_model.dart';
-import 'package:trus_app/models/player_model.dart';
 import 'package:trus_app/models/season_model.dart';
-import '../../../common/widgets/dropdown/season_dropdown.dart';
-import '../../../common/widgets/icon_text_field.dart';
-import '../../../models/enum/fine.dart';
-import '../controller/stats_controller.dart';
-import '../utils.dart';
+
+import '../../../colors.dart';
+import '../../../common/widgets/builder/models_error_future_builder.dart';
+import '../../../common/widgets/builder/statistics_error_future_builder.dart';
+import '../../../common/widgets/button/statistics_buttons.dart';
+import '../../../common/widgets/custom_text.dart';
+import '../controller/beer_stats_controller.dart';
+import '../controller/fine_stats_controller.dart';
+import '../fine_screen_enum.dart';
 
 class MatchFineStatsScreen extends ConsumerStatefulWidget {
+  final bool isFocused;
   const MatchFineStatsScreen({
+    required this.isFocused,
     Key? key,
   }) : super(key: key);
 
@@ -23,281 +26,219 @@ class MatchFineStatsScreen extends ConsumerStatefulWidget {
 }
 
 class _MatchFineStatsScreenState extends ConsumerState<MatchFineStatsScreen> {
-  bool orderDescending = true;
-  bool showMatchDetail = false;
-  late FineStatsHelperModel pickedMatch;
-  List<FineStatsHelperModel> matches = [];
-  final TextEditingController _searchController = TextEditingController();
-
-  @override
-  void dispose() {
-    _searchController.dispose();
-    super.dispose();
-  }
-
-  void setSelectedSeason(SeasonModel seasonModel) {
-    setState(() {
-      ref.read(statsControllerProvider).selectedSeason = seasonModel;
-    });
-  }
-
-  ///první hodnota je pivo
-  ///druhá hodnota je celkem
-  List<int> overallValuesForMatches() {
-    int number = 0;
-    int amount = 0;
-    for (FineStatsHelperModel match in matches) {
-      number += match.getNumberOrAmountOfFines(Fine.number);
-      amount += match.getNumberOrAmountOfFines(Fine.amount);
-    }
-    return [number, amount];
-  }
-
-  ///vyfiltruje hráče na základě zadaného řetězce v poli hledat
-  ///použít předtím, než se bude buildit listview
-  List<FineStatsHelperModel> filterMatches(
-      List<FineStatsHelperModel> snapshotMatches) {
-    List<FineStatsHelperModel> matches = [];
-    for (FineStatsHelperModel match in snapshotMatches) {
-      if (match.match!.name.contains(_searchController.text)) {
-        matches.add(match);
-      }
-    }
-    return matches;
-  }
-
-  void changeScreens(bool detail) {
-    setState(() {
-      showMatchDetail = detail;
-    });
-  }
-
   @override
   Widget build(BuildContext context) {
-    final size = MediaQuery.of(context).size;
-    const double padding = 8.0;
-    if (!showMatchDetail) {
-      return FutureBuilder<SeasonModel>(
-        future: ref.read(statsControllerProvider).currentSeason(),
-        builder: (context, seasonSnapshot) {
-          if (seasonSnapshot.connectionState == ConnectionState.waiting) {
-            return const Loader();
-          }
-          return Scaffold(
-            body: Padding(
-              padding: const EdgeInsets.all(padding),
-              child: Column(
-                children: [
-                  Row(
-                    children: [
-                      SizedBox(
-                          width: size.width / 2.5 - padding,
-                          child: SeasonDropdown(
-                              onSeasonSelected: (seasonModel) => {
-                                    setSelectedSeason(seasonModel!),
-                                    _searchController.clear()
-                                  },
-                              initSeason: ref.read(statsControllerProvider).selectedSeason ?? seasonSnapshot.data,
-                              allSeasons: true,
-                              otherSeason: true)),
-                      SizedBox(
-                          width: size.width / 5,
-                          child: Center(
-                            child: IconButton(
-                              icon: (orderDescending
-                                  ? const Icon(Icons.arrow_upward)
-                                  : const Icon(Icons.arrow_downward)),
-                              onPressed: () {
-                                setState(() {
-                                  orderDescending = !orderDescending;
-                                });
-                              },
-                              color: orangeColor,
-                            ),
-                          )),
-                      SizedBox(
-                          width: size.width / 2.5 - padding,
-                          child: IconTextField(
-                            textController: _searchController,
-                            labelText: "hledat",
-                            onIconPressed: () {
-                              setState(() {});
-                            },
-                            icon: const Icon(Icons.search, color: blackColor),
-                          )),
-                    ],
-                  ),
-                  StreamBuilder<List<FineStatsHelperModel>>(
-                      stream: ref
-                          .watch(statsControllerProvider)
-                          .finesForMatchesInSeason(
-                          ref.read(statsControllerProvider).selectedSeason),
-                      builder: (context, snapshot) {
-                        if (snapshot.connectionState == ConnectionState.waiting) {
-                          return const Loader();
-                        }
-                        return Expanded(
-                          child: ListView.builder(
-                            shrinkWrap: true,
-                            itemCount: filterMatches(snapshot.data ?? []).length + 1,
-                            itemBuilder: (context, index) {
-                              matches = sortStatsByFines(
-                                  filterMatches(snapshot.data ?? []), orderDescending);
-                              if (index == 0) {
-                                List<int> overallStats = overallValuesForMatches();
-                                return Column(
-                                  children: [
-                                    InkWell(
-                                      onTap: () => {},
-                                      child: Container(
-                                        decoration: const BoxDecoration(
-                                            border: Border(
-                                                bottom: BorderSide(
-                                          color: Colors.grey,
-                                        ))),
-                                        child: ListTile(
-                                          title: const Padding(
-                                            padding: EdgeInsets.only(bottom: 16),
-                                            child: Text(
-                                              "Celkem",
-                                              style: TextStyle(
-                                                  fontWeight: FontWeight.bold,
-                                                  fontSize: 18),
-                                            ),
-                                          ),
-                                          subtitle: Text(
-                                            "Počet pokut: ${overallStats[0]}, celková částka: ${overallStats[1]} Kč",
-                                            style: const TextStyle(
-                                                color: listviewSubtitleColor),
-                                          ),
-                                        ),
-                                      ),
-                                    )
-                                  ],
-                                );
-                              }
-                              var match = matches[index - 1];
-                              return Column(
-                                children: [
-                                  InkWell(
-                                    onTap: () {
-                                      pickedMatch = match;
-                                      changeScreens(true);
-                                    },
-                                    child: Container(
-                                      decoration: const BoxDecoration(
-                                          border: Border(
-                                              bottom: BorderSide(
-                                        color: Colors.grey,
-                                      ))),
-                                      child: ListTile(
-                                        title: Padding(
-                                          padding:
-                                              const EdgeInsets.only(bottom: 16),
-                                          child: Text(
-                                            match.match!.toStringWithOpponentNameAndDate(),
-                                            style: const TextStyle(
-                                                fontWeight: FontWeight.bold,
-                                                fontSize: 18),
-                                          ),
-                                        ),
-                                        subtitle: Text(
-                                          "Počet pokut: ${match.getNumberOrAmountOfFines(Fine.number)}, celkem: ${match.getNumberOrAmountOfFines(Fine.amount)} Kč",
-                                          style: const TextStyle(
-                                              color: listviewSubtitleColor),
-                                        ),
-                                      ),
-                                    ),
-                                  )
-                                ],
-                              );
-                            },
-                          ),
-                        );
-                      }),
-                ],
-              ),
-            ),
-          );
-        }
-      );
-    }
-    return Scaffold(
-      body: Padding(
-        padding: const EdgeInsets.all(padding),
-        child: Column(
-          children: [
-            Row(
-              children: [
-                SizedBox(
-                    child: IconButton(
-                      icon: const Icon(Icons.arrow_back),
-
-                      onPressed: () {
-                        changeScreens(false);
-                      },
-                      color: orangeColor,
-                    )),
-                SizedBox(
-                    child: TextButton(child: const Text("Zpět", style: TextStyle(color: blackColor, fontSize: 18, fontWeight: FontWeight.normal),), onPressed: () => changeScreens(false)))
-              ],
-            ),
-            Padding(
-              padding: const EdgeInsets.only(top: 8.0, bottom: 16.0),
-              child: CustomText(text: "Detail pokut ze zápasu ${pickedMatch.match!.name}"),
-            ),
-            FutureBuilder<List<PlayerModel>>(
-              future: ref.read(statsControllerProvider).playerNamesById(pickedMatch.getPlayerIdsFromMatchPlayer()),
-                builder: (context, snapshot) {
-                  if (snapshot.connectionState == ConnectionState.waiting) {
-                    return const Loader();
-                  }
-                  return Expanded(
-                    child: ListView.builder(
-                      shrinkWrap: true,
-                      itemCount: snapshot.data!.length,
-                      itemBuilder: (context, index) {
-                        List<PlayerModel> players = snapshot.data!;
-                        var player = players[index];
-                        return Column(
+    if (widget.isFocused) {
+      final size = MediaQuery.of(context).size;
+      const double padding = 8.0;
+      return StreamBuilder<FineScreenEnum>(
+          stream: ref.watch(fineStatsControllerProvider).screenDetailStream(),
+          builder: (context, snapshot) {
+            if (snapshot.connectionState == ConnectionState.waiting ||
+                snapshot.data == FineScreenEnum.firstScreen) {
+              return Scaffold(
+                body: Padding(
+                  padding: const EdgeInsets.all(padding),
+                  child: SingleChildScrollView(
+                    child: Column(
+                      children: [
+                        Row(
                           children: [
-                            InkWell(
-                              onTap: () {
-                              },
-                              child: Container(
-                                decoration: const BoxDecoration(
-                                    border: Border(
-                                        bottom: BorderSide(
-                                          color: Colors.grey,
-                                        ))),
-                                child: ListTile(
-                                  title: Padding(
-                                    padding:
-                                    const EdgeInsets.only(bottom: 16),
-                                    child: Text(
-                                      player.name,
-                                      style: const TextStyle(
-                                          fontWeight: FontWeight.bold,
-                                          fontSize: 18),
-                                    ),
-                                  ),
-                                  subtitle: Text(
-                                    pickedMatch.returnMatchDetail(player.id),
-                                    style: const TextStyle(
-                                        color: listviewSubtitleColor),
-                                  ),
-                                ),
-                              ),
+                            SizedBox(
+                                width: size.width / 2.5 - padding,
+                                child: SeasonApiDropdown(
+                                  onSeasonSelected: (season) => ref
+                                      .watch(fineStatsControllerProvider)
+                                      .setPickedSeason(season),
+                                  seasonList: ref
+                                      .watch(fineStatsControllerProvider)
+                                      .getSeasons(),
+                                  pickedSeason: ref
+                                      .watch(fineStatsControllerProvider)
+                                      .pickedSeason(),
+                                  initData: () => ref
+                                      .watch(fineStatsControllerProvider)
+                                      .setCurrentSeason(),
+                                )),
+                            StatisticsButtons(
+                              onSearchButtonClicked: (text) => ref
+                                  .watch(fineStatsControllerProvider)
+                                  .getFilteredFines(text),
+                              onOrderButtonClicked: () => ref
+                                  .read(fineStatsControllerProvider)
+                                  .onRevertTap(),
+                              padding: padding,
+                              size: size,
                             )
                           ],
-                        );
-                      },
+                        ),
+                        StatisticsErrorFutureBuilder(
+                          future: ref
+                              .watch(fineStatsControllerProvider)
+                              .getModels(true),
+                          onPressed: (model) {
+                            ref
+                                .watch(fineStatsControllerProvider)
+                                .setDetail(model);
+                          },
+                          context: context,
+                          onDialogCancel: () {},
+                          rebuildStream: ref
+                              .watch(fineStatsControllerProvider)
+                              .fineListStream(),
+                          overallStream: ref
+                              .watch(fineStatsControllerProvider)
+                              .overAllStatsStream(),
+                          overAllStatsInit: () => ref
+                              .read(fineStatsControllerProvider)
+                              .initOverallStats(),
+                        )
+                      ],
                     ),
-                  );
-                }),
-          ],
-        ),
-      ),
-    );
+                  ),
+                ),
+              );
+            } else if(snapshot.data! == FineScreenEnum.detailScreen) {
+              return Scaffold(
+                body: Padding(
+                  padding: const EdgeInsets.all(padding),
+                  child: SingleChildScrollView(
+                    child: Column(
+                      children: [
+                        Row(
+                          children: [
+                            SizedBox(
+                                child: IconButton(
+                                  icon: const Icon(Icons.arrow_back),
+                                  onPressed: () {
+                                    ref
+                                        .read(fineStatsControllerProvider)
+                                        .changeScreen(FineScreenEnum.firstScreen);
+                                  },
+                                  color: orangeColor,
+                                )),
+                            SizedBox(
+                                child: TextButton(
+                                    child: const Text(
+                                      "Zpět",
+                                      style: TextStyle(
+                                          color: blackColor,
+                                          fontSize: 18,
+                                          fontWeight: FontWeight.normal),
+                                    ),
+                                    onPressed: () => ref
+                                        .read(fineStatsControllerProvider)
+                                        .changeScreen(FineScreenEnum.firstScreen)))
+                          ],
+                        ),
+                        Padding(
+                          padding:
+                          const EdgeInsets.only(top: 8.0, bottom: 16.0),
+                          child: CustomText(
+                              text:
+                              "Detail pokut pro ${ref.read(fineStatsControllerProvider).detailString!}"),
+                        ),
+                        ModelsErrorFutureBuilder(
+                          future: ref
+                              .watch(fineStatsControllerProvider)
+                              .getDetailedModels(),
+                          rebuildStream: ref
+                              .watch(fineStatsControllerProvider)
+                              .detailedFineListStream(),
+                          onPressed: (model) {ref
+                              .watch(fineStatsControllerProvider)
+                              .setFineDetail(model);},
+                          onDialogCancel: () {},
+                          context: context,
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              );
+            }
+            else {
+              return Scaffold(
+                body: Padding(
+                  padding: const EdgeInsets.all(padding),
+                  child: SingleChildScrollView(
+                    child: Column(
+                      children: [
+                        Row(
+                          children: [
+                            SizedBox(
+                                child: IconButton(
+                                  icon: const Icon(Icons.arrow_back),
+                                  onPressed: () {
+                                    ref
+                                        .read(fineStatsControllerProvider)
+                                        .changeScreen(FineScreenEnum.detailScreen);
+                                  },
+                                  color: orangeColor,
+                                )),
+                            SizedBox(
+                                child: TextButton(
+                                    child: const Text(
+                                      "Zpět na detail",
+                                      style: TextStyle(
+                                          color: blackColor,
+                                          fontSize: 18,
+                                          fontWeight: FontWeight.normal),
+                                    ),
+                                    onPressed: () => ref
+                                        .read(fineStatsControllerProvider)
+                                        .changeScreen(FineScreenEnum.detailScreen))),
+                            SizedBox(
+                                child: IconButton(
+                                  icon: const Icon(Icons.arrow_back),
+                                  onPressed: () {
+                                    ref
+                                        .read(fineStatsControllerProvider)
+                                        .changeScreen(FineScreenEnum.firstScreen);
+                                  },
+                                  color: orangeColor,
+                                )),
+                            SizedBox(
+                                child: TextButton(
+                                    child: const Text(
+                                      "Zpět na seznam",
+                                      style: TextStyle(
+                                          color: blackColor,
+                                          fontSize: 18,
+                                          fontWeight: FontWeight.normal),
+                                    ),
+                                    onPressed: () => ref
+                                        .read(fineStatsControllerProvider)
+                                        .changeScreen(FineScreenEnum.firstScreen)))
+                          ],
+                        ),
+                        Padding(
+                          padding:
+                          const EdgeInsets.only(top: 8.0, bottom: 16.0),
+                          child: CustomText(
+                              text:
+                              ref.read(fineStatsControllerProvider).detailDetailString!),
+                        ),
+                        ModelsErrorFutureBuilder(
+                          future: ref
+                              .watch(fineStatsControllerProvider)
+                              .getDetailedDetailedModels(),
+                          rebuildStream: ref
+                              .watch(fineStatsControllerProvider)
+                              .detailedFineFineListStream(),
+                          onPressed: (object) {},
+                          onDialogCancel: () {},
+                          context: context,
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              );
+            }
+          });
+    } else {
+      return Container();
+    }
   }
 }

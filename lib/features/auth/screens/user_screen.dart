@@ -3,13 +3,20 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:trus_app/colors.dart';
 import 'package:trus_app/common/widgets/loader.dart';
 import 'package:trus_app/features/auth/controller/auth_controller.dart';
+import 'package:trus_app/models/api/user_api_model.dart';
 
 import '../../../common/utils/utils.dart';
+import '../../../common/widgets/builder/models_error_future_builder.dart';
 import '../../../common/widgets/confirmation_dialog.dart';
 import '../../../models/user_model.dart';
+import '../../general/error/api_executor.dart';
 
 class UserScreen extends ConsumerStatefulWidget {
+  final bool isFocused;
+  final VoidCallback backToMainMenu;
   const UserScreen({
+    required this.isFocused,
+    required this.backToMainMenu,
     Key? key,
   }) : super(key: key);
 
@@ -19,85 +26,37 @@ class UserScreen extends ConsumerStatefulWidget {
 
 class _UserScreenState extends ConsumerState<UserScreen> {
 
-  Future<void> rewriteUserPermissions(UserModel user) async {
-    if(user.id == ref.read(authControllerProvider).getCurrentUserId()) {
-      showSnackBar(
-        context: context,
-        content: "Nelze měnit práva u aktuálně přihlášené osoby.",
-      );
-      return;
-    }
-    final bool newWritePermission = !user.writePermission;
-    if(await ref.read(authControllerProvider).setWritePermissions(context, user, !user.writePermission)) {
-      showSnackBar(
-        context: context,
-        content: "Úspěšně nastavena práva pro psaní u uživatele ${user.name} na $newWritePermission",
-      );
-    }
-  }
-
-  void showDeleteConfirmation(UserModel user) {
-    var dialog = ConfirmationDialog("Opravdu změnit práva u uživatele ${user.name}?", () {
-      rewriteUserPermissions(user);
+  void showChangePermissionConfirmation(UserApiModel user) {
+    var dialog = ConfirmationDialog(user.admin! ? "Opravdu chcete odebrat práva uživateli ${user.name}?" : "Opravdu chcete zpřístupnit práva uživateli ${user.name}?", () {
+      changePermissions(user);
     });
     showDialog(context: context, builder: (BuildContext context) => dialog);
   }
 
+  Future<void> changePermissions(UserApiModel user) async {
+    await executeApi<void>(() async {
+      return await ref.read(authControllerProvider).changeWritePermissions(context, user);
+    },() => widget.backToMainMenu.call(), context, true).whenComplete(() => setState(() {
+    }));
+  }
+
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-        body: Padding(
-          padding: const EdgeInsets.only(top: 8.0),
-          child: StreamBuilder<List<UserModel>>(
-              stream: ref.watch(authControllerProvider).users(),
-              builder: (context, snapshot) {
-                if (snapshot.connectionState == ConnectionState.waiting) {
-                  return const Loader();
-                }
-
-                return ListView.builder(
-                  shrinkWrap: true,
-                  itemCount: snapshot.data!.length,
-                  itemBuilder: (context, index) {
-                    var user = snapshot.data![index];
-                    return Column(
-                      children: [
-                        InkWell(
-                          onTap: () => showDeleteConfirmation(user),
-                          child: Padding(
-                            padding: const EdgeInsets.only(
-                                bottom: 8.0, left: 8, right: 8),
-                            child: Container(
-                              decoration: const BoxDecoration(
-                                  border: Border(
-                                      bottom: BorderSide(
-                                color: Colors.grey,
-                              ))),
-                              child: ListTile(
-                                title: Padding(
-                                  padding: const EdgeInsets.only(bottom: 16),
-                                  child: Text(
-                                    user.name,
-                                    style: const TextStyle(
-                                        fontWeight: FontWeight.bold,
-                                        fontSize: 18),
-                                  ),
-                                ),
-                                subtitle: Text(
-                                  user.toString(),
-                                  style: const TextStyle(
-                                      color: listviewSubtitleColor),
-                                ),
-                              ),
-                            ),
-                          ),
-                        )
-                      ],
-                    );
-                  },
-                );
-              }),
-        ),
-        );
+    if (widget.isFocused) {
+      return Scaffold(
+          body: Padding(
+            padding: const EdgeInsets.only(top: 8.0),
+            child: ModelsErrorFutureBuilder(
+              future: ref.watch(authControllerProvider).getModels(),
+              onPressed: (user) => {showChangePermissionConfirmation(user as UserApiModel)},
+              onDialogCancel: () => widget.backToMainMenu.call(),
+              context: context,
+            ),
+          ),
+         );
+    }
+    else {
+      return Container();
+    }
   }
 }

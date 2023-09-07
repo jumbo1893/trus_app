@@ -12,174 +12,42 @@ import 'package:trus_app/models/helper/player_stats_helper_model.dart';
 import 'package:trus_app/models/match_model.dart';
 import 'package:trus_app/models/player_model.dart';
 
+import '../../../models/api/home_setup.dart';
 import '../../../models/enum/model.dart';
 import '../../../models/pkfl/pkfl_match.dart';
 import '../../../models/season_model.dart';
 import '../../fine/repository/fine_repository.dart';
 import '../../pkfl/tasks/retrieve_matches_task.dart';
-import '../random_fact.dart';
+import '../repository/home_api_service.dart';
 
 final homeControllerProvider = Provider((ref) {
-  final matchRepository = ref.watch(matchRepositoryProvider);
-  final fineMatchRepository = ref.watch(fineMatchRepositoryProvider);
+  final homeRepository = ref.watch(homeApiServiceProvider);
   final pkflRepository = ref.watch(pkflRepositoryProvider);
-  final playerRepository = ref.watch(playerRepositoryProvider);
-  final seasonRepository = ref.watch(seasonRepositoryProvider);
-  final beerRepository = ref.watch(beerRepositoryProvider);
-  final fineRepository = ref.watch(fineRepositoryProvider);
-  final statsRepository = ref.watch(statsRepositoryProvider);
   return HomeController(
-      matchRepository: matchRepository,
-      fineMatchRepository: fineMatchRepository,
+      homeRepository: homeRepository,
       pkflRepository: pkflRepository,
-      playerRepository: playerRepository,
-      seasonRepository: seasonRepository,
-      beerRepository: beerRepository,
-      fineRepository: fineRepository,
-      statsRepository: statsRepository,
       ref: ref);
 });
 
 class HomeController {
-  final MatchRepository matchRepository;
-  final FineMatchRepository fineMatchRepository;
+  final HomeApiService homeRepository;
   final PkflRepository pkflRepository;
-  final PlayerRepository playerRepository;
-  final SeasonRepository seasonRepository;
-  final BeerRepository beerRepository;
-  final FineRepository fineRepository;
-  final StatsRepository statsRepository;
   final ProviderRef ref;
-  final RandomFact randomFact = RandomFact();
+  String birthday = "";
+  List<String> randomFacts = [];
 
   HomeController({
-    required this.matchRepository,
-    required this.fineMatchRepository,
+    required this.homeRepository,
     required this.pkflRepository,
-    required this.playerRepository,
-    required this.seasonRepository,
-    required this.beerRepository,
-    required this.fineRepository,
-    required this.statsRepository,
     required this.ref,
   });
 
-  Stream<List<String>> randomFacts() {
-    return randomFact.getRandomFactListStream();
+  Future<List<String>> getRandomFacts() async {
+    return randomFacts;
   }
 
-  Stream<List<MatchModel>> matches() {
-    return matchRepository.getMatches();
-  }
-
-  void initRandomFact() {
-    randomFact.initStreams(matchRepository.getMatches(), Model.match);
-    randomFact.initStreams(fineMatchRepository.getFinesInMatches(), Model.fineMatch);
-    randomFact.initStreams(fineMatchRepository.getFines(), Model.fine);
-    randomFact.initStreams(playerRepository.getPlayers(), Model.player);
-    randomFact.initStreams(beerRepository.getBeersInMatches(), Model.beer);
-    randomFact.initStreams(seasonRepository.getSeasons(), Model.seasons);
-    randomFact.initStreams(matchRepository.getPlayerStats(), Model.playerStats);
-
-  }
-
-  Stream<List<MatchModel>> matchesBySeason(String seasonId) {
-    if (seasonId == "" || seasonId == SeasonModel.allSeason().id) {
-      return matchRepository.getMatches();
-    }
-    return matchRepository.getMatchesBySeason(seasonId);
-  }
-
-  Stream<List<PlayerStatsHelperModel>> playersStatsInMatch(
-      List<String> playerIdList, String matchId) {
-    return matchRepository.getPlayersStatsForMatch(matchId, playerIdList);
-  }
-
-  Stream<String> getNextPlayerBirthday() {
-    return playerRepository.getPlayers().map((event)  {
-      return _returnNextPlayerBirthdayFromList(event);
-    });
-  }
-
-  String _returnNextPlayerBirthdayFromList(List<PlayerModel> players) {
-    List<PlayerModel> returnPlayers = [];
-    for (PlayerModel playerModel in players) {
-      if (returnPlayers.isEmpty) {
-        returnPlayers.add(playerModel);
-      } else if (playerModel.compareBirthday(returnPlayers[0]) == 0) {
-        returnPlayers.clear();
-        returnPlayers.add(playerModel);
-      }
-      else if (playerModel.compareBirthday(returnPlayers[0]) == 2) {
-        returnPlayers.add(playerModel);
-      }
-    }
-    if (returnPlayers.isEmpty) {
-      return "Nelze najít dny do narozenin hráčů, hrajou vůbec nějaký za Trus?";
-    } else if (!returnPlayers[0].isTodayBirthDay()) {
-      if (returnPlayers.length == 1) {
-        if (returnPlayers[0].fan) {
-          return "Příští rundu platí věrný fanoušek ${returnPlayers[0].name}, který bude mít za ${returnPlayers[0].nextBirthdayToString()} své ${returnPlayers[0].calculateAge() + 1}. narozeniny";
-        } else {
-          return "Příští rundu platí ${returnPlayers[0].name}, který bude mít za ${returnPlayers[0].nextBirthdayToString()} své ${returnPlayers[0].calculateAge() + 1}. narozeniny";
-        }
-      } else {
-        String text = "Příští rundu platí ";
-        for (int i = 0; i < returnPlayers.length; i++) {
-          if (i == returnPlayers.length - 1) {
-            text += "${returnPlayers[i].name} ";
-          } else if (i == returnPlayers.length - 2) {
-            text += "${returnPlayers[i].name} a ";
-          } else {
-            text += "${returnPlayers[i].name}, ";
-          }
-        }
-        text += "kteří mají za ${returnPlayers[0].nextBirthdayToString()} své ";
-        for (int i = 0; i < returnPlayers.length; i++) {
-          text += "${returnPlayers[i].calculateAge() + 1}.";
-          if (i == returnPlayers.length - 1) {
-            text += " narozeniny";
-          } else if (i == returnPlayers.length - 2) {
-            text += " a ";
-          } else {
-            text += ", ";
-          }
-        }
-        return text;
-      }
-    } else {
-      if (returnPlayers.length == 1) {
-        if (returnPlayers[0].fan) {
-          return ("Dnes slaví narozeniny fanoušek ${returnPlayers[0].name}, který má ${returnPlayers[0].calculateAge()} let. Už ten sud vyval a ať ti slouží splávek!");
-        } else {
-          return ("Dnes slaví narozeniny ${returnPlayers[0].name}, který má ${returnPlayers[0].calculateAge()} let. Už ten sud vyval a ať ti slouží splávek! Na Trus!!");
-        }
-      } else {
-        String text = "Dnešní oslavenci jsou ";
-        for (int i = 0; i < returnPlayers.length; i++) {
-          if (i == returnPlayers.length - 1) {
-            text += "${returnPlayers[i].name} ";
-          } else if (i == returnPlayers.length - 2) {
-            text += "${returnPlayers[i].name} a ";
-          } else {
-            text += "${returnPlayers[i].name}, ";
-          }
-        }
-        text += "kteří mají slaví své nádherné ";
-        for (int i = 0; i < returnPlayers.length; i++) {
-          text += "${returnPlayers[i].calculateAge()}.";
-          if (i == returnPlayers.length - 1) {
-            text +=
-                " narozeniny. Pánové, všichni doufáme že se pochlapíte. Na Trus!!!!";
-          } else if (i == returnPlayers.length - 2) {
-            text += " a ";
-          } else {
-            text += ", ";
-          }
-        }
-        return text;
-      }
-    }
+  Future<String> getUpcomingBirthday() async {
+    return birthday;
   }
 
   Future<PkflMatch?> getNextPkflMatch() async {
@@ -208,5 +76,10 @@ class HomeController {
     return returnMatch;
   }
 
-
+  Future<HomeSetup> setupHome() async {
+    HomeSetup homeSetup = await homeRepository.setupHome();
+    birthday = homeSetup.nextBirthday;
+    randomFacts = homeSetup.randomFacts;
+    return homeSetup;
+  }
 }

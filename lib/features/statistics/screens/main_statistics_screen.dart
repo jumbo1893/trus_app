@@ -5,8 +5,35 @@ import 'package:trus_app/features/statistics/screens/player_beer_stats_screen.da
 import 'package:trus_app/features/statistics/screens/player_fine_stats_screen.dart';
 import 'package:trus_app/features/statistics/screens/match_fine_stats_screen.dart';
 
-class MainStatisticsScreen extends StatelessWidget {
+class MainStatisticsScreen extends StatefulWidget {
   const MainStatisticsScreen({super.key});
+
+  @override
+  State<MainStatisticsScreen> createState() => _MainStatisticsScreenState();
+}
+
+  class _MainStatisticsScreenState extends State<MainStatisticsScreen> with TickerProviderStateMixin {
+
+    late TabController tabController;
+    int activeTab = 0;
+
+    @override
+    void initState() {
+      tabController = TabController(
+          vsync: this, length: 4,);
+      super.initState();
+    }
+
+    void changeTab(int tab) {
+      setState(() {
+        activeTab = tab;
+      });
+      tabController.index = tab;
+    }
+
+    bool isFocused(int index) {
+      return index == activeTab;
+    }
 
   @override
   Widget build(BuildContext context) {
@@ -17,10 +44,11 @@ class MainStatisticsScreen extends StatelessWidget {
           appBar: AppBar(
             backgroundColor: Colors.white,
             toolbarHeight: 0,
-            bottom: const TabBar(
+            bottom: TabBar(
+              onTap: (index) => changeTab(index),
               labelColor: blackColor,
               indicatorColor: orangeColor,
-              tabs: [
+              tabs: const [
                 FittedBox(
                   child: Tab(
                     text: 'Piva\nhráči',
@@ -42,12 +70,13 @@ class MainStatisticsScreen extends StatelessWidget {
               ],
             ),
           ),
-          body: const TabBarView(
+          body: TabBarView(
+            controller: tabController,
             children: [
-              PlayerBeerStatsScreen(),
-              MatchBeerStatsScreen(),
-              PlayerFineStatsScreen(),
-              MatchFineStatsScreen(),
+              PlayerBeerStatsScreen(isFocused: isFocused(0),),
+              MatchBeerStatsScreen(isFocused: isFocused(1),),
+              PlayerFineStatsScreen(isFocused: isFocused(2),),
+              MatchFineStatsScreen(isFocused: isFocused(3),),
             ],
           ),
         ),

@@ -5,14 +5,20 @@ import 'package:trus_app/common/widgets/custom_button.dart';
 import 'package:trus_app/common/widgets/rows/row_text_field.dart';
 
 import '../../../common/utils/field_validator.dart';
+import '../../../common/widgets/builder/column_future_builder.dart';
+import '../../../common/widgets/button/crud_button.dart';
+import '../../../common/widgets/rows/stream/row_text_field_stream.dart';
+import '../../../models/enum/crud.dart';
 import '../../notification/controller/notification_controller.dart';
 import '../controller/fine_controller.dart';
 
 class AddFineScreen extends ConsumerStatefulWidget {
   final VoidCallback onAddFinePressed;
+  final bool isFocused;
   const AddFineScreen({
     Key? key,
     required this.onAddFinePressed,
+    required this.isFocused,
   }) : super(key: key);
 
   @override
@@ -20,75 +26,54 @@ class AddFineScreen extends ConsumerStatefulWidget {
 }
 
 class _AddFineScreenState extends ConsumerState<AddFineScreen> {
-  final _nameController = TextEditingController();
-  final _amountController = TextEditingController();
-  String nameErrorText = "";
-  String amountErrorText = "";
-
-  @override
-  void dispose() {
-    _nameController.dispose();
-    _amountController.dispose();
-    super.dispose();
-  }
-
-  Future<void> addFine() async {
-    String name = _nameController.text.trim();
-    String amount = _amountController.text.trim();
-    setState(() {
-      nameErrorText = validateEmptyField(name);
-      amountErrorText = validateAmountField(amount);
-    });
-    if (nameErrorText.isEmpty && amountErrorText.isEmpty) {
-      if (await ref
-          .read(fineControllerProvider)
-          .addFine(context, name, int.parse(amount))) {
-        await sendNotification(name, "ve výši $amount Kč");
-        widget.onAddFinePressed.call();
-      }
-    }
-  }
-
-  Future<void> sendNotification(String fine, String text) async {
-    if(text.isNotEmpty) {
-      String title = "Přidána pokuta $fine";
-      await ref.read(notificationControllerProvider).addNotification(
-          context, title, text);
-    }
-  }
 
   @override
   Widget build(BuildContext context) {
+    if (widget.isFocused) {
     const double padding = 8.0;
-    final size = MediaQuery.of(context).size;
-    return Scaffold(
-      body: Padding(
-        padding: const EdgeInsets.all(padding),
-        child: SafeArea(
-          child: Column(
-            children: [
-              RowTextField(
-                  size: size,
-                  padding: padding,
-                  textController: _nameController,
-                  errorText: nameErrorText,
-                  labelText: "název",
-                  textFieldText: "Název pokuty:"),
-              const SizedBox(height: 10),
-              RowTextField(
-                  size: size,
-                  padding: padding,
-                  textController: _amountController,
-                  errorText: amountErrorText,
-                  number: true,
-                  labelText: "v Kč",
-                  textFieldText: "Výše pokuty:"),
-              const SizedBox(height: 10),
-              CustomButton(text: "Přidej pokutu", onPressed: addFine)
-            ],
-          ),
+    final size = MediaQueryData.fromWindow(WidgetsBinding.instance.window).size;
+    return ColumnFutureBuilder(
+      loadModelFuture:
+      ref.watch(fineControllerProvider).newFine(),
+      columns: [
+        RowTextFieldStream(
+          size: size,
+          labelText: "název",
+          textFieldText: "Název pokuty:",
+          padding: padding,
+          textStream: ref.watch(fineControllerProvider).name(),
+          errorTextStream: ref.watch(fineControllerProvider).nameErrorText(),
+          onTextChanged: (name) =>
+          {ref.watch(fineControllerProvider).setName(name)},
         ),
-      ),
+        const SizedBox(height: 10),
+        RowTextFieldStream(
+          size: size,
+          labelText: "v Kč",
+          textFieldText: "Výše pokuty:",
+          padding: padding,
+          textStream: ref.watch(fineControllerProvider).amount(),
+          errorTextStream: ref.watch(fineControllerProvider).amountErrorText(),
+          onTextChanged: (amount) =>
+          {ref.watch(fineControllerProvider).setAmount(amount)},
+          number: true,
+        ),
+        const SizedBox(height: 10),
+        const SizedBox(height: 10),
+        CrudButton(
+          text: "Přidej pokutu",
+          context: context,
+          crud: Crud.create,
+          crudOperations: ref.read(fineControllerProvider),
+          onOperationComplete: (id) {
+            widget.onAddFinePressed();
+          },
+        )
+      ], loadingScreen: null,
     );
+    }
+    else {
+      return Container();
+    }
   }
 }

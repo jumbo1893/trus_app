@@ -2,22 +2,27 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:trus_app/common/widgets/custom_button.dart';
 import 'package:trus_app/common/widgets/rows/row_text_field.dart';
+import 'package:trus_app/models/api/fine_api_model.dart';
 
 import '../../../common/utils/field_validator.dart';
+import '../../../common/widgets/builder/column_future_builder.dart';
+import '../../../common/widgets/button/crud_button.dart';
 import '../../../common/widgets/confirmation_dialog.dart';
+import '../../../common/widgets/rows/stream/row_text_field_stream.dart';
+import '../../../models/enum/crud.dart';
 import '../../../models/fine_model.dart';
 import '../../notification/controller/notification_controller.dart';
 import '../controller/fine_controller.dart';
 
 class EditFineScreen extends ConsumerStatefulWidget {
   final VoidCallback onButtonConfirmPressed;
-  final FineModel? fineModel;
-  bool init;
-  EditFineScreen(
+  final FineApiModel? fineModel;
+  final bool isFocused;
+  const EditFineScreen(
     this.fineModel, {
     Key? key,
-    this.init = true,
     required this.onButtonConfirmPressed,
+    required this.isFocused,
   }) : super(key: key);
 
   @override
@@ -25,103 +30,67 @@ class EditFineScreen extends ConsumerStatefulWidget {
 }
 
 class _EditFineScreenState extends ConsumerState<EditFineScreen> {
-  final _nameController = TextEditingController();
-  final _amountController = TextEditingController();
-  String nameErrorText = "";
-  String amountErrorText = "";
-
-  @override
-  void dispose() {
-    _nameController.dispose();
-    _amountController.dispose();
-    super.dispose();
-  }
-
-  Future<void> editFine() async {
-    String name = _nameController.text.trim();
-    String amount = _amountController.text.trim();
-    setState(() {
-      nameErrorText = validateEmptyField(name);
-      amountErrorText = validateAmountField(amount);
-    });
-    if (nameErrorText.isEmpty && amountErrorText.isEmpty) {
-      if (await ref
-          .read(fineControllerProvider)
-          .editFine(context, name, int.parse(amount), widget.fineModel!)) {
-        await sendNotification("Upravena pokuta $name", "na výši $amount Kč");
-        widget.onButtonConfirmPressed.call();
-      }
-    }
-  }
-
-  void showDeleteConfirmation() {
-    var dialog = ConfirmationDialog("opravdu chcete smazat tuto pokutu?", () {
-      deleteFine();
-    });
-    showDialog(context: context, builder: (BuildContext context) => dialog);
-  }
-
-  Future<void> deleteFine() async {
-    final String name = widget.fineModel!.name;
-    final String amount = widget.fineModel!.amount.toString();
-    await ref
-        .read(fineControllerProvider)
-        .deleteFine(context, widget.fineModel!);
-    await sendNotification("Smazána pokuta $name", "v původní výši $amount Kč");
-    widget.onButtonConfirmPressed.call();
-  }
-
-  Future<void> sendNotification(String title, String text) async {
-    if(text.isNotEmpty) {
-      await ref.read(notificationControllerProvider).addNotification(
-          context, title, text);
-    }
-  }
-
-  void setFine(FineModel? fineModel) {
-    if (widget.init) {
-      _nameController.text = fineModel?.name ?? "";
-      _amountController.text = fineModel?.amount.toString() ?? "";
-      widget.init = false;
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
-    const double padding = 8.0;
-    final size = MediaQuery.of(context).size;
-    setFine(widget.fineModel);
-    return Scaffold(
-      body: Padding(
-        padding: const EdgeInsets.all(padding),
-        child: SafeArea(
-          child: Column(
-            children: [
-              RowTextField(
-                  size: size,
-                  padding: padding,
-                  textController: _nameController,
-                  errorText: nameErrorText,
-                  labelText: "název",
-                  textFieldText: "Název sezony:"),
-              const SizedBox(height: 10),
-              RowTextField(
-                  size: size,
-                  padding: padding,
-                  textController: _amountController,
-                  errorText: amountErrorText,
-                  number: true,
-                  labelText: "v Kč",
-                  textFieldText: "Výše pokuty:"),
-              const SizedBox(height: 10),
-              const SizedBox(height: 10),
-              CustomButton(text: "Potvrď změny", onPressed: editFine),
-              CustomButton(
-                  text: "Smaž pokutu", onPressed: showDeleteConfirmation)
-            ],
+    if (widget.isFocused) {
+      const double padding = 8.0;
+      final size =
+          MediaQueryData.fromWindow(WidgetsBinding.instance.window).size;
+      return ColumnFutureBuilder(
+        loadModelFuture:
+            ref.watch(fineControllerProvider).fine(widget.fineModel!),
+        columns: [
+          RowTextFieldStream(
+            size: size,
+            labelText: "název",
+            textFieldText: "Název pokuty:",
+            padding: padding,
+            textStream: ref.watch(fineControllerProvider).name(),
+            errorTextStream: ref.watch(fineControllerProvider).nameErrorText(),
+            onTextChanged: (name) =>
+                {ref.watch(fineControllerProvider).setName(name)},
           ),
-        ),
-      ),
-    );
+          const SizedBox(height: 10),
+          RowTextFieldStream(
+            size: size,
+            labelText: "v Kč",
+            textFieldText: "Výše pokuty:",
+            padding: padding,
+            textStream: ref.watch(fineControllerProvider).amount(),
+            errorTextStream:
+                ref.watch(fineControllerProvider).amountErrorText(),
+            onTextChanged: (amount) =>
+                {ref.watch(fineControllerProvider).setAmount(amount)},
+            number: true,
+          ),
+          const SizedBox(height: 10),
+          const SizedBox(height: 10),
+          CrudButton(
+            text: "Potvrď změny",
+            context: context,
+            crud: Crud.update,
+            crudOperations: ref.read(fineControllerProvider),
+            onOperationComplete: (id) {
+              widget.onButtonConfirmPressed();
+            },
+            id: widget.fineModel!.id!,
+          ),
+          CrudButton(
+            text: "Smaž pokutu",
+            context: context,
+            crud: Crud.delete,
+            crudOperations: ref.read(fineControllerProvider),
+            onOperationComplete: (id) {
+              widget.onButtonConfirmPressed();
+            },
+            id: widget.fineModel!.id!,
+            modelToString: widget.fineModel!,
+          ),
+        ],
+        loadingScreen: null,
+      );
+    } else {
+      return Container();
+    }
   }
 }

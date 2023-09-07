@@ -1,7 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:riverpod/riverpod.dart';
+import 'package:trus_app/features/general/read_operations.dart';
+import 'package:trus_app/models/api/interfaces/model_to_string.dart';
 import 'package:trus_app/models/user_model.dart';
 
+import '../../../common/repository/exception/internal_snackbar_exception.dart';
+import '../../../models/api/user_api_model.dart';
+import '../../general/crud_operations.dart';
 import '../repository/auth_repository.dart';
 
 final authControllerProvider = Provider((ref) {
@@ -11,30 +16,41 @@ final authControllerProvider = Provider((ref) {
 
 final userDataAuthProvider = FutureProvider((ref) {
   final authController = ref.watch(authControllerProvider);
-  return authController.getUserData();
+  return authController.fastLogin();
 });
 
-class AuthController {
+class AuthController implements ReadOperations {
   final AuthRepository authRepository;
 
   AuthController({
     required this.authRepository,
   });
 
-  Stream<List<UserModel>> users() {
-    return authRepository.getUsers();
+  Future<List<UserApiModel>> users() async {
+    return await authRepository.getUsers();
   }
 
-  Future<bool> setWritePermissions(
-      BuildContext context, UserModel user, bool write
+  Future<void> changeWritePermissions(
+      BuildContext context, UserApiModel user,
       ) async {
-    bool result = await authRepository.setUserWritePermissions(
-        context, user, write);
-    return result;
+    UserApiModel? currentUser = await getUserData();
+    print(user);
+    print(currentUser);
+    if(user == await getUserData()) {
+
+      throw InternalSnackBarException("Nemůžeš změnit práva sám sobě");
+    }
+    bool write = !user.admin!;
+    await authRepository.setUserWritePermissions(user, write);
   }
 
-  Future<UserModel?> getUserData() async {
-    UserModel? user = await authRepository.getCurrentUserData();
+  Future<UserApiModel?> getUserData() async {
+    UserApiModel? user = await authRepository.getCurrentUserData();
+    return user;
+  }
+
+  Future<UserApiModel?> fastLogin() async {
+    UserApiModel? user = await authRepository.fastLogin();
     return user;
   }
 
@@ -46,8 +62,8 @@ class AuthController {
     return authRepository.returnUserId();
   }
 
-  Future<bool> signInWithEmail(BuildContext context, String email, String password) async {
-    bool result = await authRepository.signInWithEmail(context, email, password);
+  Future<UserApiModel?> signInWithEmail(String email, String password) async {
+    UserApiModel? result = await authRepository.signInWithEmail(email, password);
      return result;
   }
 
@@ -56,18 +72,23 @@ class AuthController {
     return result;
   }
 
-  Future<bool> registerWithEmail(BuildContext context, String email, String password) async {
-    bool result = await authRepository.registerWithEmail(context, email, password);
+  Future<bool> signUpWithEmail(String email, String password) async {
+    bool result = await authRepository.signUpWithEmail(email, password);
     return result;
   }
 
-  Future<bool> signOut(BuildContext context) async {
-    bool result = await authRepository.signOut(context);
+  Future<bool> signOut() async {
+    bool result = await authRepository.signOut();
     return result;
   }
 
-  Future<bool> saveUserDataToFirebase(BuildContext context, String username) async {
-    bool result = await authRepository.saveUserDataToFirebase(context, username);
-    return result;
+  Future<void> saveUserData(String username) async {
+    await authRepository.editCurrentUser(false, username);
+
+  }
+
+  @override
+  Future<List<ModelToString>> getModels() async {
+    return await authRepository.getUsers();
   }
 }

@@ -11,7 +11,7 @@ class RandomFactBox extends StatefulWidget implements PreferredSizeWidget {
     required this.padding,
   });
 
-  final Stream<List<String>> randomFactStream;
+  final Future<List<String>> randomFactStream;
   final double padding;
 
   @override
@@ -79,8 +79,8 @@ class _RandomFactBoxState extends State<RandomFactBox> with SingleTickerProvider
         child: Row(
           children: [
             Expanded(
-              child: StreamBuilder<List<String>>(
-                  stream: widget.randomFactStream,
+              child: FutureBuilder<List<String>>(
+                  future: widget.randomFactStream,
                   builder: (context, snapshot) {
                     if (snapshot.connectionState ==
                         ConnectionState.waiting) {

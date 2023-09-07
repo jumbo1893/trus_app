@@ -28,7 +28,7 @@ class NotificationController {
   }
 
   Future<UserModel?> getUserData() async {
-    UserModel? user = await authRepository.getCurrentUserData();
+    UserModel? user = null;
     return user;
   }
 

@@ -93,7 +93,8 @@ class _MatchDropdownState extends ConsumerState<MatchDropdown> {
   @override
   Widget build(BuildContext context) {
     return StreamBuilder<List<MatchModel>>(
-        stream: ref.watch(matchControllerProvider).matches(),
+        stream: //ref.watch(matchControllerProvider).matches(),
+        null,
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
             return const Loader();
@@ -118,7 +119,7 @@ class _MatchDropdownState extends ConsumerState<MatchDropdown> {
               isExpanded: true,
               items: _addDividersAfterItems(matches),
               //customItemsHeights: _getCustomItemsHeights(snapshot.data!.length),
-              iconEnabledColor: Colors.white,
+              //iconEnabledColor: Colors.white,
               value: selectedValue,
               onChanged: (value) {
                 setState(() {
@@ -127,10 +128,10 @@ class _MatchDropdownState extends ConsumerState<MatchDropdown> {
                   widget.onPlayersSelected(selectedValue!.playerIdList);
                 });
               },
-              buttonHeight: 40,
+              /*buttonHeight: 40,
               dropdownMaxHeight: 200,
               buttonWidth: 140,
-              itemPadding: const EdgeInsets.symmetric(horizontal: 8.0),
+              itemPadding: const EdgeInsets.symmetric(horizontal: 8.0),*/
             ),
           );
         }

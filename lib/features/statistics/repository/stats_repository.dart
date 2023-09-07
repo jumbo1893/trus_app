@@ -142,6 +142,7 @@ class StatsRepository {
         beers.add(beer);
       }
       BeerStatsHelper beerStatsHelper = BeerStatsHelper(beers);
+      print(beers);
       return beerStatsHelper
           .convertBeerModelToBeerStatsHelperModelForPlayers(players);
     });
@@ -202,10 +203,14 @@ class StatsRepository {
   Stream<List<FineStatsHelperModel>> getFinesForPlayersInSeason(
       SeasonModel? season) async* {
     final List<PlayerModel> players = await _getPlayersWithoutFans();
+  //  print(players.length);
     List<String> matchIds = [];
     season ??= await getCurrentSeason();
     matchIds = await _getMatchIdsBySeason(season.id);
-    if (season != SeasonModel.allSeason()) {
+   // print(matchIds.length);
+   // print(matchIds);
+    //if (season != SeasonModel.allSeason()) {
+    if (false) {
     yield* firestore
         .collection(fineMatchTable)
         .where("matchId", whereIn: matchIds)
@@ -214,6 +219,7 @@ class StatsRepository {
       List<FineMatchModel> finesMatch = [];
       List<String> finesIds = [];
       List<FineModel> fines = [];
+      print(event.docs.length);
       for (var document in event.docs) {
         var fine = FineMatchModel.fromJson(document.data());
         finesMatch.add(fine);
@@ -221,6 +227,7 @@ class StatsRepository {
       }
       fines = await getFinesById(finesIds);
       FineStatsHelper fineStatsHelper = FineStatsHelper(fines, finesMatch);
+      print(fines);
       return fineStatsHelper
           .convertFineModelToFineStatsHelperModelForPlayers(players);
     });
@@ -234,11 +241,15 @@ class StatsRepository {
         List<FineModel> fines = [];
         for (var document in event.docs) {
           var fine = FineMatchModel.fromJson(document.data());
-          finesMatch.add(fine);
-          finesIds.add(fine.fineId);
+          if(matchIds.contains(fine.matchId)) {
+            finesMatch.add(fine);
+            finesIds.add(fine.fineId);
+          }
         }
         fines = await getFinesById(finesIds);
         FineStatsHelper fineStatsHelper = FineStatsHelper(fines, finesMatch);
+        /*print(fineStatsHelper
+            .convertFineModelToFineStatsHelperModelForPlayers(players));*/
         return fineStatsHelper
             .convertFineModelToFineStatsHelperModelForPlayers(players);
       });

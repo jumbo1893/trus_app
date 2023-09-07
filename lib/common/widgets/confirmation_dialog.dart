@@ -14,7 +14,7 @@ class ConfirmationDialog extends StatelessWidget {
       content: Text(content),
       actions: [
         TextButton(onPressed: () => Navigator.of(context).pop(), child: const Text("CANCEL")),
-        TextButton(onPressed: () {continueCallBack.call(); Navigator.of(context).pop();}, child: const Text("OK"))
+        TextButton(onPressed: () {Navigator.of(context).pop(); continueCallBack.call(); }, child: const Text("OK"))
       ],
     );
   }

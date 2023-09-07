@@ -37,11 +37,11 @@ class FineRepository extends CustomFirebaseException {
       final document = firestore.collection(fineTable).doc();
       FineModel fine = FineModel(name: name, id: document.id, amount: amount, toDelete: true);
       await document.set(fine.toJson());
-      showSnackBar(context: context, content: ("Pokuta $name úspěšně přidána"));
+      showSnackBarWithPostFrame(context: context, content: ("Pokuta $name úspěšně přidána"));
       return true;
     } on FirebaseException catch (e) {
       if (!showSnackBarOnException(e.code, context)) {
-        showSnackBar(
+        showSnackBarWithPostFrame(
           context: context,
           content: e.message!,
         );
@@ -56,12 +56,12 @@ class FineRepository extends CustomFirebaseException {
       final document = firestore.collection(fineTable).doc(fineModel.id);
       FineModel fine = FineModel(name: name, id: fineModel.id, amount: amount, toDelete: true);
       await document.set(fine.toJson());
-      showSnackBar(
+      showSnackBarWithPostFrame(
           context: context, content: ("Pokuta $name úspěšně upravena"));
       return true;
     } on FirebaseException catch (e) {
       if (!showSnackBarOnException(e.code, context)) {
-        showSnackBar(
+        showSnackBarWithPostFrame(
           context: context,
           content: e.message!,
         );
@@ -75,13 +75,13 @@ class FineRepository extends CustomFirebaseException {
     if (fineModel.toDelete) {
       await firestore.collection(fineTable).doc(fineModel.id).delete().then(
               (value) =>
-              showSnackBar(
+              showSnackBarWithPostFrame(
                   context: context, content: ("Pokuta $name úspěšně smazána")),
           onError: (e) =>
           {
             if (!showSnackBarOnException(e.code, context))
               {
-                showSnackBar(
+                showSnackBarWithPostFrame(
                   context: context,
                   content: e.message!,
                 )
@@ -89,7 +89,7 @@ class FineRepository extends CustomFirebaseException {
           });
     }
     else {
-      showSnackBar(
+      showSnackBarWithPostFrame(
           context: context,
           content: "Tuto pokutu nelze smazat",);
     }

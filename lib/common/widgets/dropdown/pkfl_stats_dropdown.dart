@@ -75,7 +75,7 @@ class _PkflStatsDropdownState extends ConsumerState<PkflStatsDropdown> {
                 ),
               ),
               items: _addDividersAfterItems(SpinnerOption.values),
-              customItemsHeights: _getCustomItemsHeights(SpinnerOption.values.length),
+              //customItemsHeights: _getCustomItemsHeights(SpinnerOption.values.length),
               value: selectedValue ?? widget.initValue ?? SpinnerOption.values[0],
               onChanged: (value) {
                 setState(() {
@@ -83,10 +83,10 @@ class _PkflStatsDropdownState extends ConsumerState<PkflStatsDropdown> {
                   widget.onValueSelected(value);
                 });
               },
-              buttonHeight: 40,
+              /*buttonHeight: 40,
               dropdownMaxHeight: 200,
               buttonWidth: 140,
-              itemPadding: const EdgeInsets.symmetric(horizontal: 8.0),
+              itemPadding: const EdgeInsets.symmetric(horizontal: 8.0),*/
             ),
           );
   }

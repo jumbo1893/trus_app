@@ -6,6 +6,7 @@ import '../../../common/widgets/custom_button.dart';
 import '../../../common/widgets/custom_text_field.dart';
 import 'package:trus_app/features/auth/controller/auth_controller.dart';
 
+import '../../general/error/api_executor.dart';
 import '../../main/main_screen.dart';
 import '../../notification/controller/notification_controller.dart';
 
@@ -14,11 +15,11 @@ class UserInformationScreen extends ConsumerStatefulWidget {
   static const routeName = '/user-information-screen';
 
   @override
-  ConsumerState<UserInformationScreen> createState() => _UserInformationScreenState();
+  ConsumerState<UserInformationScreen> createState() =>
+      _UserInformationScreenState();
 }
 
 class _UserInformationScreenState extends ConsumerState<UserInformationScreen> {
-
   final textController = TextEditingController();
   String errorText = "";
 
@@ -33,11 +34,12 @@ class _UserInformationScreenState extends ConsumerState<UserInformationScreen> {
     setState(() {
       errorText = validateEmptyField(name);
     });
-    if(errorText.isEmpty) {
-      if(await ref.read(authControllerProvider).saveUserDataToFirebase(context, name)) {
-        //await ref.read(notificationControllerProvider).addAdminNotification(context, "Nová registrace", "Zaregistrován nový píč $name");
-        Navigator.pushNamedAndRemoveUntil(context, MainScreen.routeName, (route) => false);
-      }
+    if (errorText.isEmpty) {
+      await executeApi<void>(() async {
+        return await ref.read(authControllerProvider).saveUserData(name);
+      }, () {}, context, true)
+          .whenComplete(() => Navigator.pushNamedAndRemoveUntil(
+              context, MainScreen.routeName, (route) => false));
     }
   }
 
@@ -55,8 +57,13 @@ class _UserInformationScreenState extends ConsumerState<UserInformationScreen> {
             const SizedBox(height: 30),
             const Text("Teď už jenom zadej nějaký jméno pod kterým budeš pít"),
             const SizedBox(height: 15),
-            CustomTextField(textController: textController, labelText: "nick", errorText: errorText,),
-            CustomButton(text: "Dokonči registraci", onPressed: () => storeUserData()),
+            CustomTextField(
+              textController: textController,
+              labelText: "nick",
+              errorText: errorText,
+            ),
+            CustomButton(
+                text: "Dokonči registraci", onPressed: () => storeUserData()),
           ],
         ),
       ),

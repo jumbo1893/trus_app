@@ -79,4 +79,24 @@ class FineStatsHelperModel {
     }
     return playerIds;
   }
+
+  @override
+  String toString() {
+    return 'player: ${player!.name}, totalAmount: ${totalAmount()} Kč';
+  }
+
+int totalAmount() {
+    int overall = 0;
+    for (FineMatchStatsHelperModel fine in listOfFines) {
+      overall += fine.number*fine.fine.amount;
+    }
+    return overall;
+  }
+
+  /*@override
+  String toString() {
+    return 'FineStatsHelperModel{listOfFines: ${returnPlayerDetail(match!.id)}, player: ${player!.name}, match: ${match!.name}';
+  }*/
+
+
 }

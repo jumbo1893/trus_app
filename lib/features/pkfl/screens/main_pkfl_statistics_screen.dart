@@ -60,7 +60,7 @@ class _MainPkflStatisticsScreenState
   @override
   Widget build(BuildContext context) {
     ref.watch(pkflStatsControllerProvider).snackBar().listen((event) {
-      showSnackBar(context: context, content: event);
+      showSnackBarWithPostFrame(context: context, content: event);
     });
     final size = MediaQuery.of(context).size;
     const double padding = 8.0;

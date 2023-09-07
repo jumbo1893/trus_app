@@ -54,7 +54,8 @@ class _PlayerDropdownMultiSelectState
   @override
   Widget build(BuildContext context) {
     return StreamBuilder<List<PlayerModel>>(
-        stream: ref.watch(playerControllerProvider).playersOrFans(widget.fan),
+        stream: //ref.watch(playerControllerProvider).playersOrFans(widget.fan),
+        null,
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
             return const Loader();

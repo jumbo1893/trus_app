@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:trus_app/models/api/player_api_model.dart';
 import 'package:trus_app/models/player_model.dart';
 
 import '../../../colors.dart';
@@ -6,7 +7,7 @@ import '../../../colors.dart';
 class CustomCheckboxListTile extends StatefulWidget {
   final bool initValue;
   final Function(bool value) onCheck;
-  final PlayerModel player;
+  final PlayerApiModel player;
   const CustomCheckboxListTile(
       {Key? key,
         required this.initValue,
@@ -21,13 +22,9 @@ class CustomCheckboxListTile extends StatefulWidget {
 class _CustomCheckboxListTile extends State<CustomCheckboxListTile> {
 
   late bool initCheck;
-  bool init = true;
 
   void setInitCheck() {
-    if(init) {
       initCheck = widget.initValue;
-      init = false;
-    }
   }
 
 
@@ -39,7 +36,8 @@ class _CustomCheckboxListTile extends State<CustomCheckboxListTile> {
       value: initCheck,
       onChanged: (bool? value) {
         setState(() {
-          initCheck = value!;
+          //initCheck = value!;
+          //setInitCheck();
         });
         widget.onCheck(initCheck);
       },
@@ -54,7 +52,7 @@ class _CustomCheckboxListTile extends State<CustomCheckboxListTile> {
         ),
       ),
       subtitle: Text(
-        widget.player.toStringForPlayerList(),
+        widget.player.toStringForListView(),
         style: const TextStyle(
             color: listviewSubtitleColor),
       ),

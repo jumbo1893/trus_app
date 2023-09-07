@@ -33,7 +33,7 @@ class _PkflMatchScreenState extends ConsumerState<PkflMatchScreen> {
   @override
   Widget build(BuildContext context) {
     ref.watch(pkflControllerProvider).snackBar().listen((event) {
-      showSnackBar(context: context, content: event);
+      showSnackBarWithPostFrame(context: context, content: event);
     });
     const double padding = 8.0;
     switch (screen) {

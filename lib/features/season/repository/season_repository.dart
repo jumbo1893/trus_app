@@ -35,11 +35,11 @@ class SeasonRepository extends CustomFirebaseException {
       SeasonModel season = SeasonModel(
           name: name, id: document.id, fromDate: fromDate, toDate: toDate);
       await document.set(season.toJson());
-      showSnackBar(context: context, content: ("Sezona $name úspěšně přidána"));
+      showSnackBarWithPostFrame(context: context, content: ("Sezona $name úspěšně přidána"));
       return true;
     } on FirebaseException catch (e) {
       if (!showSnackBarOnException(e.code, context)) {
-        showSnackBar(
+        showSnackBarWithPostFrame(
           context: context,
           content: e.message!,
         );
@@ -55,12 +55,12 @@ class SeasonRepository extends CustomFirebaseException {
       SeasonModel season = SeasonModel(
           name: name, id: seasonModel.id, fromDate: fromDate, toDate: toDate);
       await document.set(season.toJson());
-      showSnackBar(
+      showSnackBarWithPostFrame(
           context: context, content: ("Sezona $name úspěšně upravena"));
       return true;
     } on FirebaseException catch (e) {
       if (!showSnackBarOnException(e.code, context)) {
-        showSnackBar(
+        showSnackBarWithPostFrame(
           context: context,
           content: e.message!,
         );
@@ -73,12 +73,12 @@ class SeasonRepository extends CustomFirebaseException {
       BuildContext context, SeasonModel seasonModel) async {
     String name = seasonModel.name;
     await firestore.collection(seasonTable).doc(seasonModel.id).delete().then(
-        (value) => showSnackBar(
+        (value) => showSnackBarWithPostFrame(
             context: context, content: ("Sezona $name úspěšně smazána")),
         onError: (e) => {
               if (!showSnackBarOnException(e.code, context))
                 {
-                  showSnackBar(
+                  showSnackBarWithPostFrame(
                     context: context,
                     content: e.message!,
                   )

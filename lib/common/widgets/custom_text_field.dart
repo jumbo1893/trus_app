@@ -24,8 +24,8 @@ class CustomTextField extends StatelessWidget {
     return TextField(
       controller: textController,
       onChanged: (value) {
-        if(value.isEmpty) {
-
+        if(onChanged != null && value.isNotEmpty) {
+          onChanged!(value);
         }
       },
       decoration: InputDecoration(
@@ -50,7 +50,7 @@ class CustomTextField extends StatelessWidget {
           contentPadding: const EdgeInsets.only(left: 10, top: 10),
           suffixIcon: textController.text.isNotEmpty
               ? IconButton(
-              onPressed: () => textController.clear(),
+              onPressed: () => {textController.clear(), onChanged!("")},
               icon: const Icon(Icons.cancel, color: Colors.grey,))
               : null
       ),

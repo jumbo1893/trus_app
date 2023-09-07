@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:trus_app/common/utils/utils.dart';
 import 'package:trus_app/common/widgets/error.dart';
 import 'package:trus_app/common/widgets/loader.dart';
 import 'package:trus_app/features/auth/controller/auth_controller.dart';
@@ -9,6 +10,8 @@ import 'package:trus_app/router.dart';
 import 'package:trus_app/colors.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:trus_app/firebase_options.dart';
+
+import 'features/auth/screens/user_information_screen.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -24,24 +27,28 @@ class MyApp extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     return MaterialApp(
-      debugShowCheckedModeBanner: false,
-      title: "Trusí aplikace",
-      theme: ThemeData.light().copyWith(
-        scaffoldBackgroundColor: backgroundColor,
-        appBarTheme: const AppBarTheme(
-          color: blackColor,
-        )
-      ),
-      onGenerateRoute:  (settings) => generateRoute(settings),
-      home: ref.watch(userDataAuthProvider).when(
-        data: (user) {
-          if (user == null) {
-            return const LoginScreen();
-          }
-          return const MainScreen();
-      }, error: (error, trace) {
-          return ErrorScreen(error: error.toString(),);
-      }, loading: () => const Loader())
+        debugShowCheckedModeBanner: false,
+        title: "Trusí aplikace",
+        theme: ThemeData.light().copyWith(
+            scaffoldBackgroundColor: backgroundColor,
+            appBarTheme: const AppBarTheme(
+              color: blackColor,
+            )
+        ),
+        onGenerateRoute:  (settings) => generateRoute(settings),
+        home: ref.watch(userDataAuthProvider).when(
+            data: (user) {
+              if (user == null) {
+                return const LoginScreen();
+              }
+              else if (user.name == null || user.name!.isEmpty) {
+                return const UserInformationScreen();
+              }
+              return const MainScreen();
+            }, error: (error, trace) {
+          //showSnackBar(context: context, content: error.toString());
+              return const LoginScreen();
+        }, loading: () => const Loader())
     );
   }
 }

@@ -49,11 +49,11 @@ class PlayerRepository extends CustomFirebaseException {
       final document = firestore.collection(playerTable).doc();
       PlayerModel player = PlayerModel(name: name, id: document.id, birthday: birthday, fan: fan, isActive: active);
       await document.set(player.toJson());
-      showSnackBar(context: context, content: ("${fan ? "Fanoušek " : "Hráč "}$name úspěšně přidán"));
+      showSnackBarWithPostFrame(context: context, content: ("${fan ? "Fanoušek " : "Hráč "}$name úspěšně přidán"));
       return true;
     } on FirebaseException catch (e) {
       if (!showSnackBarOnException(e.code, context)) {
-        showSnackBar(
+        showSnackBarWithPostFrame(
           context: context,
           content: e.message!,
         );
@@ -67,11 +67,11 @@ class PlayerRepository extends CustomFirebaseException {
       final document = firestore.collection(playerTable).doc(playerModel.id);
       PlayerModel player = PlayerModel(name: name, id: playerModel.id, birthday: birthday, fan: fan, isActive: active);
       await document.set(player.toJson());
-      showSnackBar(context: context, content: ("${fan ? "Fanoušek " : "Hráč "}$name úspěšně upraven"));
+      showSnackBarWithPostFrame(context: context, content: ("${fan ? "Fanoušek " : "Hráč "}$name úspěšně upraven"));
       return true;
     } on FirebaseException catch (e) {
       if (!showSnackBarOnException(e.code, context)) {
-        showSnackBar(
+        showSnackBarWithPostFrame(
           context: context,
           content: e.message!,
         );
@@ -85,14 +85,14 @@ class PlayerRepository extends CustomFirebaseException {
     String name = playerModel.name;
     await  firestore.collection(playerTable).doc(playerModel.id).delete().then((
         value) =>
-        showSnackBar(context: context,
+        showSnackBarWithPostFrame(context: context,
             content: ("${fan
                 ? "Fanoušek "
                 : "Hráč "}$name úspěšně smazán")),
         onError: (e) => {
           if (!showSnackBarOnException(e.code, context))
             {
-              showSnackBar(
+              showSnackBarWithPostFrame(
                 context: context,
                 content: e.message!,
               )
@@ -106,7 +106,7 @@ class PlayerRepository extends CustomFirebaseException {
       onError: (e) => {
         if (!showSnackBarOnException(e.code, context))
           {
-            showSnackBar(
+            showSnackBarWithPostFrame(
               context: context,
               content: e.message!,
             )
@@ -168,7 +168,7 @@ class PlayerRepository extends CustomFirebaseException {
       return true;
     } on FirebaseException catch (e) {
       if (!showSnackBarOnException(e.code, context)) {
-        showSnackBar(
+        showSnackBarWithPostFrame(
           context: context,
           content: e.message!,
         );

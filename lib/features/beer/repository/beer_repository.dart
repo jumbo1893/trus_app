@@ -125,7 +125,7 @@ class BeerRepository extends CustomFirebaseException {
       return true;
     } on FirebaseException catch (e) {
       if(!showSnackBarOnException(e.code, context)) {
-        showSnackBar(
+        showSnackBarWithPostFrame(
           context: context,
           content: e.message!,
         );

@@ -1,4 +1,5 @@
 import '../../models/season_model.dart';
+import '../static_text.dart';
 
 String? fieldValidator(String value) {
   return "";
@@ -8,12 +9,12 @@ String validateEmptyField(String value) {
   if(value.isNotEmpty) {
     return "";
   }
-  return "toto musíš vyplnit";
+  return emptyFieldValidation;
 }
 
 String validateSeasons(List<SeasonModel>? allSeasons, DateTime seasonFrom, DateTime seasonTo, SeasonModel? currentSeason) {
   if (!seasonFrom.isBefore(seasonTo)) {
-    return "Konečné datum musí být starší";
+    return endCalendarDateNotOlderValidation;
   }
   else if (allSeasons != null || allSeasons!.isNotEmpty) {
     return _validateSeasonsCollision(allSeasons, seasonFrom, seasonTo, currentSeason);
@@ -31,7 +32,7 @@ String _validateSeasonsCollision(List<SeasonModel> allSeasons, DateTime seasonFr
               !seasonTo.isAfter(seasonModel.toDate)) ||
           (!seasonFrom.isAfter(seasonModel.fromDate) &&
               !seasonTo.isBefore(seasonModel.toDate))) {
-        return "Datum se kryje s jinými sezonami";
+        return dateCollisionValidation;
       }
 
     }
@@ -42,7 +43,7 @@ String _validateSeasonsCollision(List<SeasonModel> allSeasons, DateTime seasonFr
               !seasonTo.isAfter(seasonModel.toDate)) ||
           (!seasonFrom.isAfter(seasonModel.fromDate) &&
               !seasonTo.isBefore(seasonModel.toDate))) {
-        return "Datum se kryje s jinými sezonami";
+        return dateCollisionValidation;
       }
 
     }
@@ -58,11 +59,11 @@ String validateAmountField(String value) {
   try {
     int amount = int.parse(value);
     if(amount <= 0) {
-      return "Částka musí být vyšší než 0";
+      return amountIsNotPositiveNumberValidation;
     }
     return "";
   }
   catch (e) {
-    return "Částka musí být číselná hodnota";
+    return amountIsNotANumberValidation;
   }
 }

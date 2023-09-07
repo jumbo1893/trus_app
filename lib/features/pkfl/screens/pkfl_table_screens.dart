@@ -22,7 +22,7 @@ class _PkflTableScreenState extends ConsumerState<PkflTableScreen> {
   @override
   Widget build(BuildContext context) {
     ref.watch(pkflTableControllerProvider).snackBar().listen((event) {
-      showSnackBar(context: context, content: event);
+      showSnackBarWithPostFrame(context: context, content: event);
     });
     const double padding = 8.0;
     return Scaffold(

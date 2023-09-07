@@ -2,10 +2,14 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:trus_app/features/auth/screens/user_information_screen.dart';
 
+import '../../../common/repository/exception/handler/exception_handler.dart';
 import '../../../common/utils/field_validator.dart';
+import '../../../common/utils/utils.dart';
 import '../../../common/widgets/custom_button.dart';
 import '../../../common/widgets/custom_text_field.dart';
 import 'package:trus_app/features/auth/controller/auth_controller.dart';
+
+import '../../general/error/api_executor.dart';
 
 class RegistrationScreen extends ConsumerStatefulWidget {
   const RegistrationScreen({Key? key}) : super(key: key);
@@ -36,8 +40,12 @@ class _RegistrationScreen extends ConsumerState<RegistrationScreen> {
       emailErrorText = validateEmptyField(email);
       passwordErrorText = validateEmptyField(password);
     });
+
     if(emailErrorText.isEmpty && passwordErrorText.isEmpty) {
-      if(await ref.read(authControllerProvider).registerWithEmail(context, email, password)) {
+      bool? result = await executeApi<bool?>(() async {
+        return await ref.read(authControllerProvider).signUpWithEmail(email, password);
+      },() {}, context, true);
+      if (result != null && result) {
         Navigator.pushNamedAndRemoveUntil(context, UserInformationScreen.routeName, (route) => false);
       }
     }

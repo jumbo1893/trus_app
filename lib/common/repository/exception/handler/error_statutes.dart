@@ -1,0 +1,1 @@
+const String notLoggedIn = "not_logged_in";

@@ -75,6 +75,7 @@ class _SeasonDropdownState extends ConsumerState<SeasonDropdown> {
   Widget build(BuildContext context) {
     return StreamBuilder<List<SeasonModel>>(
         stream: ref.watch(seasonControllerProvider).seasons(),
+        //null,
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
             return const Loader();
@@ -101,7 +102,7 @@ class _SeasonDropdownState extends ConsumerState<SeasonDropdown> {
                 ),
               ),
               items: _addDividersAfterItems(seasons),
-              customItemsHeights: _getCustomItemsHeights(snapshot.data!.length),
+              //customItemsHeights: _getCustomItemsHeights(snapshot.data!.length),
               value: selectedValue ?? widget.initSeason ?? seasons[0],
               onChanged: (value) {
                 setState(() {
@@ -109,10 +110,10 @@ class _SeasonDropdownState extends ConsumerState<SeasonDropdown> {
                   widget.onSeasonSelected(value);
                 });
               },
-              buttonHeight: 40,
-              dropdownMaxHeight: 200,
-              buttonWidth: 140,
-              itemPadding: const EdgeInsets.symmetric(horizontal: 8.0),
+              //buttonHeight: 40,
+              //dropdownMaxHeight: 200,
+              //buttonWidth: 140,
+              //itemPadding: const EdgeInsets.symmetric(horizontal: 8.0),
             ),
           );
         }

@@ -1,10 +1,10 @@
 import 'package:html/dom.dart';
 import 'package:html/parser.dart';
 import 'package:http/http.dart' as http;
-import 'package:trus_app/features/pkfl/exception/bad_format_exception.dart';
-import 'package:trus_app/features/pkfl/exception/pkfl_unavailable_exception.dart';
+import 'package:trus_app/common/repository/exception/bad_format_exception.dart';
 import 'package:trus_app/models/pkfl/pkfl_match_detail.dart';
 
+import '../../../common/repository/exception/pkfl_unavailable_exception.dart';
 import '../../../models/pkfl/pkfl_match_player.dart';
 
 class RetrieveMatchDetailTask {

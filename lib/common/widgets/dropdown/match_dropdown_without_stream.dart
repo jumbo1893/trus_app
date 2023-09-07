@@ -80,7 +80,7 @@ class _MatchDropdownWithoutStream
         isExpanded: true,
         items: _addDividersAfterItems(widget.matchList),
         //customItemsHeights: _getCustomItemsHeights(snapshot.data!.length),
-        iconEnabledColor: Colors.white,
+        //iconEnabledColor: Colors.white,
         value: selectedValue,
         onChanged: (value) {
           setState(() {
@@ -88,10 +88,10 @@ class _MatchDropdownWithoutStream
             widget.onMatchSelected(value);
           });
         },
-        buttonHeight: 40,
+        /*buttonHeight: 40,
         dropdownMaxHeight: 200,
         buttonWidth: 140,
-        itemPadding: const EdgeInsets.symmetric(horizontal: 8.0),
+        itemPadding: const EdgeInsets.symmetric(horizontal: 8.0),*/
       ),
     );
   }

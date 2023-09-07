@@ -59,11 +59,11 @@ class MatchRepository extends CustomFirebaseException {
           playerIdList: playerIdList,
           seasonId: seasonId);
       await document.set(match.toJson());
-      showSnackBar(context: context, content: ("Zápas $name úspěšně přidán"));
+      showSnackBarWithPostFrame(context: context, content: ("Zápas $name úspěšně přidán"));
       return match;
     } on FirebaseException catch (e) {
       if (!showSnackBarOnException(e.code, context)) {
-        showSnackBar(
+        showSnackBarWithPostFrame(
           context: context,
           content: e.message!,
         );
@@ -90,11 +90,11 @@ class MatchRepository extends CustomFirebaseException {
           playerIdList: playerIdList,
           seasonId: seasonId);
       await document.set(match.toJson());
-      showSnackBar(context: context, content: ("Zápas $name úspěšně upraven"));
+      showSnackBarWithPostFrame(context: context, content: ("Zápas $name úspěšně upraven"));
       return true;
     } on FirebaseException catch (e) {
       if (!showSnackBarOnException(e.code, context)) {
-        showSnackBar(
+        showSnackBarWithPostFrame(
           context: context,
           content: e.message!,
         );
@@ -106,12 +106,12 @@ class MatchRepository extends CustomFirebaseException {
   Future<void> deleteMatch(BuildContext context, MatchModel matchModel) async {
     String name = matchModel.name;
     await firestore.collection(matchTable).doc(matchModel.id).delete().then(
-        (value) => showSnackBar(
+        (value) => showSnackBarWithPostFrame(
             context: context, content: ("Zápas $name úspěšně smazán")),
         onError: (e) => {
               if (!showSnackBarOnException(e.code, context))
                 {
-                  showSnackBar(
+                  showSnackBarWithPostFrame(
                     context: context,
                     content: e.message!,
                   )
@@ -212,7 +212,7 @@ class MatchRepository extends CustomFirebaseException {
       return true;
     } on FirebaseException catch (e) {
       if (!showSnackBarOnException(e.code, context)) {
-        showSnackBar(
+        showSnackBarWithPostFrame(
           context: context,
           content: e.message!,
         );
@@ -227,7 +227,7 @@ class MatchRepository extends CustomFirebaseException {
         onError: (e) => {
               if (!showSnackBarOnException(e.code, context))
                 {
-                  showSnackBar(
+                  showSnackBarWithPostFrame(
                     context: context,
                     content: e.message!,
                   )
