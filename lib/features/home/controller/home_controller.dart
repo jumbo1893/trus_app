@@ -8,37 +8,52 @@ import 'package:trus_app/features/pkfl/repository/pkfl_repository.dart';
 import 'package:trus_app/features/player/repository/player_repository.dart';
 import 'package:trus_app/features/season/repository/season_repository.dart';
 import 'package:trus_app/features/statistics/repository/stats_repository.dart';
+import 'package:trus_app/models/api/interfaces/model_to_string.dart';
 import 'package:trus_app/models/helper/player_stats_helper_model.dart';
 import 'package:trus_app/models/match_model.dart';
 import 'package:trus_app/models/player_model.dart';
 
-import '../../../models/api/home_setup.dart';
+import '../../../models/api/home/chart.dart';
+import '../../../models/api/home/home_setup.dart';
+import '../../../models/api/player_api_model.dart';
 import '../../../models/enum/model.dart';
 import '../../../models/pkfl/pkfl_match.dart';
 import '../../../models/season_model.dart';
+import '../../auth/repository/auth_repository.dart';
 import '../../fine/repository/fine_repository.dart';
+import '../../general/read_operations.dart';
 import '../../pkfl/tasks/retrieve_matches_task.dart';
+import '../../player/repository/player_api_service.dart';
 import '../repository/home_api_service.dart';
 
 final homeControllerProvider = Provider((ref) {
-  final homeRepository = ref.watch(homeApiServiceProvider);
+  final homeApiService = ref.watch(homeApiServiceProvider);
+  final playerApiService = ref.watch(playerApiServiceProvider);
   final pkflRepository = ref.watch(pkflRepositoryProvider);
+  final authRepository = ref.watch(authRepositoryProvider);
   return HomeController(
-      homeRepository: homeRepository,
+      homeApiService: homeApiService,
+      playerApiService: playerApiService,
       pkflRepository: pkflRepository,
+      authRepository: authRepository,
       ref: ref);
 });
 
-class HomeController {
-  final HomeApiService homeRepository;
+class HomeController implements ReadOperations {
+  final HomeApiService homeApiService;
+  final PlayerApiService playerApiService;
   final PkflRepository pkflRepository;
+  final AuthRepository authRepository;
   final ProviderRef ref;
   String birthday = "";
   List<String> randomFacts = [];
+  Chart? chart;
 
   HomeController({
-    required this.homeRepository,
+    required this.homeApiService,
+    required this.playerApiService,
     required this.pkflRepository,
+    required this.authRepository,
     required this.ref,
   });
 
@@ -76,10 +91,20 @@ class HomeController {
     return returnMatch;
   }
 
-  Future<HomeSetup> setupHome() async {
-    HomeSetup homeSetup = await homeRepository.setupHome();
+  Future<void> setupPlayerId(int playerId) async {
+    await authRepository.editCurrentUser(null, null, playerId);
+  }
+
+  Future<HomeSetup> setupHome(int? playerId) async {
+    HomeSetup homeSetup = await homeApiService.setupHome(playerId);
     birthday = homeSetup.nextBirthday;
     randomFacts = homeSetup.randomFacts;
+    chart = homeSetup.chart;
     return homeSetup;
+  }
+
+  @override
+  Future<List<PlayerApiModel>> getModels() async {
+    return await playerApiService.getPlayers();
   }
 }

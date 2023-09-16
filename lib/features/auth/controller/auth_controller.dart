@@ -83,8 +83,7 @@ class AuthController implements ReadOperations {
   }
 
   Future<void> saveUserData(String username) async {
-    await authRepository.editCurrentUser(false, username);
-
+    await authRepository.editCurrentUser(false, username, null);
   }
 
   @override

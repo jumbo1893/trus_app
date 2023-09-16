@@ -14,7 +14,7 @@ import '../../../models/api/fine_api_model.dart';
 import '../../../models/api/goal/goal_api_model.dart';
 import '../../../models/api/goal/goal_detailed_response.dart';
 import '../../../models/api/goal/goal_multi_add_response.dart';
-import '../../../models/api/home_setup.dart';
+import '../../../models/api/home/home_setup.dart';
 import '../../../models/api/interfaces/json_and_http_converter.dart';
 import '../../../models/api/match/match_api_model.dart';
 import '../../general/repository/crud_api_service.dart';
@@ -25,12 +25,15 @@ final homeApiServiceProvider =
 
 class HomeApiService extends CrudApiService {
 
-  Future<HomeSetup> setupHome() async {
+  Future<HomeSetup> setupHome(int? playerId) async {
+    final queryParameters = {
+      'playerId': intToString(playerId),
+    };
     const String url = "$serverUrl/$homeApi/setup";
     final HomeSetup homeSetup = await executeGetRequest(
         Uri.parse(url),
             (dynamic json) => HomeSetup.fromJson(json),
-        null);
+        queryParameters);
     return homeSetup;
   }
 }

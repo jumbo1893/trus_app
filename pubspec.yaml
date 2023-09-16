@@ -53,6 +53,7 @@ dependencies:
   flutter_launcher_icons: ^0.12.0
   sse_channel: ^0.0.3
   cookie_jar: ^3.0.1
+  fl_chart: ^0.62.0
 
 flutter_icons:
   android: true

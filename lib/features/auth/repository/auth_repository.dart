@@ -63,12 +63,6 @@ class AuthRepository extends CrudApiService {
     return decodedBody as UserApiModel;
   }
 
-  Future<UserApiModel> setUserPlayerId(UserApiModel user, int playerId) async {
-    user.playerId = playerId;
-    final decodedBody = await editModel<JsonAndHttpConverter>(user, user.id!);
-    return decodedBody as UserApiModel;
-  }
-
   Future<bool> signOut() async {
     bool firstSignOut = await signOutFromServer();
     bool secondSignOut = await signOutFromFirebase();
@@ -146,17 +140,26 @@ class AuthRepository extends CrudApiService {
     return userApiModel;
   }
 
-  Future<UserApiModel> editCurrentUser(bool admin, String name) async {
-    await auth.currentUser!.updateDisplayName(name);
+  Future<UserApiModel> editCurrentUser(bool? admin, String? name, int? playerId) async {
+    if(name != null) {
+      await auth.currentUser!.updateDisplayName(name);
+    }
     UserApiModel user = UserApiModel();
     var url = Uri.parse("$serverUrl/$authApi/update");
     user.admin = admin;
     user.name = name;
+    user.playerId = playerId;
     final UserApiModel userApiModel = await executePostRequest(
         url,
         (dynamic json) => UserApiModel.fromJson(json),
         jsonEncode(user.toJson()));
     return userApiModel;
+  }
+
+  Future<UserApiModel> setUserPlayerId(UserApiModel user, int playerId) async {
+    user.playerId = playerId;
+    final decodedBody = await editModel<JsonAndHttpConverter>(user, user.id!);
+    return decodedBody as UserApiModel;
   }
 
   Future<bool> sendForgottenPassword(BuildContext context, String email) async {
