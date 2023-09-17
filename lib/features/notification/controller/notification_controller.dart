@@ -1,51 +1,82 @@
+import 'dart:async';
+
 import 'package:flutter/cupertino.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:trus_app/features/notification/repository/notification_repository.dart';
 
+import '../../../models/api/notification_api_model.dart';
 import '../../../models/notification_model.dart';
 import '../../../models/user_model.dart';
 import '../../auth/repository/auth_repository.dart';
+import '../repository/notification_api_service.dart';
 
 final notificationControllerProvider = Provider((ref) {
-  final notificationRepository = ref.watch(notificationRepositoryProvider);
-  final authRepository = ref.watch(authRepositoryProvider);
-  return NotificationController(notificationRepository: notificationRepository, authRepository: authRepository, ref: ref);
+  final notificationApiService = ref.watch(notificationApiServiceProvider);
+  return NotificationController(notificationApiService: notificationApiService, ref: ref);
 });
 
 class NotificationController {
-  final NotificationRepository notificationRepository;
+  final NotificationApiService notificationApiService;
   final ProviderRef ref;
-  final AuthRepository authRepository;
+  final notificationsController = StreamController<List<NotificationApiModel>>.broadcast();
+  final showNextButtonController = StreamController<bool>.broadcast();
+  final showPreviousButtonController = StreamController<bool>.broadcast();
+  int pageNumber =0;
+  int? notificationsNumber;
 
   NotificationController({
-    required this.authRepository,
-    required this.notificationRepository,
+    required this.notificationApiService,
     required this.ref,
   });
 
-  Stream<List<NotificationModel>> notifications(int limit) {
-    return notificationRepository.getNotifications(limit);
+  Future<void> nextPage() async {
+    pageNumber++;
+    notificationsController.add(await getNotifications());
   }
 
-  Future<UserModel?> getUserData() async {
-    UserModel? user = null;
-    return user;
+  Future<void> previousPage() async {
+    pageNumber--;
+    notificationsController.add(await getNotifications());
   }
 
-  Future<void> addNotification(
-      BuildContext context,
-      String title,
-      String text,
-      ) async {
-    String username = await getUserData().then((value) => value?.name ?? "???");
-    await notificationRepository.addNotification(context, username, DateTime.now(), title, text);
+  void calculateShowingButtons() {
+    if(pageNumber == 0) {
+      showPreviousButtonController.add(false);
+    }
+    else {
+      showPreviousButtonController.add(true);
+    }
+    if(notificationsNumber != null && notificationsNumber == 20) {
+      showNextButtonController.add(true);
+    }
+    else {
+      showNextButtonController.add(false);
+    }
   }
 
-  Future<void> addAdminNotification(
-      BuildContext context,
-      String title,
-      String text,
-      ) async {
-    await notificationRepository.addNotification(context, "admin", DateTime.now(), title, text);
+
+  Future<void> setNewPageNumber(int pageNumber) async {
+    this.pageNumber = pageNumber;
+    notificationsController.add(await getNotifications());
+  }
+
+  Stream<List<NotificationApiModel>> notifications() {
+    return notificationsController.stream;
+  }
+
+  Stream<bool> showNextButton() {
+    return showNextButtonController.stream;
+  }
+
+  Stream<bool> showPreviousButton() {
+    return showPreviousButtonController.stream;
+  }
+
+
+  Future<List<NotificationApiModel>> getNotifications() async {
+    List<NotificationApiModel> notifications = await notificationApiService.getNotifications(pageNumber);
+    notificationsNumber = notifications.length;
+    calculateShowingButtons();
+    return notifications;
   }
 }

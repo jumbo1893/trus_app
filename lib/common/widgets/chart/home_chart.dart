@@ -94,7 +94,7 @@ class _HomeChartState extends State<HomeChart> {
 
   double calculateHorizontalInterval(List<int> labels) {
     if(labels.length < 2) {
-      return 0;
+      return 2;
     }
     return labels[1].toDouble();
   }

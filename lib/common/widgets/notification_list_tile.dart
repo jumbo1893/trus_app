@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:trus_app/models/notification_model.dart';
 
+import '../../models/api/notification_api_model.dart';
+
 class NotificationListTile extends StatelessWidget {
-  final NotificationModel notificationModel;
+  final NotificationApiModel notificationModel;
   final double padding;
   const NotificationListTile({
     Key? key,

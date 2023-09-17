@@ -26,3 +26,4 @@ const beerApi = "beer";
 const receivedFineApi = "fine/received";
 const authApi = "user";
 const homeApi = "home";
+const notificationApi = "notification";

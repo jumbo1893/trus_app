@@ -13,6 +13,7 @@ import '../../../models/api/fine_api_model.dart';
 import '../../../models/api/goal/goal_api_model.dart';
 import '../../../models/api/interfaces/json_and_http_converter.dart';
 import '../../../models/api/match/match_api_model.dart';
+import '../../../models/api/notification_api_model.dart';
 import '../../../models/api/player_api_model.dart';
 import '../../../models/api/receivedfine/received_fine_api_model.dart';
 import '../../../models/api/season_api_model.dart';
@@ -37,6 +38,8 @@ class CrudApiService extends RequestExecutor {
         return ReceivedFineApiModel.fromJson(json);
       case authApi:
         return UserApiModel.fromJson(json);
+      case notificationApi:
+        return NotificationApiModel.fromJson(json);
       default:
         throw JsonDecodeException();
     }
@@ -48,7 +51,7 @@ class CrudApiService extends RequestExecutor {
   /// [queryParameters] parametry requestu
   /// vrací list modelů zabalené v classe JsonAndHttpConverter
   Future<List<T>> getModels<T extends JsonAndHttpConverter>(
-      String apiClass, Map<String, String>? queryParameters) async {
+      String apiClass, Map<String, String?>? queryParameters) async {
     final decodedBody = await executeGetRequest<List<JsonAndHttpConverter>>(
         Uri.parse("$serverUrl/$apiClass/get-all"),
         (dynamic body) => (body as List<dynamic>)

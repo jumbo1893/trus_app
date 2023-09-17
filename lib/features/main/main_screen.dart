@@ -379,8 +379,10 @@ class _MainScreenState extends ConsumerState<MainScreen> {
             const MainGoalStatisticsScreen(
                 //22
                 ),
-            const NotificationScreen(
+            NotificationScreen(
               //23
+              backToMainMenu: () => changeFragment(0),
+              isFocused: isFocused(23),
             ),
             UserScreen(
               //24
