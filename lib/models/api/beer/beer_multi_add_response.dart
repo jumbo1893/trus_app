@@ -34,7 +34,7 @@ class BeerMultiAddResponse implements ConfirmToString {
 
   @override
   String toString() {
-    return 'BeerMultiAddResponse{editedPlayersCount: $editedPlayersCount, addedPlayersCount: $addedPlayersCount, totalBeersAdded: $totalBeersAdded, totalLiquorsAdded: $totalLiquorsAdded, match: $match}';
+    return 'V zápase proti $match byla přidáno $totalBeersAdded piv a $totalLiquorsAdded panáků. První čárka to bylo pro $addedPlayersCount hráčů, zatímco $editedPlayersCount hráčů již má rozpito';
   }
 
   @override

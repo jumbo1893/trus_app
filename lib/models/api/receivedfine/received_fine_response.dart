@@ -35,7 +35,11 @@ class ReceivedFineResponse implements ConfirmToString {
 
   @override
   String toString() {
-    return 'ReceivedFineResponse{editedPlayersCount: $editedPlayersCount, player: $player, totalFinesAdded: $totalFinesAdded, match: $match}';
+    if(player.isEmpty) {
+      return 'V zápase proti $match bylo přidáno $editedPlayersCount hráčům celkem $totalFinesAdded pokut';
+
+    }
+    return 'V zápase proti $match bylo přidáno hráči $player celkem $totalFinesAdded pokut';
   }
 
   @override

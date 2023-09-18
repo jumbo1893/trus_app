@@ -30,7 +30,7 @@ class GoalMultiAddResponse implements ConfirmToString {
 
   @override
   String toString() {
-    return 'GoalMultiAddResponse{totalGoalsAdded: $totalGoalsAdded, totalAssistAdded: $totalAssistAdded, match: $match}';
+    return 'V zápase proti $match bylo přidáno celkem $totalGoalsAdded gólů a $totalAssistAdded asistencí';
   }
 
   @override
