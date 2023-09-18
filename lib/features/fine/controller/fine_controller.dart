@@ -25,12 +25,14 @@ class FineController implements CrudOperations, ReadOperations {
   final ProviderRef ref;
   final nameController = StreamController<String>.broadcast();
   final amountController = StreamController<String>.broadcast();
+  final inactiveController = StreamController<bool>.broadcast();
   final nameErrorTextController = StreamController<String>.broadcast();
   final amountErrorTextController = StreamController<String>.broadcast();
   final loadingController = StreamController<bool>.broadcast();
   String originalFineName = "";
   String fineName = "";
   String fineAmount = "0";
+  bool fineInactive = false;
 
   FineController({
     required this.fineRepository,
@@ -66,6 +68,7 @@ class FineController implements CrudOperations, ReadOperations {
   void setEditControllers(FineApiModel fine) {
     nameController.add(fine.name);
     amountController.add(fine.amount.toString());
+    inactiveController.add(fine.inactive);
   }
 
   Future<void> fine(FineApiModel fine) async {
@@ -92,6 +95,10 @@ class FineController implements CrudOperations, ReadOperations {
     return nameController.stream;
   }
 
+  Stream<bool> inactive() {
+    return inactiveController.stream;
+  }
+
   Stream<String> nameErrorText() {
     return nameErrorTextController.stream;
   }
@@ -114,6 +121,11 @@ class FineController implements CrudOperations, ReadOperations {
     fineAmount = amount;
   }
 
+  void setInactive(bool inactive) {
+    inactiveController.add(inactive);
+    fineInactive = inactive;
+  }
+
   bool validateFields() {
     String errorText = validateEmptyField(fineName.trim());
     String amountErrorText = validateAmountField(fineAmount);
@@ -127,7 +139,7 @@ class FineController implements CrudOperations, ReadOperations {
     loadingController.add(true);
     if(validateFields()) {
       return await fineApiService.addFine(
-          FineApiModel(name: fineName, amount: int.parse(fineAmount)));
+          FineApiModel(name: fineName, amount: int.parse(fineAmount), inactive: false));
     }
     return null;
   }
@@ -142,7 +154,7 @@ class FineController implements CrudOperations, ReadOperations {
   Future<String?> editModel(int id) async {
     if(validateFields()) {
       FineApiModel response = await fineApiService.editFine(FineApiModel(
-          name: fineName, amount: int.parse(fineAmount)), id);
+          name: fineName, amount: int.parse(fineAmount), inactive: fineInactive), id);
 
       return response.toStringForEdit(originalFineName);
     }

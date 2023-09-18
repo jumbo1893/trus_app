@@ -74,8 +74,15 @@ class ReceivedFineApiModel implements JsonAndHttpConverter, AddToString{
     }
   }
 
+  get name {
+    if(fine.inactive) {
+      return "${fine.name}( inactive)";
+    }
+    return fine.name;
+  }
+
   @override
   String toStringForListView() {
-    return "${fine.name} (${fine.amount.toString()} Kč)";
+    return "$name (${fine.amount.toString()} Kč)";
   }
 }

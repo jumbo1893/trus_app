@@ -8,18 +8,20 @@ class FineApiModel implements ModelToString, JsonAndHttpConverter {
   int? id;
   final String name;
   final int amount;
+  bool inactive;
 
   FineApiModel({
     required this.name,
     required this.amount,
+    required this.inactive,
     this.id,
   });
 
   FineApiModel.dummy()
       : id = 0,
         name = "neznámá pokuta",
-        amount = 0;
-
+        amount = 0,
+        inactive = false;
 
   @override
   String toString() {
@@ -32,6 +34,7 @@ class FineApiModel implements ModelToString, JsonAndHttpConverter {
       "name": name,
       "id": id,
       "amount": amount,
+      "inactive": inactive,
     };
   }
 
@@ -41,6 +44,7 @@ class FineApiModel implements ModelToString, JsonAndHttpConverter {
       amount: json['amount'] ?? 0,
       name: json["name"] ?? "",
       id: json["id"] ?? 0,
+      inactive: json["inactive"] ?? false,
     );
   }
 
@@ -61,6 +65,9 @@ class FineApiModel implements ModelToString, JsonAndHttpConverter {
 
   @override
   String listViewTitle() {
+    if(inactive) {
+      return "$name( inactive)";
+    }
     return name;
   }
 

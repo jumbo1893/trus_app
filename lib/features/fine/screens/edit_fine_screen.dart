@@ -8,6 +8,7 @@ import '../../../common/utils/field_validator.dart';
 import '../../../common/widgets/builder/column_future_builder.dart';
 import '../../../common/widgets/button/crud_button.dart';
 import '../../../common/widgets/confirmation_dialog.dart';
+import '../../../common/widgets/rows/stream/row_switch_stream.dart';
 import '../../../common/widgets/rows/stream/row_text_field_stream.dart';
 import '../../../models/enum/crud.dart';
 import '../../../models/fine_model.dart';
@@ -62,6 +63,30 @@ class _EditFineScreenState extends ConsumerState<EditFineScreen> {
             onTextChanged: (amount) =>
                 {ref.watch(fineControllerProvider).setAmount(amount)},
             number: true,
+          ),
+          const SizedBox(height: 10),
+          RowSwitchStream(
+            size: size,
+            padding: padding,
+            textFieldText: "Pouze pro nově udělené pokuty?",
+            stream: ref.watch(fineControllerProvider).inactive(),
+            onChecked: (inactive) {
+              ref.watch(fineControllerProvider).setInactive(inactive);
+            },
+          ),
+          const SizedBox(height: 20,),
+          Row(
+            children: [
+              SizedBox(
+                  width: size.width / 6,
+                  child: const Icon(
+                    Icons.warning, color: Colors.black,)),
+              SizedBox(
+                  width: size.width / 1.3,
+                  child: const Text(
+                      "Dbejte na to, že pokud je tento přepínač vypnutý, tak se změní všechny pokuty i retrospektivně - tedy částka či jméno se změní i pro již udělené pokuty z předchozích zápasů.\n"
+                          "Pokud si přejete udělat změny pouze pro nové pokuty, přepněte do přepínač do true"))
+            ],
           ),
           const SizedBox(height: 10),
           const SizedBox(height: 10),
