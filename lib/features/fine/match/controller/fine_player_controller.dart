@@ -74,7 +74,7 @@ class FinePlayerController implements FutureAddController, ConfirmOperations {
   List<ReceivedFineApiModel> convertFinesToReceivedFines(List<FineApiModel> fineList) {
     List<ReceivedFineApiModel> returnList = [];
     for(FineApiModel fine in fineList) {
-      returnList.add(ReceivedFineApiModel(matchId: matchId, playerId: playerId, fine: fine, fineNumber: 0));
+      returnList.add(ReceivedFineApiModel(matchId: matchId, playerId: -1, fine: fine, fineNumber: 0));
     }
     return returnList;
   }

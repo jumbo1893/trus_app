@@ -53,6 +53,7 @@ class _FineMatchScreenState extends ConsumerState<FineMatchScreen> {
             context: context,
             content: "Musí být označen aspoň jeden hráč!");
       } else {
+        widget.setMatch(ref.read(fineMatchControllerProvider).pickedMatch!);
         widget.playerIdListToChangeFines(players);
       }
     }
