@@ -5,7 +5,6 @@ import 'package:http/http.dart' as http;
 import 'package:trus_app/config.dart';
 
 import '../../../models/api/beer/beer_api_model.dart';
-import 'package:sse_channel/sse_channel.dart';
 
 import '../../../models/api/beer/beer_detailed_response.dart';
 import '../../../models/api/beer/beer_list.dart';

@@ -1,17 +1,6 @@
-import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:trus_app/colors.dart';
-import 'package:trus_app/common/widgets/loader.dart';
-import 'package:trus_app/features/general/confirm_operations.dart';
-import 'package:trus_app/features/general/crud_operations.dart';
-import 'package:trus_app/models/api/interfaces/confirm_to_string.dart';
-import 'package:trus_app/models/api/interfaces/model_to_string.dart';
-import 'package:trus_app/models/enum/model.dart';
-
-import '../../../models/enum/crud.dart';
-import '../../utils/utils.dart';
-import '../confirmation_dialog.dart';
 import 'dart:math' as math;
 
 class FloatingFineMatchButton extends StatefulWidget {

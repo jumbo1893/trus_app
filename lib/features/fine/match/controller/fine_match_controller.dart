@@ -1,24 +1,17 @@
 import 'dart:async';
-import 'dart:math';
 
-import 'package:flutter/cupertino.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:trus_app/models/fine_match_model.dart';
-import 'package:trus_app/models/fine_model.dart';
+
 
 import '../../../../common/repository/exception/loading_exception.dart';
-import '../../../../common/utils/season_util.dart';
-import '../../../../config.dart';
+
 import '../../../../models/api/match/match_api_model.dart';
 import '../../../../models/api/player_api_model.dart';
 import '../../../../models/api/receivedfine/received_fine_setup.dart';
 import '../../../../models/api/season_api_model.dart';
-import '../../../../models/helper/fine_match_helper_model.dart';
 import '../../../general/match_reader.dart';
-import '../../../match/repository/match_api_service.dart';
 import '../../../season/repository/season_api_service.dart';
 import '../repository/fine_match_api_service.dart';
-import '../repository/fine_match_repository.dart';
 
 final fineMatchControllerProvider = Provider((ref) {
   final fineMatchApiService = ref.watch(fineMatchApiServiceProvider);

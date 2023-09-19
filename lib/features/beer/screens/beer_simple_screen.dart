@@ -1,38 +1,27 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:trus_app/common/widgets/listview/listview_beer_add_model.dart';
-import 'package:trus_app/common/widgets/loader.dart';
 import 'package:trus_app/features/beer/controller/beer_controller.dart';
 import 'package:trus_app/features/beer/screens/beer_paint_screen.dart';
 import 'package:trus_app/models/api/match/match_api_model.dart';
-import 'package:trus_app/models/helper/beer_helper_model.dart';
-import 'package:trus_app/models/match_model.dart';
-
-import '../../../../common/widgets/custom_button.dart';
 import '../../../colors.dart';
-import '../../../common/utils/utils.dart';
-import '../../../common/widgets/builder/add_builder.dart';
 import '../../../common/widgets/builder/error_future_builder.dart';
 import '../../../common/widgets/builder/stream_add_builder.dart';
 import '../../../common/widgets/button/confirm_button.dart';
-import '../../../common/widgets/dropdown/match_dropdown2.dart';
-import '../../../common/widgets/dropdown/match_dropdown_without_stream.dart';
+import '../../../common/widgets/dropdown/match_dropdown.dart';
 import '../../../common/widgets/dropdown/season_api_dropdown.dart';
-import '../../match/controller/match_controller.dart';
-import '../../notification/controller/notification_controller.dart';
-
-import 'package:http/http.dart' as http;
 
 class BeerSimpleScreen extends ConsumerStatefulWidget {
   final VoidCallback onButtonConfirmPressed;
   final Function(MatchApiModel match) setMatch;
   final MatchApiModel mainMatch;
   final bool isFocused;
+  final VoidCallback backToMainMenu;
   const BeerSimpleScreen({
     Key? key,
     required this.setMatch,
     required this.mainMatch,
     required this.onButtonConfirmPressed,
+    required this.backToMainMenu,
     required this.isFocused,
   }) : super(key: key);
 
@@ -53,14 +42,14 @@ class _BeerSimpleScreenState extends ConsumerState<BeerSimpleScreen> {
               .read(beerControllerProvider)
               .initScreen(widget.mainMatch.id),
           context: context,
-          onDialogCancel: () => {widget.onButtonConfirmPressed()},
+          backToMainMenu: () => widget.backToMainMenu(),
           widget: Scaffold(
               appBar: AppBar(
                 centerTitle: true,
                 automaticallyImplyLeading: false,
                 title: ConstrainedBox(
                     constraints: BoxConstraints(minWidth: size.width),
-                    child: MatchDropdown2(
+                    child: MatchDropdown(
                       onMatchSelected: (match) => ref
                           .watch(beerControllerProvider)
                           .setMatch(match),

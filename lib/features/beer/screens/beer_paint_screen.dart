@@ -8,11 +8,9 @@ import 'package:trus_app/common/utils/utils.dart';
 import 'package:trus_app/common/widgets/error.dart';
 import 'package:trus_app/features/beer/controller/beer_controller.dart';
 import 'package:trus_app/features/beer/lines/player_lines.dart';
-import 'package:trus_app/models/helper/beer_helper_model.dart';
 
 
 import '../../../colors.dart';
-import '../../../common/widgets/custom_button.dart';
 import '../../../common/widgets/loader.dart';
 import '../lines/new_player_lines_calculator.dart';
 import '../lines/painter.dart';
@@ -29,11 +27,9 @@ class BeerPaintScreen extends ConsumerStatefulWidget {
 
 class _BeerPaintScreenState extends ConsumerState<BeerPaintScreen>
     with SingleTickerProviderStateMixin {
-  //int playerIndex = 0;
   double _progress = 0.0;
   late Size size;
   late Animation<double> animation;
-  //List<PlayerLines> playerLinesList = [];
   final Random random = Random();
   late AnimationController controller;
   NewPlayerLinesCalculator? newPlayerLinesCalculator;

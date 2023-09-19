@@ -1,14 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:trus_app/colors.dart';
-import 'package:trus_app/common/widgets/loader.dart';
 import 'package:trus_app/features/auth/controller/auth_controller.dart';
 import 'package:trus_app/models/api/user_api_model.dart';
 
-import '../../../common/utils/utils.dart';
 import '../../../common/widgets/builder/models_error_future_builder.dart';
 import '../../../common/widgets/confirmation_dialog.dart';
-import '../../../models/user_model.dart';
 import '../../general/error/api_executor.dart';
 
 class UserScreen extends ConsumerStatefulWidget {
@@ -49,7 +45,7 @@ class _UserScreenState extends ConsumerState<UserScreen> {
             child: ModelsErrorFutureBuilder(
               future: ref.watch(authControllerProvider).getModels(),
               onPressed: (user) => {showChangePermissionConfirmation(user as UserApiModel)},
-              onDialogCancel: () => widget.backToMainMenu.call(),
+              backToMainMenu: () => widget.backToMainMenu.call(),
               context: context,
             ),
           ),

@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:trus_app/models/api/player_api_model.dart';
-import 'package:trus_app/models/player_model.dart';
 
 import '../../../colors.dart';
 
@@ -36,8 +35,6 @@ class _CustomCheckboxListTile extends State<CustomCheckboxListTile> {
       value: initCheck,
       onChanged: (bool? value) {
         setState(() {
-          //initCheck = value!;
-          //setInitCheck();
         });
         widget.onCheck(initCheck);
       },

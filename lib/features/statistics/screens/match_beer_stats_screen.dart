@@ -1,8 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:trus_app/common/widgets/dropdown/season_api_dropdown.dart';
-import 'package:trus_app/common/widgets/loader.dart';
-import 'package:trus_app/models/season_model.dart';
 
 import '../../../colors.dart';
 import '../../../common/widgets/builder/models_error_future_builder.dart';
@@ -13,8 +11,10 @@ import '../controller/beer_stats_controller.dart';
 
 class MatchBeerStatsScreen extends ConsumerStatefulWidget {
   final bool isFocused;
+  final VoidCallback backToMainMenu;
   const MatchBeerStatsScreen({
     required this.isFocused,
+    required this.backToMainMenu,
     Key? key,
   }) : super(key: key);
 
@@ -67,6 +67,7 @@ class _MatchBeerStatsScreenState extends ConsumerState<MatchBeerStatsScreen> {
                                   .onRevertTap(),
                               padding: padding,
                               size: size,
+                              backToMainMenu: () => widget.backToMainMenu(),
                             )
                           ],
                         ),
@@ -80,7 +81,7 @@ class _MatchBeerStatsScreenState extends ConsumerState<MatchBeerStatsScreen> {
                                 .setDetail(model);
                           },
                           context: context,
-                          onDialogCancel: () {},
+                          backToMainMenu: () => widget.backToMainMenu(),
                           rebuildStream: ref
                               .watch(beerStatsControllerProvider)
                               .beerListStream(),
@@ -144,7 +145,7 @@ class _MatchBeerStatsScreenState extends ConsumerState<MatchBeerStatsScreen> {
                               .watch(beerStatsControllerProvider)
                               .detailedBeerListStream(),
                           onPressed: (object) {},
-                          onDialogCancel: () {},
+                          backToMainMenu: () => widget.backToMainMenu(),
                           context: context,
                         ),
                       ],

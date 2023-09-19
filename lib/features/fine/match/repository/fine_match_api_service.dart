@@ -1,13 +1,7 @@
 import 'dart:convert';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:http/http.dart' as http;
-import 'package:trus_app/common/repository/exception/bad_format_exception.dart';
-import 'package:trus_app/common/repository/exception/server_exception.dart';
 import 'package:trus_app/config.dart';
-import 'package:trus_app/models/api/goal/goal_list_multi_add.dart';
-import 'package:trus_app/models/api/goal/goal_setup.dart';
-import 'package:trus_app/models/api/match/match_setup.dart';
 import 'package:trus_app/models/api/receivedfine/received_fine_api_model.dart';
 
 import '../../../../models/api/interfaces/json_and_http_converter.dart';

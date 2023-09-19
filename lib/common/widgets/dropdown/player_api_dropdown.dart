@@ -2,13 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:trus_app/common/widgets/loader.dart';
 import 'package:trus_app/features/home/controller/home_controller.dart';
-import 'package:trus_app/features/home/repository/home_api_service.dart';
-import 'package:trus_app/features/match/controller/match_controller.dart';
-import 'package:trus_app/features/season/controller/season_controller.dart';
 import 'package:dropdown_button2/dropdown_button2.dart';
 import 'package:trus_app/models/api/player_api_model.dart';
-import 'package:trus_app/models/api/season_api_model.dart';
-import 'package:trus_app/models/season_model.dart';
 
 class PlayerApiDropdown extends ConsumerStatefulWidget {
   final Function(PlayerApiModel player) onPlayerSelected;

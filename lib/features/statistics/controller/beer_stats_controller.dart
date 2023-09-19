@@ -2,22 +2,12 @@ import 'dart:async';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:trus_app/models/api/interfaces/model_to_string.dart';
-import 'package:trus_app/models/helper/beer_stats_helper_model.dart';
-import 'package:trus_app/models/helper/fine_stats_helper_model.dart';
-import 'package:trus_app/models/match_model.dart';
-import 'package:trus_app/models/player_model.dart';
-
-import '../../../common/repository/exception/loading_exception.dart';
 import '../../../common/utils/season_util.dart';
-import '../../../config.dart';
 import '../../../models/api/beer/beer_detailed_model.dart';
 import '../../../models/api/beer/beer_detailed_response.dart';
 import '../../../models/api/season_api_model.dart';
-import '../../../models/season_model.dart';
 import '../../beer/repository/beer_api_service.dart';
-import '../../general/read_operations.dart';
 import '../../season/repository/season_api_service.dart';
-import '../repository/stats_repository.dart';
 
 final beerStatsControllerProvider = Provider((ref) {
   final beerApiRepository = ref.watch(beerApiServiceProvider);

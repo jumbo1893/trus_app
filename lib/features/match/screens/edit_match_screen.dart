@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:trus_app/common/widgets/custom_button.dart';
 import 'package:trus_app/features/match/controller/match_controller.dart';
 
 import '../../../common/utils/utils.dart';
@@ -21,6 +20,7 @@ class EditMatchScreen extends ConsumerStatefulWidget {
   final Function(int id) setMatchId;
   final VoidCallback onChangePlayerGoalsPressed;
   final bool isFocused;
+  final VoidCallback backToMainMenu;
   const EditMatchScreen({
     Key? key,
     required this.onButtonConfirmPressed,
@@ -28,6 +28,7 @@ class EditMatchScreen extends ConsumerStatefulWidget {
     required this.setMatchId,
     required this.onChangePlayerGoalsPressed,
     required this.isFocused,
+    required this.backToMainMenu,
   }) : super(key: key);
 
   @override
@@ -58,6 +59,7 @@ class _EditMatchScreenState extends ConsumerState<EditMatchScreen> {
             }
             return ColumnFutureBuilder(
               loadModelFuture: ref.watch(matchControllerProvider).editMatch(),
+              backToMainMenu: () => widget.backToMainMenu(),
               columns: [
                 RowTextFieldStream(
                   size: size,

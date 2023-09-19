@@ -1,11 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:trus_app/common/widgets/custom_button.dart';
 
-import '../../../common/utils/utils.dart';
 import '../../../common/widgets/builder/column_future_builder.dart';
 import '../../../common/widgets/button/crud_button.dart';
-import '../../../common/widgets/confirmation_dialog.dart';
 import '../../../common/widgets/rows/stream/row_calendar_stream.dart';
 import '../../../common/widgets/rows/stream/row_switch_stream.dart';
 import '../../../common/widgets/rows/stream/row_text_field_stream.dart';
@@ -17,11 +14,13 @@ class EditPlayerScreen extends ConsumerStatefulWidget {
   final VoidCallback onButtonConfirmPressed;
   final PlayerApiModel? playerModel;
   final bool isFocused;
+  final VoidCallback backToMainMenu;
   const EditPlayerScreen(
     this.playerModel, {
     Key? key,
     required this.onButtonConfirmPressed,
     required this.isFocused,
+    required this.backToMainMenu,
   }) : super(key: key);
 
   @override
@@ -38,6 +37,7 @@ class _EditPlayerScreenState extends ConsumerState<EditPlayerScreen> {
       return ColumnFutureBuilder(
         loadModelFuture:
             ref.watch(playerControllerProvider).player(widget.playerModel!),
+        backToMainMenu: () => widget.backToMainMenu(),
         columns: [
           RowTextFieldStream(
             size: size,

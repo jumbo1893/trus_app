@@ -1,4 +1,3 @@
-import '../../models/season_model.dart';
 import '../static_text.dart';
 
 String? fieldValidator(String value) {

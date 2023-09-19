@@ -10,8 +10,8 @@ class ErrorDialog extends StatelessWidget {
   final String content;
   final VoidCallback continueCallBack;
 
-  ErrorDialog(this.title, this.content, this.continueCallBack, {super.key});
-  TextStyle textStyle = const TextStyle (color: Colors.black);
+  const ErrorDialog(this.title, this.content, this.continueCallBack, {super.key});
+  final TextStyle textStyle = const TextStyle (color: Colors.black);
 
   @override
   Widget build(BuildContext context) {

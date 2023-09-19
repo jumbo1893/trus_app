@@ -2,7 +2,6 @@ import 'dart:async';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:trus_app/features/general/crud_operations.dart';
-import 'package:trus_app/features/player/repository/player_repository.dart';
 
 import '../../../common/utils/field_validator.dart';
 import '../../../models/api/player_api_model.dart';
@@ -10,13 +9,11 @@ import '../../general/read_operations.dart';
 import '../repository/player_api_service.dart';
 
 final playerControllerProvider = Provider((ref) {
-  final playerRepository = ref.watch(playerRepositoryProvider);
   final playerApiService = ref.watch(playerApiServiceProvider);
-  return PlayerController(playerRepository: playerRepository, playerApiService: playerApiService, ref: ref);
+  return PlayerController(playerApiService: playerApiService, ref: ref);
 });
 
 class PlayerController implements CrudOperations, ReadOperations {
-  final PlayerRepository playerRepository;
   final PlayerApiService playerApiService;
   final ProviderRef ref;
   final nameController = StreamController<String>.broadcast();
@@ -32,7 +29,6 @@ class PlayerController implements CrudOperations, ReadOperations {
 
   PlayerController({
     required this.playerApiService,
-    required this.playerRepository,
     required this.ref,
   });
 

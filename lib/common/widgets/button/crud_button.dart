@@ -3,7 +3,6 @@ import 'package:trus_app/colors.dart';
 import 'package:trus_app/common/widgets/loader.dart';
 import 'package:trus_app/features/general/crud_operations.dart';
 import 'package:trus_app/models/api/interfaces/model_to_string.dart';
-import 'package:trus_app/models/enum/model.dart';
 
 import '../../../features/general/error/api_executor.dart';
 import '../../../models/enum/crud.dart';
@@ -38,12 +37,6 @@ class CrudButton extends StatefulWidget {
 
 class _CrudButtonState extends State<CrudButton> {
   bool _isLoading = false;
-
-  @override
-  void didChangeDependencies() {
-    // TODO: implement didChangeDependencies
-    super.didChangeDependencies();
-  }
 
   @override
   Widget build(BuildContext context) {

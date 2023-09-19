@@ -1,14 +1,11 @@
 import 'dart:async';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:trus_app/features/general/add_controller.dart';
 import 'package:trus_app/features/general/confirm_operations.dart';
-import 'package:trus_app/features/match/controller/match_controller.dart';
 import 'package:trus_app/models/api/goal/goal_api_model.dart';
 import 'package:trus_app/models/api/goal/goal_multi_add_response.dart';
 import 'package:trus_app/models/api/goal/goal_setup.dart';
 import 'package:trus_app/models/api/interfaces/confirm_to_string.dart';
-import 'package:trus_app/models/api/interfaces/model_to_string.dart';
 
 
 import '../../../models/api/goal/goal_list_multi_add.dart';
@@ -82,7 +79,6 @@ class GoalController implements FutureAddController, ConfirmOperations {
   Future<void> setupMatch(int id) async {
     navigateToGoalScreen();
     goalSetupList = await goalApiService.setupGoal(id);
-    print(goalSetupList);
   }
 
   List<GoalApiModel> setListOfGoalApiModels(int matchId) {

@@ -1,13 +1,8 @@
 import 'dart:async';
 
-import 'package:flutter/cupertino.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:trus_app/features/notification/repository/notification_repository.dart';
 
 import '../../../models/api/notification_api_model.dart';
-import '../../../models/notification_model.dart';
-import '../../../models/user_model.dart';
-import '../../auth/repository/auth_repository.dart';
 import '../repository/notification_api_service.dart';
 
 final notificationControllerProvider = Provider((ref) {
@@ -21,7 +16,7 @@ class NotificationController {
   final notificationsController = StreamController<List<NotificationApiModel>>.broadcast();
   final showNextButtonController = StreamController<bool>.broadcast();
   final showPreviousButtonController = StreamController<bool>.broadcast();
-  int pageNumber =0;
+  int pageNumber = 0;
   int? notificationsNumber;
 
   NotificationController({

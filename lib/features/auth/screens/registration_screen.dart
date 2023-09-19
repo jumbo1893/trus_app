@@ -2,9 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:trus_app/features/auth/screens/user_information_screen.dart';
 
-import '../../../common/repository/exception/handler/exception_handler.dart';
 import '../../../common/utils/field_validator.dart';
-import '../../../common/utils/utils.dart';
 import '../../../common/widgets/custom_button.dart';
 import '../../../common/widgets/custom_text_field.dart';
 import 'package:trus_app/features/auth/controller/auth_controller.dart';

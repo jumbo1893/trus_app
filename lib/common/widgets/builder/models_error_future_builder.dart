@@ -1,10 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:trus_app/common/widgets/error.dart';
 import 'package:trus_app/models/api/interfaces/model_to_string.dart';
 
 import '../../../colors.dart';
-import '../../../features/general/error/api_executor.dart';
-import '../dialog/error_dialog.dart';
+import '../../utils/utils.dart';
 import '../loader.dart';
 
 class ModelsErrorFutureBuilder<T> extends StatelessWidget {
@@ -12,20 +10,16 @@ class ModelsErrorFutureBuilder<T> extends StatelessWidget {
   final Stream<List<ModelToString>>? rebuildStream;
   final Function(ModelToString model) onPressed;
   final BuildContext context;
-  final VoidCallback onDialogCancel;
+  final VoidCallback backToMainMenu;
   const ModelsErrorFutureBuilder({
     Key? key,
     required this.future,
     required this.onPressed,
     required this.context,
-    required this.onDialogCancel,
+    required this.backToMainMenu,
     this.rebuildStream,
   }) : super(key: key);
 
-  void showErrorDialog(String snapshotError) {
-    var dialog = ErrorDialog("Chyba!", snapshotError, () => onDialogCancel());
-    showDialog(context: context, builder: (BuildContext context) => dialog);
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -36,14 +30,14 @@ class ModelsErrorFutureBuilder<T> extends StatelessWidget {
           return const Loader();
         }
         else if (snapshot.hasError) {
-          Future.delayed(Duration.zero, () => showErrorDialog(snapshot.error!.toString()));
+          Future.delayed(Duration.zero, () => showErrorDialog(snapshot.error!.toString(), () => backToMainMenu(), context));
           return const Loader();
         }
         return StreamBuilder<List<ModelToString>>(
           stream: rebuildStream,
           builder: (context, streamSnapshot) {
             if (streamSnapshot.hasError) {
-              Future.delayed(Duration.zero, () => showErrorDialog(streamSnapshot.error!.toString()));
+              Future.delayed(Duration.zero, () => showErrorDialog(streamSnapshot.error!.toString(), () => backToMainMenu(), context));
               return const Loader();
             }
             return ListView.builder(

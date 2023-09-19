@@ -1,22 +1,21 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:trus_app/common/widgets/dropdown/season_api_dropdown.dart';
-import 'package:trus_app/common/widgets/loader.dart';
-import 'package:trus_app/models/season_model.dart';
 
 import '../../../colors.dart';
 import '../../../common/widgets/builder/models_error_future_builder.dart';
 import '../../../common/widgets/builder/statistics_error_future_builder.dart';
 import '../../../common/widgets/button/statistics_buttons.dart';
 import '../../../common/widgets/custom_text.dart';
-import '../controller/beer_stats_controller.dart';
 import '../controller/fine_stats_controller.dart';
 import '../fine_screen_enum.dart';
 
 class MatchFineStatsScreen extends ConsumerStatefulWidget {
   final bool isFocused;
+  final VoidCallback backToMainMenu;
   const MatchFineStatsScreen({
     required this.isFocused,
+    required this.backToMainMenu,
     Key? key,
   }) : super(key: key);
 
@@ -69,6 +68,7 @@ class _MatchFineStatsScreenState extends ConsumerState<MatchFineStatsScreen> {
                                   .onRevertTap(),
                               padding: padding,
                               size: size,
+                              backToMainMenu: () => widget.backToMainMenu(),
                             )
                           ],
                         ),
@@ -82,7 +82,7 @@ class _MatchFineStatsScreenState extends ConsumerState<MatchFineStatsScreen> {
                                 .setDetail(model);
                           },
                           context: context,
-                          onDialogCancel: () {},
+                          backToMainMenu: () => widget.backToMainMenu(),
                           rebuildStream: ref
                               .watch(fineStatsControllerProvider)
                               .fineListStream(),
@@ -148,7 +148,7 @@ class _MatchFineStatsScreenState extends ConsumerState<MatchFineStatsScreen> {
                           onPressed: (model) {ref
                               .watch(fineStatsControllerProvider)
                               .setFineDetail(model);},
-                          onDialogCancel: () {},
+                          backToMainMenu: () => widget.backToMainMenu(),
                           context: context,
                         ),
                       ],
@@ -227,7 +227,7 @@ class _MatchFineStatsScreenState extends ConsumerState<MatchFineStatsScreen> {
                               .watch(fineStatsControllerProvider)
                               .detailedFineFineListStream(),
                           onPressed: (object) {},
-                          onDialogCancel: () {},
+                          backToMainMenu: () => widget.backToMainMenu(),
                           context: context,
                         ),
                       ],

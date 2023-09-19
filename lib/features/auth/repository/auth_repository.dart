@@ -1,5 +1,4 @@
 import 'dart:convert';
-import 'dart:io';
 
 import 'package:flutter/material.dart';
 
@@ -9,14 +8,11 @@ import 'package:trus_app/common/utils/utils.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:trus_app/config.dart';
 
-import '../../../common/repository/cookies/cookie_manager.dart';
 import '../../../common/repository/exception/login_exception.dart';
 import '../../../common/repository/exception/server_exception.dart';
-import '../../../common/utils/firebase_exception.dart';
 import '../../../models/api/interfaces/json_and_http_converter.dart';
 import '../../../models/api/user_api_model.dart';
 import '../../general/repository/crud_api_service.dart';
-import 'package:http/http.dart' as http;
 
 final authRepositoryProvider = Provider(
   (ref) => AuthRepository(
@@ -110,7 +106,7 @@ class AuthRepository extends CrudApiService {
   Future<bool> signUpWithEmail(String email, String password) async {
     String userId = await signUpWithEmailToFireBase(email, password);
     if (userId.isNotEmpty) {
-      UserApiModel user = await signUpWithEmailToServer(
+      await signUpWithEmailToServer(
               email, auth.currentUser!.uid)
           .whenComplete(() async =>
               await signInWithEmailToFirebase(email, password).whenComplete(

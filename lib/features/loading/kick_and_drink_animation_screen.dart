@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'dart:math' as math;
 
 class RunAndKickAnimationScreen extends StatefulWidget {
+  const RunAndKickAnimationScreen({super.key});
+
   @override
   _RunAndKickAnimationScreenState createState() =>
       _RunAndKickAnimationScreenState();

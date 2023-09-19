@@ -1,14 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:trus_app/colors.dart';
-import 'package:trus_app/common/widgets/loader.dart';
-import 'package:trus_app/features/general/confirm_operations.dart';
-import 'package:trus_app/features/general/crud_operations.dart';
-import 'package:trus_app/models/api/interfaces/confirm_to_string.dart';
-import 'package:trus_app/models/api/interfaces/model_to_string.dart';
-import 'package:trus_app/models/enum/model.dart';
-
-import '../../../features/general/error/api_executor.dart';
-import '../../../models/enum/crud.dart';
 import '../../models/api/player_api_model.dart';
 import 'dropdown/player_api_dropdown.dart';
 

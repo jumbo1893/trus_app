@@ -1,19 +1,21 @@
 import 'package:flutter/material.dart';
-import 'package:trus_app/models/helper/helper_model.dart';
 
 import '../../../colors.dart';
+import '../../../models/api/interfaces/add_to_string.dart';
 
 class ListviewAddModel extends StatefulWidget {
-  final IHelperModel helperModel;
-  final String? fieldName;
+  final AddToString addToString;
+  final bool goal;
   final double padding;
-  final Function(int number) onNumberChanged;
+  final VoidCallback onNumberAdded;
+  final VoidCallback onNumberRemoved;
   const ListviewAddModel(
       {Key? key,
         required this.padding,
-        required this.onNumberChanged,
-      this.fieldName,
-      required this.helperModel})
+        required this.onNumberAdded,
+        required this.onNumberRemoved,
+      this.goal = false,
+      required this.addToString})
       : super(key: key);
 
   @override
@@ -31,30 +33,43 @@ class _ListviewAddModel extends State<ListviewAddModel> {
   }
 
   void refreshText() {
-    textEditingController.text = widget.helperModel.getNumber(widget.fieldName).toString();
+    textEditingController.text = widget.addToString.numberToString(widget.goal);
   }
 
-  void sendCallback(int number) {
-    widget.onNumberChanged(number);
+  void sendCallback(bool added) {
+    if(added) {
+      widget.onNumberAdded();
+    }
+    else {
+      widget.onNumberRemoved();
+    }
   }
 
   @override
   Widget build(BuildContext context) {
-    textEditingController.text = widget.helperModel.getNumber(widget.fieldName).toString();
-    final size = MediaQuery.of(context).size;
+    textEditingController.text = widget.addToString.numberToString(widget.goal);
+    final size = MediaQueryData.fromWindow(WidgetsBinding.instance.window).size;
     return Row(
       children: [
         SizedBox(
             width: (size.width / 1.5) - widget.padding,
-            child: Text(widget.helperModel.toStringForListviewAddModel(), style: const TextStyle(fontSize: 16))),
+            child: Text(widget.addToString.toStringForListView(), style: const TextStyle(fontSize: 16))),
         const SizedBox(width: 21,),
 
         SizedBox(
             width: (size.width / 9) -7,
-            child: IconButton(onPressed: () {widget.helperModel.addNumber(widget.fieldName); refreshText(); sendCallback(widget.helperModel.getNumber(widget.fieldName));}, icon: const Icon(Icons.add, color: Colors.green,))),
+            child: IconButton(onPressed: () {
+              sendCallback(true);
+              refreshText();
+              },
+                icon: const Icon(Icons.add, color: Colors.green,))),
         SizedBox(
             width: (size.width / 9) -7,
-            child: IconButton(onPressed: () {widget.helperModel.removeNumber(widget.fieldName); refreshText(); sendCallback(widget.helperModel.getNumber(widget.fieldName));}, icon: const Icon(Icons.remove, color: Colors.red,))),
+            child: IconButton(onPressed: () {
+              sendCallback(false);
+              refreshText();
+              },
+                icon: const Icon(Icons.remove, color: Colors.red,))),
         SizedBox(
           width: (size.width / 9) -7,
           child: TextField(controller: textEditingController,

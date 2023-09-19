@@ -1,7 +1,6 @@
 import 'dart:async';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:trus_app/features/general/add_controller.dart';
 import 'package:trus_app/features/general/confirm_operations.dart';
 import 'package:trus_app/models/api/interfaces/confirm_to_string.dart';
 

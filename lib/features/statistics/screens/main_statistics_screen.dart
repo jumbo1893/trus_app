@@ -6,7 +6,8 @@ import 'package:trus_app/features/statistics/screens/player_fine_stats_screen.da
 import 'package:trus_app/features/statistics/screens/match_fine_stats_screen.dart';
 
 class MainStatisticsScreen extends StatefulWidget {
-  const MainStatisticsScreen({super.key});
+  final VoidCallback backToMainMenu;
+  const MainStatisticsScreen({super.key, required this.backToMainMenu});
 
   @override
   State<MainStatisticsScreen> createState() => _MainStatisticsScreenState();
@@ -73,10 +74,10 @@ class MainStatisticsScreen extends StatefulWidget {
           body: TabBarView(
             controller: tabController,
             children: [
-              PlayerBeerStatsScreen(isFocused: isFocused(0),),
-              MatchBeerStatsScreen(isFocused: isFocused(1),),
-              PlayerFineStatsScreen(isFocused: isFocused(2),),
-              MatchFineStatsScreen(isFocused: isFocused(3),),
+              PlayerBeerStatsScreen(isFocused: isFocused(0), backToMainMenu: () => widget.backToMainMenu()),
+              MatchBeerStatsScreen(isFocused: isFocused(1), backToMainMenu: () => widget.backToMainMenu()),
+              PlayerFineStatsScreen(isFocused: isFocused(2), backToMainMenu: () => widget.backToMainMenu()),
+              MatchFineStatsScreen(isFocused: isFocused(3), backToMainMenu: () => widget.backToMainMenu()),
             ],
           ),
         ),

@@ -8,7 +8,6 @@ import 'package:trus_app/common/utils/field_validator.dart';
 import 'package:trus_app/features/auth/screens/user_information_screen.dart';
 import 'package:trus_app/features/main/main_screen.dart';
 import 'package:trus_app/common/utils/utils.dart';
-import 'package:trus_app/common/repository/exception/handler/exception_handler.dart';
 
 import '../../../common/widgets/custom_button.dart';
 import '../../../models/api/user_api_model.dart';

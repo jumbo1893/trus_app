@@ -1,7 +1,7 @@
 import 'package:http/http.dart' as http;
 
 class CustomCookieManager {
-  Map<String, String> _headers = {};
+  final Map<String, String> _headers = {};
   //Map<String, String> _cookies = {};
 
 

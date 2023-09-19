@@ -1,8 +1,4 @@
-import 'package:dropdown_button2/dropdown_button2.dart';
 import 'package:flutter/material.dart';
-import 'package:trus_app/models/season_model.dart';
-
-import '../../../../colors.dart';
 import '../../../utils/calendar.dart';
 import '../../calendar_text_field.dart';
 import '../../custom_text.dart';

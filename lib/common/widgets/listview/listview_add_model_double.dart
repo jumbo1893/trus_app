@@ -1,8 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:trus_app/models/helper/helper_model.dart';
 
 import '../../../colors.dart';
-import '../../../features/general/add_controller.dart';
 import '../../../models/api/interfaces/add_to_string.dart';
 
 class ListviewAddModelDouble extends StatefulWidget {

@@ -2,26 +2,19 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:trus_app/colors.dart';
 import 'package:trus_app/common/widgets/custom_text.dart';
-import 'package:trus_app/common/widgets/loader.dart';
-import 'package:trus_app/models/helper/beer_stats_helper_model.dart';
-import 'package:trus_app/models/match_model.dart';
-import 'package:trus_app/models/season_model.dart';
 
 import '../../../common/widgets/builder/models_error_future_builder.dart';
 import '../../../common/widgets/builder/statistics_error_future_builder.dart';
 import '../../../common/widgets/button/statistics_buttons.dart';
 import '../../../common/widgets/dropdown/season_api_dropdown.dart';
-import '../../../common/widgets/dropdown/season_dropdown.dart';
-import '../../../common/widgets/icon_text_field.dart';
-import '../../../models/enum/drink.dart';
-import '../../../models/enum/participant.dart';
 import '../controller/beer_stats_controller.dart';
-import '../utils.dart';
 
 class PlayerBeerStatsScreen extends ConsumerStatefulWidget {
   final bool isFocused;
+  final VoidCallback backToMainMenu;
   const PlayerBeerStatsScreen({
     required this.isFocused,
+    required this.backToMainMenu,
     Key? key,
   }) : super(key: key);
 
@@ -74,6 +67,7 @@ class _PlayerBeerStatsScreenState extends ConsumerState<PlayerBeerStatsScreen> {
                                   .onRevertTap(),
                               padding: padding,
                               size: size,
+                              backToMainMenu: () => widget.backToMainMenu(),
                             )
                           ],
                         ),
@@ -87,7 +81,7 @@ class _PlayerBeerStatsScreenState extends ConsumerState<PlayerBeerStatsScreen> {
                                 .setDetail(model);
                           },
                           context: context,
-                          onDialogCancel: () {},
+                          backToMainMenu: () => widget.backToMainMenu(),
                           rebuildStream: ref
                               .watch(beerStatsControllerProvider)
                               .beerListStream(),
@@ -151,7 +145,7 @@ class _PlayerBeerStatsScreenState extends ConsumerState<PlayerBeerStatsScreen> {
                               .watch(beerStatsControllerProvider)
                               .detailedBeerListStream(),
                           onPressed: (object) {},
-                          onDialogCancel: () {},
+                          backToMainMenu: () => widget.backToMainMenu(),
                           context: context,
                         ),
                       ],

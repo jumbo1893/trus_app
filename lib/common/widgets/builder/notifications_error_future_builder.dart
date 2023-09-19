@@ -1,11 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:trus_app/common/widgets/error.dart';
-import 'package:trus_app/models/api/interfaces/model_to_string.dart';
-
-import '../../../colors.dart';
-import '../../../features/general/error/api_executor.dart';
 import '../../../models/api/notification_api_model.dart';
-import '../dialog/error_dialog.dart';
+import '../../utils/utils.dart';
 import '../loader.dart';
 import '../notification_list_tile.dart';
 
@@ -13,19 +8,14 @@ class NotificationsErrorFutureBuilder<T> extends StatelessWidget {
   final Future<List<NotificationApiModel>> future;
   final Stream<List<NotificationApiModel>> rebuildStream;
   final BuildContext context;
-  final VoidCallback onDialogCancel;
+  final VoidCallback backToMainMenu;
   const NotificationsErrorFutureBuilder({
     Key? key,
     required this.future,
     required this.context,
-    required this.onDialogCancel,
+    required this.backToMainMenu,
     required this.rebuildStream,
   }) : super(key: key);
-
-  void showErrorDialog(String snapshotError) {
-    var dialog = ErrorDialog("Chyba!", snapshotError, () => onDialogCancel());
-    showDialog(context: context, builder: (BuildContext context) => dialog);
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -36,14 +26,14 @@ class NotificationsErrorFutureBuilder<T> extends StatelessWidget {
           return const Loader();
         }
         else if (snapshot.hasError) {
-          Future.delayed(Duration.zero, () => showErrorDialog(snapshot.error!.toString()));
+          Future.delayed(Duration.zero, () => showErrorDialog(snapshot.error!.toString(), () => backToMainMenu(), context));
           return const Loader();
         }
         return StreamBuilder<List<NotificationApiModel>>(
           stream: rebuildStream,
           builder: (context, streamSnapshot) {
             if (streamSnapshot.hasError) {
-              Future.delayed(Duration.zero, () => showErrorDialog(streamSnapshot.error!.toString()));
+              Future.delayed(Duration.zero, () => showErrorDialog(streamSnapshot.error!.toString(), () => backToMainMenu(), context));
               return const Loader();
             }
             return ListView.builder(

@@ -1,33 +1,25 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:trus_app/common/widgets/custom_button.dart';
-import 'package:trus_app/common/widgets/rows/row_calendar.dart';
-import 'package:trus_app/common/widgets/rows/row_text_field.dart';
 import 'package:trus_app/features/season/controller/season_controller.dart';
 
-import '../../../common/utils/calendar.dart';
-import '../../../common/utils/field_validator.dart';
-import '../../../common/utils/utils.dart';
 import '../../../common/widgets/builder/column_future_builder.dart';
 import '../../../common/widgets/button/crud_button.dart';
-import '../../../common/widgets/confirmation_dialog.dart';
 import '../../../common/widgets/rows/stream/row_calendar_stream.dart';
 import '../../../common/widgets/rows/stream/row_text_field_stream.dart';
 import '../../../models/api/season_api_model.dart';
 import '../../../models/enum/crud.dart';
-import '../../../models/season_model.dart';
-import '../../notification/controller/notification_controller.dart';
-import '../controller/season_controller.dart';
 
 class EditSeasonScreen extends ConsumerStatefulWidget {
   final VoidCallback onButtonConfirmPressed;
   final SeasonApiModel? seasonModel;
   final bool isFocused;
+  final VoidCallback backToMainMenu;
   const EditSeasonScreen(
     this.seasonModel, {
     Key? key,
     required this.onButtonConfirmPressed,
     required this.isFocused,
+    required this.backToMainMenu,
   }) : super(key: key);
 
   @override
@@ -44,6 +36,7 @@ class _EditSeasonScreenState extends ConsumerState<EditSeasonScreen> {
       return ColumnFutureBuilder(
         loadModelFuture:
             ref.watch(seasonControllerProvider).season(widget.seasonModel!),
+        backToMainMenu: () => widget.backToMainMenu(),
         columns: [
           RowTextFieldStream(
             size: size,
@@ -65,7 +58,8 @@ class _EditSeasonScreenState extends ConsumerState<EditSeasonScreen> {
               ref.watch(seasonControllerProvider).setFromDate(date);
             },
             dateStream: ref.watch(seasonControllerProvider).fromDate(),
-            errorTextStream: ref.watch(seasonControllerProvider).fromDateErrorText(),
+            errorTextStream:
+                ref.watch(seasonControllerProvider).fromDateErrorText(),
           ),
           const SizedBox(height: 10),
           RowCalendarStream(
@@ -76,7 +70,8 @@ class _EditSeasonScreenState extends ConsumerState<EditSeasonScreen> {
               ref.watch(seasonControllerProvider).setToDate(date);
             },
             dateStream: ref.watch(seasonControllerProvider).toDate(),
-            errorTextStream: ref.watch(seasonControllerProvider).toDateErrorText(),
+            errorTextStream:
+                ref.watch(seasonControllerProvider).toDateErrorText(),
           ),
           const SizedBox(height: 10),
           const SizedBox(height: 10),

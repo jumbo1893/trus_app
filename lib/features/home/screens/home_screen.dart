@@ -3,7 +3,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:trus_app/colors.dart';
 
 import '../../../common/utils/utils.dart';
-import '../../../common/widgets/builder/error_future_builder.dart';
 import '../../../common/widgets/chart/home_chart.dart';
 import '../../../common/widgets/pick_chart_player.dart';
 import '../../../common/widgets/random_fact_box.dart';

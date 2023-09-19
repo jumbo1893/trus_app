@@ -1,20 +1,10 @@
 import 'package:flutter/material.dart';
-import 'package:trus_app/common/widgets/error.dart';
-import 'package:trus_app/features/general/add_controller.dart';
 import 'package:trus_app/models/api/interfaces/add_to_string.dart';
-import 'package:trus_app/models/api/interfaces/model_to_string.dart';
 
-import '../../../colors.dart';
-import '../../../features/general/future_add_controller.dart';
 import '../../../features/general/stream_add_controller.dart';
-import '../../../features/loading/loading_screen.dart';
-import '../../../models/api/goal/goal_setup.dart';
 import '../../repository/exception/loading_exception.dart';
-import '../../utils/utils.dart';
 import '../appbar_headline.dart';
-import '../dialog/error_dialog.dart';
 import '../listview/listview_add_model.dart';
-import '../listview/listview_add_model2.dart';
 import '../listview/listview_add_model_double.dart';
 import '../loader.dart';
 
@@ -73,7 +63,7 @@ class StreamAddBuilder extends StatelessWidget {
                           ),
                         ),
                       ),
-                      child: (doubleListview == null || doubleListview == false) ? ListviewAddModel2(
+                      child: (doubleListview == null || doubleListview == false) ? ListviewAddModel(
                         padding: 16,
                         addToString: addToString,
                         onNumberAdded: () => addController.addNumber(index, goal?? false),

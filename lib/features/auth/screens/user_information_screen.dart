@@ -8,7 +8,6 @@ import 'package:trus_app/features/auth/controller/auth_controller.dart';
 
 import '../../general/error/api_executor.dart';
 import '../../main/main_screen.dart';
-import '../../notification/controller/notification_controller.dart';
 
 class UserInformationScreen extends ConsumerStatefulWidget {
   const UserInformationScreen({Key? key}) : super(key: key);

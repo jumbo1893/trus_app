@@ -1,30 +1,21 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:trus_app/common/widgets/custom_button.dart';
-import 'package:trus_app/common/widgets/rows/row_calendar.dart';
-import 'package:trus_app/common/widgets/rows/row_text_field.dart';
-import 'package:trus_app/models/api/player_api_model.dart';
-import 'package:trus_app/models/api/season_api_model.dart';
-
-import '../../../common/utils/calendar.dart';
-import '../../../common/utils/field_validator.dart';
-import '../../../common/utils/utils.dart';
 import '../../../common/widgets/builder/column_future_builder.dart';
 import '../../../common/widgets/button/crud_button.dart';
 import '../../../common/widgets/rows/stream/row_calendar_stream.dart';
 import '../../../common/widgets/rows/stream/row_text_field_stream.dart';
 import '../../../models/enum/crud.dart';
-import '../../../models/season_model.dart';
-import '../../notification/controller/notification_controller.dart';
 import '../controller/season_controller.dart';
 
 class AddSeasonScreen extends ConsumerStatefulWidget {
   final VoidCallback onAddSeasonPressed;
   final bool isFocused;
+  final VoidCallback backToMainMenu;
   const AddSeasonScreen({
     Key? key,
     required this.onAddSeasonPressed,
     required this.isFocused,
+    required this.backToMainMenu,
   }) : super(key: key);
 
   @override
@@ -40,6 +31,7 @@ class _AddSeasonScreenState extends ConsumerState<AddSeasonScreen> {
           MediaQueryData.fromWindow(WidgetsBinding.instance.window).size;
       return ColumnFutureBuilder(
         loadModelFuture: ref.watch(seasonControllerProvider).newSeason(),
+        backToMainMenu: () => widget.backToMainMenu(),
         columns: [
           RowTextFieldStream(
             size: size,

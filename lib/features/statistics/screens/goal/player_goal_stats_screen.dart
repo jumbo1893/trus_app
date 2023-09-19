@@ -2,10 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:trus_app/colors.dart';
 import 'package:trus_app/common/widgets/custom_text.dart';
-import 'package:trus_app/common/widgets/loader.dart';
-import 'package:trus_app/models/helper/beer_stats_helper_model.dart';
-import 'package:trus_app/models/match_model.dart';
-import 'package:trus_app/models/season_model.dart';
 
 import '../../../../common/widgets/builder/models_error_future_builder.dart';
 import '../../../../common/widgets/builder/statistics_error_future_builder.dart';
@@ -15,8 +11,10 @@ import '../../controller/goal_stats_controller.dart';
 
 class PlayerGoalStatsScreen extends ConsumerStatefulWidget {
   final bool isFocused;
+  final VoidCallback backToMainMenu;
   const PlayerGoalStatsScreen({
     required this.isFocused,
+    required this.backToMainMenu,
     Key? key,
   }) : super(key: key);
 
@@ -69,6 +67,7 @@ class _PlayerGoalStatsScreenState extends ConsumerState<PlayerGoalStatsScreen> {
                                   .onRevertTap(),
                               padding: padding,
                               size: size,
+                              backToMainMenu: () => widget.backToMainMenu(),
                             )
                           ],
                         ),
@@ -82,7 +81,7 @@ class _PlayerGoalStatsScreenState extends ConsumerState<PlayerGoalStatsScreen> {
                                 .setDetail(model);
                           },
                           context: context,
-                          onDialogCancel: () {},
+                          backToMainMenu: () => widget.backToMainMenu(),
                           rebuildStream: ref
                               .watch(goalStatsControllerProvider)
                               .goalListStream(),
@@ -146,7 +145,7 @@ class _PlayerGoalStatsScreenState extends ConsumerState<PlayerGoalStatsScreen> {
                               .watch(goalStatsControllerProvider)
                               .detailedGoalListStream(),
                           onPressed: (object) {},
-                          onDialogCancel: () {},
+                          backToMainMenu: () => widget.backToMainMenu(),
                           context: context,
                         ),
                       ],

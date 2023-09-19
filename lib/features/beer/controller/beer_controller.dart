@@ -1,17 +1,9 @@
 import 'dart:async';
 import 'dart:math';
-import 'dart:typed_data';
 
-import 'package:flutter/cupertino.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:trus_app/config.dart';
-import 'package:trus_app/models/api/beer/beer_api_model.dart';
 import 'package:trus_app/models/api/interfaces/add_to_string.dart';
 import 'package:trus_app/models/api/interfaces/confirm_to_string.dart';
-import 'package:trus_app/models/beer_model.dart';
-import 'package:trus_app/models/helper/beer_helper_model.dart';
-import 'package:trus_app/models/player_model.dart';
 
 import '../../../common/repository/exception/loading_exception.dart';
 import '../../../models/api/beer/beer_list.dart';
@@ -19,35 +11,25 @@ import '../../../models/api/beer/beer_multi_add_response.dart';
 import '../../../models/api/beer/beer_no_match.dart';
 import '../../../models/api/beer/beer_no_match_with_player.dart';
 import '../../../models/api/beer/beer_setup_response.dart';
-import '../../../models/api/fine_api_model.dart';
 import '../../../models/api/match/match_api_model.dart';
 import '../../../models/api/season_api_model.dart';
-import '../../../models/match_model.dart';
-import '../../general/add_controller.dart';
 import '../../general/confirm_operations.dart';
 import '../../general/match_reader.dart';
 import '../../general/stream_add_controller.dart';
 import '../../season/repository/season_api_service.dart';
-import '../lines/new_player_lines_calculator.dart';
-import '../lines/painter.dart';
 import '../lines/player_lines.dart';
 import '../repository/beer_api_service.dart';
-import '../repository/beer_repository.dart';
-import 'dart:ui' as ui;
 
 final beerControllerProvider = Provider((ref) {
-  final beerRepository = ref.watch(beerRepositoryProvider);
   final beerApiRepository = ref.watch(beerApiServiceProvider);
   final seasonApiService = ref.watch(seasonApiServiceProvider);
   return BeerController(
-      beerRepository: beerRepository,
       ref: ref,
       beerApiRepository: beerApiRepository,
     seasonApiService: seasonApiService,);
 });
 
 class BeerController implements MatchReader, StreamAddController, ConfirmOperations {
-  final BeerRepository beerRepository;
   final SeasonApiService seasonApiService;
   final BeerApiService beerApiRepository;
   final ProviderRef ref;
@@ -74,7 +56,6 @@ class BeerController implements MatchReader, StreamAddController, ConfirmOperati
 
   BeerController({
     required this.seasonApiService,
-    required this.beerRepository,
     required this.beerApiRepository,
     required this.ref,
   });

@@ -8,8 +8,8 @@ class RowBackOrForward extends StatelessWidget {
   final String forwardText;
   final Function onBackChecked;
   final Function onForwardChecked;
-  bool secondArrowForward;
-  RowBackOrForward(
+  final bool secondArrowForward;
+  const RowBackOrForward(
       {Key? key,
       required this.padding,
       required this.backText,

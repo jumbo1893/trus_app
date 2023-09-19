@@ -75,7 +75,7 @@ class _MainPkflStatisticsScreenState
               onTap: (tab) => onTabChanged(tab),
               labelColor: blackColor,
               indicatorColor: orangeColor,
-              tabs: [
+              tabs: const [
                 FittedBox(
                     child: Tab(
                   child: CustomText(text: "Aktuální sezona"),

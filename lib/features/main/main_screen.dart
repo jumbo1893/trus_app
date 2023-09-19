@@ -18,8 +18,6 @@ import 'package:trus_app/features/season/screens/edit_season_screen.dart';
 import 'package:trus_app/features/season/screens/season_screen.dart';
 import 'package:trus_app/models/api/fine_api_model.dart';
 import 'package:trus_app/models/api/match/match_api_model.dart';
-import 'package:trus_app/models/match_model.dart';
-import 'package:trus_app/models/player_model.dart';
 import '../../common/utils/utils.dart';
 import '../../models/api/player_api_model.dart';
 import '../../models/api/season_api_model.dart';
@@ -77,8 +75,6 @@ class _MainScreenState extends ConsumerState<MainScreen> {
 
   FineApiModel fineModel = FineApiModel.dummy();
 
-  MatchModel mainMatch = MatchModel.dummyMainMatch();
-
   List<int> playerIdListModel = [];
 
   void onPickedPlayerChange(PlayerApiModel newPlayerModel) {
@@ -96,10 +92,6 @@ class _MainScreenState extends ConsumerState<MainScreen> {
     changeFragment(11);
   }
 
-  void onPickedMainMatch(MatchModel newMatchModel) {
-    mainMatch = newMatchModel;
-  }
-
   void onPickedFineChange(FineApiModel newFineModel) {
     setState(() => fineModel = newFineModel);
     changeFragment(14);
@@ -115,10 +107,6 @@ class _MainScreenState extends ConsumerState<MainScreen> {
     changeFragment(16);
   }
 
-  /*void signOut() {
-    ref.read(authControllerProvider).signOut(context);
-    Navigator.pushNamedAndRemoveUntil(context, LoginScreen.routeName, (route) => false);
-  }*/
   Future<void> signOut() async {
     bool? result = await executeApi<bool?>(() async {
       return await ref.read(authControllerProvider).signOut();
@@ -262,24 +250,28 @@ class _MainScreenState extends ConsumerState<MainScreen> {
               setMatch: (newMatch) => matchModel = newMatch,
               setPlayer: (player) => onPickedPlayerFinesChange(player),
               isFocused: isFocused(1),
+              backToMainMenu: () => changeFragment(0),
             ),
             Container(
               //2
               color: Colors.yellow,
             ),
-            const MainStatisticsScreen(
+            MainStatisticsScreen(
                 //3
+              backToMainMenu: () => changeFragment(0),
                 ),
             AddPlayerScreen(
               //4
               onAddPlayerPressed: () => changeFragment(0),
               isFocused: isFocused(4),
+              backToMainMenu: () => changeFragment(0),
             ),
             EditPlayerScreen(
               //5
               playerModel,
               onButtonConfirmPressed: () => changeFragment(0),
               isFocused: isFocused(5),
+              backToMainMenu: () => changeFragment(0),
             ),
             SeasonScreen(
               //6
@@ -292,12 +284,14 @@ class _MainScreenState extends ConsumerState<MainScreen> {
               //7
               onAddSeasonPressed: () => changeFragment(6),
               isFocused: isFocused(7),
+              backToMainMenu: () => changeFragment(0),
             ),
             EditSeasonScreen(
               //8
               seasonModel,
               onButtonConfirmPressed: () => changeFragment(6),
               isFocused: isFocused(8),
+              backToMainMenu: () => changeFragment(0),
             ),
             MatchScreen(
               //9
@@ -312,6 +306,7 @@ class _MainScreenState extends ConsumerState<MainScreen> {
               isFocused: isFocused(10),
               setMatchId: (int id) {matchModel.id = id;},
               onChangePlayerGoalsPressed: () => changeFragment(25),
+              backToMainMenu: () => changeFragment(0),
             ),
             EditMatchScreen(
               //11
@@ -320,6 +315,7 @@ class _MainScreenState extends ConsumerState<MainScreen> {
               isFocused: isFocused(11),
               setMatchId: (int id) {matchModel.id = id;},
               onChangePlayerGoalsPressed: () => changeFragment(25),
+              backToMainMenu: () => changeFragment(0),
             ),
             FineScreen(
               //12
@@ -332,12 +328,14 @@ class _MainScreenState extends ConsumerState<MainScreen> {
               //13
               onAddFinePressed: () => changeFragment(12),
               isFocused: isFocused(13),
+              backToMainMenu: () => changeFragment(0),
             ),
             EditFineScreen(
               //14
               fineModel,
               onButtonConfirmPressed: () => changeFragment(12),
               isFocused: isFocused(14),
+              backToMainMenu: () => changeFragment(0),
             ),
             FinePlayerScreen(
               //15
@@ -345,6 +343,7 @@ class _MainScreenState extends ConsumerState<MainScreen> {
               playerModel: playerModel,
               onButtonConfirmPressed: () => changeFragment(1),
               isFocused: isFocused(15),
+              backToMainMenu: () => changeFragment(0),
             ),
             MultipleFinePlayersScreen(
               //16
@@ -352,12 +351,14 @@ class _MainScreenState extends ConsumerState<MainScreen> {
               playerIdList: playerIdListModel,
               onButtonConfirmPressed: () => changeFragment(1),
               isFocused: isFocused(16),
+              backToMainMenu: () => changeFragment(0),
             ),
             BeerSimpleScreen(
               //17
               mainMatch: matchModel,
               setMatch: (newMatch) => matchModel = newMatch,
               onButtonConfirmPressed: () => changeFragment(0),
+              backToMainMenu: () => changeFragment(0),
               isFocused: isFocused(17),
             ),
             PlayerScreen(
@@ -376,8 +377,9 @@ class _MainScreenState extends ConsumerState<MainScreen> {
             const PkflTableScreen(
                 //21
                 ),
-            const MainGoalStatisticsScreen(
+            MainGoalStatisticsScreen(
                 //22
+              backToMainMenu: () => changeFragment(0),
                 ),
             NotificationScreen(
               //23
@@ -394,6 +396,7 @@ class _MainScreenState extends ConsumerState<MainScreen> {
               onAddGoalsPressed: () => changeFragment(4),
               isFocused: isFocused(25),
               matchId: matchModel.id!,
+              backToMainMenu: () => changeFragment(0),
             ),
           ],
         ),

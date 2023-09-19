@@ -1,9 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:trus_app/common/widgets/custom_button.dart';
 import 'package:trus_app/features/match/controller/match_controller.dart';
 import '../../../common/utils/utils.dart';
-import '../../../common/widgets/builder/column_future_builder.dart';
 import '../../../common/widgets/builder/column_future_builder_with_pkfl.dart';
 import '../../../common/widgets/button/crud_button.dart';
 import '../../../common/widgets/loader.dart';
@@ -12,13 +10,13 @@ import '../../../common/widgets/rows/stream/row_player_list_stream.dart';
 import '../../../common/widgets/rows/stream/row_season_stream.dart';
 import '../../../common/widgets/rows/stream/row_switch_stream.dart';
 import '../../../common/widgets/rows/stream/row_text_field_stream.dart';
-import '../../../models/api/match/match_api_model.dart';
 import '../../../models/enum/crud.dart';
 
 class AddMatchScreen extends ConsumerStatefulWidget {
   final VoidCallback onAddMatchPressed;
   final Function(int id) setMatchId;
   final VoidCallback onChangePlayerGoalsPressed;
+  final VoidCallback backToMainMenu;
   final bool isFocused;
   const AddMatchScreen({
     Key? key,
@@ -26,6 +24,7 @@ class AddMatchScreen extends ConsumerStatefulWidget {
     required this.isFocused,
     required this.setMatchId,
     required this.onChangePlayerGoalsPressed,
+    required this.backToMainMenu,
   }) : super(key: key);
 
   @override
@@ -58,6 +57,7 @@ class _AddMatchScreenState extends ConsumerState<AddMatchScreen> {
                   ref.watch(matchControllerProvider).getLastPkflMatch(),
               onPkflConfirmClick: () =>
                   ref.read(matchControllerProvider).setFieldsByPkflMatch(),
+              backToMainMenu: () => widget.backToMainMenu(),
               columns: [
                 RowTextFieldStream(
                   size: size,

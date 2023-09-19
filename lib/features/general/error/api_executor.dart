@@ -21,7 +21,7 @@ Future<T?> executeApi<T> (Future<T> Function() function, VoidCallback onDialogCa
   } on LoginException catch (e) {
     hideSnackBar(context);
     Future.delayed(Duration.zero, () =>  showSnackBarWithPostFrame(context: context, content: e.cause));
-  } on ServerException catch (e, stack) {
+  } on ServerException catch (e) {
     hideSnackBar(context);
     Future.delayed(Duration.zero, () =>  showErrorDialog(e.cause, onDialogCancel, context,));
   } on InternalSnackBarException catch (e) {

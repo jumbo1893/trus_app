@@ -3,8 +3,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:trus_app/common/widgets/loader.dart';
 
 import '../../../common/widgets/builder/notifications_error_future_builder.dart';
-import '../../../common/widgets/notification_list_tile.dart';
-import '../../../models/notification_model.dart';
 import '../controller/notification_controller.dart';
 
 class NotificationScreen extends ConsumerWidget {
@@ -25,7 +23,7 @@ class NotificationScreen extends ConsumerWidget {
             padding: const EdgeInsets.only(top: 8.0),
             child: NotificationsErrorFutureBuilder(
               future: ref.watch(notificationControllerProvider).getNotifications(),
-              onDialogCancel: () => backToMainMenu.call(),
+              backToMainMenu: () => backToMainMenu(),
               context: context,
               rebuildStream: ref.watch(notificationControllerProvider).notifications(),
             ),

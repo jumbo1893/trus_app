@@ -1,24 +1,22 @@
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:trus_app/common/widgets/custom_button.dart';
-import 'package:trus_app/common/widgets/rows/row_text_field.dart';
 
-import '../../../common/utils/field_validator.dart';
 import '../../../common/widgets/builder/column_future_builder.dart';
 import '../../../common/widgets/button/crud_button.dart';
 import '../../../common/widgets/rows/stream/row_text_field_stream.dart';
 import '../../../models/enum/crud.dart';
-import '../../notification/controller/notification_controller.dart';
 import '../controller/fine_controller.dart';
 
 class AddFineScreen extends ConsumerStatefulWidget {
   final VoidCallback onAddFinePressed;
   final bool isFocused;
+  final VoidCallback backToMainMenu;
   const AddFineScreen({
     Key? key,
     required this.onAddFinePressed,
     required this.isFocused,
+    required this.backToMainMenu,
   }) : super(key: key);
 
   @override
@@ -35,6 +33,7 @@ class _AddFineScreenState extends ConsumerState<AddFineScreen> {
     return ColumnFutureBuilder(
       loadModelFuture:
       ref.watch(fineControllerProvider).newFine(),
+      backToMainMenu: () => widget.backToMainMenu(),
       columns: [
         RowTextFieldStream(
           size: size,

@@ -1,14 +1,8 @@
-import 'package:age_calculator/age_calculator.dart';
-import 'package:trus_app/common/utils/calendar.dart';
 import 'package:trus_app/config.dart';
 import 'package:trus_app/models/api/fine_api_model.dart';
 import 'package:trus_app/models/api/interfaces/json_and_http_converter.dart';
-import 'package:trus_app/models/api/interfaces/model_to_string.dart';
-import 'package:trus_app/models/api/match/match_api_model.dart';
-import 'package:trus_app/models/api/player_api_model.dart';
 
 import '../interfaces/add_to_string.dart';
-import '../season_api_model.dart';
 
 class ReceivedFineApiModel implements JsonAndHttpConverter, AddToString{
   final int? id;

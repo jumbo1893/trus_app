@@ -2,8 +2,6 @@ import 'dart:async';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:trus_app/features/general/crud_operations.dart';
-import 'package:trus_app/features/season/repository/season_repository.dart';
-import 'package:trus_app/models/season_model.dart';
 
 import '../../../common/repository/exception/field_validation_exception.dart';
 import '../../../common/repository/exception/model/field_model.dart';
@@ -14,13 +12,11 @@ import '../repository/season_api_service.dart';
 
 final seasonControllerProvider = Provider((ref) {
   final seasonApiService = ref.watch(seasonApiServiceProvider);
-  final seasonRepository = ref.watch(seasonRepositoryProvider);
-  return SeasonController(seasonApiService: seasonApiService, seasonRepository: seasonRepository, ref: ref);
+  return SeasonController(seasonApiService: seasonApiService, ref: ref);
 });
 
 class SeasonController implements CrudOperations, ReadOperations {
   final SeasonApiService seasonApiService;
-  final SeasonRepository seasonRepository;
   final ProviderRef ref;
   final nameController = StreamController<String>.broadcast();
   final fromDateController = StreamController<DateTime>.broadcast();
@@ -35,7 +31,6 @@ class SeasonController implements CrudOperations, ReadOperations {
 
   SeasonController({
     required this.seasonApiService,
-    required this.seasonRepository,
     required this.ref,
   });
 
@@ -212,9 +207,5 @@ class SeasonController implements CrudOperations, ReadOperations {
   @override
   Future<List<SeasonApiModel>> getModels() async {
     return await seasonApiService.getSeasons(false, false, false);
-  }
-
-  Stream<List<SeasonModel>> seasons()  {
-    return seasonRepository.getSeasons();
   }
 }

@@ -1,9 +1,6 @@
 import 'dart:async';
 
-import 'package:flutter/cupertino.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:trus_app/features/fine/repository/fine_repository.dart';
-import 'package:trus_app/models/fine_model.dart';
 
 import '../../../common/utils/field_validator.dart';
 import '../../../models/api/fine_api_model.dart';
@@ -14,13 +11,11 @@ import '../repository/fine_api_service.dart';
 
 
 final fineControllerProvider = Provider((ref) {
-  final fineRepository = ref.watch(fineRepositoryProvider);
   final fineApiService = ref.watch(fineApiServiceProvider);
-  return FineController(fineRepository: fineRepository, fineApiService: fineApiService, ref: ref);
+  return FineController(fineApiService: fineApiService, ref: ref);
 });
 
 class FineController implements CrudOperations, ReadOperations {
-  final FineRepository fineRepository;
   final FineApiService fineApiService;
   final ProviderRef ref;
   final nameController = StreamController<String>.broadcast();
@@ -35,7 +30,6 @@ class FineController implements CrudOperations, ReadOperations {
   bool fineInactive = false;
 
   FineController({
-    required this.fineRepository,
     required this.fineApiService,
     required this.ref,
   });
@@ -85,10 +79,6 @@ class FineController implements CrudOperations, ReadOperations {
 
   Stream<bool> loading() {
     return loadingController.stream;
-  }
-
-  Stream<List<FineModel>> fines() {
-    return fineRepository.getFines();
   }
 
   Stream<String> name() {

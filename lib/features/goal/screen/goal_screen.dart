@@ -5,21 +5,19 @@ import 'package:trus_app/common/widgets/builder/error_future_builder.dart';
 import 'package:trus_app/common/widgets/custom_button.dart';
 import 'package:trus_app/features/goal/controller/goal_controller.dart';
 
-import '../../../common/utils/utils.dart';
-import '../../../common/widgets/builder/column_future_builder.dart';
 import '../../../common/widgets/button/confirm_button.dart';
-import '../../../common/widgets/loader.dart';
-import '../../../common/widgets/rows/row_switch.dart';
 import '../../../common/widgets/rows/stream/row_switch_stream.dart';
 import '../goal_screens.dart';
 
 class GoalScreen extends ConsumerStatefulWidget {
   final VoidCallback onAddGoalsPressed;
+  final VoidCallback backToMainMenu;
   final bool isFocused;
   final int matchId;
   const GoalScreen({
     Key? key,
     required this.onAddGoalsPressed,
+    required this.backToMainMenu,
     required this.isFocused,
     required this.matchId,
   }) : super(key: key);
@@ -36,7 +34,7 @@ class _GoalScreenState extends ConsumerState<GoalScreen> {
     if (widget.isFocused) {
       return ErrorFutureBuilder<void>(
         future: ref.read(goalControllerProvider).setupMatch(widget.matchId),
-        onDialogCancel: () => widget.onAddGoalsPressed(),
+        backToMainMenu: () => widget.backToMainMenu(),
         context: context,
         widget: StreamBuilder<GoalScreens>(
             stream: ref.watch(goalControllerProvider).screen(),

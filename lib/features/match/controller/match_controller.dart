@@ -1,37 +1,26 @@
 import 'dart:async';
 
-import 'package:flutter/cupertino.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:trus_app/config.dart';
-import 'package:trus_app/features/fine/match/repository/fine_match_repository.dart';
-import 'package:trus_app/features/match/repository/match_repository.dart';
 import 'package:trus_app/features/pkfl/repository/pkfl_repository.dart';
 import 'package:trus_app/features/season/repository/season_api_service.dart';
-import 'package:trus_app/models/api/interfaces/model_to_string.dart';
 import 'package:trus_app/models/api/player_api_model.dart';
 import 'package:trus_app/models/api/season_api_model.dart';
-import 'package:trus_app/models/helper/player_stats_helper_model.dart';
-import 'package:trus_app/models/match_model.dart';
 
 import '../../../common/static_text.dart';
 import '../../../common/utils/field_validator.dart';
 import '../../../models/api/match/match_api_model.dart';
 import '../../../models/api/match/match_setup.dart';
 import '../../../models/pkfl/pkfl_match.dart';
-import '../../../models/season_model.dart';
 import '../../general/crud_operations.dart';
-import '../../general/read_operations.dart';
 import '../../pkfl/tasks/retrieve_matches_task.dart';
 import '../repository/match_api_service.dart';
 import 'package:collection/collection.dart';
 
 final matchControllerProvider = Provider((ref) {
-  final matchRepository = ref.watch(matchRepositoryProvider);
   final pkflRepository = ref.watch(pkflRepositoryProvider);
   final matchApiService = ref.watch(matchApiServiceProvider);
   final seasonApiService = ref.watch(seasonApiServiceProvider);
   return MatchController(
-      matchRepository: matchRepository,
       pkflRepository: pkflRepository,
       matchApiService: matchApiService,
       seasonApiService: seasonApiService,
@@ -39,7 +28,6 @@ final matchControllerProvider = Provider((ref) {
 });
 
 class MatchController implements CrudOperations {
-  final MatchRepository matchRepository;
   final PkflRepository pkflRepository;
   final MatchApiService matchApiService;
   final SeasonApiService seasonApiService;
@@ -68,7 +56,6 @@ class MatchController implements CrudOperations {
   PkflMatch? pkflMatch;
 
   MatchController({
-    required this.matchRepository,
     required this.pkflRepository,
     required this.matchApiService,
     required this.seasonApiService,

@@ -1,6 +1,3 @@
-import 'package:age_calculator/age_calculator.dart';
-import 'package:trus_app/common/utils/calendar.dart';
-import 'package:trus_app/models/api/interfaces/model_to_string.dart';
 import 'package:trus_app/models/api/player_api_model.dart';
 import 'package:trus_app/models/api/season_api_model.dart';
 

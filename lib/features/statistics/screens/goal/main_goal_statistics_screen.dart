@@ -1,15 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:trus_app/colors.dart';
 import 'package:trus_app/features/statistics/screens/goal/player_goal_stats_screen.dart';
-import 'package:trus_app/features/statistics/screens/match_beer_stats_screen.dart';
-import 'package:trus_app/features/statistics/screens/player_beer_stats_screen.dart';
-import 'package:trus_app/features/statistics/screens/player_fine_stats_screen.dart';
-import 'package:trus_app/features/statistics/screens/match_fine_stats_screen.dart';
 
 import 'match_goal_stats_screen.dart';
 
 class MainGoalStatisticsScreen extends StatefulWidget {
-  const MainGoalStatisticsScreen({super.key});
+  final VoidCallback backToMainMenu;
+  const MainGoalStatisticsScreen(
+      {super.key, required this.backToMainMenu});
 
   @override
   State<MainGoalStatisticsScreen> createState() => _MainGoalStatisticsScreenState();
@@ -67,8 +65,8 @@ class MainGoalStatisticsScreen extends StatefulWidget {
           body: TabBarView(
             controller: tabController,
             children: [
-              PlayerGoalStatsScreen(isFocused: isFocused(0),),
-              MatchGoalStatsScreen(isFocused: isFocused(1),),
+              PlayerGoalStatsScreen(isFocused: isFocused(0), backToMainMenu: () => widget.backToMainMenu()),
+              MatchGoalStatsScreen(isFocused: isFocused(1), backToMainMenu: () => widget.backToMainMenu()),
             ],
           ),
         ),

@@ -1,8 +1,6 @@
-import 'package:trus_app/config.dart';
 import 'package:trus_app/models/api/fine_api_model.dart';
 import 'package:trus_app/models/api/player_api_model.dart';
 
-import '../interfaces/add_to_string.dart';
 import '../interfaces/model_to_string.dart';
 import '../match/match_api_model.dart';
 

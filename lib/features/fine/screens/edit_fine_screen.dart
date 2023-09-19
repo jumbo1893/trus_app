@@ -1,29 +1,25 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:trus_app/common/widgets/custom_button.dart';
-import 'package:trus_app/common/widgets/rows/row_text_field.dart';
 import 'package:trus_app/models/api/fine_api_model.dart';
 
-import '../../../common/utils/field_validator.dart';
 import '../../../common/widgets/builder/column_future_builder.dart';
 import '../../../common/widgets/button/crud_button.dart';
-import '../../../common/widgets/confirmation_dialog.dart';
 import '../../../common/widgets/rows/stream/row_switch_stream.dart';
 import '../../../common/widgets/rows/stream/row_text_field_stream.dart';
 import '../../../models/enum/crud.dart';
-import '../../../models/fine_model.dart';
-import '../../notification/controller/notification_controller.dart';
 import '../controller/fine_controller.dart';
 
 class EditFineScreen extends ConsumerStatefulWidget {
   final VoidCallback onButtonConfirmPressed;
   final FineApiModel? fineModel;
   final bool isFocused;
+  final VoidCallback backToMainMenu;
   const EditFineScreen(
     this.fineModel, {
     Key? key,
     required this.onButtonConfirmPressed,
     required this.isFocused,
+    required this.backToMainMenu,
   }) : super(key: key);
 
   @override
@@ -40,6 +36,7 @@ class _EditFineScreenState extends ConsumerState<EditFineScreen> {
       return ColumnFutureBuilder(
         loadModelFuture:
             ref.watch(fineControllerProvider).fine(widget.fineModel!),
+        backToMainMenu: () => widget.backToMainMenu(),
         columns: [
           RowTextFieldStream(
             size: size,
@@ -74,18 +71,22 @@ class _EditFineScreenState extends ConsumerState<EditFineScreen> {
               ref.watch(fineControllerProvider).setInactive(inactive);
             },
           ),
-          const SizedBox(height: 20,),
+          const SizedBox(
+            height: 20,
+          ),
           Row(
             children: [
               SizedBox(
                   width: size.width / 6,
                   child: const Icon(
-                    Icons.warning, color: Colors.black,)),
+                    Icons.warning,
+                    color: Colors.black,
+                  )),
               SizedBox(
                   width: size.width / 1.3,
                   child: const Text(
                       "Dbejte na to, že pokud je tento přepínač vypnutý, tak se změní všechny pokuty i retrospektivně - tedy částka či jméno se změní i pro již udělené pokuty z předchozích zápasů.\n"
-                          "Pokud si přejete udělat změny pouze pro nové pokuty, přepněte do přepínač do true"))
+                      "Pokud si přejete udělat změny pouze pro nové pokuty, přepněte do přepínač do true"))
             ],
           ),
           const SizedBox(height: 10),

@@ -26,7 +26,7 @@ class PlayerScreen extends ConsumerWidget {
           child: ModelsErrorFutureBuilder(
             future: ref.watch(playerControllerProvider).getModels(),
             onPressed: (player) => {setPlayer(player as PlayerApiModel)},
-            onDialogCancel: () => backToMainMenu.call(),
+            backToMainMenu: () => backToMainMenu(),
             context: context,
           ),
         ),

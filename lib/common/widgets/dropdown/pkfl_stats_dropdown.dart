@@ -5,8 +5,8 @@ import 'package:dropdown_button2/dropdown_button2.dart';
 
 class PkflStatsDropdown extends ConsumerStatefulWidget {
   final Function(SpinnerOption? spinnerOption) onValueSelected;
-  SpinnerOption? initValue;
-  PkflStatsDropdown({
+  final SpinnerOption? initValue;
+  const PkflStatsDropdown({
     Key? key,
     required this.onValueSelected,
     this.initValue,
@@ -48,20 +48,6 @@ class _PkflStatsDropdownState extends ConsumerState<PkflStatsDropdown> {
     return menuItems;
   }
 
-  List<double> _getCustomItemsHeights(int itemsLength) {
-    List<double> itemsHeights = [];
-    for (var i = 0; i < (itemsLength * 2) - 1; i++) {
-      if (i.isEven) {
-        itemsHeights.add(40);
-      }
-      //Dividers indexes will be the odd indexes
-      if (i.isOdd) {
-        itemsHeights.add(4);
-      }
-    }
-    return itemsHeights;
-  }
-
   @override
   Widget build(BuildContext context) {
           return DropdownButtonHideUnderline(
@@ -75,7 +61,6 @@ class _PkflStatsDropdownState extends ConsumerState<PkflStatsDropdown> {
                 ),
               ),
               items: _addDividersAfterItems(SpinnerOption.values),
-              //customItemsHeights: _getCustomItemsHeights(SpinnerOption.values.length),
               value: selectedValue ?? widget.initValue ?? SpinnerOption.values[0],
               onChanged: (value) {
                 setState(() {
@@ -83,10 +68,6 @@ class _PkflStatsDropdownState extends ConsumerState<PkflStatsDropdown> {
                   widget.onValueSelected(value);
                 });
               },
-              /*buttonHeight: 40,
-              dropdownMaxHeight: 200,
-              buttonWidth: 140,
-              itemPadding: const EdgeInsets.symmetric(horizontal: 8.0),*/
             ),
           );
   }

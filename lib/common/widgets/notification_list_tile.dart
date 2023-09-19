@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:trus_app/models/notification_model.dart';
 
 import '../../models/api/notification_api_model.dart';
 

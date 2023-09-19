@@ -1,9 +1,3 @@
-
-import 'dart:convert';
-import 'package:http/http.dart' as http;
-
-import 'model/error_response.dart';
-
 class InternalSnackBarException implements Exception {
   String cause;
 

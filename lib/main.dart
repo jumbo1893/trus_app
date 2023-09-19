@@ -1,7 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:trus_app/common/utils/utils.dart';
-import 'package:trus_app/common/widgets/error.dart';
 import 'package:trus_app/common/widgets/loader.dart';
 import 'package:trus_app/features/auth/controller/auth_controller.dart';
 import 'package:trus_app/features/auth/screens/login_screen.dart';

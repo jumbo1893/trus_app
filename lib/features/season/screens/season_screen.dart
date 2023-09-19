@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:trus_app/models/api/season_api_model.dart';
-import '../../../common/widgets/builder/error_future_builder.dart';
 import '../../../common/widgets/builder/models_error_future_builder.dart';
 import '../controller/season_controller.dart';
 
@@ -27,7 +26,7 @@ class SeasonScreen extends ConsumerWidget {
           child: ModelsErrorFutureBuilder(
             future: ref.watch(seasonControllerProvider).getModels(),
             onPressed: (season) => {setSeason(season as SeasonApiModel)},
-            onDialogCancel: () => backToMainMenu.call(),
+            backToMainMenu: () => backToMainMenu,
             context: context,
           ),
         ),

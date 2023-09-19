@@ -1,15 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:trus_app/colors.dart';
-import 'package:trus_app/common/widgets/loader.dart';
-import 'package:trus_app/features/match/controller/match_controller.dart';
-import 'package:trus_app/models/match_model.dart';
-import 'package:trus_app/models/season_model.dart';
 
 import '../../../common/widgets/builder/models_error_future_builder.dart';
-import '../../../common/widgets/builder/error_future_builder.dart';
 import '../../../common/widgets/dropdown/season_api_dropdown.dart';
-import '../../../common/widgets/dropdown/season_dropdown.dart';
 import '../../../models/api/match/match_api_model.dart';
 import '../controller/match_screen_controller.dart';
 
@@ -61,7 +54,7 @@ class MatchScreen extends ConsumerWidget {
                   rebuildStream: ref.watch(matchScreenControllerProvider)
                       .streamMatches(),
                   onPressed: (match) => {setMatch(match as MatchApiModel)},
-                  onDialogCancel: () => backToMainMenu.call(),
+                  backToMainMenu: () => backToMainMenu(),
                   context: context,
                 ),
               ],

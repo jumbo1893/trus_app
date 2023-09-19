@@ -2,11 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:riverpod/riverpod.dart';
 import 'package:trus_app/features/general/read_operations.dart';
 import 'package:trus_app/models/api/interfaces/model_to_string.dart';
-import 'package:trus_app/models/user_model.dart';
 
 import '../../../common/repository/exception/internal_snackbar_exception.dart';
 import '../../../models/api/user_api_model.dart';
-import '../../general/crud_operations.dart';
 import '../repository/auth_repository.dart';
 
 final authControllerProvider = Provider((ref) {
@@ -33,9 +31,7 @@ class AuthController implements ReadOperations {
   Future<void> changeWritePermissions(
       BuildContext context, UserApiModel user,
       ) async {
-    UserApiModel? currentUser = await getUserData();
-    print(user);
-    print(currentUser);
+    await getUserData();
     if(user == await getUserData()) {
 
       throw InternalSnackBarException("Nemůžeš změnit práva sám sobě");
