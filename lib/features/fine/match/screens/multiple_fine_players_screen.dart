@@ -55,7 +55,7 @@ class _MultipleFinePlayersScreenState extends ConsumerState<MultipleFinePlayersS
               Padding(
                 padding: const EdgeInsets.only(bottom: 16.0),
                 child: ConfirmButton(
-                  text: "Potvrď",
+                  text: "Potvrď změny",
                   context: context,
                   confirmOperations: ref
                       .read(finePlayerController),

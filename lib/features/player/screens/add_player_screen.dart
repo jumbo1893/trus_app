@@ -81,7 +81,7 @@ class _AddPlayerScreenState extends ConsumerState<AddPlayerScreen> {
           ),
           const SizedBox(height: 10),
           CrudButton(
-            text: "Přidej hráče",
+            text: "Potvrď",
             context: context,
             crud: Crud.create,
             crudOperations: ref.read(playerControllerProvider),

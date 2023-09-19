@@ -76,7 +76,7 @@ class _AddSeasonScreenState extends ConsumerState<AddSeasonScreen> {
           ),
           const SizedBox(height: 10),
           CrudButton(
-            text: "Přidej sezonu",
+            text: "Potvrď",
             context: context,
             crud: Crud.create,
             crudOperations: ref.read(seasonControllerProvider),

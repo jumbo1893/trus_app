@@ -61,7 +61,7 @@ class _AddFineScreenState extends ConsumerState<AddFineScreen> {
         const SizedBox(height: 10),
         const SizedBox(height: 10),
         CrudButton(
-          text: "Přidej pokutu",
+          text: "Potvrď",
           context: context,
           crud: Crud.create,
           crudOperations: ref.read(fineControllerProvider),
