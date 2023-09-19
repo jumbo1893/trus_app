@@ -12,41 +12,9 @@ String validateEmptyField(String value) {
   return emptyFieldValidation;
 }
 
-String validateSeasons(List<SeasonModel>? allSeasons, DateTime seasonFrom, DateTime seasonTo, SeasonModel? currentSeason) {
+String validateSeasonDate(DateTime seasonFrom, DateTime seasonTo) {
   if (!seasonFrom.isBefore(seasonTo)) {
     return endCalendarDateNotOlderValidation;
-  }
-  else if (allSeasons != null || allSeasons!.isNotEmpty) {
-    return _validateSeasonsCollision(allSeasons, seasonFrom, seasonTo, currentSeason);
-  }
-
-  return "";
-}
-
-String _validateSeasonsCollision(List<SeasonModel> allSeasons, DateTime seasonFrom, DateTime seasonTo, SeasonModel? currentSeason) {
-  for(SeasonModel seasonModel in allSeasons) {
-    if (currentSeason != null && seasonModel.id != currentSeason.id) {
-      if ((!seasonFrom.isBefore(seasonModel.fromDate) &&
-          !seasonFrom.isAfter(seasonModel.toDate)) ||
-          (!seasonTo.isBefore(seasonModel.fromDate) &&
-              !seasonTo.isAfter(seasonModel.toDate)) ||
-          (!seasonFrom.isAfter(seasonModel.fromDate) &&
-              !seasonTo.isBefore(seasonModel.toDate))) {
-        return dateCollisionValidation;
-      }
-
-    }
-    else if (currentSeason == null) {
-      if ((!seasonFrom.isBefore(seasonModel.fromDate) &&
-          !seasonFrom.isAfter(seasonModel.toDate)) ||
-          (!seasonTo.isBefore(seasonModel.fromDate) &&
-              !seasonTo.isAfter(seasonModel.toDate)) ||
-          (!seasonFrom.isAfter(seasonModel.fromDate) &&
-              !seasonTo.isBefore(seasonModel.toDate))) {
-        return dateCollisionValidation;
-      }
-
-    }
   }
   return "";
 }

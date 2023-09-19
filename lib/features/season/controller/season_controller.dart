@@ -136,6 +136,18 @@ class SeasonController implements CrudOperations, ReadOperations {
   bool validateFields() {
     String errorText = validateEmptyField(seasonName.trim());
     nameErrorTextController.add(errorText);
+    return validateNameField() && validateCalendarField();
+  }
+
+  bool validateNameField() {
+    String errorText = validateEmptyField(seasonName.trim());
+    nameErrorTextController.add(errorText);
+    return errorText.isEmpty;
+  }
+
+  bool validateCalendarField() {
+    String errorText = validateSeasonDate(seasonFromDate, seasonToDate);
+    toDateErrorTextController.add(errorText);
     return errorText.isEmpty;
   }
 

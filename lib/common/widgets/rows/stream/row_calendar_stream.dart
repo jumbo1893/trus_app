@@ -41,19 +41,8 @@ class _RowCalendarStream extends State<RowCalendarStream> {
     super.dispose();
   }
 
-  void watchTextFieldErrors() {
-    if(widget.errorTextStream != null) {
-      widget.errorTextStream!.listen((event) {
-        setState(() {
-          errorText = event;
-        });
-      });
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
-    watchTextFieldErrors();
     final size = MediaQuery.of(context).size;
     return StreamBuilder<DateTime>(
       stream: widget.dateStream,
@@ -71,17 +60,25 @@ class _RowCalendarStream extends State<RowCalendarStream> {
                 child: CustomText(text: widget.textFieldText)),
             SizedBox(
               width: (size.width / 1.5) - widget.padding,
-              child: CalendarTextField(
-                textController: _calendarController,
-                errorText: errorText,
-                onCalendarIconPressed: () {
-                  showCalendar(context, date).then((value) {
-                    widget.onDateChanged(value);
-                    _calendarController.text = dateTimeToString(value);
-                  }, onError: (e) {
-                    print(e);
-                  });
-                },
+              child: StreamBuilder<String>(
+                stream: widget.errorTextStream,
+                builder: (context, errorTextSnapshot) {
+                  if (errorTextSnapshot.connectionState != ConnectionState.waiting && errorTextSnapshot.hasData) {
+                    errorText = errorTextSnapshot.data!;
+                  }
+                  return CalendarTextField(
+                    textController: _calendarController,
+                    errorText: errorText,
+                    onCalendarIconPressed: () {
+                      showCalendar(context, date).then((value) {
+                        widget.onDateChanged(value);
+                        _calendarController.text = dateTimeToString(value);
+                      }, onError: (e) {
+                        print(e);
+                      });
+                    },
+                  );
+                }
               ),
             ),
           ],

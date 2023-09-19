@@ -1,6 +1,6 @@
 //validace
 String emptyFieldValidation = "toto musíš vyplnit";
-String endCalendarDateNotOlderValidation = "Konečné datum musí být starší";
+String endCalendarDateNotOlderValidation = "Konečné datum musí být starší než počáteční";
 String dateCollisionValidation = "Datum se kryje s jinými sezonami";
 String amountIsNotPositiveNumberValidation = "Částka musí být vyšší než 0";
 String amountIsNotANumberValidation = "Částka musí být číselná hodnota";
