@@ -20,13 +20,12 @@ class HomeScreen extends ConsumerStatefulWidget {
 
 class _HomeScreenState extends ConsumerState<HomeScreen> {
   static const double padding = 20;
-  int? playerId;
 
   @override
   Widget build(BuildContext context) {
     final size = MediaQuery.of(context).size;
     return FutureBuilder<HomeSetup>(
-        future: ref.read(homeControllerProvider).setupHome(playerId),
+        future: ref.read(homeControllerProvider).setupHome(),
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting ||
               !snapshot.hasData) {
@@ -125,7 +124,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                         : PickChartPlayer(
                             size: size,
                             padding: padding,
-                            onPlayerSelected: (player) => ref.watch(homeControllerProvider).setupPlayerId(player.id!).whenComplete(() => setState(() {playerId = player.id!;})),
+                            onPlayerSelected: (player) => ref.watch(homeControllerProvider).setupPlayerId(player.id!).whenComplete(() => setState(() {ref.read(homeControllerProvider).playerId = player.id!;})),
                           ),
                     RandomFactBox(
                       padding: padding,

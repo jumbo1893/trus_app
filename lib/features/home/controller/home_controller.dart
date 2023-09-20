@@ -35,6 +35,7 @@ class HomeController implements ReadOperations {
   String birthday = "";
   List<String> randomFacts = [];
   Chart? chart;
+  int? playerId;
 
   HomeController({
     required this.homeApiService,
@@ -82,7 +83,7 @@ class HomeController implements ReadOperations {
     await authRepository.editCurrentUser(null, null, playerId);
   }
 
-  Future<HomeSetup> setupHome(int? playerId) async {
+  Future<HomeSetup> setupHome() async {
     HomeSetup homeSetup = await homeApiService.setupHome(playerId);
     birthday = homeSetup.nextBirthday;
     randomFacts = homeSetup.randomFacts;
