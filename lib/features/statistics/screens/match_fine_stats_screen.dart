@@ -150,6 +150,7 @@ class _MatchFineStatsScreenState extends ConsumerState<MatchFineStatsScreen> {
                               .setFineDetail(model);},
                           backToMainMenu: () => widget.backToMainMenu(),
                           context: context,
+                          scrollable: false,
                         ),
                       ],
                     ),

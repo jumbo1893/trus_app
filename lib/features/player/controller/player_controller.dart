@@ -45,6 +45,8 @@ class PlayerController implements CrudOperations, ReadOperations {
     fanController.add(false);
     activeController.add(true);
     nameErrorTextController.add("");
+    playerFan = false;
+    playerActive = true;
   }
 
   void setFieldsToPlayer(PlayerApiModel player) {

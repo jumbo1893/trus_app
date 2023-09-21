@@ -150,6 +150,7 @@ class _PlayerFineStatsScreenState extends ConsumerState<PlayerFineStatsScreen> {
                               .setFineDetail(model);},
                           backToMainMenu: () => widget.backToMainMenu(),
                           context: context,
+                          scrollable: false,
                         ),
                       ],
                     ),

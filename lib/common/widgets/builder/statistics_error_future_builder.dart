@@ -92,6 +92,7 @@ class StatisticsErrorFutureBuilder<T> extends StatelessWidget {
                 ),
                 ListView.builder(
                   shrinkWrap: true,
+                  physics: const NeverScrollableScrollPhysics(),
                   itemCount: streamSnapshot.data?.length ?? snapshot.data!.length,
                   itemBuilder: (context, index) {
                     var data = streamSnapshot.data?[index] ?? snapshot.data![index];

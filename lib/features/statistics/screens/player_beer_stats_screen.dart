@@ -147,6 +147,7 @@ class _PlayerBeerStatsScreenState extends ConsumerState<PlayerBeerStatsScreen> {
                           onPressed: (object) {},
                           backToMainMenu: () => widget.backToMainMenu(),
                           context: context,
+                          scrollable: false,
                         ),
                       ],
                     ),

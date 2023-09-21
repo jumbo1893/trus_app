@@ -80,47 +80,49 @@ class _FineMatchScreenState extends ConsumerState<FineMatchScreen> {
               ),
               body: Padding(
                 padding: const EdgeInsets.all(padding),
-                child: Column(children: [
-                  Row(
-                    children: [
-                      SizedBox(
-                          width: size.width / 2 - padding,
-                          child: SeasonApiDropdown(
-                            onSeasonSelected: (season) => ref
-                                .watch(fineMatchControllerProvider)
-                                .setSeason(season),
-                            seasonList: ref
-                                .watch(fineMatchControllerProvider)
-                                .getSeasons(),
-                            pickedSeason: ref
-                                .watch(fineMatchControllerProvider)
-                                .pickedSeason(),
-                            initData: () => ref
-                                .watch(fineMatchControllerProvider)
-                                .setInitSeason(),
-                          )),
-                    ],
-                  ),
-                  FineMatchListview(
-                    initPlayerStream: () => ref
-                        .read(fineMatchControllerProvider)
-                        .initPlayersStream(),
-                    playersStream:
-                        ref.watch(fineMatchControllerProvider).players(),
-                    multiselectStream:
-                        ref.watch(fineMatchControllerProvider).multiselect(),
-                    onPlayerSelected: (player) => {
-                      widget.setPlayer(player),
-                      widget.setMatch(
-                          ref.read(fineMatchControllerProvider).pickedMatch!)
-                    },
-                    onPlayerChecked: (player) => ref
-                        .read(fineMatchControllerProvider)
-                        .setCheckedPlayer(player),
-                    checkedPlayersStream:
-                        ref.watch(fineMatchControllerProvider).checkedPlayers(),
-                  )
-                ]),
+                child: SingleChildScrollView(
+                  child: Column(children: [
+                    Row(
+                      children: [
+                        SizedBox(
+                            width: size.width / 2 - padding,
+                            child: SeasonApiDropdown(
+                              onSeasonSelected: (season) => ref
+                                  .watch(fineMatchControllerProvider)
+                                  .setSeason(season),
+                              seasonList: ref
+                                  .watch(fineMatchControllerProvider)
+                                  .getSeasons(),
+                              pickedSeason: ref
+                                  .watch(fineMatchControllerProvider)
+                                  .pickedSeason(),
+                              initData: () => ref
+                                  .watch(fineMatchControllerProvider)
+                                  .setInitSeason(),
+                            )),
+                      ],
+                    ),
+                    FineMatchListview(
+                      initPlayerStream: () => ref
+                          .read(fineMatchControllerProvider)
+                          .initPlayersStream(),
+                      playersStream:
+                          ref.watch(fineMatchControllerProvider).players(),
+                      multiselectStream:
+                          ref.watch(fineMatchControllerProvider).multiselect(),
+                      onPlayerSelected: (player) => {
+                        widget.setPlayer(player),
+                        widget.setMatch(
+                            ref.read(fineMatchControllerProvider).pickedMatch!)
+                      },
+                      onPlayerChecked: (player) => ref
+                          .read(fineMatchControllerProvider)
+                          .setCheckedPlayer(player),
+                      checkedPlayersStream:
+                          ref.watch(fineMatchControllerProvider).checkedPlayers(),
+                    )
+                  ]),
+                ),
               ),
               floatingActionButtonLocation:
                   FloatingActionButtonLocation.endDocked,

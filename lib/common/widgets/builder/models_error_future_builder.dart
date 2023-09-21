@@ -11,6 +11,7 @@ class ModelsErrorFutureBuilder<T> extends StatelessWidget {
   final Function(ModelToString model) onPressed;
   final BuildContext context;
   final VoidCallback backToMainMenu;
+  final bool? scrollable;
   const ModelsErrorFutureBuilder({
     Key? key,
     required this.future,
@@ -18,6 +19,7 @@ class ModelsErrorFutureBuilder<T> extends StatelessWidget {
     required this.context,
     required this.backToMainMenu,
     this.rebuildStream,
+    this.scrollable,
   }) : super(key: key);
 
 
@@ -42,6 +44,7 @@ class ModelsErrorFutureBuilder<T> extends StatelessWidget {
             }
             return ListView.builder(
               shrinkWrap: true,
+              physics: scrollable!=null ? (scrollable! ? null : const NeverScrollableScrollPhysics()) : null,
               itemCount: streamSnapshot.data?.length ?? snapshot.data!.length,
               itemBuilder: (context, index) {
                 var data = streamSnapshot.data?[index] ?? snapshot.data![index];

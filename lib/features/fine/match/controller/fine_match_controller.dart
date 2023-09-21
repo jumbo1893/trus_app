@@ -111,11 +111,11 @@ class FineMatchController implements MatchReader {
 
   void checkOnlyPlayers(bool player) {
     cleanCheckPlayers();
-    if(!player) {
-      checkedPlayersList = playersInMatchList;
+    if(player) {
+      checkedPlayersList.addAll(playersInMatchList);
     }
     else {
-      checkedPlayersList = otherPlayersList;
+      checkedPlayersList.addAll(otherPlayersList);
     }
   }
 
@@ -124,7 +124,7 @@ class FineMatchController implements MatchReader {
     //všichni hráči
       case 1:
         {
-          checkedPlayersList = allPlayersList;
+          checkedPlayersList.addAll(allPlayersList);
           break;
         }
     //nehrající

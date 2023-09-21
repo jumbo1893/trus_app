@@ -70,6 +70,8 @@ class MatchController implements CrudOperations {
     seasons = matchSetup.seasonList;
     players = matchSetup.playerList;
     fans = matchSetup.fanList;
+    matchPlayers = [];
+    matchFans = [];
     checkedPlayerController.add([]);
     checkedFanController.add([]);
     homeController.add(true);
