@@ -91,6 +91,7 @@ class _EditPlayerScreenState extends ConsumerState<EditPlayerScreen> {
             onOperationComplete: (id) {
               widget.onButtonConfirmPressed();
             },
+            backToMainMenu: () => widget.backToMainMenu(),
             id: widget.playerModel!.id!,
           ),
           CrudButton(
@@ -103,6 +104,7 @@ class _EditPlayerScreenState extends ConsumerState<EditPlayerScreen> {
             },
             id: widget.playerModel!.id!,
             modelToString: widget.playerModel!,
+            backToMainMenu: () => widget.backToMainMenu(),
           ),
         ],
         loadingScreen: null,

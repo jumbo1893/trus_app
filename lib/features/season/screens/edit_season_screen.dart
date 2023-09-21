@@ -83,6 +83,7 @@ class _EditSeasonScreenState extends ConsumerState<EditSeasonScreen> {
             onOperationComplete: (id) {
               widget.onButtonConfirmPressed();
             },
+            backToMainMenu: () => widget.backToMainMenu(),
             id: widget.seasonModel!.id!,
           ),
           CrudButton(
@@ -93,6 +94,7 @@ class _EditSeasonScreenState extends ConsumerState<EditSeasonScreen> {
             onOperationComplete: (id) {
               widget.onButtonConfirmPressed();
             },
+            backToMainMenu: () => widget.backToMainMenu(),
             id: widget.seasonModel!.id!,
             modelToString: widget.seasonModel!,
           ),

@@ -99,6 +99,7 @@ class _EditFineScreenState extends ConsumerState<EditFineScreen> {
             onOperationComplete: (id) {
               widget.onButtonConfirmPressed();
             },
+            backToMainMenu: () => widget.backToMainMenu(),
             id: widget.fineModel!.id!,
           ),
           CrudButton(
@@ -109,6 +110,7 @@ class _EditFineScreenState extends ConsumerState<EditFineScreen> {
             onOperationComplete: (id) {
               widget.onButtonConfirmPressed();
             },
+            backToMainMenu: () => widget.backToMainMenu(),
             id: widget.fineModel!.id!,
             modelToString: widget.fineModel!,
           ),

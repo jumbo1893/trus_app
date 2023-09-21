@@ -140,6 +140,7 @@ class _AddMatchScreenState extends ConsumerState<AddMatchScreen> {
                     widget.setMatchId(id);
                     widget.onAddMatchPressed();
                   },
+                  backToMainMenu: () => widget.backToMainMenu(),
                 ),
                 CrudButton(
                   text: "Potvrď a přejdi ke gólům",
@@ -150,6 +151,7 @@ class _AddMatchScreenState extends ConsumerState<AddMatchScreen> {
                     widget.setMatchId(id);
                     widget.onChangePlayerGoalsPressed();
                   },
+                  backToMainMenu: () => widget.backToMainMenu(),
                 ),
               ],
             );

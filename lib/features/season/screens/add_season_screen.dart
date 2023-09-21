@@ -75,6 +75,7 @@ class _AddSeasonScreenState extends ConsumerState<AddSeasonScreen> {
             onOperationComplete: (id) {
               widget.onAddSeasonPressed();
             },
+            backToMainMenu: () => widget.backToMainMenu(),
           )
         ],
         loadingScreen: null,

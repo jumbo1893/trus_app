@@ -15,6 +15,7 @@ class CrudButton extends StatefulWidget {
   final CrudOperations crudOperations;
   final BuildContext context;
   final Function(int) onOperationComplete;
+  final VoidCallback backToMainMenu;
   final int? id;
   final ModelToString? modelToString;
 
@@ -25,6 +26,7 @@ class CrudButton extends StatefulWidget {
     required this.crud,
     required this.crudOperations,
     required this.onOperationComplete,
+    required this.backToMainMenu,
     this.id,
     this.modelToString,
   }) : super(key: key);
@@ -74,7 +76,7 @@ class _CrudButtonState extends State<CrudButton> {
       case Crud.create:
         ModelToString? response = await executeApi<ModelToString?>(() async {
           return await widget.crudOperations.addModel();
-        },() => widget.onOperationComplete.call(-1), context, false);
+        },() => widget.backToMainMenu.call(), context, false);
         if (response != null) {
           showSnackBar(
             context: widget.context,
@@ -89,7 +91,7 @@ class _CrudButtonState extends State<CrudButton> {
       case Crud.update:
         String? response = await executeApi<String?>(() async {
           return await widget.crudOperations.editModel(widget.id!);
-        },() => widget.onOperationComplete.call(widget.id!), context, false);
+        },() => widget.backToMainMenu.call(), context, false);
         if (response != null) {
           showSnackBar(context: widget.context, content: response);
           widget.onOperationComplete.call(widget.id!);
@@ -116,7 +118,7 @@ class _CrudButtonState extends State<CrudButton> {
   Future<void> deleteModel() async {
     String? response = await executeApi<String?>(() async {
       return await widget.crudOperations.deleteModel(widget.id!);
-    },() => widget.onOperationComplete.call(widget.id!), context, false);
+    },() => widget.backToMainMenu.call(), context, false);
     if(response != null) {
       showSnackBar(context: context, content: response);
       widget.onOperationComplete.call(widget.id!);

@@ -100,6 +100,7 @@ class _GoalScreenState extends ConsumerState<GoalScreen> {
                         onOperationComplete: () {
                           widget.onAddGoalsPressed();
                         },
+                        backToMainMenu: () => widget.backToMainMenu(),
                       ),
                     )
                   ],

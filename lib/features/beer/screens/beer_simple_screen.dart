@@ -119,6 +119,7 @@ class _BeerSimpleScreenState extends ConsumerState<BeerSimpleScreen> {
                       context: context,
                       confirmOperations: ref.read(beerControllerProvider),
                       onOperationComplete: () => {widget.setMatch(ref.read(beerControllerProvider).pickedMatch!), widget.onButtonConfirmPressed()},
+                      backToMainMenu: () => widget.backToMainMenu(),
                       id: -1,
                     ),
                   ),

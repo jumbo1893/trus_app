@@ -86,6 +86,7 @@ class _AddPlayerScreenState extends ConsumerState<AddPlayerScreen> {
             onOperationComplete: (id) {
               widget.onAddPlayerPressed();
             },
+            backToMainMenu: () => widget.backToMainMenu(),
           )
         ],
         loadingScreen: null,

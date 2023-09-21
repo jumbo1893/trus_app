@@ -67,6 +67,7 @@ class _AddFineScreenState extends ConsumerState<AddFineScreen> {
           onOperationComplete: (id) {
             widget.onAddFinePressed();
           },
+          backToMainMenu: () => widget.backToMainMenu(),
         )
       ], loadingScreen: null,
     );

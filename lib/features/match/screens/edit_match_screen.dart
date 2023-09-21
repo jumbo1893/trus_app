@@ -143,6 +143,7 @@ class _EditMatchScreenState extends ConsumerState<EditMatchScreen> {
                   onOperationComplete: (id) {
                     widget.onButtonConfirmPressed();
                   },
+                  backToMainMenu: () => widget.backToMainMenu(),
                   id: widget.matchModel!.id!,
                 ),
                 CrudButton(
@@ -153,6 +154,7 @@ class _EditMatchScreenState extends ConsumerState<EditMatchScreen> {
                   onOperationComplete: (id) {
                     widget.onButtonConfirmPressed();
                   },
+                  backToMainMenu: () => widget.backToMainMenu(),
                   id: widget.matchModel!.id!,
                   modelToString: widget.matchModel!,
                 ),
@@ -166,6 +168,7 @@ class _EditMatchScreenState extends ConsumerState<EditMatchScreen> {
                     widget.setMatchId(id);
                     widget.onChangePlayerGoalsPressed();
                   },
+                  backToMainMenu: () => widget.backToMainMenu(),
                 ),
               ],
             );

@@ -12,6 +12,7 @@ class ConfirmButton extends StatefulWidget {
   final BuildContext context;
   final VoidCallback onOperationComplete;
   final ConfirmOperations confirmOperations;
+  final VoidCallback backToMainMenu;
   final int id;
 
   const ConfirmButton({
@@ -20,6 +21,7 @@ class ConfirmButton extends StatefulWidget {
     required this.context,
     required this.confirmOperations,
     required this.onOperationComplete,
+    required this.backToMainMenu,
     required this.id,
   }) : super(key: key);
 
@@ -66,7 +68,7 @@ class _ConfirmButtonState extends State<ConfirmButton> {
     });
     ConfirmToString? response = await executeApi<ConfirmToString>(() async {
       return await widget.confirmOperations.addModel(widget.id);
-    },() => widget.onOperationComplete(), context, false);
+    },() => widget.backToMainMenu.call(), context, false);
     if (response != null) {
       showSnackBar(context: widget.context, content: response.toStringForSnackBar());
       widget.onOperationComplete();

@@ -55,6 +55,7 @@ class _FinePlayerScreenState extends ConsumerState<FinePlayerScreen> {
                   onOperationComplete: () {
                     widget.onButtonConfirmPressed();
                   },
+                  backToMainMenu: () => widget.backToMainMenu(),
                   id: -1,
                 ),
               )

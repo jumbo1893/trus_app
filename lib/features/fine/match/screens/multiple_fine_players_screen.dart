@@ -55,6 +55,7 @@ class _MultipleFinePlayersScreenState extends ConsumerState<MultipleFinePlayersS
                   onOperationComplete: () {
                     widget.onButtonConfirmPressed();
                   },
+                  backToMainMenu: () => widget.backToMainMenu(),
                   id: -1,),
               )
             ],
