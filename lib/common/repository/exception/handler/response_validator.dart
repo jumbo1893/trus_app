@@ -7,6 +7,7 @@ import '../field_validation_exception.dart';
 import '../internal_snackbar_exception.dart';
 import '../login_exception.dart';
 import '../model/error_response.dart';
+import '../model/login_expired_exception.dart';
 import '../server_exception.dart';
 import 'error_statutes.dart';
 
@@ -20,13 +21,13 @@ class ResponseValidator {
       final decodedBody = json.decode(utf8.decode(response.bodyBytes));
       ErrorResponse errorResponse = ErrorResponse.fromJson(decodedBody);
       if(errorResponse.code == notLoggedIn) {
-        throw LoginException("Nelze pokračovat, nejsi přihlášenej!");
+        throw LoginExpiredException();
       }
       else {
         throw LoginException(errorResponse.message);
       }
     } else if (value == 403) {
-      throw ServerException('Nedostačující práva');
+      throw ServerException('Nedostačující práva na úpravu');
     } else if (value == 400) {
       try {
         final decodedBody = json.decode(utf8.decode(response.bodyBytes));

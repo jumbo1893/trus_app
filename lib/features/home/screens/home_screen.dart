@@ -9,6 +9,7 @@ import '../../../common/widgets/random_fact_box.dart';
 import '../../../common/widgets/loader.dart';
 import '../../../models/api/home/home_setup.dart';
 import '../../../models/pkfl/pkfl_match.dart';
+import '../../general/error/api_executor.dart';
 import '../controller/home_controller.dart';
 
 class HomeScreen extends ConsumerStatefulWidget {
@@ -24,8 +25,13 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   @override
   Widget build(BuildContext context) {
     final size = MediaQuery.of(context).size;
-    return FutureBuilder<HomeSetup>(
-        future: ref.read(homeControllerProvider).setupHome(),
+    return FutureBuilder<HomeSetup?>(
+        //future: ref.read(homeControllerProvider).setupHome(),
+      future: executeApi<HomeSetup?>(() async {
+        return await ref.read(homeControllerProvider).setupHome();
+      },() => setState(() {
+
+      }), context, false),
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting ||
               !snapshot.hasData) {
