@@ -61,7 +61,7 @@ class BeerController implements MatchReader, StreamAddController, ConfirmOperati
   });
 
   Future<void> initScreen(int? matchId) async {
-    if(matchId == null || matchId == MatchApiModel.dummy().id) {
+    if(matchId == null || matchId == MatchApiModel.dummy().id || matchId < 0) {
       await setupBeers(null, null);
     }
     else {
