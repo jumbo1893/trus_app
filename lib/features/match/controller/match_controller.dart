@@ -83,6 +83,7 @@ class MatchController implements CrudOperations {
     matchName = matchSetup.match!.name;
     originalOpponentName = matchSetup.match!.name;
     nameController.add(matchSetup.match!.name);
+    matchDate = matchSetup.match!.date;
     dateController.add(matchSetup.match!.date);
     setSeason(matchSetup.primarySeason);
     seasons = matchSetup.seasonList;
@@ -93,6 +94,7 @@ class MatchController implements CrudOperations {
     matchFans = _getListOfPlayersByIds(fans, matchSetup.match!.playerIdList);
     checkedPlayerController.add(matchPlayers);
     checkedFanController.add(matchFans);
+    matchHome = matchSetup.match!.home;
     homeController.add(matchSetup.match!.home);
     nameErrorTextController.add("");
     playerErrorTextController.add("");
