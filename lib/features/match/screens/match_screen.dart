@@ -29,35 +29,38 @@ class MatchScreen extends ConsumerWidget {
       return Scaffold(
           body: Padding(
             padding: const EdgeInsets.all(padding),
-            child: Column(
-              children: [
-                Row(
-                  children: [
-                    SizedBox(
-                        width: size.width / 2 - padding,
-                        child: SeasonApiDropdown(
-                          onSeasonSelected: (season) =>
-                              ref.watch(matchScreenControllerProvider)
-                                  .setPickedSeason(season),
-                          seasonList: ref.watch(matchScreenControllerProvider)
-                              .getSeasons(),
-                          pickedSeason: ref.watch(matchScreenControllerProvider)
-                              .pickedSeason(),
-                          initData: () =>
-                              ref.watch(matchScreenControllerProvider)
-                                  .setCurrentSeason(),
-                        )),
-                  ],
-                ),
-                ModelsErrorFutureBuilder(
-                  future: ref.watch(matchScreenControllerProvider).getModels(),
-                  rebuildStream: ref.watch(matchScreenControllerProvider)
-                      .streamMatches(),
-                  onPressed: (match) => {setMatch(match as MatchApiModel)},
-                  backToMainMenu: () => backToMainMenu(),
-                  context: context,
-                ),
-              ],
+            child: SingleChildScrollView(
+              child: Column(
+                children: [
+                  Row(
+                    children: [
+                      SizedBox(
+                          width: size.width / 2 - padding,
+                          child: SeasonApiDropdown(
+                            onSeasonSelected: (season) =>
+                                ref.watch(matchScreenControllerProvider)
+                                    .setPickedSeason(season),
+                            seasonList: ref.watch(matchScreenControllerProvider)
+                                .getSeasons(),
+                            pickedSeason: ref.watch(matchScreenControllerProvider)
+                                .pickedSeason(),
+                            initData: () =>
+                                ref.watch(matchScreenControllerProvider)
+                                    .setCurrentSeason(),
+                          )),
+                    ],
+                  ),
+                  ModelsErrorFutureBuilder(
+                    future: ref.watch(matchScreenControllerProvider).getModels(),
+                    rebuildStream: ref.watch(matchScreenControllerProvider)
+                        .streamMatches(),
+                    onPressed: (match) => {setMatch(match as MatchApiModel)},
+                    backToMainMenu: () => backToMainMenu(),
+                    context: context,
+                    scrollable: false,
+                  ),
+                ],
+              ),
             ),
           ),
           floatingActionButton: FloatingActionButton(
