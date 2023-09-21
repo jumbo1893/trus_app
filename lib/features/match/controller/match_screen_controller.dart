@@ -54,7 +54,12 @@ class MatchScreenController implements ReadOperations {
   }
 
   void setCurrentSeason() {
-    setPickedSeason(returnCurrentSeason(seasonList));
+    if(screenPickedSeason == null) {
+      setPickedSeason(returnCurrentSeason(seasonList));
+    }
+    else {
+      setPickedSeason(returnSeasonById(seasonList, screenPickedSeason!.id!));
+    }
   }
 
   Future<void> setPickedSeason(SeasonApiModel season) async {
