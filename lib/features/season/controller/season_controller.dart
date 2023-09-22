@@ -42,6 +42,7 @@ class SeasonController implements CrudOperations, ReadOperations {
   }
 
   void loadNewSeason() {
+    seasonName = "";
     nameController.add("");
     setDatesToNewSeason();
     resetErrorTextControllers();
@@ -56,13 +57,19 @@ class SeasonController implements CrudOperations, ReadOperations {
   void setDatesToNewSeason() {
     int year = DateTime.now().year;
     int month = DateTime.now().month;
+    DateTime fromDate;
+    DateTime toDate;
     if (month <= 6) {
-      fromDateController.add(DateTime.utc(year, 1, 1));
-      toDateController.add(DateTime.utc(year, 6, 30));
+      fromDate = DateTime.utc(year, 1, 1);
+      toDate = DateTime.utc(year, 1, 1);
     } else {
-      fromDateController.add(DateTime.utc(year, 7, 1));
-      toDateController.add(DateTime.utc(year, 12, 31));
+      fromDate = DateTime.utc(year, 9, 1);
+      toDate = DateTime.utc(year, 12, 31);
     }
+    seasonFromDate = fromDate;
+    seasonToDate = toDate;
+    fromDateController.add(fromDate);
+    toDateController.add(toDate);
   }
 
   void setFieldsToSeason(SeasonApiModel season) {

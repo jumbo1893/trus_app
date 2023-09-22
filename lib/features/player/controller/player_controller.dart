@@ -40,7 +40,9 @@ class PlayerController implements CrudOperations, ReadOperations {
   }
 
   void loadNewPlayer() {
+    playerName = "";
     nameController.add("");
+    playerDate = DateTime.utc(DateTime.now().year, 1, 1);
     dateController.add(DateTime.utc(DateTime.now().year, 1, 1));
     fanController.add(false);
     activeController.add(true);

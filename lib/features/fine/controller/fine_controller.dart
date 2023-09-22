@@ -57,6 +57,7 @@ class FineController implements CrudOperations, ReadOperations {
   void setFieldsToPlayer(FineApiModel fine) {
     fineName = fine.name;
     fineAmount = fine.amount.toString();
+    fineInactive = fine.inactive;
   }
 
   void setEditControllers(FineApiModel fine) {
