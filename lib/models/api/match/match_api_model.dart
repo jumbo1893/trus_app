@@ -52,7 +52,7 @@ class MatchApiModel implements ModelToString, JsonAndHttpConverter {
     return {
       "name": name,
       "id": id,
-      "date": date.toIso8601String(),
+      "date": formatDateForJson(date),
       "home": home,
       "seasonId": seasonId,
       "playerIdList": playerIdList,

@@ -111,7 +111,7 @@ class PlayerApiModel implements ModelToString, JsonAndHttpConverter {
     return {
       "name": name,
       "id": id,
-      "birthday": birthday.toIso8601String(),
+      "birthday": formatDateForJson(birthday),
       "fan": fan,
       "active": active,
     };

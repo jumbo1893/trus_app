@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-
+import 'package:intl/intl.dart';
 
 Future<DateTime> showCalendar(BuildContext context, DateTime? initialDate) async {
   DateTime? chosenDateTime;
@@ -25,6 +25,12 @@ bool isSameDay(DateTime dateTime1, DateTime dateTime2) {
     return true;
   }
   return false;
+}
+
+String formatDateForJson(DateTime dateTime) {
+  final formatter = DateFormat('yyyy-MM-ddTHH:mm:ss');
+  final returnDate = formatter.format(dateTime.toLocal());
+  return returnDate;
 }
 
 

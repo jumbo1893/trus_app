@@ -1,5 +1,6 @@
 import 'package:trus_app/config.dart';
 
+import '../../common/utils/calendar.dart';
 import 'interfaces/json_and_http_converter.dart';
 
 class NotificationApiModel implements JsonAndHttpConverter {
@@ -22,7 +23,7 @@ class NotificationApiModel implements JsonAndHttpConverter {
     return {
       "id": id,
       "userName": userName,
-      "date": date.toIso8601String(),
+      "date": formatDateForJson(date),
       "title": title,
       "text": text,
     };

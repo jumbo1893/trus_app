@@ -32,8 +32,8 @@ class SeasonApiModel implements ModelToString, JsonAndHttpConverter {
     return {
       "name": name,
       "id": id,
-      "fromDate": fromDate.toIso8601String(),
-      "toDate": toDate.toIso8601String(),
+      "fromDate": formatDateForJson(fromDate),
+      "toDate": formatDateForJson(toDate),
     };
   }
 
