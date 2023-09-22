@@ -76,6 +76,9 @@ class AppBarTitleManager {
         case 24:
           appBarTitle = "Nastavení uživatelů";
           break;
+        case 25:
+          appBarTitle = "Info o aplikaci";
+          break;
       }
       return appBarTitle;
   }

@@ -241,7 +241,7 @@ class BottomSheetNavigationManager {
                   color: Colors.orange,
                 ),
                 title: const Text("Informace o appce"),
-                onTap: () {},
+                onTap: () => onModalBottomSheetMenuTapped(26),
               ),
               ListTile(
                 leading: const Icon(

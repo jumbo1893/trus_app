@@ -29,6 +29,7 @@ import '../fine/screens/add_fine_screen.dart';
 import '../fine/screens/edit_fine_screen.dart';
 import '../general/error/api_executor.dart';
 import '../home/screens/home_screen.dart';
+import '../info/screens/info_screen.dart';
 import '../notification/screen/notification_screen.dart';
 import '../pkfl/screens/pkfl_table_screens.dart';
 import '../season/screens/add_season_screen.dart';
@@ -397,6 +398,9 @@ class _MainScreenState extends ConsumerState<MainScreen> {
               isFocused: isFocused(25),
               matchId: matchModel.id!,
               backToMainMenu: () => changeFragment(0),
+            ),
+            const InfoScreen(
+              //26
             ),
           ],
         ),
