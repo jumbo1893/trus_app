@@ -144,7 +144,7 @@ class FineController implements CrudOperations, ReadOperations {
   @override
   Future<String?> editModel(int id) async {
     if(validateFields()) {
-      FineApiModel response = await fineApiService.editFine(FineApiModel(
+      FineApiModel response = await fineApiService.editFine(FineApiModel(id: id,
           name: fineName, amount: int.parse(fineAmount), inactive: fineInactive), id);
 
       return response.toStringForEdit(originalFineName);

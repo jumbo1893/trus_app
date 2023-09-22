@@ -325,6 +325,7 @@ class MatchController implements CrudOperations {
     if (validateFields()) {
       MatchApiModel response = await matchApiService.editMatch(
           MatchApiModel.withPlayers(
+              id: id,
               name: matchName,
               date: matchDate,
               seasonId: matchSeason.id!,

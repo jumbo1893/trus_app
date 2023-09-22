@@ -143,7 +143,7 @@ class PlayerController implements CrudOperations, ReadOperations {
   @override
   Future<String?> editModel(int id) async {
     if(validateFields()) {
-      PlayerApiModel response = await playerApiService.editPlayer(PlayerApiModel(
+      PlayerApiModel response = await playerApiService.editPlayer(PlayerApiModel(id: id,
           name: playerName, birthday: playerDate, fan: playerFan, active: playerActive), id);
 
       return response.toStringForEdit(originalPlayerName);

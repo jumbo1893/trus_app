@@ -190,7 +190,7 @@ class SeasonController implements CrudOperations, ReadOperations {
     if (validateFields()) {
       try {
       SeasonApiModel response = await seasonApiService.editSeason(
-          SeasonApiModel(
+          SeasonApiModel(id: id,
               name: seasonName, toDate: seasonToDate, fromDate: seasonFromDate),
           id);
 
