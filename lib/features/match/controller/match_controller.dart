@@ -74,6 +74,7 @@ class MatchController implements CrudOperations {
     matchFans = [];
     checkedPlayerController.add([]);
     checkedFanController.add([]);
+    matchHome = true;
     homeController.add(true);
     nameErrorTextController.add("");
     playerErrorTextController.add("");
