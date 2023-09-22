@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:trus_app/colors.dart';
 
-class AppBarHeadline extends StatelessWidget with PreferredSizeWidget {
+class AppBarHeadline extends StatelessWidget implements PreferredSizeWidget {
   final String text;
 
   const AppBarHeadline({
