@@ -393,7 +393,7 @@ class _MainScreenState extends ConsumerState<MainScreen> {
             ),
             GoalScreen(
               //25
-              onAddGoalsPressed: () => changeFragment(4),
+              onAddGoalsPressed: () => changeFragment(0),
               isFocused: isFocused(25),
               matchId: matchModel.id!,
               backToMainMenu: () => changeFragment(0),
