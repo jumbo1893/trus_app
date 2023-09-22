@@ -1,5 +1,6 @@
 import 'package:trus_app/models/api/player_api_model.dart';
 
+import '../../../common/utils/calendar.dart';
 import '../interfaces/model_to_string.dart';
 import '../match/match_api_model.dart';
 
@@ -36,7 +37,7 @@ class BeerDetailedModel implements ModelToString {
   @override
   String listViewTitle() {
     if(match != null) {
-      return match!.listViewTitle();
+      return "${match!.listViewTitle()}, ${dateTimeToString(match!.date)}";
     }
     else if (player != null) {
       return player!.listViewTitle();
@@ -63,6 +64,6 @@ class BeerDetailedModel implements ModelToString {
 
   @override
   String toStringForListView() {
-    return "Počet piv: $beerNumber, počet panáků: $liquorNumber";
+    return "Počet piv: $beerNumber, počet panáků: $liquorNumber, celkem: ${beerNumber+liquorNumber} ";
   }
 }

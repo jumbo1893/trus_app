@@ -118,13 +118,17 @@ class MatchController implements CrudOperations {
   void setFieldsByPkflMatch() {
     matchName = pkflMatch!.opponent;
     nameController.add(pkflMatch!.opponent);
+    matchDate = pkflMatch!.date;
     dateController.add(pkflMatch!.date);
     setSeason(matchSetup.primarySeason);
     seasons = matchSetup.seasonList;
     players = matchSetup.playerList;
     fans = matchSetup.fanList;
+    matchPlayers = [];
+    matchFans = [];
     checkedPlayerController.add([]);
     checkedFanController.add([]);
+    matchHome = pkflMatch!.homeMatch;
     homeController.add(pkflMatch!.homeMatch);
     nameErrorTextController.add("");
     playerErrorTextController.add("");
