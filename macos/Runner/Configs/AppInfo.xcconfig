@@ -8,7 +8,7 @@
 PRODUCT_NAME = trus_app
 
 // The application's bundle identifier
-PRODUCT_BUNDLE_IDENTIFIER = com.jumbo.trusApp
+PRODUCT_BUNDLE_IDENTIFIER = com.jumbo.trus
 
 // The copyright displayed in application information
 PRODUCT_COPYRIGHT = Copyright © 2022 com.jumbo. All rights reserved.
