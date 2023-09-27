@@ -43,14 +43,17 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     });
     if (emailErrorText.isEmpty && passwordErrorText.isEmpty) {
       UserApiModel? user = await executeApi<UserApiModel?>(() async {
-        return await ref.read(authControllerProvider).signInWithEmail(email, password);
-      },() {}, context, true);
-      if(user != null) {
-        if(user.name == null || user.name!.isEmpty) {
-          Navigator.pushNamedAndRemoveUntil(context, UserInformationScreen.routeName, (route) => false);
-        }
-        else {
-          showSnackBarWithPostFrame(context: context, content: user.toStringForAdd());
+        return await ref
+            .read(authControllerProvider)
+            .signInWithEmail(email, password);
+      }, () {}, context, true);
+      if (user != null) {
+        if (user.name == null || user.name!.isEmpty) {
+          Navigator.pushNamedAndRemoveUntil(
+              context, UserInformationScreen.routeName, (route) => false);
+        } else {
+          showSnackBarWithPostFrame(
+              context: context, content: user.toStringForAdd());
           Navigator.pushNamed(context, MainScreen.routeName);
         }
       }
@@ -77,36 +80,42 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       body: SafeArea(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.center,
-                children: [
-                  Image.asset(
-                    'images/logo.jpg',
-                    height: 240,
-                    width: 215,
-                  ),
-                  const Text("Pro přihlášení zadej uživatelské jméno a heslo."),
-                  const SizedBox(height: 15),
-                  CustomTextField(
-                      textController: emailController,
-                      labelText: "email",
-                      errorText: emailErrorText),
-                  CustomTextField(
-                      textController: passwordController,
-                      labelText: "heslo",
-                      password: true,
-                      errorText: passwordErrorText),
-                  CustomButton(
-                      text: "Přihlaš se", onPressed: () => sendEmailAndPassword()),
-                  CustomTextButton(
-                      text: "Zaregistruj se",
-                      onPressed: () => navigateToRegistrationScreen(context)),
-                  CustomTextButton(
-                      text: "Zapomněl jsem heslo",
-                      onPressed: () => sendForgottenPassword()),
-                ],
-              ),
-          ),
-        );
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            Image.asset(
+              'images/logo.jpg',
+              height: 240,
+              width: 215,
+            ),
+            const Text("Pro přihlášení zadej uživatelské jméno a heslo."),
+            const SizedBox(height: 15),
+            CustomTextField(
+                textController: emailController,
+                labelText: "email",
+                errorText: emailErrorText,
+                key: const ValueKey('email_text_field')),
+            CustomTextField(
+                textController: passwordController,
+                labelText: "heslo",
+                password: true,
+                errorText: passwordErrorText,
+                key: const ValueKey('password_text_field')),
+            CustomButton(
+                text: "Přihlaš se",
+                onPressed: () => sendEmailAndPassword(),
+                key: const ValueKey('login_button')),
+            CustomTextButton(
+                text: "Zaregistruj se",
+                onPressed: () => navigateToRegistrationScreen(context),
+                key: const ValueKey('registration_button')),
+            CustomTextButton(
+                text: "Zapomněl jsem heslo",
+                onPressed: () => sendForgottenPassword(),
+                key: const ValueKey('forgotten_password_button')),
+          ],
+        ),
+      ),
+    );
   }
 }
