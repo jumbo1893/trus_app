@@ -253,6 +253,14 @@ class BottomSheetNavigationManager {
               ),
               ListTile(
                 leading: const Icon(
+                  Icons.no_accounts,
+                  color: Colors.orange,
+                ),
+                title: const Text("Smazat účet"),
+                onTap: () => onModalBottomSheetMenuTapped(-1),
+              ),
+              ListTile(
+                leading: const Icon(
                   Icons.edit_calendar,
                   color: Colors.orange,
                 ),

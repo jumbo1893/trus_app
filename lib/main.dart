@@ -13,10 +13,6 @@ import 'package:flutter_driver/driver_extension.dart';
 import 'features/auth/screens/user_information_screen.dart';
 
 void main() async {
-  enableFlutterDriverExtension(
-      commands: [],
-      finders: []
-  );
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp(
       options: DefaultFirebaseOptions.currentPlatform

@@ -78,6 +78,10 @@ class AuthController implements ReadOperations {
     return result;
   }
 
+  Future<void> deleteAccount() async {
+    bool result = await authRepository.deleteAccount();
+  }
+
   Future<void> saveUserData(String username) async {
     await authRepository.editCurrentUser(false, username, null);
   }

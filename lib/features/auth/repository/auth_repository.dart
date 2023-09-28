@@ -16,14 +16,13 @@ import '../../general/repository/crud_api_service.dart';
 
 final authRepositoryProvider = Provider(
   (ref) => AuthRepository(
-      auth: FirebaseAuth.instance, firestore: FirebaseFirestore.instance),
+      firestore: FirebaseFirestore.instance),
 );
 
 class AuthRepository extends CrudApiService {
-  final FirebaseAuth auth;
   final FirebaseFirestore firestore;
 
-  AuthRepository({required this.auth, required this.firestore});
+  AuthRepository({required this.firestore});
 
   Future<UserApiModel?> fastLogin() async {
     UserApiModel userApiModel;
@@ -57,6 +56,22 @@ class AuthRepository extends CrudApiService {
     user.admin = write;
     final decodedBody = await editModel<JsonAndHttpConverter>(user, user.id!);
     return decodedBody as UserApiModel;
+  }
+
+  Future<bool> deleteAccount() async {
+    bool firstSignOut = await deleteAccountFromServer();
+    bool secondSignOut = await deleteAccountFromFirebase();
+    return firstSignOut && secondSignOut;
+  }
+
+  Future<bool> deleteAccountFromFirebase() async {
+    await auth.currentUser!.delete();
+    return true;
+  }
+
+  Future<bool> deleteAccountFromServer() async {
+    var url = Uri.parse("$serverUrl/$authApi/delete");
+    return await executeDeleteRequest(url, (_) => true, jsonEncode(null));
   }
 
   Future<bool> signOut() async {

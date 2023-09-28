@@ -19,6 +19,7 @@ import 'package:trus_app/features/season/screens/season_screen.dart';
 import 'package:trus_app/models/api/fine_api_model.dart';
 import 'package:trus_app/models/api/match/match_api_model.dart';
 import '../../common/utils/utils.dart';
+import '../../common/widgets/confirmation_dialog.dart';
 import '../../models/api/player_api_model.dart';
 import '../../models/api/season_api_model.dart';
 import '../auth/controller/auth_controller.dart';
@@ -125,6 +126,24 @@ class _MainScreenState extends ConsumerState<MainScreen> {
     return "píč $name";
   }
 
+  Future<void> showDeleteConfirmationDialog() async {
+    print("test");
+    var dialog = ConfirmationDialog(
+      "Opravdu chcete smazat tento účet?",
+          () async {
+        await executeApi<void>(() async {
+          return await ref
+              .read(authControllerProvider)
+              .deleteAccount();
+        }, () {}, context, true).then((value) => signOut());
+      },
+    );
+    showDialog(
+      context: context,
+      builder: (BuildContext context) => dialog,
+    );
+  }
+
 
   void showBottomSheetNavigation() {
     _bottomSheetNavigationManager.showBottomSheetNavigation((index) => onModalBottomSheetMenuTapped(index), getUserName(), () { signOut();});
@@ -207,8 +226,14 @@ class _MainScreenState extends ConsumerState<MainScreen> {
   }
 
   void onModalBottomSheetMenuTapped(int index) {
-    Navigator.of(context).pop();
-    changeFragment(index);
+    if (index == -1) { //delete account
+      Navigator.of(context).pop();
+      showDeleteConfirmationDialog();
+    }
+    else {
+      Navigator.of(context).pop();
+      changeFragment(index);
+    }
   }
 
   Future<bool> _onWillPop() async {
