@@ -196,18 +196,23 @@ class _MainScreenState extends ConsumerState<MainScreen> {
   }
 
   void onBackButtonTap() {
-    if(fragmentList.isNotEmpty) {
-      int index = fragmentList.removeLast();
-      manageBackButton(index, true);
-      setAppBarTitle(index);
-      changeBottomSheetColor(index);
-      pageController.jumpToPage(index);
+    if(_currentIndex == 25) { // GoalScreen
+      onPickedMatchChange(matchModel);
     }
     else {
-      manageBackButton(0, true);
-      setAppBarTitle(0);
-      changeBottomSheetColor(0);
-      pageController.jumpToPage(0);
+      if (fragmentList.isNotEmpty) {
+        int index = fragmentList.removeLast();
+        manageBackButton(index, true);
+        setAppBarTitle(index);
+        changeBottomSheetColor(index);
+        pageController.jumpToPage(index);
+      }
+      else {
+        manageBackButton(0, true);
+        setAppBarTitle(0);
+        changeBottomSheetColor(0);
+        pageController.jumpToPage(0);
+      }
     }
   }
 
