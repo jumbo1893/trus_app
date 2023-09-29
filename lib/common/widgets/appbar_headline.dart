@@ -3,10 +3,11 @@ import 'package:trus_app/colors.dart';
 
 class AppBarHeadline extends StatelessWidget implements PreferredSizeWidget {
   final String text;
-
+  final VoidCallback? onBackButtonPressed;
   const AppBarHeadline({
     Key? key,
     required this.text,
+    this.onBackButtonPressed,
   }) : super(key: key);
 
   @override
@@ -14,6 +15,8 @@ class AppBarHeadline extends StatelessWidget implements PreferredSizeWidget {
     return AppBar(
         title: Text(text),
         centerTitle: true,
+        leading: onBackButtonPressed != null ? IconButton(
+          onPressed: () => onBackButtonPressed!(), icon: const Icon(Icons.arrow_back),): Container(),
         foregroundColor: blackColor,
         backgroundColor: Colors.white);
   }
@@ -21,3 +24,10 @@ class AppBarHeadline extends StatelessWidget implements PreferredSizeWidget {
   @override
   Size get preferredSize => const Size.fromHeight(kMinInteractiveDimension);
 }
+
+class Class{
+  final Function function;
+  Class({this.function = _defaultFunction});
+  static _defaultFunction() {}
+}
+

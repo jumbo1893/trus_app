@@ -12,12 +12,14 @@ class AddBuilder extends StatelessWidget {
   final String? appBarText;
   final bool? goal;
   final bool? doubleListview;
+  final VoidCallback? onBackButtonPressed;
 
   const AddBuilder({
     Key? key,
     required this.addController,
     this.appBarText,
     this.goal = false,
+    this.onBackButtonPressed,
     this.doubleListview = false,
   }) : super(key: key);
 
@@ -26,6 +28,7 @@ class AddBuilder extends StatelessWidget {
     const double padding = 8.0;
     return Scaffold(
       appBar: appBarText != null ? AppBarHeadline(
+        onBackButtonPressed: onBackButtonPressed != null ? () => onBackButtonPressed!() : null,
         text: appBarText!,
       ): null,
       body: Padding(

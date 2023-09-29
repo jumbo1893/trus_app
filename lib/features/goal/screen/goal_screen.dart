@@ -51,6 +51,24 @@ class _GoalScreenState extends ConsumerState<GoalScreen> {
                       ),
                     ),
                     Padding(
+                      padding: const EdgeInsets.all(padding),
+                      child: RowSwitchStream(
+                        size: size,
+                        padding: padding,
+                        textFieldText: "Propsat do pokut?",
+                        stream:
+                        ref.watch(goalControllerProvider).rewriteFines(),
+                        initStream: () => ref
+                            .watch(goalControllerProvider)
+                            .initRewriteStream(),
+                        onChecked: (rewrite) {
+                          ref
+                              .watch(goalControllerProvider)
+                              .setRewriteFines(rewrite);
+                        },
+                      ),
+                    ),
+                    Padding(
                       padding: const EdgeInsets.only(bottom: 16.0),
                       child: CustomButton(
                           text: "Pokračuj k asistencím",
@@ -70,25 +88,12 @@ class _GoalScreenState extends ConsumerState<GoalScreen> {
                       addController: ref.read(goalControllerProvider),
                       appBarText: "Přidej asistence",
                       goal: false,
+                          onBackButtonPressed: () => {
+                            ref
+                                .read(goalControllerProvider)
+                                .navigateToGoalScreen()
+                          },
                     )),
-                    Padding(
-                      padding: const EdgeInsets.all(padding),
-                      child: RowSwitchStream(
-                        size: size,
-                        padding: padding,
-                        textFieldText: "Propsat do pokut?",
-                        stream:
-                            ref.watch(goalControllerProvider).rewriteFines(),
-                        initStream: () => ref
-                            .watch(goalControllerProvider)
-                            .initRewriteStream(),
-                        onChecked: (rewrite) {
-                          ref
-                              .watch(goalControllerProvider)
-                              .setRewriteFines(rewrite);
-                        },
-                      ),
-                    ),
                     Padding(
                       padding: const EdgeInsets.only(bottom: 16.0),
                       child: ConfirmButton(
