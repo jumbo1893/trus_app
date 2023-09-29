@@ -59,13 +59,6 @@ class _ListviewAddModel extends State<ListviewAddModel> {
         SizedBox(
             width: (size.width / 9) -7,
             child: IconButton(onPressed: () {
-              sendCallback(true);
-              refreshText();
-              },
-                icon: const Icon(Icons.add, color: Colors.green,))),
-        SizedBox(
-            width: (size.width / 9) -7,
-            child: IconButton(onPressed: () {
               sendCallback(false);
               refreshText();
               },
@@ -73,6 +66,7 @@ class _ListviewAddModel extends State<ListviewAddModel> {
         SizedBox(
           width: (size.width / 9) -7,
           child: TextField(controller: textEditingController,
+            textAlign: TextAlign.center,
             decoration: const InputDecoration(
               enabled: false,
               border: InputBorder.none,
@@ -83,6 +77,13 @@ class _ListviewAddModel extends State<ListviewAddModel> {
 
             ),),
         ),
+        SizedBox(
+            width: (size.width / 9) -7,
+            child: IconButton(onPressed: () {
+              sendCallback(true);
+              refreshText();
+            },
+                icon: const Icon(Icons.add, color: Colors.green,))),
       ],
 
     );

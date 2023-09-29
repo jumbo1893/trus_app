@@ -12,11 +12,11 @@ class ListviewAddModelDouble extends StatefulWidget {
   final VoidCallback onSecondNumberRemoved;
   const ListviewAddModelDouble(
       {Key? key,
-        required this.padding,
-        required this.onFirstNumberAdded,
-        required this.onFirstNumberRemoved,
-        required this.onSecondNumberAdded,
-        required this.onSecondNumberRemoved,
+      required this.padding,
+      required this.onFirstNumberAdded,
+      required this.onFirstNumberRemoved,
+      required this.onSecondNumberAdded,
+      required this.onSecondNumberRemoved,
       required this.addToString})
       : super(key: key);
 
@@ -25,7 +25,6 @@ class ListviewAddModelDouble extends StatefulWidget {
 }
 
 class _ListviewAddModelDoubleState extends State<ListviewAddModelDouble> {
-
   TextEditingController firstTextEditingController = TextEditingController();
   TextEditingController secondTextEditingController = TextEditingController();
 
@@ -42,19 +41,17 @@ class _ListviewAddModelDoubleState extends State<ListviewAddModelDouble> {
   }
 
   void sendFirstCallback(bool added) {
-    if(added) {
+    if (added) {
       widget.onFirstNumberAdded();
-    }
-    else {
+    } else {
       widget.onFirstNumberRemoved();
     }
   }
 
   void sendSecondCallback(bool added) {
-    if(added) {
+    if (added) {
       widget.onSecondNumberAdded();
-    }
-    else {
+    } else {
       widget.onSecondNumberRemoved();
     }
   }
@@ -64,91 +61,118 @@ class _ListviewAddModelDoubleState extends State<ListviewAddModelDouble> {
     firstTextEditingController.text = widget.addToString.numberToString(true);
     secondTextEditingController.text = widget.addToString.numberToString(false);
     final size = MediaQueryData.fromWindow(WidgetsBinding.instance.window).size;
-    final sizeFragment = size/30;
+    final sizeFragment = size / 30;
     return Row(
       children: [
         SizedBox(
-            width: (sizeFragment.width*9) - widget.padding,
-            child: Text(widget.addToString.toStringForListView(), style: const TextStyle(fontSize: 16))),
-        SizedBox(width: sizeFragment.width*1.5,),
+            width: (sizeFragment.width * 9) - widget.padding,
+            child: Text(widget.addToString.toStringForListView(),
+                style: const TextStyle(fontSize: 16))),
         SizedBox(
-            width: (sizeFragment.width*2),
+          width: sizeFragment.width * 1.5,
+        ),
+        SizedBox(
+            width: (sizeFragment.width * 2),
             child: IconButton(
               icon: const Icon(
-                Icons.sports_bar, color: blackColor,
+                Icons.sports_bar,
+                color: blackColor,
               ),
-              onPressed: () { sendFirstCallback(true);
-            refreshText(); },)),
+              onPressed: () {
+                sendFirstCallback(false);
+                refreshText();
+              },
+            )),
 
         SizedBox(
-            width: (sizeFragment.width*2),
-            child: IconButton(onPressed: () {
-              sendFirstCallback(true);
-              refreshText();
-              },
-                icon: const Icon(Icons.add, color: Colors.green,))),
+            width: (sizeFragment.width * 2),
+            child: IconButton(
+                onPressed: () {
+                  sendFirstCallback(false);
+                  refreshText();
+                },
+                icon: const Icon(
+                  Icons.remove,
+                  color: Colors.red,
+                ))),
         SizedBox(
-            width: (sizeFragment.width*2),
-            child: IconButton(onPressed: () {
-              sendFirstCallback(false);
-              refreshText();
-              },
-                icon: const Icon(Icons.remove, color: Colors.red,))),
-        SizedBox(
-          width: (sizeFragment.width*3),
-          child: TextField(controller: firstTextEditingController,
+          width: (sizeFragment.width * 1.5),
+          child: TextField(
+            textAlign: TextAlign.center,
+            controller: firstTextEditingController,
             decoration: const InputDecoration(
               enabled: false,
               border: InputBorder.none,
-              floatingLabelStyle: TextStyle(
-                  color: blackColor
-              ),
+              floatingLabelStyle: TextStyle(color: blackColor),
               contentPadding: EdgeInsets.only(left: 10),
-
-            ),),
-
+            ),
+          ),
         ),
+        SizedBox(
+            width: (sizeFragment.width * 2),
+            child: IconButton(
+                onPressed: () {
+                  sendFirstCallback(true);
+                  refreshText();
+                },
+                icon: const Icon(
+                  Icons.add,
+                  color: Colors.green,
+                ))),
+        SizedBox(width: sizeFragment.width),
         //druhá část
         SizedBox(
-            width: (sizeFragment.width*2.0),
+            width: (sizeFragment.width * 2),
             child: IconButton(
               icon: const Icon(
-                Icons.liquor, color: blackColor,
+                Icons.liquor,
+                color: blackColor,
               ),
-              onPressed: () { sendSecondCallback(true);
-              refreshText(); },)),
+              onPressed: () {
+                sendSecondCallback(false);
+                refreshText();
+              },
+            )),
 
         SizedBox(
-            width: (sizeFragment.width*2),
-            child: IconButton(onPressed: () {
-              sendSecondCallback(true);
-              refreshText();
-            },
-                icon: const Icon(Icons.add, color: Colors.green,))),
+            width: (sizeFragment.width * 2),
+            child: IconButton(
+                onPressed: () {
+                  sendSecondCallback(false);
+                  refreshText();
+                },
+                icon: const Icon(
+                  Icons.remove,
+                  color: Colors.red,
+                ))),
         SizedBox(
-            width: (sizeFragment.width*2),
-            child: IconButton(onPressed: () {
-              sendSecondCallback(false);
-              refreshText();
-            },
-                icon: const Icon(Icons.remove, color: Colors.red,))),
-        SizedBox(width: sizeFragment.width,),
+          width: sizeFragment.width,
+        ),
         SizedBox(
-          width: (sizeFragment.width*3),
-          child: TextField(controller: secondTextEditingController,
+          width: (sizeFragment.width * 1.5),
+          child: TextField(
+            textAlign: TextAlign.center,
+            controller: secondTextEditingController,
             decoration: const InputDecoration(
               enabled: false,
               border: InputBorder.none,
-              floatingLabelStyle: TextStyle(
-                  color: blackColor
-              ),
+              floatingLabelStyle: TextStyle(color: blackColor),
               //contentPadding: EdgeInsets.only(left: 10),
-
-            ),),
-
+            ),
+          ),
         ),
+        SizedBox(
+            width: (sizeFragment.width * 2),
+            child: IconButton(
+                onPressed: () {
+                  sendSecondCallback(true);
+                  refreshText();
+                },
+                icon: const Icon(
+                  Icons.add,
+                  color: Colors.green,
+                ))),
       ],
-
     );
   }
 }
