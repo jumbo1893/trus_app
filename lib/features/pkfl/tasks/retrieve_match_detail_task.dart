@@ -1,22 +1,21 @@
+import 'package:dio/dio.dart';
 import 'package:html/dom.dart';
 import 'package:html/parser.dart';
-import 'package:http/http.dart' as http;
 import 'package:trus_app/common/repository/exception/bad_format_exception.dart';
 import 'package:trus_app/models/pkfl/pkfl_match_detail.dart';
-
-import '../../../common/repository/exception/pkfl_unavailable_exception.dart';
 import '../../../models/pkfl/pkfl_match_player.dart';
+import '../../general/repository/request_executor.dart';
 
-class RetrieveMatchDetailTask {
+class RetrieveMatchDetailTask extends RequestExecutor {
   final String matchUrl;
 
   RetrieveMatchDetailTask(this.matchUrl);
 
   Future<PkflMatchDetail> returnPkflMatchDetail() async {
-    http.Response response = await http.Client().get(Uri.parse(matchUrl));
-    validateStatusCode(response.statusCode);
+    Response response = await getDioClient().get(matchUrl);
+    validatePkflStatusCode(response.statusCode);
     try {
-      var document = parse(response.body);
+      var document = parse(response.data);
       var matches = document.getElementsByClassName(
           "matches");
       var ps = matches[0].querySelectorAll("p");
@@ -101,15 +100,5 @@ class RetrieveMatchDetailTask {
   bool _isBestPlayer(Element tdName) {
     List<Element> elements = tdName.getElementsByClassName("best-player");
     return elements.isNotEmpty;
-  }
-
-  void validateStatusCode(int value) {
-    if (value == 404) {
-      throw PkflUnavailableException("Chybná url pkfl web stránky");
-    } else if (value == 401 || value == 403) {
-      throw PkflUnavailableException("Odmítnutý přístup na pkfl web");
-    } else if (value != 200) {
-      throw PkflUnavailableException('Web PKFL je nedostupný. Status: $value');
-    }
   }
 }

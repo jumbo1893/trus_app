@@ -1,4 +1,4 @@
-import 'package:http/http.dart' as http;
+import 'package:dio/dio.dart';
 
 class CustomCookieManager {
   final Map<String, String> _headers = {};
@@ -13,12 +13,10 @@ class CustomCookieManager {
     return _headers;
   }
 
-  void updateCookie(http.Response response) {
-    String? rawCookie = response.headers['set-cookie'];
-    if (rawCookie != null) {
-      int index = rawCookie.indexOf(';');
-      _headers['cookie'] =
-      (index == -1) ? rawCookie : rawCookie.substring(0, index);
+  void updateCookie(Response<dynamic> response) {
+    List<String>? rawCookies  = response.headers['set-cookie'];
+    if (rawCookies != null) {
+      _headers['cookie'] = rawCookies.join('; ');
     }
   }
 }

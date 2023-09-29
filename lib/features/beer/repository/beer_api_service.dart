@@ -1,7 +1,6 @@
 import 'dart:convert';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:http/http.dart' as http;
 import 'package:trus_app/config.dart';
 
 import '../../../models/api/beer/beer_api_model.dart';
@@ -10,21 +9,18 @@ import '../../../models/api/beer/beer_detailed_response.dart';
 import '../../../models/api/beer/beer_list.dart';
 import '../../../models/api/beer/beer_multi_add_response.dart';
 import '../../../models/api/beer/beer_setup_response.dart';
+import '../../../models/api/interfaces/json_and_http_converter.dart';
 import '../../general/repository/crud_api_service.dart';
 
 final beerApiServiceProvider =
     Provider<BeerApiService>((ref) => BeerApiService());
 
 class BeerApiService extends CrudApiService {
+
+
   Future<List<BeerApiModel>> getBeers() async {
-    try {
-      final response = await http.get(Uri.parse("$serverUrl/beer/get-all"));
-      return (json.decode(response.body) as List)
-          .map((e) => BeerApiModel.fromJson(e))
-          .toList();
-    } catch (e) {
-      throw Exception(e);
-    }
+    final decodedBody = await getModels<JsonAndHttpConverter>(beerApi, null);
+    return decodedBody.map((model) => model as BeerApiModel).toList();
   }
 
   Future<BeerSetupResponse> setupBeers(int? matchId, int? seasonId) async {
