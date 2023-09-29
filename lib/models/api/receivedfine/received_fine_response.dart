@@ -37,7 +37,9 @@ class ReceivedFineResponse implements ConfirmToString {
   String toString() {
     if(player.isEmpty) {
       return 'V zápase proti $match bylo přidáno $editedPlayersCount hráčům celkem $totalFinesAdded pokut';
-
+    }
+    if(totalFinesAdded <= 0) {
+      return 'V zápase proti $match byly hráči $player upraveny pokuty';
     }
     return 'V zápase proti $match bylo přidáno hráči $player celkem $totalFinesAdded pokut';
   }
