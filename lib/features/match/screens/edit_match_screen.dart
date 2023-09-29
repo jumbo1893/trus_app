@@ -165,6 +165,7 @@ class _EditMatchScreenState extends ConsumerState<EditMatchScreen> {
                   id: widget.matchModel!.id!,
                   crudOperations: ref.read(matchControllerProvider),
                   onOperationComplete: (id) {
+                    hideSnackBar(context);
                     widget.setMatchId(id);
                     widget.onChangePlayerGoalsPressed();
                   },
