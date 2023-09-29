@@ -273,9 +273,9 @@ class MatchController implements CrudOperations {
   PkflMatch? returnLastPkflMatch(List<PkflMatch> pkflMatches) {
     PkflMatch? returnMatch;
     DateTime dateTime = DateTime.now();
-    DateTime dateTimeTwoDaysLater = dateTime.add(const Duration(days: 1));
+    DateTime dateTimeOneDayLater = dateTime.add(const Duration(days: 1));
     for (PkflMatch pkflMatch in pkflMatches) {
-      if (pkflMatch.date.isBefore(dateTimeTwoDaysLater)) {
+      if (pkflMatch.date.isBefore(dateTimeOneDayLater)) {
         if (returnMatch == null || returnMatch.date.isBefore(pkflMatch.date)) {
           returnMatch = pkflMatch;
         }

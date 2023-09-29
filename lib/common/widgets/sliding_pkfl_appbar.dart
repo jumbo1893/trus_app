@@ -59,9 +59,10 @@ class _SlidingPkflAppBarState extends State<SlidingPkflAppBar>
             }),
         ),
         child: AppBar(
-            title: Text(
-                "Načíst poslední zápas\n${widget.pkflMatch?.toStringNameWithOpponent() ?? ""}?",
-                style: const TextStyle(fontSize: 13)),
+            title: widget.pkflMatch != null ? Text(
+              widget.pkflMatch!.date.isBefore(DateTime.now()) ?
+                "Načíst poslední zápas\n${widget.pkflMatch!.toStringNameWithOpponent()}?" : "Načíst příští zápas\n${widget.pkflMatch?.toStringNameWithOpponent()}?",
+                style: const TextStyle(fontSize: 13)) : const Text(""),
             actions: [
               IconButton(
                   onPressed: () => {hideAppBar(), widget.onConfirmPressed()},
