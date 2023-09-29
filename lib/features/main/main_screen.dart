@@ -53,6 +53,7 @@ class _MainScreenState extends ConsumerState<MainScreen> {
   final List<int> fragmentList = [];
   bool backButtonVisibility = false;
   int _currentIndex = 0;
+  int? pageIndexWhenPlusButtonTapped;
   late BottomSheetNavigationManager _bottomSheetNavigationManager;
   late AppBarTitleManager _appBarTitleManager;
 
@@ -147,6 +148,21 @@ class _MainScreenState extends ConsumerState<MainScreen> {
 
   void showBottomSheetNavigation() {
     _bottomSheetNavigationManager.showBottomSheetNavigation((index) => onModalBottomSheetMenuTapped(index), getUserName(), () { signOut();});
+  }
+
+  void changeFragmentAfterAddMatch(int index) {
+    if(pageIndexWhenPlusButtonTapped != null) {
+      changeFragment(pageIndexWhenPlusButtonTapped!);
+      pageIndexWhenPlusButtonTapped = null;
+    }
+    else {
+      changeFragment(index);
+    }
+  }
+
+  void changeFragmentForAddMatch() {
+    pageIndexWhenPlusButtonTapped = _currentIndex;
+    changeFragment(10);
   }
 
   void changeFragment(int index) {
@@ -262,7 +278,7 @@ class _MainScreenState extends ConsumerState<MainScreen> {
           title: Text(_appBarTitleManager.appBarTitle),
           actions: [
             IconButton(
-                onPressed: () => changeFragment(10), icon: const Icon(Icons.add)),
+                onPressed: () => changeFragmentForAddMatch(), icon: const Icon(Icons.add)),
             IconButton(onPressed: () => changeFragment(23), icon: const Icon(Icons.notifications)),
           ],
         ),
@@ -333,7 +349,7 @@ class _MainScreenState extends ConsumerState<MainScreen> {
             ),
             AddMatchScreen(
               //10
-              onAddMatchPressed: () => changeFragment(9),
+              onAddMatchPressed: () => changeFragmentAfterAddMatch(9),
               isFocused: isFocused(10),
               setMatchId: (int id) {matchModel.id = id;},
               onChangePlayerGoalsPressed: () => changeFragment(25),
