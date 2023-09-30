@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../models/api/notification_api_model.dart';
+import '../utils/calendar.dart';
 
 class NotificationListTile extends StatelessWidget {
   final NotificationApiModel notificationModel;
@@ -30,7 +31,7 @@ class NotificationListTile extends StatelessWidget {
             )),
         SizedBox(
           width: (size.width / 3) - padding,
-          child: Text("${notificationModel.date.day}. ${notificationModel.date.month}. ${notificationModel.date.year} ${notificationModel.date.hour}:${notificationModel.date.minute}"),
+          child: Text("${formatDateForFrontend(notificationModel.date)}"),
           ),
         SizedBox(
           width: (size.width / 2) - padding,

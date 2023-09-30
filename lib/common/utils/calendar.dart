@@ -33,4 +33,10 @@ String formatDateForJson(DateTime dateTime) {
   return returnDate;
 }
 
+String formatDateForFrontend(DateTime dateTime) {
+  final formatter = DateFormat('dd. MM. yyyy HH:mm');
+  final returnDate = formatter.format(dateTime.toLocal());
+  return returnDate;
+}
+
 

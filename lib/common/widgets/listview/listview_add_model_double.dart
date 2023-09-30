@@ -96,7 +96,7 @@ class _ListviewAddModelDoubleState extends State<ListviewAddModelDouble> {
                   color: Colors.red,
                 ))),
         SizedBox(
-          width: (sizeFragment.width * 1.5),
+          width: (sizeFragment.width * 2.5),
           child: TextField(
             textAlign: TextAlign.center,
             controller: firstTextEditingController,
