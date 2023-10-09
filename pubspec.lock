@@ -194,7 +194,7 @@ packages:
     source: hosted
     version: "1.0.0"
   cupertino_http:
-    dependency: transitive
+    dependency: "direct main"
     description:
       name: cupertino_http
       sha256: "25ccac265488d64cd868e311567b874cdc1aefcbef02033108d679c3f83a3108"

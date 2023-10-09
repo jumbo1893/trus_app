@@ -1,4 +1,4 @@
-import 'package:dio/dio.dart';
+import 'package:http/http.dart' as http;
 import 'package:html/dom.dart';
 import 'package:html/parser.dart';
 import 'package:trus_app/common/repository/exception/bad_format_exception.dart';
@@ -11,11 +11,11 @@ class RetrieveTeamsTask extends RequestExecutor {
   RetrieveTeamsTask(this.pkflTableUrl);
 
   Future<List<PkflTeam>> returnPkflTeams() async {
-    Response response = await getDioClient().get(pkflTableUrl);
+    http.Response response = await getClient().get(Uri.parse(pkflTableUrl));
     List<PkflTeam> pkflTeams = [];
-    validatePkflStatusCode(response.statusCode);
+    validatePkflStatusCode(response);
     try {
-      var document = parse(response.data);
+      var document = parse(response.body);
       var table = document.getElementById(
           "grounds");
       var trs = table!.querySelectorAll("tr");

@@ -1,10 +1,8 @@
-import 'package:dio/dio.dart';
+import 'package:http/http.dart' as http;
 import 'package:html/dom.dart';
 import 'package:html/parser.dart';
 import 'package:trus_app/common/repository/exception/bad_format_exception.dart';
 import 'package:trus_app/models/pkfl/pkfl_match.dart';
-
-import '../../../common/repository/exception/pkfl_unavailable_exception.dart';
 import '../../general/repository/request_executor.dart';
 
 class RetrieveMatchesTask extends RequestExecutor {
@@ -15,11 +13,11 @@ class RetrieveMatchesTask extends RequestExecutor {
   RetrieveMatchesTask(this.pkflUrl);
 
   Future<List<PkflMatch>> returnPkflMatches() async {
-    Response response = await getDioClient().get(pkflUrl);
+    http.Response response = await getClient().get(Uri.parse(pkflUrl));
     List<PkflMatch> pkflMatches = [];
-    validatePkflStatusCode(response.statusCode);
+    validatePkflStatusCode(response);
     try {
-      var document = parse(response.data);
+      var document = parse(response.body);
       var table = document.getElementsByClassName(
           "dataTable table table-bordered table-striped");
       var trs = table[0].querySelectorAll("tr");

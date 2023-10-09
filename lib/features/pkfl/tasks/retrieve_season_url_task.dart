@@ -1,4 +1,4 @@
-import 'package:dio/dio.dart';
+import 'package:http/http.dart' as http;
 import 'package:html/dom.dart';
 import 'package:html/parser.dart';
 import 'package:trus_app/common/repository/exception/bad_format_exception.dart';
@@ -13,11 +13,11 @@ class RetrieveSeasonUrlTask extends RequestExecutor {
   RetrieveSeasonUrlTask(this.pkflUrl, this.currentSeason);
 
   Future<List<PkflSeason>> returnPkflSeasons() async {
-    Response response = await getDioClient().get(pkflUrl);
+    http.Response response = await getClient().get(Uri.parse(pkflUrl));
     List<PkflSeason> pkflSeasons = [];
-    validatePkflStatusCode(response.statusCode);
+    validatePkflStatusCode(response);
     try {
-      var document = parse(response.data);
+      var document = parse(response.body);
       var matchesSpinnerDiv = document.getElementsByClassName(
           "dropdown-content")[0];
       var spinnerSeasons = matchesSpinnerDiv.querySelectorAll("a[href]");

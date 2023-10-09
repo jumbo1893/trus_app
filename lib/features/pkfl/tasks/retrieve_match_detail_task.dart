@@ -1,4 +1,4 @@
-import 'package:dio/dio.dart';
+import 'package:http/http.dart' as http;
 import 'package:html/dom.dart';
 import 'package:html/parser.dart';
 import 'package:trus_app/common/repository/exception/bad_format_exception.dart';
@@ -12,10 +12,10 @@ class RetrieveMatchDetailTask extends RequestExecutor {
   RetrieveMatchDetailTask(this.matchUrl);
 
   Future<PkflMatchDetail> returnPkflMatchDetail() async {
-    Response response = await getDioClient().get(matchUrl);
-    validatePkflStatusCode(response.statusCode);
+    http.Response response = await getClient().get(Uri.parse(matchUrl));
+    validatePkflStatusCode(response);
     try {
-      var document = parse(response.data);
+      var document = parse(response.body);
       var matches = document.getElementsByClassName(
           "matches");
       var ps = matches[0].querySelectorAll("p");

@@ -1,8 +1,7 @@
 import 'dart:convert';
-import 'package:dio/dio.dart';
 import 'package:trus_app/common/repository/exception/model/field_validation_response.dart';
 
-
+import 'package:http/http.dart' as http;
 import '../field_validation_exception.dart';
 import '../internal_snackbar_exception.dart';
 import '../login_exception.dart';
@@ -14,15 +13,12 @@ import 'error_statutes.dart';
 
 class ResponseValidator {
 
-  void validateStatusCode(Response response) {
-    int? value = response.statusCode;
-    if (value == null) {
-      return;
-    }
+  void validateStatusCode(http.Response response) {
+    int value = response.statusCode;
     if (value == 404) {
       throw ServerException(" $value: Chybná url na server");
     } else if (value == 401) {
-      final decodedBody = response.data;
+      final decodedBody = json.decode(utf8.decode(response.bodyBytes));
       ErrorResponse errorResponse = ErrorResponse.fromJson(decodedBody);
       if(errorResponse.code == notLoggedIn) {
         throw LoginExpiredException();
@@ -34,7 +30,7 @@ class ResponseValidator {
       throw ServerException('Nedostačující práva na úpravu');
     } else if (value == 400) {
       try {
-        final decodedBody = response.data;
+        final decodedBody = json.decode(utf8.decode(response.bodyBytes));
         FieldValidationResponse fieldValidationResponse = FieldValidationResponse.fromJson(decodedBody);
         throw FieldValidationException(fieldValidationResponse.fields);
       } catch (e) {
@@ -47,11 +43,11 @@ class ResponseValidator {
         }
       }
     } else if (value == 409) {
-      final decodedBody = response.data;
+      final decodedBody = json.decode(utf8.decode(response.bodyBytes));
       ErrorResponse errorResponse = ErrorResponse.fromJson(decodedBody);
       throw LoginException(errorResponse.message);
     } else if (value == 422) {
-      final decodedBody = response.data;
+      final decodedBody = json.decode(utf8.decode(response.bodyBytes));
       ErrorResponse errorResponse = ErrorResponse.fromJson(decodedBody);
       throw InternalSnackBarException(errorResponse.message);
     } else if (value > 200 || value < 200) {
@@ -60,10 +56,8 @@ class ResponseValidator {
     }
   }
 
-  void validatePkflStatusCode(int? value) {
-    if (value == null) {
-      return;
-    }
+  void validatePkflStatusCode(http.Response response) {
+    int value = response.statusCode;
     if (value == 404) {
       throw PkflUnavailableException("Chybná url pkfl web stránky");
     } else if (value == 401 || value == 403) {
