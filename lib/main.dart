@@ -8,10 +8,12 @@ import 'package:trus_app/router.dart';
 import 'package:trus_app/colors.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:trus_app/firebase_options.dart';
+import 'package:flutter_driver/driver_extension.dart';
 
 import 'features/auth/screens/user_information_screen.dart';
 
 void main() async {
+  enableFlutterDriverExtension();
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp(
       options: DefaultFirebaseOptions.currentPlatform

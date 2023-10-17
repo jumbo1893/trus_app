@@ -38,6 +38,9 @@ import '../server_exception.dart';
     else if (e.code == 'weak-password') {
       return "Moc slabý heslo, zadej takový aby vyhovovalo googlu";
     }
+    else if (e.code == 'invalid-credential') {
+      return "Zadal jsi špatné jméno nebo heslo!";
+    }
     else {
       return e.message!;
     }
