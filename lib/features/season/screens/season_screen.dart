@@ -24,6 +24,7 @@ class SeasonScreen extends ConsumerWidget {
         body: Padding(
           padding: const EdgeInsets.only(top: 8.0),
           child: ModelsErrorFutureBuilder(
+            key: const ValueKey('season_list'),
             future: ref.watch(seasonControllerProvider).getModels(),
             onPressed: (season) => {setSeason(season as SeasonApiModel)},
             backToMainMenu: () => backToMainMenu,
@@ -31,6 +32,7 @@ class SeasonScreen extends ConsumerWidget {
           ),
         ),
         floatingActionButton: FloatingActionButton(
+          key: const ValueKey('add_season_floating_button'),
           onPressed: onPlusButtonPressed,
           elevation: 4.0,
           child: const Icon(Icons.add),

@@ -27,11 +27,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     final size = MediaQuery.of(context).size;
     return FutureBuilder<HomeSetup?>(
         //future: ref.read(homeControllerProvider).setupHome(),
-      future: executeApi<HomeSetup?>(() async {
-        return await ref.read(homeControllerProvider).setupHome();
-      },() => setState(() {
-
-      }), context, false),
+        future: executeApi<HomeSetup?>(() async {
+          return await ref.read(homeControllerProvider).setupHome();
+        }, () => setState(() {}), context, false),
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting ||
               !snapshot.hasData) {
@@ -86,10 +84,10 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                                   }
                                   var pkflMatch = snapshot.data;
                                   return Text(
-                                    pkflMatch?.toStringForHomeScreen() ??
-                                        "Zatím neznámý",
-                                    textAlign: TextAlign.center,
-                                  );
+                                      pkflMatch?.toStringForHomeScreen() ??
+                                          "Zatím neznámý",
+                                      textAlign: TextAlign.center,
+                                      key: const ValueKey('pkfl_text'));
                                 }),
                           ],
                         ),
@@ -110,15 +108,15 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                             size: 40,
                           ),
                           Flexible(
-                            child: Text(
-                              homeSetup.nextBirthday,
-                              textAlign: TextAlign.center,
-                            ),
+                            child: Text(homeSetup.nextBirthday,
+                                textAlign: TextAlign.center,
+                                key: const ValueKey('birthday_text')),
                           ),
                         ],
                       )),
                     ),
                     const SizedBox(
+                      key: ValueKey('player_chart'),
                       height: 15,
                     ),
                     homeSetup.chart != null
@@ -130,7 +128,14 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                         : PickChartPlayer(
                             size: size,
                             padding: padding,
-                            onPlayerSelected: (player) => ref.watch(homeControllerProvider).setupPlayerId(player.id!).whenComplete(() => setState(() {ref.read(homeControllerProvider).playerId = player.id!;})),
+                            onPlayerSelected: (player) => ref
+                                .watch(homeControllerProvider)
+                                .setupPlayerId(player.id!)
+                                .whenComplete(() => setState(() {
+                                      ref
+                                          .read(homeControllerProvider)
+                                          .playerId = player.id!;
+                                    })),
                           ),
                     RandomFactBox(
                       padding: padding,

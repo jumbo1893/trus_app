@@ -24,6 +24,7 @@ class PlayerScreen extends ConsumerWidget {
         body: Padding(
           padding: const EdgeInsets.only(top: 8.0),
           child: ModelsErrorFutureBuilder(
+            key: const ValueKey('player_list'),
             future: ref.watch(playerControllerProvider).getModels(),
             onPressed: (player) => {setPlayer(player as PlayerApiModel)},
             backToMainMenu: () => backToMainMenu(),

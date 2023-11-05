@@ -40,6 +40,7 @@ class _EditPlayerScreenState extends ConsumerState<EditPlayerScreen> {
         backToMainMenu: () => widget.backToMainMenu(),
         columns: [
           RowTextFieldStream(
+            key: const ValueKey('player_name_field'),
             size: size,
             labelText: "jméno",
             textFieldText: "Jméno hráče:",
@@ -52,6 +53,7 @@ class _EditPlayerScreenState extends ConsumerState<EditPlayerScreen> {
           ),
           const SizedBox(height: 10),
           RowCalendarStream(
+            key: const ValueKey('player_date_field'),
             size: size,
             padding: padding,
             textFieldText: "Datum narození:",
@@ -63,6 +65,7 @@ class _EditPlayerScreenState extends ConsumerState<EditPlayerScreen> {
           ),
           const SizedBox(height: 10),
           RowSwitchStream(
+            key: const ValueKey('player_fan_field'),
             size: size,
             padding: padding,
             textFieldText: "fanoušek?",
@@ -73,6 +76,7 @@ class _EditPlayerScreenState extends ConsumerState<EditPlayerScreen> {
           ),
           const SizedBox(height: 10),
           RowSwitchStream(
+            key: const ValueKey('player_active_field'),
             size: size,
             padding: padding,
             textFieldText: "aktivní?",
@@ -84,6 +88,7 @@ class _EditPlayerScreenState extends ConsumerState<EditPlayerScreen> {
           const SizedBox(height: 10),
           const SizedBox(height: 10),
           CrudButton(
+            key: const ValueKey('confirm_button'),
             text: "Potvrď změny",
             context: context,
             crud: Crud.update,
@@ -95,6 +100,7 @@ class _EditPlayerScreenState extends ConsumerState<EditPlayerScreen> {
             id: widget.playerModel!.id!,
           ),
           CrudButton(
+            key: const ValueKey('delete_button'),
             text: "Smaž hráče",
             context: context,
             crud: Crud.delete,

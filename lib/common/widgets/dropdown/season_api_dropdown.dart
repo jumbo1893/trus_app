@@ -92,6 +92,7 @@ class _SeasonApiDropdownState extends ConsumerState<SeasonApiDropdown> {
               }
               SeasonApiModel season = snapshot.data!;
               return DropdownButtonHideUnderline(
+                key: const ValueKey("season_items"),
                 child: DropdownButton2(
                   isExpanded: true,
                   hint: Text(

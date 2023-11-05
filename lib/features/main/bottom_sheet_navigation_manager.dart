@@ -16,6 +16,7 @@ class BottomSheetNavigationManager {
         builder: (context) => SizedBox(
           height: MediaQuery.of(context).copyWith().size.height * (3 / 4),
           child: ListView(
+            key: const ValueKey('bottom_navigation'),
             children: <Widget>[
               InkWell(
                 onTap: () => Navigator.of(context).pop(),
@@ -33,10 +34,11 @@ class BottomSheetNavigationManager {
                     Text(userName),
                     TextButton(
                       onPressed: () => signOut(),
+                        key: const ValueKey('logout_button'),
                       child: const Text("Odhlásit",
                           style: TextStyle(
                             color: orangeColor,
-                          )),
+                          ))
                     )
                   ],
                 ),
@@ -48,6 +50,7 @@ class BottomSheetNavigationManager {
                             color: Colors.black,
                           )))),
               ListTile(
+    key: const ValueKey('menu_home'),
                 leading: const Icon(
                   Icons.home,
                   color: Colors.orange,
@@ -68,6 +71,7 @@ class BottomSheetNavigationManager {
                 ],
               ),
               ListTile(
+                key: const ValueKey('menu_add_match'),
                 leading: const Icon(
                   Icons.add,
                   color: Colors.orange,
@@ -76,6 +80,7 @@ class BottomSheetNavigationManager {
                 onTap: () => onModalBottomSheetMenuTapped(10),
               ),
               ListTile(
+                key: const ValueKey('menu_match_list'),
                 leading: const Icon(
                   Icons.list_outlined,
                   color: Colors.orange,
@@ -96,6 +101,7 @@ class BottomSheetNavigationManager {
                 ],
               ),
               ListTile(
+                key: const ValueKey('menu_pkfl_match_list'),
                 leading: const Icon(
                   Icons.sports_soccer,
                   color: Colors.orange,
@@ -104,6 +110,7 @@ class BottomSheetNavigationManager {
                 onTap: () => onModalBottomSheetMenuTapped(19),
               ),
               ListTile(
+                key: const ValueKey('menu_pkfl_table'),
                 leading: const Icon(
                   Icons.scoreboard_rounded,
                   color: Colors.orange,
@@ -112,6 +119,7 @@ class BottomSheetNavigationManager {
                 onTap: () => onModalBottomSheetMenuTapped(21),
               ),
               ListTile(
+                key: const ValueKey('menu_pkfl_stats'),
                 leading: const Icon(
                   Icons.equalizer,
                   color: Colors.orange,
@@ -132,6 +140,7 @@ class BottomSheetNavigationManager {
                 ],
               ),
               ListTile(
+                key: const ValueKey('menu_add_player'),
                 leading: const Icon(
                   Icons.person_add,
                   color: Colors.orange,
@@ -140,6 +149,7 @@ class BottomSheetNavigationManager {
                 onTap: () => onModalBottomSheetMenuTapped(4),
               ),
               ListTile(
+                key: const ValueKey('menu_player_list'),
                 leading: const Icon(
                   Icons.group,
                   color: Colors.orange,
@@ -160,6 +170,7 @@ class BottomSheetNavigationManager {
                 ],
               ),
               ListTile(
+                key: const ValueKey('menu_fine_settings'),
                 leading: const Icon(
                   Icons.attach_money,
                   color: Colors.orange,
@@ -168,6 +179,7 @@ class BottomSheetNavigationManager {
                 onTap: () => onModalBottomSheetMenuTapped(12),
               ),
               ListTile(
+                key: const ValueKey('menu_add_fine'),
                 leading: const Icon(
                   Icons.savings,
                   color: Colors.orange,
@@ -188,6 +200,7 @@ class BottomSheetNavigationManager {
                 ],
               ),
               ListTile(
+                key: const ValueKey('menu_beer'),
                 leading: const Icon(
                   Icons.sports_bar,
                   color: Colors.orange,
@@ -208,6 +221,7 @@ class BottomSheetNavigationManager {
                 ],
               ),
               ListTile(
+                key: const ValueKey('menu_stats'),
                 leading: const Icon(
                   Icons.equalizer,
                   color: Colors.orange,
@@ -216,6 +230,7 @@ class BottomSheetNavigationManager {
                 onTap: () => onModalBottomSheetMenuTapped(3),
               ),
               ListTile(
+                key: const ValueKey('menu_goal_stats'),
                 leading: const Icon(
                   Icons.query_stats,
                   color: Colors.orange,
@@ -236,6 +251,7 @@ class BottomSheetNavigationManager {
                 ],
               ),
               ListTile(
+                key: const ValueKey('menu_app_info'),
                 leading: const Icon(
                   Icons.info,
                   color: Colors.orange,
@@ -244,6 +260,7 @@ class BottomSheetNavigationManager {
                 onTap: () => onModalBottomSheetMenuTapped(26),
               ),
               ListTile(
+                key: const ValueKey('menu_user_settings'),
                 leading: const Icon(
                   Icons.manage_accounts,
                   color: Colors.orange,
@@ -252,6 +269,7 @@ class BottomSheetNavigationManager {
                 onTap: () => onModalBottomSheetMenuTapped(24),
               ),
               ListTile(
+                key: const ValueKey('menu_delete_account'),
                 leading: const Icon(
                   Icons.no_accounts,
                   color: Colors.orange,
@@ -260,6 +278,7 @@ class BottomSheetNavigationManager {
                 onTap: () => onModalBottomSheetMenuTapped(-1),
               ),
               ListTile(
+                key: const ValueKey('menu_season'),
                 leading: const Icon(
                   Icons.edit_calendar,
                   color: Colors.orange,

@@ -30,6 +30,7 @@ class MatchScreen extends ConsumerWidget {
           body: Padding(
             padding: const EdgeInsets.all(padding),
             child: SingleChildScrollView(
+              key: const ValueKey('match_screen'),
               child: Column(
                 children: [
                   Row(
@@ -37,6 +38,7 @@ class MatchScreen extends ConsumerWidget {
                       SizedBox(
                           width: size.width / 2 - padding,
                           child: SeasonApiDropdown(
+                            key: const ValueKey('season_dropdown'),
                             onSeasonSelected: (season) =>
                                 ref.watch(matchScreenControllerProvider)
                                     .setPickedSeason(season),
@@ -51,6 +53,7 @@ class MatchScreen extends ConsumerWidget {
                     ],
                   ),
                   ModelsErrorFutureBuilder(
+                    key: const ValueKey('match_list'),
                     future: ref.watch(matchScreenControllerProvider).getModels(),
                     rebuildStream: ref.watch(matchScreenControllerProvider)
                         .streamMatches(),
@@ -64,6 +67,7 @@ class MatchScreen extends ConsumerWidget {
             ),
           ),
           floatingActionButton: FloatingActionButton(
+            key: const ValueKey('add_match_floating_button'),
             onPressed: onPlusButtonPressed,
             elevation: 4.0,
             child: const Icon(Icons.add),

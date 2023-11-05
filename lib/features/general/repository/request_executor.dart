@@ -46,6 +46,7 @@ class RequestExecutor extends ResponseValidator {
         ..allowsExpensiveNetworkAccess = false;
       return CupertinoClient.fromSessionConfiguration(config);
     } else {
+      IOClient io = IOClient();
       return IOClient(); // Uses an HTTP client based on dart:io
     }
   }

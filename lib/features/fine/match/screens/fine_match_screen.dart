@@ -67,6 +67,7 @@ class _FineMatchScreenState extends ConsumerState<FineMatchScreen> {
                 title: ConstrainedBox(
                     constraints: BoxConstraints(minWidth: size.width),
                     child: MatchDropdown(
+                      key: const ValueKey("match_dropdown"),
                       onMatchSelected: (match) => ref
                           .watch(fineMatchControllerProvider)
                           .setMatch(match),
@@ -87,6 +88,7 @@ class _FineMatchScreenState extends ConsumerState<FineMatchScreen> {
                         SizedBox(
                             width: size.width / 2 - padding,
                             child: SeasonApiDropdown(
+                              key: const ValueKey("season_dropdown"),
                               onSeasonSelected: (season) => ref
                                   .watch(fineMatchControllerProvider)
                                   .setSeason(season),

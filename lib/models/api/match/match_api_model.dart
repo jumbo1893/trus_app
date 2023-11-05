@@ -88,12 +88,12 @@ class MatchApiModel implements ModelToString, JsonAndHttpConverter {
 
   @override
   String listViewTitle() {
-    return home ? "Liščí Trus -  $name" : "$name - Liščí Trus";
+    return home ? "Liščí Trus - $name" : "$name - Liščí Trus";
   }
 
   @override
   String toStringForAdd() {
-    return "Přidán zápas ${home ? "Liščí Trus -  $name" : "$name - Liščí Trus"} $name s datumem: ${dateTimeToString(date)}";
+    return "Přidán zápas ${home ? "Liščí Trus - $name" : "$name - Liščí Trus"} $name s datumem: ${dateTimeToString(date)}";
   }
 
   @override
@@ -103,7 +103,7 @@ class MatchApiModel implements ModelToString, JsonAndHttpConverter {
 
   @override
   String toStringForEdit(String originName) {
-    return "Zápas se soupeřem $originName upraven na ${home ? "Liščí Trus -  $name" : "$name - Liščí Trus"} $name s datumem: ${dateTimeToString(date)}";
+    return "Zápas se soupeřem $originName upraven na ${home ? "Liščí Trus - $name" : "$name - Liščí Trus"} $name s datumem: ${dateTimeToString(date)}";
   }
 
   @override

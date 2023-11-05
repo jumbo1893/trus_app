@@ -16,8 +16,12 @@ const int allSeasonId = -3;
 
 
 //api
+const testUrl = "https://192.168.0.150:8443";
+const prodUrl = "https://trus.up.railway.app";
+const devUrl = "https://192.168.0.150:8080";
 //const serverUrl = "https://192.168.0.150:8443";
 const serverUrl = "https://trus.up.railway.app";
+const automation = false;
 const matchApi = "match";
 const playerApi = "player";
 const seasonApi = "season";

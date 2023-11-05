@@ -24,6 +24,7 @@ class FineScreen extends ConsumerWidget {
         body: Padding(
           padding: const EdgeInsets.only(top: 8.0),
           child: ModelsErrorFutureBuilder(
+            key: const ValueKey('fine_list'),
             future: ref.watch(fineControllerProvider).getModels(),
             onPressed: (fine) => {setFine(fine as FineApiModel)},
             backToMainMenu: () => backToMainMenu(),

@@ -84,6 +84,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
             Image.asset(
+              key: const ValueKey('logo_image'),
               'images/logo.jpg',
               height: 240,
               width: 215,

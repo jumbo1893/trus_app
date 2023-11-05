@@ -21,7 +21,8 @@ class RandomFactBox extends StatefulWidget implements PreferredSizeWidget {
   State<RandomFactBox> createState() => _RandomFactBoxState();
 }
 
-class _RandomFactBoxState extends State<RandomFactBox> with SingleTickerProviderStateMixin {
+class _RandomFactBoxState extends State<RandomFactBox>
+    with SingleTickerProviderStateMixin {
   int randomFactNumber = -1;
   int listLength = 0;
   late final AnimationController _animationController;
@@ -43,18 +44,15 @@ class _RandomFactBoxState extends State<RandomFactBox> with SingleTickerProvider
   void setNextRandomFactNumber(bool next) {
     if (randomFactNumber != -1) {
       if (next) {
-        if (randomFactNumber == listLength-1) {
+        if (randomFactNumber == listLength - 1) {
           randomFactNumber = 0;
-        }
-        else {
+        } else {
           randomFactNumber++;
         }
-      }
-      else {
+      } else {
         if (randomFactNumber == 0) {
-          randomFactNumber = listLength-1;
-        }
-        else {
+          randomFactNumber = listLength - 1;
+        } else {
           randomFactNumber--;
         }
       }
@@ -64,10 +62,7 @@ class _RandomFactBoxState extends State<RandomFactBox> with SingleTickerProvider
   @override
   Widget build(BuildContext context) {
     final size = MediaQuery.of(context).size;
-    _animation = Tween<double>(
-        begin: 0,
-        end: 1
-    ).animate(_animationController);
+    _animation = Tween<double>(begin: 0, end: 1).animate(_animationController);
     return Container(
       margin: const EdgeInsets.all(5.0),
       padding: const EdgeInsets.all(3.0),
@@ -82,8 +77,7 @@ class _RandomFactBoxState extends State<RandomFactBox> with SingleTickerProvider
               child: FutureBuilder<List<String>>(
                   future: widget.randomFactStream,
                   builder: (context, snapshot) {
-                    if (snapshot.connectionState ==
-                        ConnectionState.waiting) {
+                    if (snapshot.connectionState == ConnectionState.waiting) {
                       return const Loader();
                     }
                     List<String> randomFactList = snapshot.data!;
@@ -94,11 +88,12 @@ class _RandomFactBoxState extends State<RandomFactBox> with SingleTickerProvider
                     return Column(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        Text('Náhodná zajímavost #${randomFactNumber+1}',
+                        Text('Náhodná zajímavost #${randomFactNumber + 1}',
                             style: const TextStyle(
                               fontWeight: FontWeight.bold,
                               fontSize: 16,
-                            )),
+                            ),
+                            key: const ValueKey('random_text_title')),
                         Flexible(
                           child: GestureDetector(
                             onHorizontalDragEnd: (dragEndDetails) {
@@ -106,16 +101,15 @@ class _RandomFactBoxState extends State<RandomFactBox> with SingleTickerProvider
                                 setState(() {
                                   setNextRandomFactNumber(true);
                                 });
-                              } else if(dragEndDetails.primaryVelocity! > 0){
+                              } else if (dragEndDetails.primaryVelocity! > 0) {
                                 setState(() {
                                   setNextRandomFactNumber(false);
                                 });
                               }
                             },
-                            child: Text(
-                              randomFactList[randomFactNumber],
-                              textAlign: TextAlign.center,
-                            ),
+                            child: Text(randomFactList[randomFactNumber],
+                                textAlign: TextAlign.center,
+                                key: const ValueKey('random_text')),
                           ),
                         ),
                       ],
@@ -125,21 +119,20 @@ class _RandomFactBoxState extends State<RandomFactBox> with SingleTickerProvider
             RotationTransition(
               turns: _animation,
               child: IconButton(
-                icon: const Icon(
-                  Icons.refresh,
+                  icon: const Icon(
+                    Icons.refresh,
+                    color: orangeColor,
+                    size: 40,
+                  ),
                   color: orangeColor,
-                  size: 40,
-                ),
-                color: orangeColor,
-                onPressed: () {
-                  _animationController.forward(
-                      from: 0
-                  ).whenComplete(() => setState(() {
-                    setNewRandomFactNumber(listLength);
-                  }));
-
-                },
-              ),
+                  onPressed: () {
+                    _animationController
+                        .forward(from: 0)
+                        .whenComplete(() => setState(() {
+                              setNewRandomFactNumber(listLength);
+                            }));
+                  },
+                  key: const ValueKey('random_text_refresh')),
             ),
           ],
         ),

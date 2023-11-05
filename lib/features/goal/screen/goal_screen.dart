@@ -53,6 +53,7 @@ class _GoalScreenState extends ConsumerState<GoalScreen> {
                     Padding(
                       padding: const EdgeInsets.all(padding),
                       child: RowSwitchStream(
+                        key: const ValueKey('goal_fine_field'),
                         size: size,
                         padding: padding,
                         textFieldText: "Propsat do pokut?",

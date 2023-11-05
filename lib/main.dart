@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:trus_app/common/widgets/loader.dart';
@@ -10,10 +12,17 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:trus_app/firebase_options.dart';
 import 'package:flutter_driver/driver_extension.dart';
 
+import 'config.dart';
 import 'features/auth/screens/user_information_screen.dart';
+import 'my_http_overrides.dart';
 
 void main() async {
-  enableFlutterDriverExtension();
+  if(automation) {
+    enableFlutterDriverExtension();
+  }
+  if(serverUrl == testUrl) {
+    HttpOverrides.global = MyHttpOverrides();
+  }
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp(
       options: DefaultFirebaseOptions.currentPlatform

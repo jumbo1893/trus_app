@@ -39,6 +39,7 @@ class _EditSeasonScreenState extends ConsumerState<EditSeasonScreen> {
         backToMainMenu: () => widget.backToMainMenu(),
         columns: [
           RowTextFieldStream(
+            key: const ValueKey('season_name_field'),
             size: size,
             labelText: "název",
             padding: padding,
@@ -51,6 +52,7 @@ class _EditSeasonScreenState extends ConsumerState<EditSeasonScreen> {
           ),
           const SizedBox(height: 10),
           RowCalendarStream(
+            key: const ValueKey('season_start_date_field'),
             size: size,
             padding: padding,
             textFieldText: "Začátek sezony:",
@@ -63,6 +65,7 @@ class _EditSeasonScreenState extends ConsumerState<EditSeasonScreen> {
           ),
           const SizedBox(height: 10),
           RowCalendarStream(
+            key: const ValueKey('season_end_date_field'),
             size: size,
             padding: padding,
             textFieldText: "Konec sezony:",
@@ -76,6 +79,7 @@ class _EditSeasonScreenState extends ConsumerState<EditSeasonScreen> {
           const SizedBox(height: 10),
           const SizedBox(height: 10),
           CrudButton(
+            key: const ValueKey('confirm_button'),
             text: "Potvrď změny",
             context: context,
             crud: Crud.update,
@@ -87,6 +91,7 @@ class _EditSeasonScreenState extends ConsumerState<EditSeasonScreen> {
             id: widget.seasonModel!.id!,
           ),
           CrudButton(
+            key: const ValueKey('delete_button'),
             text: "Smaž sezonu",
             context: context,
             crud: Crud.delete,

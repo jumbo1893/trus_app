@@ -120,12 +120,15 @@ class AuthRepository extends CrudApiService {
 
   Future<bool> signUpWithEmail(String email, String password) async {
     String userId = await signUpWithEmailToFireBase(email, password);
+    print(userId);
     if (userId.isNotEmpty) {
+      print("není empty");
       await signUpWithEmailToServer(
               email, auth.currentUser!.uid)
           .whenComplete(() async =>
               await signInWithEmailToFirebase(email, password).whenComplete(
                   () => signInWithEmailToServer(email, auth.currentUser!.uid)));
+      print("log");
       return true;
     }
     return false;

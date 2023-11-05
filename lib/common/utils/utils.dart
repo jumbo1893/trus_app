@@ -48,3 +48,7 @@ void showErrorDialog(String snapshotError, VoidCallback onDialogCancel, BuildCon
   var dialog = ErrorDialog("Chyba!", snapshotError, () => onDialogCancel());
   showDialog(context: context, builder: (BuildContext context) => dialog);
 }
+
+String getValueFromValueKey(Key key) {
+  return key.toString().substring(3, key.toString().length - 3);
+}

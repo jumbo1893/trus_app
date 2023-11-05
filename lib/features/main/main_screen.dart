@@ -278,8 +278,11 @@ class _MainScreenState extends ConsumerState<MainScreen> {
           title: Text(_appBarTitleManager.appBarTitle),
           actions: [
             IconButton(
+                key: const ValueKey('plus_button'),
                 onPressed: () => changeFragmentForAddMatch(), icon: const Icon(Icons.add)),
-            IconButton(onPressed: () => changeFragment(23), icon: const Icon(Icons.notifications)),
+            IconButton(
+                key: const ValueKey('notifications_button'),
+                onPressed: () => changeFragment(23), icon: const Icon(Icons.notifications)),
           ],
         ),
         body: PageView(
@@ -454,6 +457,7 @@ class _MainScreenState extends ConsumerState<MainScreen> {
           onPressed: () => changeFragment(17),
           elevation: 4.0,
           backgroundColor: Colors.orange,
+          key: const ValueKey('beer_button'),
           child: const Icon(
             Icons.sports_bar_outlined,
             color: Colors.black87,
@@ -465,13 +469,13 @@ class _MainScreenState extends ConsumerState<MainScreen> {
           type: BottomNavigationBarType.shifting,
           items: [
             const BottomNavigationBarItem(
-                icon: Icon(Icons.home), label: "Přehled"),
+                icon: Icon(Icons.home, key: ValueKey('home_button')), label: "Přehled"),
             const BottomNavigationBarItem(
-                icon: Icon(Icons.savings), label: "Pokuty"),
+                icon: Icon(Icons.savings, key: ValueKey('fine_button')), label: "Pokuty"),
             BottomNavigationBarItem(label: "", icon: Container()),
             const BottomNavigationBarItem(
-                icon: Icon(Icons.equalizer), label: "Statistiky"),
-            const BottomNavigationBarItem(icon: Icon(Icons.menu), label: "Menu"),
+                icon: Icon(Icons.equalizer, key: ValueKey('stats_button')), label: "Statistiky"),
+            const BottomNavigationBarItem(icon: Icon(Icons.menu, key: ValueKey('menu_button')), label: "Menu"),
           ],
           currentIndex: _selectedBottomSheetIndex,
           selectedItemColor: selectedItemColor,

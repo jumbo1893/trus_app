@@ -84,6 +84,7 @@ class _MatchDropdownState extends ConsumerState<MatchDropdown> {
                       return matches
                           .map((e) =>
                           Container(
+                            key: ValueKey("match_item_${e.name}"),
                             alignment: Alignment.center,
                             child: Text(
                               e.listViewTitle(),

@@ -39,6 +39,7 @@ class _EditFineScreenState extends ConsumerState<EditFineScreen> {
         backToMainMenu: () => widget.backToMainMenu(),
         columns: [
           RowTextFieldStream(
+            key: const ValueKey('fine_name_field'),
             size: size,
             labelText: "název",
             textFieldText: "Název pokuty:",
@@ -50,6 +51,7 @@ class _EditFineScreenState extends ConsumerState<EditFineScreen> {
           ),
           const SizedBox(height: 10),
           RowTextFieldStream(
+            key: const ValueKey('fine_amount_field'),
             size: size,
             labelText: "v Kč",
             textFieldText: "Výše pokuty:",
@@ -63,6 +65,7 @@ class _EditFineScreenState extends ConsumerState<EditFineScreen> {
           ),
           const SizedBox(height: 10),
           RowSwitchStream(
+            key: const ValueKey('fine_switch_field'),
             size: size,
             padding: padding,
             textFieldText: "Pouze pro nově udělené pokuty?",
@@ -92,6 +95,7 @@ class _EditFineScreenState extends ConsumerState<EditFineScreen> {
           const SizedBox(height: 10),
           const SizedBox(height: 10),
           CrudButton(
+            key: const ValueKey('confirm_button'),
             text: "Potvrď změny",
             context: context,
             crud: Crud.update,
@@ -103,6 +107,7 @@ class _EditFineScreenState extends ConsumerState<EditFineScreen> {
             id: widget.fineModel!.id!,
           ),
           CrudButton(
+            key: const ValueKey('delete_button'),
             text: "Smaž pokutu",
             context: context,
             crud: Crud.delete,

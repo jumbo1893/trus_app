@@ -18,7 +18,6 @@ class RegistrationScreen extends ConsumerStatefulWidget {
 }
 
 class _RegistrationScreen extends ConsumerState<RegistrationScreen> {
-
   final emailController = TextEditingController();
   final passwordController = TextEditingController();
   String emailErrorText = "";
@@ -39,12 +38,15 @@ class _RegistrationScreen extends ConsumerState<RegistrationScreen> {
       passwordErrorText = validateEmptyField(password);
     });
 
-    if(emailErrorText.isEmpty && passwordErrorText.isEmpty) {
+    if (emailErrorText.isEmpty && passwordErrorText.isEmpty) {
       bool? result = await executeApi<bool?>(() async {
-        return await ref.read(authControllerProvider).signUpWithEmail(email, password);
-      },() {}, context, true);
+        return await ref
+            .read(authControllerProvider)
+            .signUpWithEmail(email, password);
+      }, () {}, context, true);
       if (result != null && result) {
-        Navigator.pushNamedAndRemoveUntil(context, UserInformationScreen.routeName, (route) => false);
+        Navigator.pushNamedAndRemoveUntil(
+            context, UserInformationScreen.routeName, (route) => false);
       }
     }
   }
@@ -63,9 +65,21 @@ class _RegistrationScreen extends ConsumerState<RegistrationScreen> {
             const SizedBox(height: 30),
             const Text("Pro registraturu zadej mail a heslo."),
             const SizedBox(height: 15),
-            CustomTextField(textController: emailController, labelText: "mail", errorText: emailErrorText,),
-            CustomTextField(textController: passwordController, labelText: "heslo", password: true, errorText: passwordErrorText,),
-            CustomButton(text: "Pokračuj", onPressed: () => sendEmailAndPassword()),
+            CustomTextField(
+                textController: emailController,
+                labelText: "mail",
+                errorText: emailErrorText,
+                key: const ValueKey('email_text_field')),
+            CustomTextField(
+                textController: passwordController,
+                labelText: "heslo",
+                password: true,
+                errorText: passwordErrorText,
+                key: const ValueKey('password_text_field')),
+            CustomButton(
+                text: "Pokračuj",
+                onPressed: () => sendEmailAndPassword(),
+                key: const ValueKey('confirm_button')),
           ],
         ),
       ),

@@ -62,6 +62,7 @@ class _EditMatchScreenState extends ConsumerState<EditMatchScreen> {
               backToMainMenu: () => widget.backToMainMenu(),
               columns: [
                 RowTextFieldStream(
+                  key: const ValueKey('match_name_field'),
                   size: size,
                   labelText: "jméno",
                   textFieldText: "Jméno soupeře:",
@@ -74,6 +75,7 @@ class _EditMatchScreenState extends ConsumerState<EditMatchScreen> {
                 ),
                 const SizedBox(height: 10),
                 RowCalendarStream(
+                  key: const ValueKey('match_date_field'),
                   size: size,
                   padding: padding,
                   textFieldText: "Datum zápasu:",
@@ -84,6 +86,7 @@ class _EditMatchScreenState extends ConsumerState<EditMatchScreen> {
                 ),
                 const SizedBox(height: 10),
                 RowSwitchStream(
+                  key: const ValueKey('match_home_field'),
                   size: size,
                   padding: padding,
                   textFieldText: "domácí zápas?",
@@ -94,6 +97,7 @@ class _EditMatchScreenState extends ConsumerState<EditMatchScreen> {
                 ),
                 const SizedBox(height: 10),
                 RowSeasonStream(
+                  key: const ValueKey('match_season_field'),
                   size: size,
                   padding: padding,
                   seasonList: ref.watch(matchControllerProvider).seasonList(),
@@ -106,6 +110,7 @@ class _EditMatchScreenState extends ConsumerState<EditMatchScreen> {
                 ),
                 const SizedBox(height: 10),
                 RowPlayerListStream(
+                  key: const ValueKey('match_player_field'),
                   size: size,
                   padding: padding,
                   playerList: ref.watch(matchControllerProvider).playerList(),
@@ -122,6 +127,7 @@ class _EditMatchScreenState extends ConsumerState<EditMatchScreen> {
                 ),
                 const SizedBox(height: 10),
                 RowPlayerListStream(
+                  key: const ValueKey('match_fan_field'),
                   size: size,
                   padding: padding,
                   playerList: ref.watch(matchControllerProvider).fanList(),
@@ -136,6 +142,7 @@ class _EditMatchScreenState extends ConsumerState<EditMatchScreen> {
                 ),
                 const SizedBox(height: 10),
                 CrudButton(
+                  key: const ValueKey('confirm_button'),
                   text: "Potvrď změny",
                   context: context,
                   crud: Crud.update,
@@ -147,6 +154,7 @@ class _EditMatchScreenState extends ConsumerState<EditMatchScreen> {
                   id: widget.matchModel!.id!,
                 ),
                 CrudButton(
+                  key: const ValueKey('delete_button'),
                   text: "Smaž zápas",
                   context: context,
                   crud: Crud.delete,
@@ -159,6 +167,7 @@ class _EditMatchScreenState extends ConsumerState<EditMatchScreen> {
                   modelToString: widget.matchModel!,
                 ),
                 CrudButton(
+                  key: const ValueKey('confirm_and_goal_button'),
                   text: "Uprav statistiky",
                   context: context,
                   crud: Crud.update,

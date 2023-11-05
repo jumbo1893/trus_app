@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:trus_app/colors.dart';
 
+import '../utils/utils.dart';
+
 class CustomTextField extends StatelessWidget {
   final TextEditingController textController;
   final String labelText;
@@ -24,36 +26,31 @@ class CustomTextField extends StatelessWidget {
     return TextField(
       controller: textController,
       onChanged: (value) {
-        if(onChanged != null && value.isNotEmpty) {
+        if (onChanged != null && value.isNotEmpty) {
           onChanged!(value);
         }
       },
       decoration: InputDecoration(
           enabledBorder: const UnderlineInputBorder(
-            borderSide: BorderSide(
-                color: orangeColor
-            ),
+            borderSide: BorderSide(color: orangeColor),
           ),
           focusedBorder: const UnderlineInputBorder(
-            borderSide: BorderSide(
-                color: orangeColor
-            ),
+            borderSide: BorderSide(color: orangeColor),
           ),
           labelText: labelText,
           labelStyle: const TextStyle(
             fontSize: 12,
           ),
-          floatingLabelStyle: const TextStyle(
-              color: blackColor
-          ),
+          floatingLabelStyle: const TextStyle(color: blackColor),
           errorText: errorText.isNotEmpty ? errorText : null,
           contentPadding: const EdgeInsets.only(left: 10, top: 10),
           suffixIcon: textController.text.isNotEmpty
               ? IconButton(
-              onPressed: () => {textController.clear(), onChanged!("")},
-              icon: const Icon(Icons.cancel, color: Colors.grey,))
-              : null
-      ),
+                  onPressed: () => {textController.clear(), onChanged!("")},
+                  icon: Icon(Icons.cancel,
+                      color: Colors.grey,
+                      key: ValueKey("${getValueFromValueKey(key!)}_button")))
+              : null),
       textAlign: TextAlign.right,
       obscureText: password,
       keyboardType: (number ? TextInputType.number : TextInputType.text),

@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 
+import '../../../utils/utils.dart';
 import '../../custom_text.dart';
 import '../../custom_text_field.dart';
 import '../../loader.dart';
@@ -16,7 +17,7 @@ class RowTextFieldStream extends StatefulWidget {
   final Stream<String>? errorTextStream;
   final Function(String) onTextChanged;
   const RowTextFieldStream(
-      {Key? key,
+      {required Key key,
       required this.size,
       required this.padding,
       required this.labelText,
@@ -94,6 +95,7 @@ class _RowTextFieldStream extends State<RowTextFieldStream> {
                       errorText = errorSnapshot.data!;
                     }
                     return CustomTextField(
+                      key: ValueKey("${getValueFromValueKey(widget.key!)}_text"),
                       textController: _nameController,
                       labelText: widget.labelText,
                       errorText: errorText,

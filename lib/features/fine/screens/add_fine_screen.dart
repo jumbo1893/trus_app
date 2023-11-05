@@ -36,6 +36,7 @@ class _AddFineScreenState extends ConsumerState<AddFineScreen> {
       backToMainMenu: () => widget.backToMainMenu(),
       columns: [
         RowTextFieldStream(
+          key: const ValueKey('fine_name_field'),
           size: size,
           labelText: "název",
           textFieldText: "Název pokuty:",
@@ -47,6 +48,7 @@ class _AddFineScreenState extends ConsumerState<AddFineScreen> {
         ),
         const SizedBox(height: 10),
         RowTextFieldStream(
+          key: const ValueKey('fine_amount_field'),
           size: size,
           labelText: "v Kč",
           textFieldText: "Výše pokuty:",
@@ -60,6 +62,7 @@ class _AddFineScreenState extends ConsumerState<AddFineScreen> {
         const SizedBox(height: 10),
         const SizedBox(height: 10),
         CrudButton(
+          key: const ValueKey('confirm_button'),
           text: "Potvrď",
           context: context,
           crud: Crud.create,

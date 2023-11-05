@@ -16,7 +16,9 @@ Future<DateTime> showCalendar(BuildContext context, DateTime? initialDate) async
 }
 
 String dateTimeToString(DateTime dateTime) {
-  return "${dateTime.day}.${dateTime.month}. ${dateTime.year}";
+  final formatter = DateFormat('dd.MM. yyyy');
+  final returnDate = formatter.format(dateTime.toLocal());
+  return returnDate;
 }
 
 bool isSameDay(DateTime dateTime1, DateTime dateTime2) {
