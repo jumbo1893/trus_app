@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:trus_app/common/widgets/custom_text_button.dart';
@@ -12,6 +14,7 @@ import 'package:trus_app/common/utils/utils.dart';
 import '../../../common/widgets/custom_button.dart';
 import '../../../models/api/user_api_model.dart';
 import '../../general/error/api_executor.dart';
+import '../../loading/loading_screen.dart';
 
 class LoginScreen extends ConsumerStatefulWidget {
   static const routeName = '/login-screen';
@@ -26,6 +29,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   final passwordController = TextEditingController();
   String emailErrorText = "";
   String passwordErrorText = "";
+  bool _isLoading = false;
+  UserApiModel? _user;
+  final loadingController = StreamController<bool>.broadcast();
 
   @override
   void dispose() {
@@ -40,23 +46,41 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     setState(() {
       emailErrorText = validateEmptyField(email);
       passwordErrorText = validateEmptyField(password);
+      _isLoading = true;
     });
     if (emailErrorText.isEmpty && passwordErrorText.isEmpty) {
       UserApiModel? user = await executeApi<UserApiModel?>(() async {
         return await ref
             .read(authControllerProvider)
             .signInWithEmail(email, password);
-      }, () {}, context, true);
+      }, () {}, context, false);
       if (user != null) {
-        if (user.name == null || user.name!.isEmpty) {
-          Navigator.pushNamedAndRemoveUntil(
-              context, UserInformationScreen.routeName, (route) => false);
-        } else {
-          showSnackBarWithPostFrame(
-              context: context, content: user.toStringForAdd());
-          Navigator.pushNamed(context, MainScreen.routeName);
-        }
+        _user = user;
+        loadingController.add(false);
       }
+      else {
+        setState(() {
+          loadingController.add(true);
+          _isLoading = false;
+        });
+      }
+    }
+    else {
+      setState(() {
+        loadingController.add(true);
+        _isLoading = false;
+      });
+    }
+  }
+
+  void navigateToHomePage(UserApiModel user) {
+    if (user.name == null || user.name!.isEmpty) {
+      Navigator.pushNamedAndRemoveUntil(
+          context, UserInformationScreen.routeName, (route) => false);
+    } else {
+      showSnackBarWithPostFrame(
+          context: context, content: user.toStringForAdd());
+      Navigator.pushNamed(context, MainScreen.routeName);
     }
   }
 
@@ -78,6 +102,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
 
   @override
   Widget build(BuildContext context) {
+    if(_isLoading) {
+      return LoadingScreen(buttonClicked: () => navigateToHomePage(_user!), buttonText: "Pokračovat na domovskou obrazovku", loadingFlag: loadingController.stream, loadingDoneText: "Úspěšně přihlášeno!",);
+    }
     return Scaffold(
       body: SafeArea(
         child: Column(

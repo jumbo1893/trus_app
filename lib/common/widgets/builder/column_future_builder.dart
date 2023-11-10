@@ -24,7 +24,7 @@ class ColumnFutureBuilder<T> extends StatelessWidget {
         stream: loadingScreen,
         builder: (context, loadingSnapshot) {
           if (loadingSnapshot.connectionState != ConnectionState.waiting && loadingSnapshot.hasData && loadingSnapshot.data!) {
-            return const LoadingScreen();
+            return const Loader();
           }
           return FutureBuilder<void>(
               future: loadModelFuture,
