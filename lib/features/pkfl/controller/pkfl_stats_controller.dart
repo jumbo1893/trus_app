@@ -9,287 +9,345 @@ import 'package:trus_app/models/enum/spinner_options.dart';
 import 'package:trus_app/models/pkfl/pkfl_match.dart';
 import 'package:trus_app/models/pkfl/pkfl_player_stats.dart';
 import 'package:trus_app/models/pkfl/pkfl_season.dart';
+import '../../../models/api/pkfl/pkfl_all_individual_stats.dart';
+import '../../../models/api/pkfl/pkfl_card_comment.dart';
+import '../../../models/api/pkfl/pkfl_individual_stats_api_model.dart';
 import '../../../models/helper/percentage_loader_model.dart';
+import '../../../models/helper/pkfl_all_individual_stats_with_spinner.dart';
 import '../../../models/pkfl/pkfl_match_player.dart';
+import '../../general/read_operations.dart';
+import '../repository/pkfl_api_service.dart';
 import '../repository/pkfl_repository.dart';
 
 final pkflStatsControllerProvider = Provider((ref) {
   final pkflRepository = ref.watch(pkflRepositoryProvider);
-  return PkflStatsController(pkflRepository: pkflRepository, ref: ref);
+  final pkflApiService = ref.watch(pkflApiServiceProvider);
+  return PkflStatsController(
+      pkflRepository: pkflRepository, ref: ref, pkflApiService: pkflApiService);
 });
 
 class PkflStatsController {
   final PkflRepository pkflRepository;
+  final PkflApiService pkflApiService;
   final ProviderRef ref;
-  final streamLoaderTextController =
-      StreamController<PercentageLoaderModel>.broadcast();
-  final streamLoaderController = StreamController<bool>.broadcast();
-  final streamPkflStatsPlayer =
-      StreamController<List<PkflPlayerStats>>.broadcast();
-  final snackBarController = StreamController<String>.broadcast();
-  List<PkflMatch> matchListCurrentSeason = [];
-  List<PkflMatch> matchListAllSeasons = [];
+  List<PkflAllIndividualStats> matchListCurrentSeason = [];
+  List<PkflAllIndividualStats> matchListAllSeasons = [];
+  final pickedOptionController = StreamController<SpinnerOption>.broadcast();
+  final matchListController =
+      StreamController<PkflAllIndividualStatsWithSpinner>.broadcast();
+
+  bool currentSeason = true;
+  SpinnerOption? spinnerOption;
+  bool desc = true;
+  String? filterText;
 
   PkflStatsController({
     required this.pkflRepository,
+    required this.pkflApiService,
     required this.ref,
   });
 
-  Future<String> url() async {
-    return pkflRepository.getPkflTeamUrl();
+  Stream<PkflAllIndividualStatsWithSpinner> pkflPlayerStats() {
+    return matchListController.stream;
   }
 
-  Stream<String> snackBar() {
-    return snackBarController.stream;
-  }
-
-  Stream<PercentageLoaderModel> loaderTextData() {
-    return streamLoaderTextController.stream;
-  }
-
-  Stream<bool> loaderData() {
-    return streamLoaderController.stream;
-  }
-
-  Stream<List<PkflPlayerStats>> pkflPlayerStats() {
-    return streamPkflStatsPlayer.stream;
-  }
-
-  void setPkflPlayerStats(bool currentSeason, SpinnerOption option, bool desc,
-      String? filterText) async {
-    try {
-      streamLoaderController.add(true);
-      if (currentSeason) {
-        if (matchListCurrentSeason.isEmpty) {
-          matchListCurrentSeason = await _setPkflMatches(currentSeason);
-        }
-        streamPkflStatsPlayer.add(_sortPkflStatsPlayers(
-            _initPlayerStatsList(matchListCurrentSeason, filterText),
-            desc,
-            option));
-      } else {
-        if (matchListAllSeasons.isEmpty) {
-          matchListAllSeasons = await _setPkflMatches(currentSeason);
-        }
-        streamPkflStatsPlayer.add(_sortPkflStatsPlayers(
-            _initPlayerStatsList(matchListAllSeasons, filterText),
-            desc,
-            option));
+  Future<void> setListToStream() async {
+    if (currentSeason) {
+      if (matchListCurrentSeason.isEmpty) {
+        await getModels();
       }
-      streamLoaderController.add(false);
-    } catch (e) {
-      snackBarController.add(e.toString());
+      matchListController.add(_sortPkflStatsPlayers(
+          matchListCurrentSeason, desc, noNullSpinnerOption(), filterText));
+    } else {
+      if (matchListAllSeasons.isEmpty) {
+        await getModels();
+      }
+      matchListController.add(_sortPkflStatsPlayers(
+          matchListAllSeasons, desc, noNullSpinnerOption(), filterText));
     }
   }
 
-  Future<List<PkflMatch>> _setPkflMatches(bool currentSeason) async {
-    List<PkflMatch> matches = [];
-    streamLoaderTextController
-        .add(PercentageLoaderModel("připojuji se k webu pkfl"));
-    String url = await pkflRepository.getPkflTeamUrl();
-    streamLoaderTextController.add(PercentageLoaderModel("načítám sezony"));
-    RetrieveSeasonUrlTask retrieveSeasonUrlTask =
-        RetrieveSeasonUrlTask(url, currentSeason);
-    List<PkflSeason> pkflSeasons =
-        await retrieveSeasonUrlTask.returnPkflSeasons();
-    streamLoaderTextController.add(PercentageLoaderModel("načítám zápasy"));
-    for (PkflSeason pkflSeason in pkflSeasons) {
-      streamLoaderTextController
-          .add(PercentageLoaderModel("načítám sezonu ${pkflSeason.name}"));
-      RetrieveMatchesTask retrieveMatchesTask =
-          RetrieveMatchesTask(pkflSeason.url);
-      matches.addAll(await retrieveMatchesTask.returnPkflMatches());
-    }
-    int detailNumber = 1;
-    for (PkflMatch pkflMatch in matches) {
-      PercentageLoaderModel loader = PercentageLoaderModel(
-          "načítám detail zápasu:\n ${pkflMatch.toStringWithOpponentAndDate()}");
-      loader.calculatePercentageNumber(detailNumber, pkflSeasons.length);
-      streamLoaderTextController.add(loader);
-      RetrieveMatchDetailTask retrieveMatchDetailTask =
-          RetrieveMatchDetailTask(pkflMatch.urlResult);
-      pkflMatch.pkflMatchDetail ??=
-          (await retrieveMatchDetailTask.returnPkflMatchDetail());
-      detailNumber++;
-    }
-    return matches;
+  SpinnerOption noNullSpinnerOption() {
+    spinnerOption ??= SpinnerOption.values[0];
+    return spinnerOption!;
   }
 
-  List<PkflPlayerStats> _initPlayerStatsList(
-      List<PkflMatch> matches, String? filterValue) {
-    HashMap<PkflMatchPlayer, PkflPlayerStats> pkflPlayerStatsHashMap =
-        HashMap();
-    for (PkflMatch pkflMatch in matches) {
-      for (PkflMatchPlayer pkflMatchPlayer
-          in pkflMatch.pkflMatchDetail!.pkflPlayers) {
-        if (filterValue == null ||
-            pkflMatchPlayer.name
-                .toLowerCase()
-                .contains(filterValue.toLowerCase())) {
-          PkflPlayerStats? hashStatPlayer =
-              pkflPlayerStatsHashMap[pkflMatchPlayer];
-          if (hashStatPlayer == null) {
-            PkflPlayerStats pkflPlayerStats =
-                PkflPlayerStats(pkflMatchPlayer.name);
-            pkflPlayerStats.enhanceWithPlayerDetail(pkflMatchPlayer, pkflMatch);
-            pkflPlayerStatsHashMap.addAll({pkflMatchPlayer: pkflPlayerStats});
-          } else {
-            hashStatPlayer.enhanceWithPlayerDetail(pkflMatchPlayer, pkflMatch);
-          }
+  Future<void> setPickedOption(SpinnerOption option) async {
+    spinnerOption = option;
+    pickedOptionController.add(option);
+    await setListToStream();
+  }
+
+  void setCurrentOption() {
+    spinnerOption ??= SpinnerOption.values[0];
+    setPickedOption(spinnerOption!);
+  }
+
+  Stream<SpinnerOption> pickedOption() {
+    return pickedOptionController.stream;
+  }
+
+  Stream<PkflAllIndividualStatsWithSpinner> playerStatsList() {
+    return matchListController.stream;
+  }
+
+  Future<void> onRevertTap() async {
+    desc = !desc;
+    await setListToStream();
+  }
+
+  Future<void> setSeason(bool currentSeason) async {
+    this.currentSeason = currentSeason;
+    await setListToStream();
+  }
+
+  Future<void> setFilteredText(String? filter) async {
+    filterText = filter;
+    await setListToStream();
+  }
+
+  PkflAllIndividualStatsWithSpinner setPkflAllIndividualStatsWithSpinner(
+      List<PkflAllIndividualStats> players) {
+    return PkflAllIndividualStatsWithSpinner(
+        pkflAllIndividualStats: players, option: noNullSpinnerOption());
+  }
+
+  PkflAllIndividualStatsWithSpinner _sortPkflStatsPlayers(
+      List<PkflAllIndividualStats> playerStatsList,
+      bool desc,
+      SpinnerOption option,
+      String? filterText) {
+    List<PkflAllIndividualStats> players = [];
+    if (filterText != null && filterText.isNotEmpty) {
+      for (PkflAllIndividualStats playerStats in playerStatsList) {
+        if (playerStats.player.name.contains(filterText.trim())) {
+          players.add(playerStats);
         }
       }
+    } else {
+      players.addAll(playerStatsList);
     }
-    return pkflPlayerStatsHashMap.values.toList();
-  }
-
-  List<PkflPlayerStats> _sortPkflStatsPlayers(
-      List<PkflPlayerStats> players, bool desc, SpinnerOption option) {
     switch (option) {
       case SpinnerOption.bestPlayerRatio:
         if (desc) {
           players.sort((b, a) => a
               .getBestPlayerMatchesRatio()
               .compareTo(b.getBestPlayerMatchesRatio()));
-          return players;
+          return setPkflAllIndividualStatsWithSpinner(players);
         } else {
           players.sort((a, b) => a
               .getBestPlayerMatchesRatio()
               .compareTo(b.getBestPlayerMatchesRatio()));
         }
-        return players;
+        return setPkflAllIndividualStatsWithSpinner(players);
       case SpinnerOption.goals:
         if (desc) {
           players.sort((b, a) => a.goals.compareTo(b.goals));
-          return players;
+          return setPkflAllIndividualStatsWithSpinner(players);
         } else {
           players.sort((a, b) => a.goals.compareTo(b.goals));
         }
-        return players;
+        return setPkflAllIndividualStatsWithSpinner(players);
       case SpinnerOption.bestPlayers:
         if (desc) {
           players.sort((b, a) => a.bestPlayer.compareTo(b.bestPlayer));
-          return players;
+          return setPkflAllIndividualStatsWithSpinner(players);
         } else {
           players.sort((a, b) => a.bestPlayer.compareTo(b.bestPlayer));
         }
-        return players;
+        return setPkflAllIndividualStatsWithSpinner(players);
       case SpinnerOption.yellowCards:
         if (desc) {
           players.sort((b, a) => a.yellowCards.compareTo(b.yellowCards));
-          return players;
+          return setPkflAllIndividualStatsWithSpinner(players);
         } else {
           players.sort((a, b) => a.yellowCards.compareTo(b.yellowCards));
         }
-        return players;
+        return setPkflAllIndividualStatsWithSpinner(players);
       case SpinnerOption.redCards:
         if (desc) {
           players.sort((b, a) => a.redCards.compareTo(b.redCards));
-          return players;
+          return setPkflAllIndividualStatsWithSpinner(players);
         } else {
           players.sort((a, b) => a.redCards.compareTo(b.redCards));
         }
-        return players;
+        return setPkflAllIndividualStatsWithSpinner(players);
       case SpinnerOption.ownGoals:
         if (desc) {
           players.sort((b, a) => a.ownGoals.compareTo(b.ownGoals));
-          return players;
+          return setPkflAllIndividualStatsWithSpinner(players);
         } else {
           players.sort((a, b) => a.ownGoals.compareTo(b.ownGoals));
         }
-        return players;
+        return setPkflAllIndividualStatsWithSpinner(players);
       case SpinnerOption.matches:
         if (desc) {
           players.sort((b, a) => a.matches.compareTo(b.matches));
-          return players;
+          return setPkflAllIndividualStatsWithSpinner(players);
         } else {
           players.sort((a, b) => a.matches.compareTo(b.matches));
         }
-        return players;
+        return setPkflAllIndividualStatsWithSpinner(players);
       case SpinnerOption.goalkeepingMinutes:
         if (desc) {
           players.sort(
               (b, a) => a.goalkeepingMinutes.compareTo(b.goalkeepingMinutes));
-          return players;
+          return setPkflAllIndividualStatsWithSpinner(players);
         } else {
           players.sort(
               (a, b) => a.goalkeepingMinutes.compareTo(b.goalkeepingMinutes));
         }
-        return players;
+        return setPkflAllIndividualStatsWithSpinner(players);
       case SpinnerOption.goalRatio:
         if (desc) {
           players.sort((b, a) =>
               a.getGoalMatchesRatio().compareTo(b.getGoalMatchesRatio()));
-          return players;
+          return setPkflAllIndividualStatsWithSpinner(players);
         } else {
           players.sort((a, b) =>
               a.getGoalMatchesRatio().compareTo(b.getGoalMatchesRatio()));
         }
-        return players;
+        return setPkflAllIndividualStatsWithSpinner(players);
       case SpinnerOption.receivedGoalsRatio:
         if (desc) {
           players.sort((b, a) => a
               .getReceivedGoalsGoalkeepingMinutesRatio()
               .compareTo(b.getReceivedGoalsGoalkeepingMinutesRatio()));
-          return players;
+          return setPkflAllIndividualStatsWithSpinner(players);
         } else {
           players.sort((a, b) => a
               .getReceivedGoalsGoalkeepingMinutesRatio()
               .compareTo(b.getReceivedGoalsGoalkeepingMinutesRatio()));
         }
-        return players;
+        return setPkflAllIndividualStatsWithSpinner(players);
       case SpinnerOption.yellowCardRatio:
         if (desc) {
           players.sort((b, a) => a
               .getYellowCardMatchesRatio()
               .compareTo(b.getYellowCardMatchesRatio()));
-          return players;
+          return setPkflAllIndividualStatsWithSpinner(players);
         } else {
           players.sort((a, b) => a
               .getYellowCardMatchesRatio()
               .compareTo(b.getYellowCardMatchesRatio()));
         }
-        return players;
+        return setPkflAllIndividualStatsWithSpinner(players);
       case SpinnerOption.hattrick:
         if (desc) {
           players.sort((b, a) => a.hattrick.compareTo(b.hattrick));
-          return players;
+          return setPkflAllIndividualStatsWithSpinner(players);
         } else {
           players.sort((a, b) => a.hattrick.compareTo(b.hattrick));
         }
-        return players;
+        return setPkflAllIndividualStatsWithSpinner(players);
       case SpinnerOption.cleanSheet:
         if (desc) {
           players.sort((b, a) => a.cleanSheet.compareTo(b.cleanSheet));
-          return players;
+          return setPkflAllIndividualStatsWithSpinner(players);
         } else {
           players.sort((a, b) => a.cleanSheet.compareTo(b.cleanSheet));
         }
-        return players;
-      case SpinnerOption.cardDetail:
-        return filterPlayerWithComments(players);
+        return setPkflAllIndividualStatsWithSpinner(players);
+      case SpinnerOption.yellowCardDetail:
+        return filterPlayerWithComments(players, true);
+      case SpinnerOption.redCardDetail:
+        return filterPlayerWithComments(players, false);
       case SpinnerOption.receivedGoals:
         if (desc) {
           players.sort((b, a) => a.receivedGoals.compareTo(b.receivedGoals));
-          return players;
+          return setPkflAllIndividualStatsWithSpinner(players);
         } else {
           players.sort((a, b) => a.receivedGoals.compareTo(b.receivedGoals));
         }
-        return players;
+        return setPkflAllIndividualStatsWithSpinner(players);
+      case SpinnerOption.matchPoints:
+        if (desc) {
+          players.sort((b, a) => a
+              .getMatchPointsMatchesRatio()
+              .compareTo(b.getMatchPointsMatchesRatio()));
+          return setPkflAllIndividualStatsWithSpinner(players);
+        } else {
+          players.sort((a, b) => a
+              .getMatchPointsMatchesRatio()
+              .compareTo(b.getMatchPointsMatchesRatio()));
+        }
+        return setPkflAllIndividualStatsWithSpinner(players);
     }
   }
 
-  List<PkflPlayerStats> filterPlayerWithComments(
-      List<PkflPlayerStats> allPlayers) {
-    List<PkflPlayerStats> players = [];
-    for (PkflPlayerStats playerStats in allPlayers) {
-      if (playerStats.cardDetail.isNotEmpty) {
-        for (String cardDetail in playerStats.cardDetail) {
-          PkflPlayerStats pkflPlayerStats = PkflPlayerStats(playerStats.name);
-          pkflPlayerStats.singleCardDetail = cardDetail;
-          players.add(pkflPlayerStats);
+  PkflAllIndividualStatsWithSpinner filterPlayerWithComments(
+      List<PkflAllIndividualStats> allPlayers, bool yellow) {
+    List<PkflAllIndividualStats> players = [];
+    for (PkflAllIndividualStats playerStats in allPlayers) {
+      if (yellow) {
+        if (playerStats.yellowCardComments.isNotEmpty) {
+          for (PkflCardComment comment in playerStats.yellowCardComments) {
+            List<PkflCardComment> comments = [];
+            comments.add(comment);
+            PkflAllIndividualStats pkflAllIndividualStats =
+                PkflAllIndividualStats(
+                    matches: 0,
+                    player: playerStats.player,
+                    goals: 0,
+                    receivedGoals: 0,
+                    ownGoals: 0,
+                    goalkeepingMinutes: 0,
+                    yellowCards: 0,
+                    redCards: 0,
+                    bestPlayer: 0,
+                    hattrick: 0,
+                    cleanSheet: 0,
+                    yellowCardComments: comments,
+                    redCardComments: [],
+                    matchPoints: 0);
+            players.add(pkflAllIndividualStats);
+          }
+        }
+      } else {
+        if (playerStats.redCardComments.isNotEmpty) {
+          for (PkflCardComment comment in playerStats.redCardComments) {
+            List<PkflCardComment> comments = [];
+            comments.add(comment);
+            PkflAllIndividualStats pkflAllIndividualStats =
+                PkflAllIndividualStats(
+                    matches: 0,
+                    player: playerStats.player,
+                    goals: 0,
+                    receivedGoals: 0,
+                    ownGoals: 0,
+                    goalkeepingMinutes: 0,
+                    yellowCards: 0,
+                    redCards: 0,
+                    bestPlayer: 0,
+                    hattrick: 0,
+                    cleanSheet: 0,
+                    yellowCardComments: [],
+                    redCardComments: comments,
+                    matchPoints: 0);
+            players.add(pkflAllIndividualStats);
+          }
         }
       }
     }
-    return players;
+    return setPkflAllIndividualStatsWithSpinner(players);
+  }
+
+  @override
+  Future<PkflAllIndividualStatsWithSpinner> getModels() async {
+    if (currentSeason) {
+      if (matchListCurrentSeason.isEmpty) {
+        matchListCurrentSeason =
+            await pkflApiService.getPkflAllIndividualStats(currentSeason);
+      }
+      return _sortPkflStatsPlayers(
+          matchListCurrentSeason, desc, noNullSpinnerOption(), filterText);
+    } else {
+      if (matchListAllSeasons.isEmpty) {
+        matchListAllSeasons =
+            await pkflApiService.getPkflAllIndividualStats(currentSeason);
+      }
+      return _sortPkflStatsPlayers(
+          matchListAllSeasons, desc, noNullSpinnerOption(), filterText);
+    }
   }
 }

@@ -106,7 +106,7 @@ class BottomSheetNavigationManager {
                   Icons.sports_soccer,
                   color: Colors.orange,
                 ),
-                title: const Text("Seznam PKFL zápasů"),
+                title: const Text("Program zápasů"),
                 onTap: () => onModalBottomSheetMenuTapped(19),
               ),
               ListTile(

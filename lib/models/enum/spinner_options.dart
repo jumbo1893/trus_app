@@ -12,8 +12,10 @@ enum SpinnerOption {
   yellowCardRatio("Žluté karty/zápasy"),
   hattrick("Hattricky"),
   cleanSheet("Čistá konta"),
-  cardDetail("Detail karet"),
-  receivedGoals("Obdržené góly");
+  yellowCardDetail("Detail žlutých karet"),
+  redCardDetail("Detail červených karet"),
+  receivedGoals("Obdržené góly"),
+  matchPoints("Úspěšnost v zápasech");
 
   final String name;
 

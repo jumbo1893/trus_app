@@ -1,24 +1,31 @@
 import 'dart:async';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:trus_app/features/general/read_operations.dart';
 import 'package:trus_app/features/pkfl/tasks/retrieve_match_detail_task.dart';
 import 'package:trus_app/features/pkfl/tasks/retrieve_matches_task.dart';
 import 'package:trus_app/features/pkfl/tasks/retrieve_season_url_task.dart';
+import 'package:trus_app/models/api/interfaces/model_to_string.dart';
+import 'package:trus_app/models/api/pkfl/pkfl_match_api_model.dart';
 import 'package:trus_app/models/pkfl/pkfl_match.dart';
 import 'package:trus_app/models/pkfl/pkfl_season.dart';
+import '../repository/pkfl_api_service.dart';
 import '../repository/pkfl_repository.dart';
 
 final pkflControllerProvider = Provider((ref) {
   final pkflRepository = ref.watch(pkflRepositoryProvider);
-  return PkflController(pkflRepository: pkflRepository, ref: ref);
+  final pkflApiService = ref.watch(pkflApiServiceProvider);
+  return PkflController(pkflRepository: pkflRepository, ref: ref, pkflApiService: pkflApiService);
 });
 
-class PkflController {
+class PkflController implements ReadOperations{
   final PkflRepository pkflRepository;
+  final PkflApiService pkflApiService;
   final ProviderRef ref;
   final snackBarController = StreamController<String>.broadcast();
   PkflController({
     required this.pkflRepository,
+    required this.pkflApiService,
     required this.ref,
   });
 
@@ -83,5 +90,10 @@ class PkflController {
       }
     }
     return returnMatches;
+  }
+
+  @override
+  Future<List<PkflMatchApiModel>> getModels() async {
+    return await pkflApiService.getPkflFixtures();
   }
 }

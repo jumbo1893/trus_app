@@ -5,6 +5,7 @@ import 'package:trus_app/features/pkfl/repository/pkfl_repository.dart';
 
 import '../../../models/api/home/chart.dart';
 import '../../../models/api/home/home_setup.dart';
+import '../../../models/api/pkfl/pkfl_match_api_model.dart';
 import '../../../models/api/player_api_model.dart';
 import '../../../models/pkfl/pkfl_match.dart';
 import '../../auth/repository/auth_repository.dart';
@@ -36,6 +37,9 @@ class HomeController implements ReadOperations {
   List<String> randomFacts = [];
   Chart? chart;
   int? playerId;
+  PkflMatchApiModel? nextMatch;
+  PkflMatchApiModel? lastMatch;
+  HomeSetup? homeSetup;
 
   HomeController({
     required this.homeApiService,
@@ -53,18 +57,12 @@ class HomeController implements ReadOperations {
     return birthday;
   }
 
-  Future<PkflMatch?> getNextPkflMatch() async {
-    String url = "";
-    List<PkflMatch> matches = [];
-    url = await pkflRepository.getPkflTeamUrl();
-    RetrieveMatchesTask matchesTask = RetrieveMatchesTask(url);
-    try {
-      await matchesTask.returnPkflMatches().then((value) => matches = value);
-    } catch (e, stacktrace) {
-      print(stacktrace);
-    }
+  Future<PkflMatchApiModel?> getNextPkflMatch() async {
+    return nextMatch;
+  }
 
-    return returnNextPkflMatch(matches);
+  Future<PkflMatchApiModel?> getLastPkflMatch() async {
+    return lastMatch;
   }
 
   PkflMatch? returnNextPkflMatch(List<PkflMatch> pkflMatches) {
@@ -83,12 +81,22 @@ class HomeController implements ReadOperations {
     await authRepository.editCurrentUser(null, null, playerId);
   }
 
-  Future<HomeSetup> setupHome() async {
+  Future<void> reloadSetupHome() async {
+    print("reloadSetupHome");
     HomeSetup homeSetup = await homeApiService.setupHome(playerId);
-    birthday = homeSetup.nextBirthday;
-    randomFacts = homeSetup.randomFacts;
-    chart = homeSetup.chart;
-    return homeSetup;
+    this.homeSetup = homeSetup;
+  }
+
+  Future<HomeSetup> setupHome(bool changedMatch) async {
+    if(homeSetup == null || changedMatch) {
+      await reloadSetupHome();
+    }
+    birthday = homeSetup!.nextBirthday;
+    randomFacts = homeSetup!.randomFacts;
+    chart = homeSetup!.chart;
+    nextMatch = homeSetup!.nextAndLastPkflMatch[0];
+    lastMatch = homeSetup!.nextAndLastPkflMatch[1];
+    return homeSetup!;
   }
 
   @override

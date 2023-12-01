@@ -48,7 +48,6 @@ class _PkflMatchScreenState extends ConsumerState<PkflMatchScreen> {
                     if (snapshot.connectionState == ConnectionState.waiting) {
                       return const Loader();
                     }
-                    sortMatchesByDate(snapshot.data!, false);
                     return ListView.builder(
                       shrinkWrap: true,
                       itemCount: snapshot.data!.length,
@@ -214,7 +213,6 @@ class _PkflMatchScreenState extends ConsumerState<PkflMatchScreen> {
                       if (snapshot.connectionState == ConnectionState.waiting) {
                         return const Loader();
                       }
-                      sortMatchesByDate(snapshot.data!, false);
                       return Expanded(
                         child: ListView.builder(
                           shrinkWrap: true,

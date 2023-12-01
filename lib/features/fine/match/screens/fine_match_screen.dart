@@ -15,7 +15,7 @@ class FineMatchScreen extends ConsumerStatefulWidget {
   final Function(PlayerApiModel player) setPlayer;
   final Function(MatchApiModel match) setMatch;
   final Function(List<int> playerIdListToChangeFines) playerIdListToChangeFines;
-  final MatchApiModel mainMatch;
+  final int matchId;
   final bool isFocused;
   final VoidCallback backToMainMenu;
   const FineMatchScreen({
@@ -23,7 +23,7 @@ class FineMatchScreen extends ConsumerStatefulWidget {
     required this.setPlayer,
     required this.playerIdListToChangeFines,
     required this.setMatch,
-    required this.mainMatch,
+    required this.matchId,
     required this.isFocused,
     required this.backToMainMenu,
   }) : super(key: key);
@@ -57,7 +57,7 @@ class _FineMatchScreenState extends ConsumerState<FineMatchScreen> {
       return ErrorFutureBuilder<void>(
           future: ref
               .read(fineMatchControllerProvider)
-              .initScreen(widget.mainMatch.id),
+              .initScreen(widget.matchId),
           context: context,
           backToMainMenu: () => widget.backToMainMenu(),
           widget: Scaffold(

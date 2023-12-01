@@ -8,6 +8,8 @@ import '../../../models/api/goal/goal_api_model.dart';
 import '../../../models/api/interfaces/json_and_http_converter.dart';
 import '../../../models/api/match/match_api_model.dart';
 import '../../../models/api/notification_api_model.dart';
+import '../../../models/api/pkfl/pkfl_all_individual_stats.dart';
+import '../../../models/api/pkfl/pkfl_match_api_model.dart';
 import '../../../models/api/player_api_model.dart';
 import '../../../models/api/receivedfine/received_fine_api_model.dart';
 import '../../../models/api/season_api_model.dart';
@@ -34,6 +36,10 @@ class CrudApiService extends RequestExecutor {
         return UserApiModel.fromJson(json);
       case notificationApi:
         return NotificationApiModel.fromJson(json);
+      case pkflApi:
+        return PkflMatchApiModel.fromJson(json);
+      case pkflAllIndividualStatsApi:
+        return PkflAllIndividualStats.fromJson(json);
       default:
         throw JsonDecodeException();
     }
@@ -49,6 +55,22 @@ class CrudApiService extends RequestExecutor {
     final decodedBody = await executeGetRequest<List<JsonAndHttpConverter>>(
         Uri.parse("$serverUrl/$apiClass/get-all"),
         (dynamic body) => (body as List<dynamic>)
+            .map((e) => _mapToModel(e as Map<String, dynamic>, apiClass) as T)
+            .toList(),
+        queryParameters);
+    return decodedBody.cast<T>();
+  }
+
+  ///get request na server
+  ///
+  /// [apiClass] třída na kterou posíláme req
+  /// [queryParameters] parametry requestu
+  /// vrací list modelů zabalené v classe JsonAndHttpConverter
+  Future<List<T>> getModelsWithoutGetAll<T extends JsonAndHttpConverter>(
+      String apiClass, Map<String, String?>? queryParameters) async {
+    final decodedBody = await executeGetRequest<List<JsonAndHttpConverter>>(
+        Uri.parse("$serverUrl/$apiClass"),
+            (dynamic body) => (body as List<dynamic>)
             .map((e) => _mapToModel(e as Map<String, dynamic>, apiClass) as T)
             .toList(),
         queryParameters);

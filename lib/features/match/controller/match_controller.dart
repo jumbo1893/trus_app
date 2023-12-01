@@ -10,25 +10,29 @@ import '../../../common/static_text.dart';
 import '../../../common/utils/field_validator.dart';
 import '../../../models/api/match/match_api_model.dart';
 import '../../../models/api/match/match_setup.dart';
+import '../../../models/api/pkfl/pkfl_match_api_model.dart';
+import '../../../models/api/pkfl/pkfl_match_detail.dart';
+import '../../../models/enum/match_detail_options.dart';
 import '../../../models/pkfl/pkfl_match.dart';
 import '../../general/crud_operations.dart';
+import '../../pkfl/repository/pkfl_api_service.dart';
 import '../../pkfl/tasks/retrieve_matches_task.dart';
 import '../repository/match_api_service.dart';
 import 'package:collection/collection.dart';
 
 final matchControllerProvider = Provider((ref) {
-  final pkflRepository = ref.watch(pkflRepositoryProvider);
+  final pkflApiService = ref.watch(pkflApiServiceProvider);
   final matchApiService = ref.watch(matchApiServiceProvider);
   final seasonApiService = ref.watch(seasonApiServiceProvider);
   return MatchController(
-      pkflRepository: pkflRepository,
+      pkflApiService: pkflApiService,
       matchApiService: matchApiService,
       seasonApiService: seasonApiService,
       ref: ref);
 });
 
 class MatchController implements CrudOperations {
-  final PkflRepository pkflRepository;
+  final PkflApiService pkflApiService;
   final MatchApiService matchApiService;
   final SeasonApiService seasonApiService;
   final ProviderRef ref;
@@ -42,10 +46,13 @@ class MatchController implements CrudOperations {
       StreamController<List<PlayerApiModel>>.broadcast();
   final dateController = StreamController<DateTime>.broadcast();
   final homeController = StreamController<bool>.broadcast();
+  final connectWithPkflController = StreamController<bool>.broadcast();
+  final matchDetailScreenController = StreamController<int>.broadcast();
   String originalOpponentName = "";
   String matchName = "";
   DateTime matchDate = DateTime.now();
   bool matchHome = true;
+  bool connectWithPkflMatch = true;
   List<PlayerApiModel> matchPlayers = [];
   List<PlayerApiModel> matchFans = [];
   List<SeasonApiModel> seasons = [];
@@ -53,10 +60,11 @@ class MatchController implements CrudOperations {
   List<PlayerApiModel> fans = [];
   SeasonApiModel matchSeason = SeasonApiModel.dummy();
   late MatchSetup matchSetup;
-  PkflMatch? pkflMatch;
+  PkflMatchDetail? pkflMatchDetail;
+  PkflMatchApiModel? pkflMatch;
 
   MatchController({
-    required this.pkflRepository,
+    required this.pkflApiService,
     required this.matchApiService,
     required this.seasonApiService,
     required this.ref,
@@ -78,6 +86,8 @@ class MatchController implements CrudOperations {
     homeController.add(true);
     nameErrorTextController.add("");
     playerErrorTextController.add("");
+    pkflMatch = matchSetup.pkflMatch;
+    setupPkflController();
   }
 
   void loadEditMatch() {
@@ -99,6 +109,41 @@ class MatchController implements CrudOperations {
     homeController.add(matchSetup.match!.home);
     nameErrorTextController.add("");
     playerErrorTextController.add("");
+    pkflMatch = matchSetup.pkflMatch;
+    setupPkflController();
+  }
+
+  Future<void> loadNewMatchByPkflMatch(PkflMatchApiModel pkflMatch) async {
+    String name = pkflMatch.opponent == null ? "" : pkflMatch.opponent!.name;
+    matchName = name;
+    nameController.add(name);
+    DateTime date = pkflMatch.date;
+    matchDate = date;
+    dateController.add(date);
+    setSeason(matchSetup.primarySeason);
+    seasons = matchSetup.seasonList;
+    players = matchSetup.playerList;
+    fans = matchSetup.fanList;
+    matchPlayers = [];
+    matchFans = [];
+    checkedPlayerController.add([]);
+    checkedFanController.add([]);
+    bool homeMatch = pkflMatch.homeMatch;
+    matchHome = homeMatch;
+    homeController.add(homeMatch);
+    nameErrorTextController.add("");
+    playerErrorTextController.add("");
+    setupPkflController();
+  }
+
+  setupPkflController() {
+    if(pkflMatch != null) {
+      connectWithPkflMatch = true;
+    }
+    else {
+      connectWithPkflMatch = false;
+    }
+    connectWithPkflController.add(connectWithPkflMatch);
   }
 
   List<PlayerApiModel> _getListOfPlayersByIds(
@@ -115,27 +160,14 @@ class MatchController implements CrudOperations {
     return returnList;
   }
 
-  void setFieldsByPkflMatch() {
-    matchName = pkflMatch!.opponent;
-    nameController.add(pkflMatch!.opponent);
-    matchDate = pkflMatch!.date;
-    dateController.add(pkflMatch!.date);
-    setSeason(matchSetup.primarySeason);
-    seasons = matchSetup.seasonList;
-    players = matchSetup.playerList;
-    fans = matchSetup.fanList;
-    matchPlayers = [];
-    matchFans = [];
-    checkedPlayerController.add([]);
-    checkedFanController.add([]);
-    matchHome = pkflMatch!.homeMatch;
-    homeController.add(pkflMatch!.homeMatch);
-    nameErrorTextController.add("");
-    playerErrorTextController.add("");
-  }
-
   Future<void> newMatch() async {
     await Future.delayed(Duration.zero, () => loadNewMatch());
+  }
+
+  Future<void> newMatchByPkflMatch(PkflMatchApiModel pkflMatch) async {
+    this.pkflMatch = pkflMatch;
+    await Future.delayed(
+        Duration.zero, () => loadNewMatchByPkflMatch(pkflMatch));
   }
 
   Future<void> editMatch() async {
@@ -144,11 +176,67 @@ class MatchController implements CrudOperations {
 
   Future<void> setupNewMatch() async {
     matchSetup = await _setupMatch(null);
+    pkflMatch = matchSetup.pkflMatch; //musíme udělat předtim, než to vrátíme
   }
 
   Future<void> setupEditMatch(int id) async {
     matchSetup = await _setupMatch(id);
+    pkflMatch = matchSetup.pkflMatch;
   }
+
+  MatchApiModel returnEditMatch() {
+    return matchSetup.match!;
+  }
+
+  Future<PkflMatchApiModel> returnPkflMatch() async {
+      return pkflMatchDetail!.pkflMatch;
+  }
+
+  Future<PkflMatchDetail> returnPkflMatchDetail() async {
+    return pkflMatchDetail!;
+  }
+
+  Future<List<MatchDetailOptions>> loadPkflMatchDetail(int? pkflMatchId, bool editMatch) async {
+    List<MatchDetailOptions> matchDetailOptions = [];
+    if(pkflMatchId != null) {
+      pkflMatchDetail = await getPkflMatchDetail(pkflMatchId);
+      matchDetailOptions.add(MatchDetailOptions.pkflDetail);
+      if(pkflMatchDetail!.commonMatches.isNotEmpty) {
+        matchDetailOptions.add(MatchDetailOptions.commonMatches);
+      }
+      if(pkflMatchDetail!.pkflMatch.matchIdList.isNotEmpty && editMatch) {
+        await setupEditMatch(pkflMatchDetail!.pkflMatch.matchIdList[0]);
+        matchDetailOptions.add(MatchDetailOptions.editMatch);
+      }
+    }
+    return matchDetailOptions;
+  }
+
+  Future<List<MatchDetailOptions>> setupScreen(int? matchId, int? pkflMatchId) async {
+    List<MatchDetailOptions> matchDetailOptions = [];
+    if(pkflMatchId != null) {
+      return await loadPkflMatchDetail(pkflMatchId, true);
+    }
+    else if(matchId != null) {
+      await setupEditMatch(matchId);
+      matchDetailOptions.add(MatchDetailOptions.editMatch);
+      if (pkflMatch != null) {
+        matchDetailOptions.addAll(
+            await loadPkflMatchDetail(pkflMatch!.id, false));
+      }
+    }
+    return matchDetailOptions;
+  }
+
+  void changeMatchDetailScreen(int option) {
+    matchDetailScreenController.add(option);
+  }
+
+  Stream<int> matchDetailScreen() {
+    return matchDetailScreenController.stream;
+  }
+
+
 
   Stream<String> name() {
     return nameController.stream;
@@ -202,6 +290,10 @@ class MatchController implements CrudOperations {
     return homeController.stream;
   }
 
+  Stream<bool> connectWithPkfl() {
+    return connectWithPkflController.stream;
+  }
+
   Stream<DateTime> date() {
     return dateController.stream;
   }
@@ -224,6 +316,11 @@ class MatchController implements CrudOperations {
   void setHome(bool home) {
     homeController.add(home);
     matchHome = home;
+  }
+
+  void setConnectWithPkflMatch(bool connect) {
+    connectWithPkflController.add(connect);
+    connectWithPkflMatch = connect;
   }
 
   void addPlayer(PlayerApiModel player) {
@@ -256,34 +353,6 @@ class MatchController implements CrudOperations {
     checkedFanController.add(fans);
   }
 
-  Future<PkflMatch?> getLastPkflMatch() async {
-    String url = "";
-    List<PkflMatch> matches = [];
-    url = await pkflRepository.getPkflTeamUrl();
-    RetrieveMatchesTask matchesTask = RetrieveMatchesTask(url);
-    try {
-      await matchesTask.returnPkflMatches().then((value) => matches = value);
-    } catch (e, stacktrace) {
-      print(stacktrace);
-    }
-    pkflMatch = returnLastPkflMatch(matches);
-    return pkflMatch;
-  }
-
-  PkflMatch? returnLastPkflMatch(List<PkflMatch> pkflMatches) {
-    PkflMatch? returnMatch;
-    DateTime dateTime = DateTime.now();
-    DateTime dateTimeOneDayLater = dateTime.add(const Duration(days: 1));
-    for (PkflMatch pkflMatch in pkflMatches) {
-      if (pkflMatch.date.isBefore(dateTimeOneDayLater)) {
-        if (returnMatch == null || returnMatch.date.isBefore(pkflMatch.date)) {
-          returnMatch = pkflMatch;
-        }
-      }
-    }
-    return returnMatch;
-  }
-
   bool validateFields() {
     String errorText = validateEmptyField(matchName.trim());
     String playerErrorText;
@@ -301,6 +370,10 @@ class MatchController implements CrudOperations {
     return await matchApiService.setupMatch(id);
   }
 
+  Future<PkflMatchDetail> getPkflMatchDetail(int id) async {
+    return await pkflApiService.getPkflMatchDetail(id);
+  }
+
   @override
   Future<MatchApiModel?> addModel() async {
     if (validateFields()) {
@@ -309,7 +382,8 @@ class MatchController implements CrudOperations {
           date: matchDate,
           seasonId: matchSeason.id!,
           home: matchHome,
-          players: matchPlayers + matchFans));
+          players: matchPlayers + matchFans,
+          pkflMatch: connectWithPkflMatch ? pkflMatch : null));
     }
     return null;
   }
@@ -325,6 +399,7 @@ class MatchController implements CrudOperations {
     if (validateFields()) {
       MatchApiModel response = await matchApiService.editMatch(
           MatchApiModel.withPlayers(
+              pkflMatch: connectWithPkflMatch ? pkflMatch : null,
               id: id,
               name: matchName,
               date: matchDate,

@@ -4,6 +4,8 @@ import 'package:trus_app/models/api/interfaces/json_and_http_converter.dart';
 import 'package:trus_app/models/api/interfaces/model_to_string.dart';
 import 'package:trus_app/models/api/player_api_model.dart';
 
+import '../pkfl/pkfl_match_api_model.dart';
+
 class MatchApiModel implements ModelToString, JsonAndHttpConverter {
   int? id;
   final String name;
@@ -11,6 +13,7 @@ class MatchApiModel implements ModelToString, JsonAndHttpConverter {
   final int seasonId;
   final bool home;
   final List<int> playerIdList;
+  PkflMatchApiModel? pkflMatch;
 
   MatchApiModel({
     required this.name,
@@ -19,6 +22,7 @@ class MatchApiModel implements ModelToString, JsonAndHttpConverter {
     required this.home,
     required this.playerIdList,
     this.id,
+    this.pkflMatch
   });
 
   MatchApiModel.withPlayers({
@@ -28,6 +32,7 @@ class MatchApiModel implements ModelToString, JsonAndHttpConverter {
     required this.home,
     List<PlayerApiModel>? players,
     this.id,
+    this.pkflMatch
   }) : playerIdList = _getIdsFromPlayers(players ?? []);
 
   static List<int> _getIdsFromPlayers(List<PlayerApiModel> players) {
@@ -56,6 +61,7 @@ class MatchApiModel implements ModelToString, JsonAndHttpConverter {
       "home": home,
       "seasonId": seasonId,
       "playerIdList": playerIdList,
+      "pkflMatch": pkflMatch,
     };
   }
 
@@ -68,6 +74,7 @@ class MatchApiModel implements ModelToString, JsonAndHttpConverter {
       home: json["home"] ?? false,
       seasonId: json['seasonId'] ?? 0,
       playerIdList: List<int>.from((json['playerIdList'])),
+      pkflMatch: json["pkflMatch"] != null ? PkflMatchApiModel.fromJson(json["pkflMatch"]) : null,
     );
   }
 

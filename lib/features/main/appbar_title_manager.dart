@@ -59,7 +59,7 @@ class AppBarTitleManager {
           appBarTitle = "Hráči";
           break;
         case 19:
-          appBarTitle = "Seznam PKFL zápasů";
+          appBarTitle = "Program zápasů";
           break;
         case 20:
           appBarTitle = "Statistika PKFL";

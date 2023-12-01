@@ -109,9 +109,13 @@ class PkflPlayerStats {
         return "počet hattricků: $hattrick, počet zápasů: $matches";
       case SpinnerOption.cleanSheet:
         return "počet čistejch kont: $cleanSheet, počet odchytaných zápasů: ${(roundNumbers(goalkeepingMinutes/60))}";
-      case SpinnerOption.cardDetail:
+      case SpinnerOption.yellowCardDetail:
+        return singleCardDetail;
+      case SpinnerOption.redCardDetail:
         return singleCardDetail;
       case SpinnerOption.receivedGoals:
+        return "počet obdržených gólů: $receivedGoals, počet odchytaných zápasů: ${(roundNumbers(goalkeepingMinutes/60))}";
+      case SpinnerOption.matchPoints:
         return "počet obdržených gólů: $receivedGoals, počet odchytaných zápasů: ${(roundNumbers(goalkeepingMinutes/60))}";
     }
   }

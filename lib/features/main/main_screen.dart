@@ -18,10 +18,13 @@ import 'package:trus_app/features/season/screens/edit_season_screen.dart';
 import 'package:trus_app/features/season/screens/season_screen.dart';
 import 'package:trus_app/models/api/fine_api_model.dart';
 import 'package:trus_app/models/api/match/match_api_model.dart';
+import 'package:trus_app/models/pkfl/pkfl_match.dart';
 import '../../common/utils/utils.dart';
 import '../../common/widgets/confirmation_dialog.dart';
+import '../../models/api/pkfl/pkfl_match_api_model.dart';
 import '../../models/api/player_api_model.dart';
 import '../../models/api/season_api_model.dart';
+import '../../models/enum/match_detail_options.dart';
 import '../auth/controller/auth_controller.dart';
 import '../auth/screens/user_screen.dart';
 import '../beer/screens/beer_simple_screen.dart';
@@ -32,7 +35,9 @@ import '../general/error/api_executor.dart';
 import '../home/screens/home_screen.dart';
 import '../info/screens/info_screen.dart';
 import '../notification/screen/notification_screen.dart';
+import '../pkfl/screens/match_detail_screen.dart';
 import '../pkfl/screens/pkfl_table_screens.dart';
+import '../pkfl/screens/pkfl_fixtures_screen.dart';
 import '../season/screens/add_season_screen.dart';
 import '../statistics/screens/goal/main_goal_statistics_screen.dart';
 import '../statistics/screens/main_statistics_screen.dart';
@@ -56,6 +61,7 @@ class _MainScreenState extends ConsumerState<MainScreen> {
   int? pageIndexWhenPlusButtonTapped;
   late BottomSheetNavigationManager _bottomSheetNavigationManager;
   late AppBarTitleManager _appBarTitleManager;
+  bool changedMatch = false;
 
   @override
   void initState() {
@@ -66,19 +72,26 @@ class _MainScreenState extends ConsumerState<MainScreen> {
 
   //dummy modely , které se předávají na další obrazovky
   PlayerApiModel playerModel = PlayerApiModel(
-      name: "name",
-      id: 0,
-      birthday: DateTime.now(),
-      fan: false,
-      active: true,);
+    name: "name",
+    id: 0,
+    birthday: DateTime.now(),
+    fan: false,
+    active: true,
+  );
 
   SeasonApiModel seasonModel = SeasonApiModel.dummy();
 
   MatchApiModel matchModel = MatchApiModel.dummy();
 
+  int? matchId;
+
   FineApiModel fineModel = FineApiModel.dummy();
 
+  PkflMatchApiModel? pkflMatch;
+
   List<int> playerIdListModel = [];
+
+  MatchDetailOptions preferredScreen = MatchDetailOptions.editMatch;
 
   void onPickedPlayerChange(PlayerApiModel newPlayerModel) {
     setState(() => playerModel = newPlayerModel);
@@ -91,8 +104,25 @@ class _MainScreenState extends ConsumerState<MainScreen> {
   }
 
   void onPickedMatchChange(MatchApiModel newMatchModel) {
+    setState(() => {
+      matchModel = newMatchModel,
+      matchId = newMatchModel.id,
+      preferredScreen = MatchDetailOptions.editMatch,
+      pkflMatch = null
+    });
     setState(() => matchModel = newMatchModel);
-    changeFragment(11);
+    preferredScreen = MatchDetailOptions.editMatch;
+    changeFragment(27);
+  }
+
+  void onPickedPkflMatchChange(PkflMatchApiModel newPkflMatchApiModel,
+      MatchDetailOptions preferredScreen) {
+    setState(() => {
+          pkflMatch = newPkflMatchApiModel,
+      matchId = null,
+          this.preferredScreen = preferredScreen
+        });
+    changeFragment(27);
   }
 
   void onPickedFineChange(FineApiModel newFineModel) {
@@ -113,15 +143,18 @@ class _MainScreenState extends ConsumerState<MainScreen> {
   Future<void> signOut() async {
     bool? result = await executeApi<bool?>(() async {
       return await ref.read(authControllerProvider).signOut();
-    },() => showBottomSheetNavigation(), context, true);
+    }, () => showBottomSheetNavigation(), context, true);
     if (result != null && result) {
-      Navigator.pushNamedAndRemoveUntil(context, LoginScreen.routeName, (route) => false);
-      showSnackBarWithPostFrame(context: context, content: "Děkujeme, přijďte zas");
+      Navigator.pushNamedAndRemoveUntil(
+          context, LoginScreen.routeName, (route) => false);
+      showSnackBarWithPostFrame(
+          context: context, content: "Děkujeme, přijďte zas");
     }
   }
+
   String getUserName() {
     String? name = ref.read(authControllerProvider).getCurrentUserName();
-    if(name == null) {
+    if (name == null) {
       return "Uživatel neznámý trouba";
     }
     return "píč $name";
@@ -131,12 +164,11 @@ class _MainScreenState extends ConsumerState<MainScreen> {
     print("test");
     var dialog = ConfirmationDialog(
       "Opravdu chcete smazat tento účet?",
-          () async {
+      () async {
         await executeApi<void>(() async {
-          return await ref
-              .read(authControllerProvider)
-              .deleteAccount();
-        }, () {}, context, true).then((value) => signOut());
+          return await ref.read(authControllerProvider).deleteAccount();
+        }, () {}, context, true)
+            .then((value) => signOut());
       },
     );
     showDialog(
@@ -145,23 +177,29 @@ class _MainScreenState extends ConsumerState<MainScreen> {
     );
   }
 
-
   void showBottomSheetNavigation() {
-    _bottomSheetNavigationManager.showBottomSheetNavigation((index) => onModalBottomSheetMenuTapped(index), getUserName(), () { signOut();});
+    _bottomSheetNavigationManager.showBottomSheetNavigation(
+        (index) => onModalBottomSheetMenuTapped(index), getUserName(), () {
+      signOut();
+    });
   }
 
   void changeFragmentAfterAddMatch(int index) {
-    if(pageIndexWhenPlusButtonTapped != null) {
+    if (pageIndexWhenPlusButtonTapped != null) {
       changeFragment(pageIndexWhenPlusButtonTapped!);
       pageIndexWhenPlusButtonTapped = null;
-    }
-    else {
+    } else {
       changeFragment(index);
     }
   }
 
-  void changeFragmentForAddMatch() {
+  void changeFragmentForAddMatchFromAddButton(PkflMatchApiModel? match) {
     pageIndexWhenPlusButtonTapped = _currentIndex;
+    changeFragmentForAddMatch(match);
+  }
+
+  void changeFragmentForAddMatch(PkflMatchApiModel? match) {
+    pkflMatch = match;
     changeFragment(10);
   }
 
@@ -184,27 +222,25 @@ class _MainScreenState extends ConsumerState<MainScreen> {
       if (index == 0 || index == 1 || index == 3) {
         _selectedBottomSheetIndex = index;
       } else if (index == 4) {
-      }
-      else {
+      } else {
         _selectedBottomSheetIndex = 2;
       }
     });
   }
 
   void manageBackButton(int index, bool tappedBackButton) {
-    if(!tappedBackButton) {
+    if (!tappedBackButton) {
       fragmentList.add(_currentIndex);
     }
     _currentIndex = index;
-    if(index == 0) {
+    if (index == 0) {
       fragmentList.clear();
     }
-    if(fragmentList.isEmpty && backButtonVisibility) {
+    if (fragmentList.isEmpty && backButtonVisibility) {
       setState(() {
         backButtonVisibility = false;
-        });
-    }
-    else if(fragmentList.isNotEmpty && !backButtonVisibility) {
+      });
+    } else if (fragmentList.isNotEmpty && !backButtonVisibility) {
       setState(() {
         backButtonVisibility = true;
       });
@@ -212,18 +248,17 @@ class _MainScreenState extends ConsumerState<MainScreen> {
   }
 
   void onBackButtonTap() {
-    if(_currentIndex == 25) { // GoalScreen
+    if (_currentIndex == 25) {
+      // GoalScreen
       onPickedMatchChange(matchModel);
-    }
-    else {
+    } else {
       if (fragmentList.isNotEmpty) {
         int index = fragmentList.removeLast();
         manageBackButton(index, true);
         setAppBarTitle(index);
         changeBottomSheetColor(index);
         pageController.jumpToPage(index);
-      }
-      else {
+      } else {
         manageBackButton(0, true);
         setAppBarTitle(0);
         changeBottomSheetColor(0);
@@ -247,11 +282,11 @@ class _MainScreenState extends ConsumerState<MainScreen> {
   }
 
   void onModalBottomSheetMenuTapped(int index) {
-    if (index == -1) { //delete account
+    if (index == -1) {
+      //delete account
       Navigator.of(context).pop();
       showDeleteConfirmationDialog();
-    }
-    else {
+    } else {
       Navigator.of(context).pop();
       changeFragment(index);
     }
@@ -266,35 +301,61 @@ class _MainScreenState extends ConsumerState<MainScreen> {
     return pageIndex == _currentIndex;
   }
 
+  bool isChangedMatch() {
+    if (changedMatch) {
+      changedMatch = false;
+      return true;
+    }
+    return false;
+  }
+
   @override
   Widget build(BuildContext context) {
     return WillPopScope(
       onWillPop: _onWillPop,
       child: Scaffold(
-        resizeToAvoidBottomInset:
-            false, //pak nelítá prostřední tlačítko z dolního menu nahoru
+        resizeToAvoidBottomInset: false,
+        //pak nelítá prostřední tlačítko z dolního menu nahoru
         appBar: AppBar(
-          leading: backButtonVisibility ? BackButton(color: Colors.white, onPressed: () => onBackButtonTap(),): null,
+          leading: backButtonVisibility
+              ? BackButton(
+                  color: Colors.white,
+                  onPressed: () => onBackButtonTap(),
+                )
+              : null,
           title: Text(_appBarTitleManager.appBarTitle),
           actions: [
             IconButton(
                 key: const ValueKey('plus_button'),
-                onPressed: () => changeFragmentForAddMatch(), icon: const Icon(Icons.add)),
+                onPressed: () => changeFragmentForAddMatchFromAddButton(null),
+                icon: const Icon(Icons.add)),
             IconButton(
                 key: const ValueKey('notifications_button'),
-                onPressed: () => changeFragment(23), icon: const Icon(Icons.notifications)),
+                onPressed: () => changeFragment(23),
+                icon: const Icon(Icons.notifications)),
           ],
         ),
         body: PageView(
           controller: pageController,
           physics: const NeverScrollableScrollPhysics(),
           children: [
-            const HomeScreen(
-                //0
-                ),
+            HomeScreen(
+              //0
+              addPkflMatch: (pkflMatch) => changeFragmentForAddMatch(pkflMatch),
+              addGoals: (int matchId) =>
+                  {matchModel.id = matchId, changeFragment(25)},
+              addFines: (int matchId) =>
+                  {matchModel.id = matchId, changeFragment(1)},
+              addBeers: (int matchId) =>
+                  {matchModel.id = matchId, changeFragment(17)},
+              editMatch: (int matchId) =>
+                  {matchModel.id = matchId, onPickedMatchChange(matchModel)},
+              changedMatch: isChangedMatch(),
+              commonMatches: (pkflMatch) => onPickedPkflMatchChange(pkflMatch, MatchDetailOptions.commonMatches),
+            ),
             FineMatchScreen(
               //1
-              mainMatch: matchModel,
+              matchId: matchModel.id!,
               playerIdListToChangeFines: (players) =>
                   onPickedPlayersFinesChange(players),
               setMatch: (newMatch) => matchModel = newMatch,
@@ -307,9 +368,9 @@ class _MainScreenState extends ConsumerState<MainScreen> {
               color: Colors.yellow,
             ),
             MainStatisticsScreen(
-                //3
+              //3
               backToMainMenu: () => changeFragment(0),
-                ),
+            ),
             AddPlayerScreen(
               //4
               onAddPlayerPressed: () => changeFragment(0),
@@ -345,25 +406,31 @@ class _MainScreenState extends ConsumerState<MainScreen> {
             ),
             MatchScreen(
               //9
-              onPlusButtonPressed: () => changeFragment(10),
+              onPlusButtonPressed: () => changeFragmentForAddMatch(null),
               setMatch: (match) => onPickedMatchChange(match),
               backToMainMenu: () => changeFragment(0),
               isFocused: isFocused(9),
             ),
             AddMatchScreen(
               //10
-              onAddMatchPressed: () => changeFragmentAfterAddMatch(9),
+              onAddMatchPressed: () =>
+                  {changeFragmentAndDeletePage(0), changedMatch = true},
               isFocused: isFocused(10),
-              setMatchId: (int id) {matchModel.id = id;},
+              setMatchId: (int id) {
+                matchModel.id = id;
+              },
               onChangePlayerGoalsPressed: () => changeFragment(25),
               backToMainMenu: () => changeFragment(0),
+              pkflMatch: pkflMatch,
             ),
             EditMatchScreen(
               //11
-              matchModel: matchModel,
-              onButtonConfirmPressed: () => changeFragmentAndDeletePage(9),
+              onButtonConfirmPressed: () =>
+                  {changeFragmentAndDeletePage(0), changedMatch = true},
               isFocused: isFocused(11),
-              setMatchId: (int id) {matchModel.id = id;},
+              setMatchId: (int id) {
+                matchModel.id = id;
+              },
               onChangePlayerGoalsPressed: () => changeFragment(25),
               backToMainMenu: () => changeFragment(0),
             ),
@@ -405,7 +472,7 @@ class _MainScreenState extends ConsumerState<MainScreen> {
             ),
             BeerSimpleScreen(
               //17
-              mainMatch: matchModel,
+              matchId: matchModel.id!,
               setMatch: (newMatch) => matchModel = newMatch,
               onButtonConfirmPressed: () => changeFragment(0),
               backToMainMenu: () => changeFragment(0),
@@ -418,19 +485,24 @@ class _MainScreenState extends ConsumerState<MainScreen> {
               setPlayer: (player) => onPickedPlayerChange(player),
               isFocused: isFocused(18),
             ),
-            const PkflMatchScreen(
-                //19
-                ),
-            const MainPkflStatisticsScreen(
-                //20
-                ),
+            PkflFixturesScreen(
+              //19
+              setPkflMach: (match) => onPickedPkflMatchChange(match, MatchDetailOptions.pkflDetail),
+              backToMainMenu: () => changeFragment(0),
+              isFocused: isFocused(19),
+            ),
+            MainPkflStatisticsScreen(
+              backToMainMenu: () => changeFragment(0),
+              isFocused: isFocused(20),
+              //20
+            ),
             const PkflTableScreen(
                 //21
                 ),
             MainGoalStatisticsScreen(
-                //22
+              //22
               backToMainMenu: () => changeFragment(0),
-                ),
+            ),
             NotificationScreen(
               //23
               backToMainMenu: () => changeFragment(0),
@@ -449,7 +521,20 @@ class _MainScreenState extends ConsumerState<MainScreen> {
               backToMainMenu: () => changeFragment(0),
             ),
             const InfoScreen(
-              //26
+                //26
+                ),
+            MatchDetailScreen(
+              //27
+              backToMainMenu: () => changeFragment(0),
+              pkflMatchId: pkflMatch?.id,
+              matchId: matchId,
+              preferredScreen: preferredScreen, isFocused: isFocused(27),
+              onButtonConfirmPressed: () =>
+              {changeFragmentAndDeletePage(0), changedMatch = true},
+              setMatchId: (int id) {
+                matchModel.id = id;
+              },
+              onChangePlayerGoalsPressed: () => changeFragment(25),
             ),
           ],
         ),
@@ -469,13 +554,18 @@ class _MainScreenState extends ConsumerState<MainScreen> {
           type: BottomNavigationBarType.shifting,
           items: [
             const BottomNavigationBarItem(
-                icon: Icon(Icons.home, key: ValueKey('home_button')), label: "Přehled"),
+                icon: Icon(Icons.home, key: ValueKey('home_button')),
+                label: "Přehled"),
             const BottomNavigationBarItem(
-                icon: Icon(Icons.savings, key: ValueKey('fine_button')), label: "Pokuty"),
+                icon: Icon(Icons.savings, key: ValueKey('fine_button')),
+                label: "Pokuty"),
             BottomNavigationBarItem(label: "", icon: Container()),
             const BottomNavigationBarItem(
-                icon: Icon(Icons.equalizer, key: ValueKey('stats_button')), label: "Statistiky"),
-            const BottomNavigationBarItem(icon: Icon(Icons.menu, key: ValueKey('menu_button')), label: "Menu"),
+                icon: Icon(Icons.equalizer, key: ValueKey('stats_button')),
+                label: "Statistiky"),
+            const BottomNavigationBarItem(
+                icon: Icon(Icons.menu, key: ValueKey('menu_button')),
+                label: "Menu"),
           ],
           currentIndex: _selectedBottomSheetIndex,
           selectedItemColor: selectedItemColor,

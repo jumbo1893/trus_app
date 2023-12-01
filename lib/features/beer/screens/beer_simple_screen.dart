@@ -13,13 +13,13 @@ import '../../../common/widgets/dropdown/season_api_dropdown.dart';
 class BeerSimpleScreen extends ConsumerStatefulWidget {
   final VoidCallback onButtonConfirmPressed;
   final Function(MatchApiModel match) setMatch;
-  final MatchApiModel mainMatch;
+  final int matchId;
   final bool isFocused;
   final VoidCallback backToMainMenu;
   const BeerSimpleScreen({
     Key? key,
     required this.setMatch,
-    required this.mainMatch,
+    required this.matchId,
     required this.onButtonConfirmPressed,
     required this.backToMainMenu,
     required this.isFocused,
@@ -40,7 +40,7 @@ class _BeerSimpleScreenState extends ConsumerState<BeerSimpleScreen> {
       return ErrorFutureBuilder<void>(
           future: ref
               .read(beerControllerProvider)
-              .initScreen(widget.mainMatch.id),
+              .initScreen(widget.matchId),
           context: context,
           backToMainMenu: () => widget.backToMainMenu(),
           widget: Scaffold(
