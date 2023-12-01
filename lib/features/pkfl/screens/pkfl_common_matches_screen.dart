@@ -57,7 +57,7 @@ class _PkflCommonMatchesScreenState extends ConsumerState<PkflCommonMatchesScree
                           title: Padding(
                             padding: const EdgeInsets.only(bottom: 16),
                             child: Text(
-                              "Vzájemné zápasy V/R/P: $aggregateMatches",
+                              "Bilance zápasů V/R/P: $aggregateMatches",
                               style: const TextStyle(
                                   fontWeight: FontWeight.bold,
                                   fontSize: 18),
