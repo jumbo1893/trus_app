@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:trus_app/models/api/pkfl/pkfl_match_api_model.dart';
-import 'package:trus_app/models/api/player_api_model.dart';
 import '../../../common/widgets/builder/models_error_future_builder.dart';
 import '../controller/pkfl_controller.dart';
 

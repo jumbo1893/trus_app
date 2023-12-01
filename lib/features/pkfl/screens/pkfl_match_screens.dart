@@ -5,7 +5,6 @@ import 'package:trus_app/common/utils/utils.dart';
 import 'package:trus_app/common/widgets/loader.dart';
 import 'package:trus_app/features/pkfl/controller/pkfl_controller.dart';
 import 'package:trus_app/features/pkfl/pkfl_screens.dart';
-import 'package:trus_app/features/pkfl/utils.dart';
 import 'package:trus_app/models/pkfl/pkfl_match.dart';
 
 import '../../../common/widgets/custom_text.dart';

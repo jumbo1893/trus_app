@@ -5,7 +5,6 @@ import 'package:trus_app/features/general/read_operations.dart';
 import 'package:trus_app/features/pkfl/tasks/retrieve_match_detail_task.dart';
 import 'package:trus_app/features/pkfl/tasks/retrieve_matches_task.dart';
 import 'package:trus_app/features/pkfl/tasks/retrieve_season_url_task.dart';
-import 'package:trus_app/models/api/interfaces/model_to_string.dart';
 import 'package:trus_app/models/api/pkfl/pkfl_match_api_model.dart';
 import 'package:trus_app/models/pkfl/pkfl_match.dart';
 import 'package:trus_app/models/pkfl/pkfl_season.dart';

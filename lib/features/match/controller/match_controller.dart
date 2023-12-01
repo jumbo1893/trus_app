@@ -1,7 +1,6 @@
 import 'dart:async';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:trus_app/features/pkfl/repository/pkfl_repository.dart';
 import 'package:trus_app/features/season/repository/season_api_service.dart';
 import 'package:trus_app/models/api/player_api_model.dart';
 import 'package:trus_app/models/api/season_api_model.dart';
@@ -13,10 +12,8 @@ import '../../../models/api/match/match_setup.dart';
 import '../../../models/api/pkfl/pkfl_match_api_model.dart';
 import '../../../models/api/pkfl/pkfl_match_detail.dart';
 import '../../../models/enum/match_detail_options.dart';
-import '../../../models/pkfl/pkfl_match.dart';
 import '../../general/crud_operations.dart';
 import '../../pkfl/repository/pkfl_api_service.dart';
-import '../../pkfl/tasks/retrieve_matches_task.dart';
 import '../repository/match_api_service.dart';
 import 'package:collection/collection.dart';
 

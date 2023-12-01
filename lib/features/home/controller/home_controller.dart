@@ -10,7 +10,6 @@ import '../../../models/api/player_api_model.dart';
 import '../../../models/pkfl/pkfl_match.dart';
 import '../../auth/repository/auth_repository.dart';
 import '../../general/read_operations.dart';
-import '../../pkfl/tasks/retrieve_matches_task.dart';
 import '../../player/repository/player_api_service.dart';
 import '../repository/home_api_service.dart';
 

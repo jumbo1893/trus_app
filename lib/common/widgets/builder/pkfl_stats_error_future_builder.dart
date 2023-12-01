@@ -1,9 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:trus_app/models/api/interfaces/model_to_string.dart';
 
 import '../../../colors.dart';
-import '../../../models/api/interfaces/pkfl_individual_stats_to_string.dart';
-import '../../../models/enum/spinner_options.dart';
 import '../../../models/helper/pkfl_all_individual_stats_with_spinner.dart';
 import '../../utils/utils.dart';
 import '../loader.dart';

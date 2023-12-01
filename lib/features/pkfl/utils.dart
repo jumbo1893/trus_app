@@ -1,5 +1,3 @@
-import 'package:trus_app/models/pkfl/pkfl_match.dart';
-
 import '../../models/api/pkfl/pkfl_match_api_model.dart';
 import '../../models/pkfl/pkfl_team.dart';
 

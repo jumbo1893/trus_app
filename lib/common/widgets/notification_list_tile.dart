@@ -31,7 +31,7 @@ class NotificationListTile extends StatelessWidget {
             )),
         SizedBox(
           width: (size.width / 3) - padding,
-          child: Text("${formatDateForFrontend(notificationModel.date)}"),
+          child: Text(formatDateForFrontend(notificationModel.date)),
           ),
         SizedBox(
           width: (size.width / 2) - padding,

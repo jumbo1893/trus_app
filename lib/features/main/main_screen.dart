@@ -10,7 +10,6 @@ import 'package:trus_app/features/match/screens/add_match_screen.dart';
 import 'package:trus_app/features/match/screens/edit_match_screen.dart';
 import 'package:trus_app/features/match/screens/match_screen.dart';
 import 'package:trus_app/features/pkfl/screens/main_pkfl_statistics_screen.dart';
-import 'package:trus_app/features/pkfl/screens/pkfl_match_screens.dart';
 import 'package:trus_app/features/player/screens/add_player_screen.dart';
 import 'package:trus_app/features/player/screens/edit_player_screen.dart';
 import 'package:trus_app/features/player/screens/player_screen.dart';
@@ -18,7 +17,6 @@ import 'package:trus_app/features/season/screens/edit_season_screen.dart';
 import 'package:trus_app/features/season/screens/season_screen.dart';
 import 'package:trus_app/models/api/fine_api_model.dart';
 import 'package:trus_app/models/api/match/match_api_model.dart';
-import 'package:trus_app/models/pkfl/pkfl_match.dart';
 import '../../common/utils/utils.dart';
 import '../../common/widgets/confirmation_dialog.dart';
 import '../../models/api/pkfl/pkfl_match_api_model.dart';
@@ -161,7 +159,6 @@ class _MainScreenState extends ConsumerState<MainScreen> {
   }
 
   Future<void> showDeleteConfirmationDialog() async {
-    print("test");
     var dialog = ConfirmationDialog(
       "Opravdu chcete smazat tento účet?",
       () async {

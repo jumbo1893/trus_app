@@ -1,4 +1,3 @@
-import 'package:dio/io.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:http/http.dart' as http;
 import 'package:http/io_client.dart';

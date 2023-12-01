@@ -1,13 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:trus_app/common/utils/utils.dart';
 import 'package:trus_app/common/widgets/loader.dart';
 import 'package:trus_app/models/api/pkfl/pkfl_match_api_model.dart';
 import 'package:trus_app/models/api/pkfl/pkfl_match_detail.dart';
-import 'package:trus_app/models/pkfl/pkfl_match.dart';
 
 import '../../../colors.dart';
-import '../../../common/widgets/custom_text.dart';
 import '../../match/controller/match_controller.dart';
 import '../utils.dart';
 

@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:trus_app/common/widgets/custom_text.dart';
 
 import '../../../colors.dart';
 

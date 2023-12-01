@@ -4,13 +4,8 @@ import 'package:trus_app/colors.dart';
 import 'package:trus_app/features/match/screens/edit_match_screen.dart';
 import 'package:trus_app/features/pkfl/screens/pkfl_common_matches_screen.dart';
 import 'package:trus_app/features/pkfl/screens/pkfl_match_detail_screen.dart';
-import 'package:trus_app/features/statistics/screens/match_beer_stats_screen.dart';
-import 'package:trus_app/features/statistics/screens/player_beer_stats_screen.dart';
-import 'package:trus_app/features/statistics/screens/player_fine_stats_screen.dart';
-import 'package:trus_app/features/statistics/screens/match_fine_stats_screen.dart';
 
 import '../../../common/utils/utils.dart';
-import '../../../common/widgets/custom_text.dart';
 import '../../../common/widgets/loader.dart';
 import '../../../models/enum/match_detail_options.dart';
 import '../../match/controller/match_controller.dart';

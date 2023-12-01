@@ -1,6 +1,4 @@
-import 'package:trus_app/config.dart';
-import 'package:trus_app/models/api/interfaces/json_and_http_converter.dart';
-import 'package:trus_app/models/api/interfaces/model_to_string.dart';
+
 
 class PkflRefereeApiModel {
   int id;

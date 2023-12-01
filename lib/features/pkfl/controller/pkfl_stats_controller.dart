@@ -1,21 +1,10 @@
 import 'dart:async';
-import 'dart:collection';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:trus_app/features/pkfl/tasks/retrieve_match_detail_task.dart';
-import 'package:trus_app/features/pkfl/tasks/retrieve_matches_task.dart';
-import 'package:trus_app/features/pkfl/tasks/retrieve_season_url_task.dart';
 import 'package:trus_app/models/enum/spinner_options.dart';
-import 'package:trus_app/models/pkfl/pkfl_match.dart';
-import 'package:trus_app/models/pkfl/pkfl_player_stats.dart';
-import 'package:trus_app/models/pkfl/pkfl_season.dart';
 import '../../../models/api/pkfl/pkfl_all_individual_stats.dart';
 import '../../../models/api/pkfl/pkfl_card_comment.dart';
-import '../../../models/api/pkfl/pkfl_individual_stats_api_model.dart';
-import '../../../models/helper/percentage_loader_model.dart';
 import '../../../models/helper/pkfl_all_individual_stats_with_spinner.dart';
-import '../../../models/pkfl/pkfl_match_player.dart';
-import '../../general/read_operations.dart';
 import '../repository/pkfl_api_service.dart';
 import '../repository/pkfl_repository.dart';
 
@@ -332,7 +321,6 @@ class PkflStatsController {
     return setPkflAllIndividualStatsWithSpinner(players);
   }
 
-  @override
   Future<PkflAllIndividualStatsWithSpinner> getModels() async {
     if (currentSeason) {
       if (matchListCurrentSeason.isEmpty) {
