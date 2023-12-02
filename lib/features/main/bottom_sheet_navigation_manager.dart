@@ -127,6 +127,15 @@ class BottomSheetNavigationManager {
                 title: const Text("Statistiky z PKFL"),
                 onTap: () => onModalBottomSheetMenuTapped(20),
               ),
+              ListTile(
+                key: const ValueKey('menu_pkfl_player_stats'),
+                leading: const Icon(
+                  Icons.stacked_bar_chart,
+                  color: Colors.orange,
+                ),
+                title: const Text("Hráčské statistiky z PKFL"),
+                onTap: () => onModalBottomSheetMenuTapped(11),
+              ),
               Row(
                 children: const [
                   Padding(

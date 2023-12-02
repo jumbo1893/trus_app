@@ -33,4 +33,5 @@ const authApi = "user";
 const homeApi = "home";
 const pkflApi = "pkfl";
 const pkflAllIndividualStatsApi = "pkfl/player-stats";
+const pkflPlayerApi = "pkfl/player";
 const notificationApi = "notification";

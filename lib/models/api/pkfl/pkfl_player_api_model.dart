@@ -1,6 +1,9 @@
 
 
-class PkflPlayerApiModel {
+import '../../../config.dart';
+import '../interfaces/json_and_http_converter.dart';
+
+class PkflPlayerApiModel implements JsonAndHttpConverter {
   int id;
   String name;
 
@@ -10,7 +13,7 @@ class PkflPlayerApiModel {
   });
 
 
-
+  @override
   Map<String, dynamic> toJson() {
     return {
       "name": name,
@@ -18,6 +21,7 @@ class PkflPlayerApiModel {
     };
   }
 
+  @override
   factory PkflPlayerApiModel.fromJson(Map<String, dynamic> json) {
     return PkflPlayerApiModel(
       name: json["name"] ?? "",
@@ -34,5 +38,10 @@ class PkflPlayerApiModel {
 
   @override
   int get hashCode => id.hashCode;
+
+  @override
+  String httpRequestClass() {
+    return pkflPlayerApi;
+  }
 
 }

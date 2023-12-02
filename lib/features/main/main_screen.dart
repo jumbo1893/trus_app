@@ -34,6 +34,7 @@ import '../home/screens/home_screen.dart';
 import '../info/screens/info_screen.dart';
 import '../notification/screen/notification_screen.dart';
 import '../pkfl/screens/match_detail_screen.dart';
+import '../pkfl/screens/pkfl_player_stats_screen.dart';
 import '../pkfl/screens/pkfl_table_screens.dart';
 import '../pkfl/screens/pkfl_fixtures_screen.dart';
 import '../season/screens/add_season_screen.dart';
@@ -420,15 +421,9 @@ class _MainScreenState extends ConsumerState<MainScreen> {
               backToMainMenu: () => changeFragment(0),
               pkflMatch: pkflMatch,
             ),
-            EditMatchScreen(
+            PkflPlayerStatsScreen(
               //11
-              onButtonConfirmPressed: () =>
-                  {changeFragmentAndDeletePage(0), changedMatch = true},
               isFocused: isFocused(11),
-              setMatchId: (int id) {
-                matchModel.id = id;
-              },
-              onChangePlayerGoalsPressed: () => changeFragment(25),
               backToMainMenu: () => changeFragment(0),
             ),
             FineScreen(
