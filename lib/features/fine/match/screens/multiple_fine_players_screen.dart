@@ -6,42 +6,42 @@ import 'package:trus_app/models/api/match/match_api_model.dart';
 import '../../../../common/widgets/builder/add_builder.dart';
 import '../../../../common/widgets/builder/error_future_builder.dart';
 import '../../../../common/widgets/button/confirm_button.dart';
+import '../../../../common/widgets/screen/custom_consumer_stateful_widget.dart';
+import '../../../main/screen_controller.dart';
+import 'fine_match_screen.dart';
 
-class MultipleFinePlayersScreen extends ConsumerStatefulWidget {
-  final VoidCallback onButtonConfirmPressed;
-  final List<int> playerIdList;
-  final MatchApiModel matchModel;
-  final bool isFocused;
-  final VoidCallback backToMainMenu;
+class MultipleFinePlayersScreen extends CustomConsumerStatefulWidget {
+  static const String id = "multiple-fine-players-screen";
+
   const MultipleFinePlayersScreen({
     Key? key,
-    required this.playerIdList,
-    required this.matchModel,
-    required this.onButtonConfirmPressed,
-    required this.isFocused,
-    required this.backToMainMenu,
-  }) : super(key: key);
+  }) : super(key: key, title: "Přidat pokutu více hráčům", name: id);
 
   @override
-  ConsumerState<MultipleFinePlayersScreen> createState() => _MultipleFinePlayersScreenState();
+  ConsumerState<MultipleFinePlayersScreen> createState() =>
+      _MultipleFinePlayersScreenState();
 }
 
-class _MultipleFinePlayersScreenState extends ConsumerState<MultipleFinePlayersScreen> {
-
-
+class _MultipleFinePlayersScreenState
+    extends ConsumerState<MultipleFinePlayersScreen> {
   @override
   Widget build(BuildContext context) {
-    if (widget.isFocused) {
+    if (ref
+        .read(screenControllerProvider)
+        .isScreenFocused(MultipleFinePlayersScreen.id)) {
+      List<int> playerIdList = ref.read(screenControllerProvider).playerIdList;
+      MatchApiModel matchModel = ref.read(screenControllerProvider).matchModel;
       return ErrorFutureBuilder<void>(
-          future: ref.read(finePlayerController).setupMultiFines(widget.playerIdList, widget.matchModel.id!),
-          backToMainMenu: () => widget.backToMainMenu(),
+          future: ref
+              .read(finePlayerController)
+              .setupMultiFines(playerIdList, matchModel.id!),
           context: context,
-          widget:  Column(
+          widget: Column(
             children: [
               Expanded(
                 child: AddBuilder(
                   addController: ref.read(finePlayerController),
-                  appBarText: "Pokuty v zápase ${widget.matchModel.name}",
+                  appBarText: "Pokuty v zápase ${matchModel.name}",
                   goal: true,
                 ),
               ),
@@ -50,17 +50,17 @@ class _MultipleFinePlayersScreenState extends ConsumerState<MultipleFinePlayersS
                 child: ConfirmButton(
                   text: "Potvrď změny",
                   context: context,
-                  confirmOperations: ref
-                      .read(finePlayerController),
+                  confirmOperations: ref.read(finePlayerController),
                   onOperationComplete: () {
-                    widget.onButtonConfirmPressed();
+                    ref
+                        .read(screenControllerProvider)
+                        .changeFragment(FineMatchScreen.id);
                   },
-                  backToMainMenu: () => widget.backToMainMenu(),
-                  id: -1,),
+                  id: -1,
+                ),
               )
             ],
-          )
-      );
+          ));
     } else {
       return Container();
     }

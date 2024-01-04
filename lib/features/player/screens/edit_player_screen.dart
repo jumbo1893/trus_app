@@ -1,27 +1,25 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:trus_app/features/player/screens/player_screen.dart';
 
 import '../../../common/widgets/builder/column_future_builder.dart';
 import '../../../common/widgets/button/crud_button.dart';
 import '../../../common/widgets/rows/stream/row_calendar_stream.dart';
 import '../../../common/widgets/rows/stream/row_switch_stream.dart';
 import '../../../common/widgets/rows/stream/row_text_field_stream.dart';
+import '../../../common/widgets/screen/custom_consumer_stateful_widget.dart';
 import '../../../models/api/player_api_model.dart';
 import '../../../models/enum/crud.dart';
+import '../../main/screen_controller.dart';
 import '../controller/player_controller.dart';
 
-class EditPlayerScreen extends ConsumerStatefulWidget {
-  final VoidCallback onButtonConfirmPressed;
-  final PlayerApiModel? playerModel;
-  final bool isFocused;
-  final VoidCallback backToMainMenu;
+class EditPlayerScreen extends CustomConsumerStatefulWidget {
+
+  static const String id = "edit-player-screen";
   const EditPlayerScreen(
-    this.playerModel, {
+    {
     Key? key,
-    required this.onButtonConfirmPressed,
-    required this.isFocused,
-    required this.backToMainMenu,
-  }) : super(key: key);
+  }) : super(key: key, title: "Upravit hráče", name: id);
 
   @override
   ConsumerState<EditPlayerScreen> createState() => _EditPlayerScreenState();
@@ -30,14 +28,16 @@ class EditPlayerScreen extends ConsumerStatefulWidget {
 class _EditPlayerScreenState extends ConsumerState<EditPlayerScreen> {
   @override
   Widget build(BuildContext context) {
-    if (widget.isFocused) {
+    PlayerApiModel player = ref.watch(screenControllerProvider).playerModel;
+    if (ref
+        .read(screenControllerProvider)
+        .isScreenFocused(EditPlayerScreen.id)) {
       const double padding = 8.0;
       final size =
           MediaQueryData.fromWindow(WidgetsBinding.instance.window).size;
       return ColumnFutureBuilder(
         loadModelFuture:
-            ref.watch(playerControllerProvider).player(widget.playerModel!),
-        backToMainMenu: () => widget.backToMainMenu(),
+            ref.watch(playerControllerProvider).player(player),
         columns: [
           RowTextFieldStream(
             key: const ValueKey('player_name_field'),
@@ -94,10 +94,11 @@ class _EditPlayerScreenState extends ConsumerState<EditPlayerScreen> {
             crud: Crud.update,
             crudOperations: ref.read(playerControllerProvider),
             onOperationComplete: (id) {
-              widget.onButtonConfirmPressed();
+              ref
+                  .read(screenControllerProvider)
+                  .changeFragment(PlayerScreen.id);
             },
-            backToMainMenu: () => widget.backToMainMenu(),
-            id: widget.playerModel!.id!,
+            id: player.id!,
           ),
           CrudButton(
             key: const ValueKey('delete_button'),
@@ -106,11 +107,12 @@ class _EditPlayerScreenState extends ConsumerState<EditPlayerScreen> {
             crud: Crud.delete,
             crudOperations: ref.read(playerControllerProvider),
             onOperationComplete: (id) {
-              widget.onButtonConfirmPressed();
+              ref
+                  .read(screenControllerProvider)
+                  .changeFragment(PlayerScreen.id);
             },
-            id: widget.playerModel!.id!,
-            modelToString: widget.playerModel!,
-            backToMainMenu: () => widget.backToMainMenu(),
+            id: player.id!,
+            modelToString: player,
           ),
         ],
         loadingScreen: null,

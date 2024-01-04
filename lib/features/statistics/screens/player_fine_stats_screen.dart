@@ -12,12 +12,11 @@ import '../fine_screen_enum.dart';
 
 class PlayerFineStatsScreen extends ConsumerStatefulWidget {
   final bool isFocused;
-  final VoidCallback backToMainMenu;
   const PlayerFineStatsScreen({
     required this.isFocused,
-    required this.backToMainMenu,
     Key? key,
   }) : super(key: key);
+
 
   @override
   ConsumerState<PlayerFineStatsScreen> createState() =>
@@ -68,7 +67,6 @@ class _PlayerFineStatsScreenState extends ConsumerState<PlayerFineStatsScreen> {
                                   .onRevertTap(),
                               padding: padding,
                               size: size,
-                              backToMainMenu: () => widget.backToMainMenu(),
                             )
                           ],
                         ),
@@ -82,7 +80,6 @@ class _PlayerFineStatsScreenState extends ConsumerState<PlayerFineStatsScreen> {
                                 .setDetail(model);
                           },
                           context: context,
-                          backToMainMenu: () => widget.backToMainMenu(),
                           rebuildStream: ref
                               .watch(fineStatsControllerProvider)
                               .fineListStream(),
@@ -148,7 +145,6 @@ class _PlayerFineStatsScreenState extends ConsumerState<PlayerFineStatsScreen> {
                           onPressed: (model) {ref
                               .watch(fineStatsControllerProvider)
                               .setFineDetail(model);},
-                          backToMainMenu: () => widget.backToMainMenu(),
                           context: context,
                           scrollable: false,
                         ),
@@ -228,7 +224,6 @@ class _PlayerFineStatsScreenState extends ConsumerState<PlayerFineStatsScreen> {
                               .watch(fineStatsControllerProvider)
                               .detailedFineFineListStream(),
                           onPressed: (object) {},
-                          backToMainMenu: () => widget.backToMainMenu(),
                           context: context,
                         ),
                       ],

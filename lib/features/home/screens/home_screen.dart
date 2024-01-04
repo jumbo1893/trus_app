@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:trus_app/colors.dart';
+import 'package:trus_app/features/beer/screens/beer_simple_screen.dart';
+import 'package:trus_app/features/fine/match/screens/fine_match_screen.dart';
+import 'package:trus_app/features/pkfl/screens/match_detail_screen.dart';
 
 import '../../../common/utils/utils.dart';
 import '../../../common/widgets/chart/home_chart.dart';
@@ -8,30 +11,23 @@ import '../../../common/widgets/pick_chart_player.dart';
 import '../../../common/widgets/pkfl/pkfl_match_box.dart';
 import '../../../common/widgets/random_fact_box.dart';
 import '../../../common/widgets/loader.dart';
+import '../../../common/widgets/screen/custom_consumer_stateful_widget.dart';
 import '../../../models/api/home/home_setup.dart';
 import '../../../models/api/pkfl/pkfl_match_api_model.dart';
+import '../../../models/enum/match_detail_options.dart';
 import '../../general/error/api_executor.dart';
+import '../../goal/screen/goal_screen.dart';
+import '../../main/screen_controller.dart';
+import '../../match/screens/add_match_screen.dart';
 import '../controller/home_controller.dart';
 
-class HomeScreen extends ConsumerStatefulWidget {
-  final Function(PkflMatchApiModel pkflMatchApiModel) addPkflMatch;
-  final Function(int matchId) editMatch;
-  final Function(int matchId) addGoals;
-  final Function(int matchId) addFines;
-  final Function(int matchId) addBeers;
-  final Function(PkflMatchApiModel pkflMatchApiModel) commonMatches;
-  final bool changedMatch;
+class HomeScreen extends CustomConsumerStatefulWidget {
+  static const String id = "home-screen";
 
   const HomeScreen(
       {Key? key,
-      required this.addPkflMatch,
-      required this.addGoals,
-      required this.addFines,
-      required this.addBeers,
-      required this.editMatch,
-      required this.changedMatch,
-      required this.commonMatches})
-      : super(key: key);
+      })
+      : super(key: key, title: "Trusí appka", name: id);
 
   @override
   ConsumerState<HomeScreen> createState() => _HomeScreenState();
@@ -40,11 +36,45 @@ class HomeScreen extends ConsumerStatefulWidget {
 class _HomeScreenState extends ConsumerState<HomeScreen> {
   static const double padding = 20;
 
+  void setScreenToCommonMatches(PkflMatchApiModel pkflMatchApiModel) {
+    ref
+        .read(screenControllerProvider)
+        .setPreferredScreen(MatchDetailOptions.commonMatches);
+    ref.read(screenControllerProvider).setPkflMatch(pkflMatchApiModel);
+    ref.read(screenControllerProvider).changeFragment(MatchDetailScreen.id);
+  }
+
+  void setScreenToEditMatch(int matchId) {
+    ref
+        .read(screenControllerProvider)
+        .setPreferredScreen(MatchDetailOptions.editMatch);
+    ref.read(screenControllerProvider).setMatchId(matchId);
+    ref.read(screenControllerProvider).changeFragment(MatchDetailScreen.id);
+  }
+
+  void setScreenAddGoals(int matchId) {
+    ref.read(screenControllerProvider).setMatchId(matchId);
+    ref.read(screenControllerProvider).changeFragment(GoalScreen.id);
+  }
+
+  void setScreenAddFines(int matchId) {
+    ref.read(screenControllerProvider).setMatchId(matchId);
+    ref.read(screenControllerProvider).changeFragment(FineMatchScreen.id);
+  }
+
+  void setScreenAddBeers(int matchId) {
+    ref.read(screenControllerProvider).setMatchId(matchId);
+    ref.read(screenControllerProvider).changeFragment(BeerSimpleScreen.id);
+  }
+
   void onEditMatchClicked(PkflMatchApiModel pkflMatch) {
     if (pkflMatch.matchIdList.isEmpty) {
-      widget.addPkflMatch(pkflMatch);
+      ref.read(screenControllerProvider).setPkflMatch(pkflMatch);
+      ref.read(screenControllerProvider).changeFragment(AddMatchScreen.id);
     } else {
-      widget.editMatch(pkflMatch.matchIdList[0]);
+      setScreenToEditMatch(pkflMatch.matchIdList[0]);
+      ref.read(screenControllerProvider).setMatchId(pkflMatch.matchIdList[0]);
+      ref.read(screenControllerProvider).changeFragment(MatchDetailScreen.id);
     }
   }
 
@@ -65,11 +95,11 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           return notification.depth == 0;
         },
         child: FutureBuilder<HomeSetup?>(
-            //future: ref.read(homeControllerProvider).setupHome(),
+            //future: ref.read(homeControllerProvider).setupHome()
             future: executeApi<HomeSetup?>(() async {
               return await ref
                   .read(homeControllerProvider)
-                  .setupHome(widget.changedMatch);
+                  .setupHome(ref.read(screenControllerProvider).isChangedMatch());
             }, () => setState(() {}), context, false),
             builder: (context, snapshot) {
               if (snapshot.connectionState == ConnectionState.waiting ||
@@ -107,13 +137,13 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                           onButtonAddPlayersClick: (pkflMatch) =>
                               {onEditMatchClicked(pkflMatch)},
                           onButtonAddGoalsClick: (pkflMatch) =>
-                              {widget.addGoals(pkflMatch.matchIdList[0])},
+                              {setScreenAddGoals(pkflMatch.matchIdList[0])},
                           onButtonAddBeerClick: (pkflMatch) =>
-                              {widget.addBeers(pkflMatch.matchIdList[0])},
+                              {setScreenAddBeers(pkflMatch.matchIdList[0])},
                           onButtonAddFineClick: (pkflMatch) =>
-                              {widget.addFines(pkflMatch.matchIdList[0])},
+                              {setScreenAddFines(pkflMatch.matchIdList[0])},
                           onCommonMatchesClick: (pkflMatch) =>
-                              {widget.commonMatches(pkflMatch)},
+                              {setScreenToCommonMatches(pkflMatch)},
                         ),
                         PkflMatchBox(
                           pkflMatchFuture: ref
@@ -124,13 +154,13 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                           onButtonAddPlayersClick: (pkflMatch) =>
                               {onEditMatchClicked(pkflMatch)},
                           onButtonAddGoalsClick: (pkflMatch) =>
-                              {widget.addGoals(pkflMatch.matchIdList[0])},
+                              {setScreenAddGoals(pkflMatch.matchIdList[0])},
                           onButtonAddBeerClick: (pkflMatch) =>
-                              {widget.addBeers(pkflMatch.matchIdList[0])},
+                              {setScreenAddBeers(pkflMatch.matchIdList[0])},
                           onButtonAddFineClick: (pkflMatch) =>
-                              {widget.addFines(pkflMatch.matchIdList[0])},
+                              {setScreenAddFines(pkflMatch.matchIdList[0])},
                           onCommonMatchesClick: (pkflMatch) =>
-                              {widget.commonMatches(pkflMatch)},
+                              {setScreenToCommonMatches(pkflMatch)},
                         ),
                         const SizedBox(
                           height: 15,

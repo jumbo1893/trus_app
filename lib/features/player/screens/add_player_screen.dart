@@ -1,24 +1,23 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:trus_app/features/player/screens/player_screen.dart';
 
 import '../../../common/widgets/builder/column_future_builder.dart';
 import '../../../common/widgets/button/crud_button.dart';
 import '../../../common/widgets/rows/stream/row_calendar_stream.dart';
 import '../../../common/widgets/rows/stream/row_switch_stream.dart';
 import '../../../common/widgets/rows/stream/row_text_field_stream.dart';
+import '../../../common/widgets/screen/custom_consumer_stateful_widget.dart';
 import '../../../models/enum/crud.dart';
+import '../../main/screen_controller.dart';
 import '../controller/player_controller.dart';
 
-class AddPlayerScreen extends ConsumerStatefulWidget {
-  final VoidCallback onAddPlayerPressed;
-  final bool isFocused;
-  final VoidCallback backToMainMenu;
+class AddPlayerScreen extends CustomConsumerStatefulWidget {
+  static const String id = "add-player-screen";
+
   const AddPlayerScreen({
     Key? key,
-    required this.onAddPlayerPressed,
-    required this.isFocused,
-    required this.backToMainMenu,
-  }) : super(key: key);
+  }) : super(key: key, title: "Přidat hráče", name: id);
 
   @override
   ConsumerState<AddPlayerScreen> createState() => _AddPlayerScreenState();
@@ -27,13 +26,14 @@ class AddPlayerScreen extends ConsumerStatefulWidget {
 class _AddPlayerScreenState extends ConsumerState<AddPlayerScreen> {
   @override
   Widget build(BuildContext context) {
-    if (widget.isFocused) {
+    if (ref
+        .read(screenControllerProvider)
+        .isScreenFocused(AddPlayerScreen.id)) {
       const double padding = 8.0;
       final size =
           MediaQueryData.fromWindow(WidgetsBinding.instance.window).size;
       return ColumnFutureBuilder(
         loadModelFuture: ref.watch(playerControllerProvider).newPlayer(),
-        backToMainMenu: () => widget.backToMainMenu(),
         columns: [
           RowTextFieldStream(
             key: const ValueKey('player_name_field'),
@@ -89,9 +89,10 @@ class _AddPlayerScreenState extends ConsumerState<AddPlayerScreen> {
             crud: Crud.create,
             crudOperations: ref.read(playerControllerProvider),
             onOperationComplete: (id) {
-              widget.onAddPlayerPressed();
+              ref
+                  .read(screenControllerProvider)
+                  .changeFragment(PlayerScreen.id);
             },
-            backToMainMenu: () => widget.backToMainMenu(),
           )
         ],
         loadingScreen: null,

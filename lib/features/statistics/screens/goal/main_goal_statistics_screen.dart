@@ -2,12 +2,14 @@ import 'package:flutter/material.dart';
 import 'package:trus_app/colors.dart';
 import 'package:trus_app/features/statistics/screens/goal/player_goal_stats_screen.dart';
 
+import '../../../../common/widgets/screen/custom_stateful_widget.dart';
 import 'match_goal_stats_screen.dart';
 
-class MainGoalStatisticsScreen extends StatefulWidget {
-  final VoidCallback backToMainMenu;
-  const MainGoalStatisticsScreen(
-      {super.key, required this.backToMainMenu});
+class MainGoalStatisticsScreen extends CustomStatefulWidget {
+  static const String id = "main-goal-statistics-screen";
+  const MainGoalStatisticsScreen({
+    Key? key,
+  }) : super(key: key, title: "Statistika gólů/asistencí", name: id);
 
   @override
   State<MainGoalStatisticsScreen> createState() => _MainGoalStatisticsScreenState();
@@ -65,8 +67,8 @@ class MainGoalStatisticsScreen extends StatefulWidget {
           body: TabBarView(
             controller: tabController,
             children: [
-              PlayerGoalStatsScreen(isFocused: isFocused(0), backToMainMenu: () => widget.backToMainMenu()),
-              MatchGoalStatsScreen(isFocused: isFocused(1), backToMainMenu: () => widget.backToMainMenu()),
+              PlayerGoalStatsScreen(isFocused: isFocused(0)),
+              MatchGoalStatsScreen(isFocused: isFocused(1)),
             ],
           ),
         ),

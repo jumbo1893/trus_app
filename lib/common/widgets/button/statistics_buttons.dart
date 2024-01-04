@@ -1,15 +1,17 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:trus_app/colors.dart';
 
 import '../../../features/general/error/api_executor.dart';
+import '../../../features/home/screens/home_screen.dart';
+import '../../../features/main/screen_controller.dart';
 import '../icon_text_field.dart';
 
-class StatisticsButtons extends StatefulWidget {
+class StatisticsButtons extends ConsumerStatefulWidget {
   final Function(String text) onSearchButtonClicked;
   final VoidCallback onOrderButtonClicked;
   final double padding;
   final Size size;
-  final VoidCallback backToMainMenu;
 
   const StatisticsButtons({
     Key? key,
@@ -17,16 +19,15 @@ class StatisticsButtons extends StatefulWidget {
     required this.onOrderButtonClicked,
     required this.padding,
     required this.size,
-    required this.backToMainMenu,
   }) : super(key: key);
 
 
 
   @override
-  State<StatisticsButtons> createState() => _StatisticsButtonsState();
+  ConsumerState<StatisticsButtons> createState() => _StatisticsButtonsState();
 }
 
-class _StatisticsButtonsState extends State<StatisticsButtons> {
+class _StatisticsButtonsState extends ConsumerState<StatisticsButtons> {
 
   bool orderDescending = true;
 
@@ -41,7 +42,9 @@ class _StatisticsButtonsState extends State<StatisticsButtons> {
   Future<void> onSearchPressed() async {
      await executeApi<void>(() async {
       return await widget.onSearchButtonClicked(_searchController.text);
-    },() => widget.backToMainMenu(), context, false);
+    },() =>  ref
+         .read(screenControllerProvider)
+         .changeFragment(HomeScreen.id), context, false);
   }
 
   @override

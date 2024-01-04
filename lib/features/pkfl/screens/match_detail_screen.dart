@@ -1,36 +1,24 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:trus_app/colors.dart';
+import 'package:trus_app/features/home/screens/home_screen.dart';
 import 'package:trus_app/features/match/screens/edit_match_screen.dart';
 import 'package:trus_app/features/pkfl/screens/pkfl_common_matches_screen.dart';
 import 'package:trus_app/features/pkfl/screens/pkfl_match_detail_screen.dart';
 
 import '../../../common/utils/utils.dart';
 import '../../../common/widgets/loader.dart';
+import '../../../common/widgets/screen/custom_consumer_stateful_widget.dart';
 import '../../../models/enum/match_detail_options.dart';
+import '../../main/screen_controller.dart';
 import '../../match/controller/match_controller.dart';
 
-class MatchDetailScreen extends ConsumerStatefulWidget {
-  final VoidCallback backToMainMenu;
-  final int? pkflMatchId;
-  final int? matchId;
-  final MatchDetailOptions preferredScreen;
-  final bool isFocused;
-  final VoidCallback onButtonConfirmPressed;
-  final Function(int id) setMatchId;
-  final VoidCallback onChangePlayerGoalsPressed;
+class MatchDetailScreen extends CustomConsumerStatefulWidget {
+  static const String id = "match-detail-screen";
 
   const MatchDetailScreen({
-    super.key,
-    required this.onButtonConfirmPressed,
-    required this.setMatchId,
-    required this.onChangePlayerGoalsPressed,
-    required this.backToMainMenu,
-    required this.pkflMatchId,
-    required this.matchId,
-    required this.preferredScreen,
-    required this.isFocused,
-  });
+    Key? key,
+  }) : super(key: key, title: "Detail zápasu", name: id);
 
   @override
   ConsumerState<MatchDetailScreen> createState() => _MatchDetailScreenState();
@@ -72,19 +60,16 @@ class _MatchDetailScreenState extends ConsumerState<MatchDetailScreen>
     if (matchOptionList.contains(MatchDetailOptions.editMatch)) {
       widgets.add(EditMatchScreen(
         isFocused: isFocused(MatchDetailOptions.editMatch, matchOptionList),
-        backToMainMenu: () => widget.backToMainMenu(), onButtonConfirmPressed: () => widget.onButtonConfirmPressed(), setMatchId: (id) => widget.setMatchId(id), onChangePlayerGoalsPressed: ()  => widget.onChangePlayerGoalsPressed(),
       ));
     }
     if (matchOptionList.contains(MatchDetailOptions.pkflDetail)) {
       widgets.add(PkflMatchDetailScreen(
         isFocused: isFocused(MatchDetailOptions.pkflDetail, matchOptionList),
-        backToMainMenu: () => widget.backToMainMenu(),
       ));
     }
     if (matchOptionList.contains(MatchDetailOptions.commonMatches)) {
       widgets.add(PkflCommonMatchesScreen(
         isFocused: isFocused(MatchDetailOptions.commonMatches, matchOptionList),
-        backToMainMenu: () => widget.backToMainMenu(),
       ));
     }
     return widgets;
@@ -146,30 +131,39 @@ class _MatchDetailScreenState extends ConsumerState<MatchDetailScreen>
 
   @override
   Widget build(BuildContext context) {
-    if (widget.isFocused) {
+    if (ref
+        .read(screenControllerProvider)
+        .isScreenFocused(MatchDetailScreen.id)) {
+      MatchDetailOptions preferredScreen =
+          ref.read(screenControllerProvider).preferredScreen;
       return MaterialApp(
         home: FutureBuilder<List<MatchDetailOptions>>(
             future: ref
                 .watch(matchControllerProvider)
-                .setupScreen(widget.matchId, widget.pkflMatchId),
+                //.setupScreen(widget.matchId, widget.pkflMatchId),
+                .setupScreen(ref.read(screenControllerProvider).matchId,
+                    ref.read(screenControllerProvider).pkflMatch?.id),
             builder: (context, snapshot) {
               if (snapshot.connectionState == ConnectionState.waiting) {
                 return const Loader();
               } else if (snapshot.hasError) {
                 Future.delayed(
                     Duration.zero,
-                    () => showErrorDialog(snapshot.error!.toString(),
-                        widget.backToMainMenu, context));
+                    () => showErrorDialog(
+                        snapshot.error!.toString(),
+                        () => ref
+                            .read(screenControllerProvider)
+                            .changeFragment(HomeScreen.id),
+                        context));
                 return const Loader();
               }
               List<MatchDetailOptions> matchOptionList = snapshot.data!;
-              activeTab =
-                  getInitialIndex(widget.preferredScreen, matchOptionList);
+              activeTab = getInitialIndex(preferredScreen, matchOptionList);
               tabController = TabController(
                   vsync: this,
                   length: matchOptionList.length,
                   initialIndex:
-                      getInitialIndex(widget.preferredScreen, matchOptionList));
+                      getInitialIndex(preferredScreen, matchOptionList));
               return StreamBuilder<int>(
                   stream:
                       ref.watch(matchControllerProvider).matchDetailScreen(),
@@ -177,8 +171,12 @@ class _MatchDetailScreenState extends ConsumerState<MatchDetailScreen>
                     if (snapshot.hasError) {
                       Future.delayed(
                           Duration.zero,
-                          () => showErrorDialog(snapshot.error!.toString(),
-                              widget.backToMainMenu, context));
+                          () => showErrorDialog(
+                              snapshot.error!.toString(),
+                              () => ref
+                                  .read(screenControllerProvider)
+                                  .changeFragment(HomeScreen.id),
+                              context));
                       return const Loader();
                     }
                     if (streamSnapshot.data != null) {
@@ -187,8 +185,8 @@ class _MatchDetailScreenState extends ConsumerState<MatchDetailScreen>
                     }
                     return DefaultTabController(
                       length: matchOptionList.length,
-                      initialIndex: getInitialIndex(
-                          widget.preferredScreen, matchOptionList),
+                      initialIndex:
+                          getInitialIndex(preferredScreen, matchOptionList),
                       child: Scaffold(
                         appBar: AppBar(
                           backgroundColor: Colors.white,

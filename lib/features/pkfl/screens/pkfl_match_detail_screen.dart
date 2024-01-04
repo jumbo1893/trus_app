@@ -6,15 +6,15 @@ import 'package:trus_app/models/api/pkfl/pkfl_match_api_model.dart';
 import 'package:trus_app/models/pkfl/pkfl_match.dart';
 
 import '../../../common/widgets/custom_text.dart';
+import '../../home/screens/home_screen.dart';
+import '../../main/screen_controller.dart';
 import '../../match/controller/match_controller.dart';
 
 class PkflMatchDetailScreen extends ConsumerStatefulWidget {
   final bool isFocused;
-  final VoidCallback backToMainMenu;
 
   const PkflMatchDetailScreen({
     required this.isFocused,
-    required this.backToMainMenu,
     Key? key,
   }) : super(key: key);
 
@@ -24,7 +24,6 @@ class PkflMatchDetailScreen extends ConsumerStatefulWidget {
 }
 
 class _PkflMatchDetailScreenState extends ConsumerState<PkflMatchDetailScreen> {
-
   @override
   Widget build(BuildContext context) {
     if (widget.isFocused) {
@@ -37,9 +36,12 @@ class _PkflMatchDetailScreenState extends ConsumerState<PkflMatchDetailScreen> {
               } else if (snapshot.hasError) {
                 Future.delayed(
                     Duration.zero,
-                        () =>
-                        showErrorDialog(snapshot.error!.toString(),
-                            widget.backToMainMenu, context));
+                    () => showErrorDialog(
+                        snapshot.error!.toString(),
+                        () => ref
+                            .read(screenControllerProvider)
+                            .changeFragment(HomeScreen.id),
+                        context));
                 return const Loader();
               }
               PkflMatchApiModel pkflMatch = snapshot.data!;
@@ -48,7 +50,11 @@ class _PkflMatchDetailScreenState extends ConsumerState<PkflMatchDetailScreen> {
                   padding: const EdgeInsets.all(8),
                   child: Column(
                     children: [
-                      Center(child: CustomText(text: "\n${pkflMatch.toStringNameWithOpponent()}\n", fontSize: 20,)),
+                      Center(
+                          child: CustomText(
+                        text: "\n${pkflMatch.toStringNameWithOpponent()}\n",
+                        fontSize: 20,
+                      )),
                       CustomText(text: pkflMatch.returnFirstDetailsOfMatch()),
                       FutureBuilder<PkflMatch>(
                           future: null,
@@ -60,7 +66,8 @@ class _PkflMatchDetailScreenState extends ConsumerState<PkflMatchDetailScreen> {
                             return Column(
                               children: [
                                 CustomText(
-                                    text: pkflMatch.returnSecondDetailsOfMatch()),
+                                    text:
+                                        pkflMatch.returnSecondDetailsOfMatch()),
                               ],
                             );
                           })
@@ -68,11 +75,9 @@ class _PkflMatchDetailScreenState extends ConsumerState<PkflMatchDetailScreen> {
                   ),
                 ),
               );
-            }
-        ),
+            }),
       );
-    }
-    else {
+    } else {
       return Container();
     }
   }

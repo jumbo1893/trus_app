@@ -1,27 +1,22 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:trus_app/features/fine/match/controller/fine_player_controller.dart';
+import 'package:trus_app/features/fine/match/screens/fine_match_screen.dart';
 import 'package:trus_app/models/api/match/match_api_model.dart';
 
 import '../../../../common/widgets/builder/add_builder.dart';
 import '../../../../common/widgets/builder/error_future_builder.dart';
 import '../../../../common/widgets/button/confirm_button.dart';
+import '../../../../common/widgets/screen/custom_consumer_stateful_widget.dart';
 import '../../../../models/api/player_api_model.dart';
+import '../../../main/screen_controller.dart';
 
-class FinePlayerScreen extends ConsumerStatefulWidget {
-  final VoidCallback onButtonConfirmPressed;
-  final VoidCallback backToMainMenu;
-  final PlayerApiModel playerModel;
-  final MatchApiModel matchModel;
-  final bool isFocused;
+class FinePlayerScreen extends CustomConsumerStatefulWidget {
+  static const String id = "fine-player-screen";
+
   const FinePlayerScreen({
     Key? key,
-    required this.playerModel,
-    required this.matchModel,
-    required this.onButtonConfirmPressed,
-    required this.backToMainMenu,
-    required this.isFocused,
-  }) : super(key: key);
+  }) : super(key: key, title: "Přidat pokutu hráči", name: id);
 
   @override
   ConsumerState<FinePlayerScreen> createState() => _FinePlayerScreenState();
@@ -30,19 +25,22 @@ class FinePlayerScreen extends ConsumerStatefulWidget {
 class _FinePlayerScreenState extends ConsumerState<FinePlayerScreen> {
   @override
   Widget build(BuildContext context) {
-    if (widget.isFocused) {
+    if (ref
+        .read(screenControllerProvider)
+        .isScreenFocused(FinePlayerScreen.id)) {
+      PlayerApiModel player = ref.watch(screenControllerProvider).playerModel;
+      MatchApiModel matchModel = ref.read(screenControllerProvider).matchModel;
       return ErrorFutureBuilder<void>(
           future: ref
               .read(finePlayerController)
-              .setupPlayer(widget.playerModel.id!, widget.matchModel.id!),
-          backToMainMenu: () => widget.backToMainMenu(),
+              .setupPlayer(player.id!, matchModel.id!),
           context: context,
           widget: Column(
             children: [
               Expanded(
                 child: AddBuilder(
                   addController: ref.read(finePlayerController),
-                  appBarText: widget.playerModel.name,
+                  appBarText: player.name,
                   goal: false,
                 ),
               ),
@@ -53,9 +51,10 @@ class _FinePlayerScreenState extends ConsumerState<FinePlayerScreen> {
                   context: context,
                   confirmOperations: ref.read(finePlayerController),
                   onOperationComplete: () {
-                    widget.onButtonConfirmPressed();
+                    ref
+                        .read(screenControllerProvider)
+                        .changeFragment(FineMatchScreen.id);
                   },
-                  backToMainMenu: () => widget.backToMainMenu(),
                   id: -1,
                 ),
               )

@@ -3,27 +3,25 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:trus_app/common/widgets/loader.dart';
 
 import '../../../common/widgets/builder/notifications_error_future_builder.dart';
+import '../../../common/widgets/screen/custom_consumer_widget.dart';
+import '../../main/screen_controller.dart';
 import '../controller/notification_controller.dart';
 
-class NotificationScreen extends ConsumerWidget {
-  final VoidCallback backToMainMenu;
-  final bool isFocused;
+class NotificationScreen extends CustomConsumerWidget {
+  static const String id = "notification-screen";
   const NotificationScreen(
       {
     Key? key,
-        required this.backToMainMenu,
-        required this.isFocused,
-  }) : super(key: key);
+  }) : super(key: key, title: "Notifikace", name: id);
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    if (isFocused) {
+    if (ref.read(screenControllerProvider).isScreenFocused(id)) {
       return Scaffold(
           body: Padding(
             padding: const EdgeInsets.only(top: 8.0),
             child: NotificationsErrorFutureBuilder(
               future: ref.watch(notificationControllerProvider).getNotifications(),
-              backToMainMenu: () => backToMainMenu(),
               context: context,
               rebuildStream: ref.watch(notificationControllerProvider).notifications(),
             ),

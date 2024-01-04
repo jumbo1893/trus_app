@@ -2,31 +2,23 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:trus_app/common/utils/utils.dart';
 import 'package:trus_app/common/widgets/dropdown/match_dropdown.dart';
+import 'package:trus_app/features/fine/match/screens/multiple_fine_players_screen.dart';
 import 'package:trus_app/models/api/player_api_model.dart';
 
 import '../../../../common/widgets/builder/error_future_builder.dart';
 import '../../../../common/widgets/button/floating_finematch_button.dart';
 import '../../../../common/widgets/dropdown/season_api_dropdown.dart';
 import '../../../../common/widgets/listview/fine_match_listview.dart';
+import '../../../../common/widgets/screen/custom_consumer_stateful_widget.dart';
 import '../../../../models/api/match/match_api_model.dart';
+import '../../../main/screen_controller.dart';
 import '../controller/fine_match_controller.dart';
 
-class FineMatchScreen extends ConsumerStatefulWidget {
-  final Function(PlayerApiModel player) setPlayer;
-  final Function(MatchApiModel match) setMatch;
-  final Function(List<int> playerIdListToChangeFines) playerIdListToChangeFines;
-  final int matchId;
-  final bool isFocused;
-  final VoidCallback backToMainMenu;
+class FineMatchScreen extends CustomConsumerStatefulWidget {
+  static const String id = "fine-match-screen";
   const FineMatchScreen({
     Key? key,
-    required this.setPlayer,
-    required this.playerIdListToChangeFines,
-    required this.setMatch,
-    required this.matchId,
-    required this.isFocused,
-    required this.backToMainMenu,
-  }) : super(key: key);
+  }) : super(key: key, title: "Přidání pokut", name: id);
 
   @override
   ConsumerState<FineMatchScreen> createState() => _FineMatchScreenState();
@@ -41,8 +33,9 @@ class _FineMatchScreenState extends ConsumerState<FineMatchScreen> {
         showSnackBarWithPostFrame(
             context: context, content: "Musí být označen aspoň jeden hráč!");
       } else {
-        widget.setMatch(ref.read(fineMatchControllerProvider).pickedMatch!);
-        widget.playerIdListToChangeFines(players);
+        ref.read(screenControllerProvider).setMatch(ref.read(fineMatchControllerProvider).pickedMatch!);
+        ref.read(screenControllerProvider).setPlayerIdList(players);
+        ref.read(screenControllerProvider).changeFragment(MultipleFinePlayersScreen.id);
       }
     } else {
       ref.read(fineMatchControllerProvider).onIconClick(index);
@@ -51,15 +44,15 @@ class _FineMatchScreenState extends ConsumerState<FineMatchScreen> {
 
   @override
   Widget build(BuildContext context) {
-    if (widget.isFocused) {
+    if (ref.read(screenControllerProvider).isScreenFocused(FineMatchScreen.id)) {
       final size = MediaQuery.of(context).size;
       const double padding = 8.0;
       return ErrorFutureBuilder<void>(
           future: ref
               .read(fineMatchControllerProvider)
-              .initScreen(widget.matchId),
+              .initScreen(ref
+              .read(screenControllerProvider).matchId),
           context: context,
-          backToMainMenu: () => widget.backToMainMenu(),
           widget: Scaffold(
               appBar: AppBar(
                 centerTitle: true,
@@ -113,8 +106,8 @@ class _FineMatchScreenState extends ConsumerState<FineMatchScreen> {
                       multiselectStream:
                           ref.watch(fineMatchControllerProvider).multiselect(),
                       onPlayerSelected: (player) => {
-                        widget.setPlayer(player),
-                        widget.setMatch(
+                        ref.read(screenControllerProvider).setPlayer(player),
+                        ref.read(screenControllerProvider).setMatch(
                             ref.read(fineMatchControllerProvider).pickedMatch!)
                       },
                       onPlayerChecked: (player) => ref

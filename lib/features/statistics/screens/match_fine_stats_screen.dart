@@ -12,10 +12,8 @@ import '../fine_screen_enum.dart';
 
 class MatchFineStatsScreen extends ConsumerStatefulWidget {
   final bool isFocused;
-  final VoidCallback backToMainMenu;
   const MatchFineStatsScreen({
     required this.isFocused,
-    required this.backToMainMenu,
     Key? key,
   }) : super(key: key);
 
@@ -68,7 +66,6 @@ class _MatchFineStatsScreenState extends ConsumerState<MatchFineStatsScreen> {
                                   .onRevertTap(),
                               padding: padding,
                               size: size,
-                              backToMainMenu: () => widget.backToMainMenu(),
                             )
                           ],
                         ),
@@ -82,7 +79,6 @@ class _MatchFineStatsScreenState extends ConsumerState<MatchFineStatsScreen> {
                                 .setDetail(model);
                           },
                           context: context,
-                          backToMainMenu: () => widget.backToMainMenu(),
                           rebuildStream: ref
                               .watch(fineStatsControllerProvider)
                               .fineListStream(),
@@ -148,7 +144,6 @@ class _MatchFineStatsScreenState extends ConsumerState<MatchFineStatsScreen> {
                           onPressed: (model) {ref
                               .watch(fineStatsControllerProvider)
                               .setFineDetail(model);},
-                          backToMainMenu: () => widget.backToMainMenu(),
                           context: context,
                           scrollable: false,
                         ),
@@ -228,7 +223,6 @@ class _MatchFineStatsScreenState extends ConsumerState<MatchFineStatsScreen> {
                               .watch(fineStatsControllerProvider)
                               .detailedFineFineListStream(),
                           onPressed: (object) {},
-                          backToMainMenu: () => widget.backToMainMenu(),
                           context: context,
                         ),
                       ],

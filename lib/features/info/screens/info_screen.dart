@@ -2,11 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import '../../../common/widgets/loader.dart';
+import '../../../common/widgets/screen/custom_consumer_stateful_widget.dart';
 
-class InfoScreen extends ConsumerStatefulWidget {
+class InfoScreen extends CustomConsumerStatefulWidget {
+  static const String id = "info-screen";
   const InfoScreen({
     Key? key,
-  }) : super(key: key);
+  }) : super(key: key, title: "Info o aplikaci", name: id);
 
   @override
   ConsumerState<InfoScreen> createState() => _InfoScreenState();

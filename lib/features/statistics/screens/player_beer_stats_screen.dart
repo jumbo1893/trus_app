@@ -11,10 +11,8 @@ import '../controller/beer_stats_controller.dart';
 
 class PlayerBeerStatsScreen extends ConsumerStatefulWidget {
   final bool isFocused;
-  final VoidCallback backToMainMenu;
   const PlayerBeerStatsScreen({
     required this.isFocused,
-    required this.backToMainMenu,
     Key? key,
   }) : super(key: key);
 
@@ -67,7 +65,6 @@ class _PlayerBeerStatsScreenState extends ConsumerState<PlayerBeerStatsScreen> {
                                   .onRevertTap(),
                               padding: padding,
                               size: size,
-                              backToMainMenu: () => widget.backToMainMenu(),
                             )
                           ],
                         ),
@@ -81,7 +78,6 @@ class _PlayerBeerStatsScreenState extends ConsumerState<PlayerBeerStatsScreen> {
                                 .setDetail(model);
                           },
                           context: context,
-                          backToMainMenu: () => widget.backToMainMenu(),
                           rebuildStream: ref
                               .watch(beerStatsControllerProvider)
                               .beerListStream(),
@@ -145,7 +141,6 @@ class _PlayerBeerStatsScreenState extends ConsumerState<PlayerBeerStatsScreen> {
                               .watch(beerStatsControllerProvider)
                               .detailedBeerListStream(),
                           onPressed: (object) {},
-                          backToMainMenu: () => widget.backToMainMenu(),
                           context: context,
                           scrollable: false,
                         ),

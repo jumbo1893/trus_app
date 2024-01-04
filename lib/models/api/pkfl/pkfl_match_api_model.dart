@@ -6,6 +6,7 @@ import 'package:trus_app/models/api/pkfl/pkfl_opponent_api_model.dart';
 import 'package:trus_app/models/api/pkfl/pkfl_referee_api_model.dart';
 import 'package:trus_app/models/api/pkfl/pkfl_season_api_model.dart';
 import 'package:trus_app/models/api/pkfl/pkfl_stadium_api_model.dart';
+import 'package:trus_app/models/api/season_api_model.dart';
 
 import '../../../common/utils/calendar.dart';
 
@@ -27,23 +28,35 @@ class PkflMatchApiModel implements JsonAndHttpConverter, ModelToString {
   List<PkflIndividualStatsApiModel> playerList;
   List<int> matchIdList;
 
-  PkflMatchApiModel(
-      {required this.id,
-      required this.date,
-      this.opponent,
-      required this.round,
-      required this.league,
-      this.stadium,
-      this.referee,
-      required this.season,
-      this.trusGoalNumber,
-      this.opponentGoalNumber,
-      required this.homeMatch,
-      required this.urlResult,
-      required this.refereeComment,
-      required this.alreadyPlayed,
-      required this.playerList,
-      required this.matchIdList});
+  PkflMatchApiModel({required this.id,
+    required this.date,
+    this.opponent,
+    required this.round,
+    required this.league,
+    this.stadium,
+    this.referee,
+    required this.season,
+    this.trusGoalNumber,
+    this.opponentGoalNumber,
+    required this.homeMatch,
+    required this.urlResult,
+    required this.refereeComment,
+    required this.alreadyPlayed,
+    required this.playerList,
+    required this.matchIdList});
+
+  PkflMatchApiModel.dummy()
+      : id = 0,
+        league = "",
+        matchIdList = [],
+        playerList = [],
+        alreadyPlayed = false,
+        refereeComment = "",
+        round = 0,
+        season = PkflSeasonApiModel(name: "", url: "", id: 0),
+        urlResult = "",
+        homeMatch = false,
+        date = DateTime.fromMicrosecondsSinceEpoch(0);
 
   @override
   Map<String, dynamic> toJson() {
@@ -71,11 +84,14 @@ class PkflMatchApiModel implements JsonAndHttpConverter, ModelToString {
     return PkflMatchApiModel(
       id: json["id"],
       date: DateTime.parse(json['date']),
-      opponent: json["opponent"] != null ? PkflOpponentApiModel.fromJson(json["opponent"]) : null,
+      opponent: json["opponent"] != null ? PkflOpponentApiModel.fromJson(
+          json["opponent"]) : null,
       round: json["round"],
       league: json["league"],
-      stadium: json["stadium"] != null ? PkflStadiumApiModel.fromJson(json["stadium"]) : null,
-      referee: json["referee"] != null ? PkflRefereeApiModel.fromJson(json["referee"]) : null,
+      stadium: json["stadium"] != null ? PkflStadiumApiModel.fromJson(
+          json["stadium"]) : null,
+      referee: json["referee"] != null ? PkflRefereeApiModel.fromJson(
+          json["referee"]) : null,
       season: PkflSeasonApiModel.fromJson(json["season"]),
       trusGoalNumber: json["trusGoalNumber"],
       opponentGoalNumber: json["opponentGoalNumber"],
@@ -83,7 +99,9 @@ class PkflMatchApiModel implements JsonAndHttpConverter, ModelToString {
       urlResult: json["urlResult"],
       refereeComment: json["refereeComment"],
       alreadyPlayed: json["alreadyPlayed"],
-      playerList: List<PkflIndividualStatsApiModel>.from((json['playerList'] as List<dynamic>).map((match) => PkflIndividualStatsApiModel.fromJson(match))),
+      playerList: List<PkflIndividualStatsApiModel>.from(
+          (json['playerList'] as List<dynamic>).map((match) =>
+              PkflIndividualStatsApiModel.fromJson(match))),
       matchIdList: List<int>.from((json['matchIdList'])),
     );
   }
@@ -96,15 +114,18 @@ class PkflMatchApiModel implements JsonAndHttpConverter, ModelToString {
   }
 
   String toStringForNextMatchHomeScreen() {
-    return "${toStringNameWithOpponent()}, v čase ${formatDateForFrontend(date)}. Jedná se o $round. kolo a bude se hrát ${stadiumToString()}. Pískat bude ${refereeToString()}";
+    return "${toStringNameWithOpponent()}, v čase ${formatDateForFrontend(
+        date)}. Jedná se o $round. kolo a bude se hrát ${stadiumToString()}. Pískat bude ${refereeToString()}";
   }
 
   String toStringForLastMatchHomeScreen() {
-    return "${toStringNameWithOpponent()}, v čase ${formatDateForFrontend(date)}. Jednalo se o $round. kolo a hrálo se ${stadiumToString()} ${resultToString()}. Rozhodčí byl ${refereeToString()}";
+    return "${toStringNameWithOpponent()}, v čase ${formatDateForFrontend(
+        date)}. Jednalo se o $round. kolo a hrálo se ${stadiumToString()} ${resultToString()}. Rozhodčí byl ${refereeToString()}";
   }
 
   String toStringForCardDetail() {
-    return "${toStringNameWithOpponent()} hraném ${formatDateForFrontend(date)} ${stadiumToString()} s konečným výsledkem ${resultToString()}. Kartu udělalil ${refereeToString()}";
+    return "${toStringNameWithOpponent()} hraném ${formatDateForFrontend(
+        date)} ${stadiumToString()} s konečným výsledkem ${resultToString()}. Kartu udělalil ${refereeToString()}";
   }
 
   String resultToString() {
@@ -149,18 +170,18 @@ class PkflMatchApiModel implements JsonAndHttpConverter, ModelToString {
   }
 
   String returnFirstDetailsOfMatch() {
-    return "$round. kolo, $league, hrané ${formatDateForFrontend(date)}\n\nStadion: ${stadiumToString()}\n\nRozhodčí: ${refereeToString()}\n\nVýsledek: ${simpleResultToString()}";
+    return "$round. kolo, $league, hrané ${formatDateForFrontend(
+        date)}\n\nStadion: ${stadiumToString()}\n\nRozhodčí: ${refereeToString()}\n\nVýsledek: ${simpleResultToString()}";
   }
 
   String returnSecondDetailsOfMatch() {
     return "\n$refereeComment ${returnBestPlayerText()}${returnGoalScorersText()}${returnOwnGoalScorersText()}${returnYellowCardPlayersText()}${returnRedCardPlayersText()}";
-
   }
 
   String returnBestPlayerText() {
     if (playerList.isNotEmpty) {
       for (PkflIndividualStatsApiModel player in playerList) {
-        if(player.bestPlayer) {
+        if (player.bestPlayer) {
           return ("\nHvězda zápasu: ${player.player.name}");
         }
       }
@@ -172,7 +193,7 @@ class PkflMatchApiModel implements JsonAndHttpConverter, ModelToString {
     String text = "";
     if (playerList.isNotEmpty) {
       for (PkflIndividualStatsApiModel player in playerList) {
-        if(player.goals > 0) {
+        if (player.goals > 0) {
           int goalNumber = player.goals;
           text += "${player.player.name}: $goalNumber${(goalNumber == 1)
               ? " gól"
@@ -180,7 +201,7 @@ class PkflMatchApiModel implements JsonAndHttpConverter, ModelToString {
         }
       }
     }
-    if(text.isNotEmpty) {
+    if (text.isNotEmpty) {
       return ("\n\nStřelci:\n") + text;
     }
     return text;
@@ -198,7 +219,7 @@ class PkflMatchApiModel implements JsonAndHttpConverter, ModelToString {
         }
       }
     }
-    if(text.isNotEmpty) {
+    if (text.isNotEmpty) {
       return ("\nStřelci vlastňáků:\n") + text;
     }
     return text;
@@ -213,7 +234,7 @@ class PkflMatchApiModel implements JsonAndHttpConverter, ModelToString {
         }
       }
     }
-    if(text.isNotEmpty) {
+    if (text.isNotEmpty) {
       return ("\nŽluté karty:\n") + text;
     }
     return text;
@@ -227,7 +248,7 @@ class PkflMatchApiModel implements JsonAndHttpConverter, ModelToString {
           text += ("${player.player.name}: ${player.redCards}\n");
         }
       }
-      if(text.isNotEmpty) {
+      if (text.isNotEmpty) {
         return ("\nČervené karty:\n") + text;
       }
     }
@@ -235,7 +256,8 @@ class PkflMatchApiModel implements JsonAndHttpConverter, ModelToString {
   }
 
   String toStringForSubtitle() {
-    return "Datum: ${formatDateForFrontend(date)}, výsledek: ${simpleResultToString()}";
+    return "Datum: ${formatDateForFrontend(
+        date)}, výsledek: ${simpleResultToString()}";
   }
 
   String toStringForMutualMatchesSubtitle() {
@@ -245,9 +267,9 @@ class PkflMatchApiModel implements JsonAndHttpConverter, ModelToString {
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
-      other is PkflMatchApiModel &&
-          runtimeType == other.runtimeType &&
-          id == other.id;
+          other is PkflMatchApiModel &&
+              runtimeType == other.runtimeType &&
+              id == other.id;
 
   @override
   int get hashCode => id.hashCode;

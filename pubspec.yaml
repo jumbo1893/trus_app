@@ -59,6 +59,7 @@ dependencies:
   dio: ^5.3.3
   native_dio_adapter: ^0.1.0
   cupertino_http: ^0.1.2
+  provider: ^6.1.1
 
 flutter_icons:
   android: true

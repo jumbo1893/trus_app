@@ -10,11 +10,9 @@ import '../utils.dart';
 
 class PkflCommonMatchesScreen extends ConsumerStatefulWidget {
   final bool isFocused;
-  final VoidCallback backToMainMenu;
 
   const PkflCommonMatchesScreen({
     required this.isFocused,
-    required this.backToMainMenu,
     Key? key,
   }) : super(key: key);
 
@@ -23,50 +21,48 @@ class PkflCommonMatchesScreen extends ConsumerStatefulWidget {
       _PkflCommonMatchesScreenState();
 }
 
-class _PkflCommonMatchesScreenState extends ConsumerState<PkflCommonMatchesScreen> {
-
+class _PkflCommonMatchesScreenState
+    extends ConsumerState<PkflCommonMatchesScreen> {
   @override
   Widget build(BuildContext context) {
     const double padding = 8.0;
     if (widget.isFocused) {
       return Scaffold(
         body: FutureBuilder<PkflMatchDetail>(
-            future: ref
-                .read(matchControllerProvider)
-                .returnPkflMatchDetail(),
+            future: ref.read(matchControllerProvider).returnPkflMatchDetail(),
             builder: (context, snapshot) {
               if (snapshot.connectionState == ConnectionState.waiting) {
                 return const Loader();
               }
-              List<PkflMatchApiModel> commonMatches = sortMatchesByDate(snapshot.data!.commonMatches, true);
-              String aggregateMatches = snapshot.data!.aggregateMatches?? "";
-              String aggregateScore = snapshot.data!.aggregateScore?? "";
+              List<PkflMatchApiModel> commonMatches =
+                  sortMatchesByDate(snapshot.data!.commonMatches, true);
+              String aggregateMatches = snapshot.data!.aggregateMatches ?? "";
+              String aggregateScore = snapshot.data!.aggregateScore ?? "";
               return Column(
                 children: [
                   InkWell(
                     child: Padding(
-                      padding: const EdgeInsets.only(
-                          bottom: 8.0, left: 8, right: 8),
+                      padding:
+                          const EdgeInsets.only(bottom: 8.0, left: 8, right: 8),
                       child: Container(
                         decoration: const BoxDecoration(
                             border: Border(
                                 bottom: BorderSide(
-                                  color: Colors.grey,
-                                ))),
+                          color: Colors.grey,
+                        ))),
                         child: ListTile(
                           title: Padding(
                             padding: const EdgeInsets.only(bottom: 16),
                             child: Text(
                               "Bilance zápasů V/R/P: $aggregateMatches",
                               style: const TextStyle(
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 18),
+                                  fontWeight: FontWeight.bold, fontSize: 18),
                             ),
                           ),
                           subtitle: Text(
                             "Celkové skóre: $aggregateScore",
-                            style: const TextStyle(
-                                color: listviewSubtitleColor),
+                            style:
+                                const TextStyle(color: listviewSubtitleColor),
                           ),
                         ),
                       ),
@@ -86,8 +82,8 @@ class _PkflCommonMatchesScreenState extends ConsumerState<PkflCommonMatchesScree
                                 decoration: const BoxDecoration(
                                     border: Border(
                                         bottom: BorderSide(
-                                          color: Colors.grey,
-                                        ))),
+                                  color: Colors.grey,
+                                ))),
                                 child: ListTile(
                                   title: Padding(
                                     padding: const EdgeInsets.only(
@@ -116,8 +112,7 @@ class _PkflCommonMatchesScreenState extends ConsumerState<PkflCommonMatchesScree
               );
             }),
       );
-    }
-    else {
+    } else {
       return Container();
     }
   }

@@ -1,22 +1,21 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:trus_app/features/season/screens/season_screen.dart';
 import '../../../common/widgets/builder/column_future_builder.dart';
 import '../../../common/widgets/button/crud_button.dart';
 import '../../../common/widgets/rows/stream/row_calendar_stream.dart';
 import '../../../common/widgets/rows/stream/row_text_field_stream.dart';
+import '../../../common/widgets/screen/custom_consumer_stateful_widget.dart';
 import '../../../models/enum/crud.dart';
+import '../../main/screen_controller.dart';
 import '../controller/season_controller.dart';
 
-class AddSeasonScreen extends ConsumerStatefulWidget {
-  final VoidCallback onAddSeasonPressed;
-  final bool isFocused;
-  final VoidCallback backToMainMenu;
+class AddSeasonScreen extends CustomConsumerStatefulWidget {
+  static const String id = "add-season-screen";
+
   const AddSeasonScreen({
     Key? key,
-    required this.onAddSeasonPressed,
-    required this.isFocused,
-    required this.backToMainMenu,
-  }) : super(key: key);
+  }) : super(key: key, title: "Přidat sezonu", name: id);
 
   @override
   ConsumerState<AddSeasonScreen> createState() => _AddSeasonScreenState();
@@ -25,13 +24,14 @@ class AddSeasonScreen extends ConsumerStatefulWidget {
 class _AddSeasonScreenState extends ConsumerState<AddSeasonScreen> {
   @override
   Widget build(BuildContext context) {
-    if (widget.isFocused) {
+    if (ref
+        .read(screenControllerProvider)
+        .isScreenFocused(AddSeasonScreen.id)) {
       const double padding = 8.0;
       final size =
           MediaQueryData.fromWindow(WidgetsBinding.instance.window).size;
       return ColumnFutureBuilder(
         loadModelFuture: ref.watch(seasonControllerProvider).newSeason(),
-        backToMainMenu: () => widget.backToMainMenu(),
         columns: [
           RowTextFieldStream(
             key: const ValueKey('season_name_field'),
@@ -55,7 +55,8 @@ class _AddSeasonScreenState extends ConsumerState<AddSeasonScreen> {
               ref.watch(seasonControllerProvider).setFromDate(date);
             },
             dateStream: ref.watch(seasonControllerProvider).fromDate(),
-            errorTextStream: ref.watch(seasonControllerProvider).fromDateErrorText(),
+            errorTextStream:
+                ref.watch(seasonControllerProvider).fromDateErrorText(),
           ),
           const SizedBox(height: 10),
           RowCalendarStream(
@@ -67,7 +68,8 @@ class _AddSeasonScreenState extends ConsumerState<AddSeasonScreen> {
               ref.watch(seasonControllerProvider).setToDate(date);
             },
             dateStream: ref.watch(seasonControllerProvider).toDate(),
-            errorTextStream: ref.watch(seasonControllerProvider).toDateErrorText(),
+            errorTextStream:
+                ref.watch(seasonControllerProvider).toDateErrorText(),
           ),
           const SizedBox(height: 10),
           CrudButton(
@@ -77,9 +79,10 @@ class _AddSeasonScreenState extends ConsumerState<AddSeasonScreen> {
             crud: Crud.create,
             crudOperations: ref.read(seasonControllerProvider),
             onOperationComplete: (id) {
-              widget.onAddSeasonPressed();
+              ref
+                  .read(screenControllerProvider)
+                  .changeFragment(SeasonScreen.id);
             },
-            backToMainMenu: () => widget.backToMainMenu(),
           )
         ],
         loadingScreen: null,

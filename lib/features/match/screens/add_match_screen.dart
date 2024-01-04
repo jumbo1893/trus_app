@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:trus_app/features/goal/screen/goal_screen.dart';
+import 'package:trus_app/features/home/screens/home_screen.dart';
 import 'package:trus_app/features/match/controller/match_controller.dart';
 import '../../../common/utils/utils.dart';
 import '../../../common/widgets/builder/column_future_builder.dart';
@@ -10,25 +12,17 @@ import '../../../common/widgets/rows/stream/row_player_list_stream.dart';
 import '../../../common/widgets/rows/stream/row_season_stream.dart';
 import '../../../common/widgets/rows/stream/row_switch_stream.dart';
 import '../../../common/widgets/rows/stream/row_text_field_stream.dart';
+import '../../../common/widgets/screen/custom_consumer_stateful_widget.dart';
 import '../../../models/api/pkfl/pkfl_match_api_model.dart';
 import '../../../models/enum/crud.dart';
+import '../../main/screen_controller.dart';
 
-class AddMatchScreen extends ConsumerStatefulWidget {
-  final VoidCallback onAddMatchPressed;
-  final Function(int id) setMatchId;
-  final VoidCallback onChangePlayerGoalsPressed;
-  final VoidCallback backToMainMenu;
-  final bool isFocused;
-  PkflMatchApiModel? pkflMatch;
-  AddMatchScreen({
+class AddMatchScreen extends CustomConsumerStatefulWidget {
+  static const String id = "add-match-screen";
+
+  const AddMatchScreen({
     Key? key,
-    required this.onAddMatchPressed,
-    required this.isFocused,
-    required this.setMatchId,
-    required this.onChangePlayerGoalsPressed,
-    required this.backToMainMenu,
-    required this.pkflMatch,
-  }) : super(key: key);
+  }) : super(key: key, title: "Přidat zápas", name: id);
 
   @override
   ConsumerState<AddMatchScreen> createState() => _AddMatchScreenState();
@@ -37,7 +31,7 @@ class AddMatchScreen extends ConsumerStatefulWidget {
 class _AddMatchScreenState extends ConsumerState<AddMatchScreen> {
   @override
   Widget build(BuildContext context) {
-    if (widget.isFocused) {
+    if (ref.read(screenControllerProvider).isScreenFocused(AddMatchScreen.id)) {
       const double padding = 8.0;
       final size =
           MediaQueryData.fromWindow(WidgetsBinding.instance.window).size;
@@ -49,14 +43,25 @@ class _AddMatchScreenState extends ConsumerState<AddMatchScreen> {
             } else if (snapshot.hasError) {
               Future.delayed(
                   Duration.zero,
-                  () => showErrorDialog(snapshot.error!.toString(),
-                      widget.onAddMatchPressed, context));
+                  () => showErrorDialog(
+                      snapshot.error!.toString(),
+                      () => {
+                            ref
+                                .read(screenControllerProvider)
+                                .changeFragment(HomeScreen.id)
+                          },
+                      context));
               return const Loader();
             }
+            PkflMatchApiModel? pkflMatch =
+                ref.read(screenControllerProvider).pkflMatch;
             return ColumnFutureBuilder(
-              loadModelFuture: widget.pkflMatch == null ? ref.watch(matchControllerProvider).newMatch() : ref.watch(matchControllerProvider).newMatchByPkflMatch(widget.pkflMatch!),
+              loadModelFuture: pkflMatch == null
+                  ? ref.watch(matchControllerProvider).newMatch()
+                  : ref
+                      .watch(matchControllerProvider)
+                      .newMatchByPkflMatch(pkflMatch),
               loadingScreen: null,
-              backToMainMenu: () => widget.backToMainMenu(),
               columns: [
                 RowTextFieldStream(
                   key: const ValueKey('match_name_field'),
@@ -143,10 +148,12 @@ class _AddMatchScreenState extends ConsumerState<AddMatchScreen> {
                   crud: Crud.create,
                   crudOperations: ref.read(matchControllerProvider),
                   onOperationComplete: (id) {
-                    widget.setMatchId(id);
-                    widget.onAddMatchPressed();
+                    ref.read(screenControllerProvider).setMatchId(id);
+                    ref
+                        .read(screenControllerProvider)
+                        .changeFragment(HomeScreen.id);
+                    ref.read(screenControllerProvider).setChangedMatch(true);
                   },
-                  backToMainMenu: () => widget.backToMainMenu(),
                 ),
                 CrudButton(
                   key: const ValueKey('confirm_and_goal_button'),
@@ -155,10 +162,11 @@ class _AddMatchScreenState extends ConsumerState<AddMatchScreen> {
                   crud: Crud.create,
                   crudOperations: ref.read(matchControllerProvider),
                   onOperationComplete: (id) {
-                    widget.setMatchId(id);
-                    widget.onChangePlayerGoalsPressed();
+                    ref.read(screenControllerProvider).setMatchId(id);
+                    ref
+                        .read(screenControllerProvider)
+                        .changeFragment(GoalScreen.id);
                   },
-                  backToMainMenu: () => widget.backToMainMenu(),
                 ),
               ],
             );

@@ -11,10 +11,9 @@ import '../../controller/goal_stats_controller.dart';
 
 class PlayerGoalStatsScreen extends ConsumerStatefulWidget {
   final bool isFocused;
-  final VoidCallback backToMainMenu;
+
   const PlayerGoalStatsScreen({
     required this.isFocused,
-    required this.backToMainMenu,
     Key? key,
   }) : super(key: key);
 
@@ -67,7 +66,6 @@ class _PlayerGoalStatsScreenState extends ConsumerState<PlayerGoalStatsScreen> {
                                   .onRevertTap(),
                               padding: padding,
                               size: size,
-                              backToMainMenu: () => widget.backToMainMenu(),
                             )
                           ],
                         ),
@@ -81,7 +79,6 @@ class _PlayerGoalStatsScreenState extends ConsumerState<PlayerGoalStatsScreen> {
                                 .setDetail(model);
                           },
                           context: context,
-                          backToMainMenu: () => widget.backToMainMenu(),
                           rebuildStream: ref
                               .watch(goalStatsControllerProvider)
                               .goalListStream(),
@@ -145,7 +142,6 @@ class _PlayerGoalStatsScreenState extends ConsumerState<PlayerGoalStatsScreen> {
                               .watch(goalStatsControllerProvider)
                               .detailedGoalListStream(),
                           onPressed: (object) {},
-                          backToMainMenu: () => widget.backToMainMenu(),
                           context: context,
                         ),
                       ],

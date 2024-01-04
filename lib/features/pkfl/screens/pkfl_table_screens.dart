@@ -6,12 +6,14 @@ import 'package:trus_app/common/widgets/loader.dart';
 import 'package:trus_app/features/pkfl/utils.dart';
 import 'package:trus_app/models/pkfl/pkfl_team.dart';
 
+import '../../../common/widgets/screen/custom_consumer_stateful_widget.dart';
 import '../controller/pkfl_table_controller.dart';
 
-class PkflTableScreen extends ConsumerStatefulWidget {
+class PkflTableScreen extends CustomConsumerStatefulWidget {
+  static const String id = "pkfl-table-screen";
   const PkflTableScreen({
     Key? key,
-  }) : super(key: key);
+  }) : super(key: key, title: "Tabulka PKFL", name: id);
 
   @override
   ConsumerState<PkflTableScreen> createState() => _PkflTableScreenState();

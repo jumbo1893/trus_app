@@ -1,26 +1,23 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:trus_app/features/fine/screens/fine_screen.dart';
 import 'package:trus_app/models/api/fine_api_model.dart';
 
 import '../../../common/widgets/builder/column_future_builder.dart';
 import '../../../common/widgets/button/crud_button.dart';
 import '../../../common/widgets/rows/stream/row_switch_stream.dart';
 import '../../../common/widgets/rows/stream/row_text_field_stream.dart';
+import '../../../common/widgets/screen/custom_consumer_stateful_widget.dart';
 import '../../../models/enum/crud.dart';
+import '../../main/screen_controller.dart';
 import '../controller/fine_controller.dart';
 
-class EditFineScreen extends ConsumerStatefulWidget {
-  final VoidCallback onButtonConfirmPressed;
-  final FineApiModel? fineModel;
-  final bool isFocused;
-  final VoidCallback backToMainMenu;
-  const EditFineScreen(
-    this.fineModel, {
+class EditFineScreen extends CustomConsumerStatefulWidget {
+  static const String id = "edit-fine-screen";
+
+  const EditFineScreen({
     Key? key,
-    required this.onButtonConfirmPressed,
-    required this.isFocused,
-    required this.backToMainMenu,
-  }) : super(key: key);
+  }) : super(key: key, title: "Upravit pokutu", name: id);
 
   @override
   ConsumerState<EditFineScreen> createState() => _EditFineScreenState();
@@ -29,14 +26,13 @@ class EditFineScreen extends ConsumerStatefulWidget {
 class _EditFineScreenState extends ConsumerState<EditFineScreen> {
   @override
   Widget build(BuildContext context) {
-    if (widget.isFocused) {
+    if (ref.read(screenControllerProvider).isScreenFocused(EditFineScreen.id)) {
+      FineApiModel fine = ref.watch(screenControllerProvider).fineModel;
       const double padding = 8.0;
       final size =
           MediaQueryData.fromWindow(WidgetsBinding.instance.window).size;
       return ColumnFutureBuilder(
-        loadModelFuture:
-            ref.watch(fineControllerProvider).fine(widget.fineModel!),
-        backToMainMenu: () => widget.backToMainMenu(),
+        loadModelFuture: ref.watch(fineControllerProvider).fine(fine),
         columns: [
           RowTextFieldStream(
             key: const ValueKey('fine_name_field'),
@@ -101,10 +97,9 @@ class _EditFineScreenState extends ConsumerState<EditFineScreen> {
             crud: Crud.update,
             crudOperations: ref.read(fineControllerProvider),
             onOperationComplete: (id) {
-              widget.onButtonConfirmPressed();
+              ref.read(screenControllerProvider).changeFragment(FineScreen.id);
             },
-            backToMainMenu: () => widget.backToMainMenu(),
-            id: widget.fineModel!.id!,
+            id: fine.id!,
           ),
           CrudButton(
             key: const ValueKey('delete_button'),
@@ -113,11 +108,10 @@ class _EditFineScreenState extends ConsumerState<EditFineScreen> {
             crud: Crud.delete,
             crudOperations: ref.read(fineControllerProvider),
             onOperationComplete: (id) {
-              widget.onButtonConfirmPressed();
+              ref.read(screenControllerProvider).changeFragment(FineScreen.id);
             },
-            backToMainMenu: () => widget.backToMainMenu(),
-            id: widget.fineModel!.id!,
-            modelToString: widget.fineModel!,
+            id: fine.id!,
+            modelToString: fine,
           ),
         ],
         loadingScreen: null,

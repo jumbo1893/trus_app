@@ -1,26 +1,23 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:trus_app/features/season/controller/season_controller.dart';
+import 'package:trus_app/features/season/screens/season_screen.dart';
 
 import '../../../common/widgets/builder/column_future_builder.dart';
 import '../../../common/widgets/button/crud_button.dart';
 import '../../../common/widgets/rows/stream/row_calendar_stream.dart';
 import '../../../common/widgets/rows/stream/row_text_field_stream.dart';
+import '../../../common/widgets/screen/custom_consumer_stateful_widget.dart';
 import '../../../models/api/season_api_model.dart';
 import '../../../models/enum/crud.dart';
+import '../../main/screen_controller.dart';
 
-class EditSeasonScreen extends ConsumerStatefulWidget {
-  final VoidCallback onButtonConfirmPressed;
-  final SeasonApiModel? seasonModel;
-  final bool isFocused;
-  final VoidCallback backToMainMenu;
-  const EditSeasonScreen(
-    this.seasonModel, {
+class EditSeasonScreen extends CustomConsumerStatefulWidget {
+  static const String id = "edit-season-screen";
+
+  const EditSeasonScreen({
     Key? key,
-    required this.onButtonConfirmPressed,
-    required this.isFocused,
-    required this.backToMainMenu,
-  }) : super(key: key);
+  }) : super(key: key, title: "Upravit sezonu", name: id);
 
   @override
   ConsumerState<EditSeasonScreen> createState() => _EditSeasonScreenState();
@@ -29,14 +26,15 @@ class EditSeasonScreen extends ConsumerStatefulWidget {
 class _EditSeasonScreenState extends ConsumerState<EditSeasonScreen> {
   @override
   Widget build(BuildContext context) {
-    if (widget.isFocused) {
+    SeasonApiModel season = ref.read(screenControllerProvider).seasonModel;
+    if (ref
+        .read(screenControllerProvider)
+        .isScreenFocused(EditSeasonScreen.id)) {
       const double padding = 8.0;
       final size =
           MediaQueryData.fromWindow(WidgetsBinding.instance.window).size;
       return ColumnFutureBuilder(
-        loadModelFuture:
-            ref.watch(seasonControllerProvider).season(widget.seasonModel!),
-        backToMainMenu: () => widget.backToMainMenu(),
+        loadModelFuture: ref.watch(seasonControllerProvider).season(season),
         columns: [
           RowTextFieldStream(
             key: const ValueKey('season_name_field'),
@@ -85,10 +83,11 @@ class _EditSeasonScreenState extends ConsumerState<EditSeasonScreen> {
             crud: Crud.update,
             crudOperations: ref.read(seasonControllerProvider),
             onOperationComplete: (id) {
-              widget.onButtonConfirmPressed();
+              ref
+                  .read(screenControllerProvider)
+                  .changeFragment(SeasonScreen.id);
             },
-            backToMainMenu: () => widget.backToMainMenu(),
-            id: widget.seasonModel!.id!,
+            id: season.id!,
           ),
           CrudButton(
             key: const ValueKey('delete_button'),
@@ -97,11 +96,12 @@ class _EditSeasonScreenState extends ConsumerState<EditSeasonScreen> {
             crud: Crud.delete,
             crudOperations: ref.read(seasonControllerProvider),
             onOperationComplete: (id) {
-              widget.onButtonConfirmPressed();
+              ref
+                  .read(screenControllerProvider)
+                  .changeFragment(SeasonScreen.id);
             },
-            backToMainMenu: () => widget.backToMainMenu(),
-            id: widget.seasonModel!.id!,
-            modelToString: widget.seasonModel!,
+            id: season.id!,
+            modelToString: season,
           ),
         ],
         loadingScreen: null,

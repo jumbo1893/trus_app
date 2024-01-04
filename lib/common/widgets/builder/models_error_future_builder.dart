@@ -1,29 +1,31 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:trus_app/models/api/interfaces/model_to_string.dart';
 
 import '../../../colors.dart';
+import '../../../features/home/screens/home_screen.dart';
+import '../../../features/main/screen_controller.dart';
 import '../../utils/utils.dart';
 import '../loader.dart';
 
-class ModelsErrorFutureBuilder<T> extends StatelessWidget {
+class ModelsErrorFutureBuilder<T> extends ConsumerWidget {
   final Future<List<ModelToString>> future;
   final Stream<List<ModelToString>>? rebuildStream;
   final Function(ModelToString model) onPressed;
   final BuildContext context;
-  final VoidCallback backToMainMenu;
   final bool? scrollable;
+
   const ModelsErrorFutureBuilder({
     Key? key,
     required this.future,
     required this.onPressed,
     required this.context,
-    required this.backToMainMenu,
     this.rebuildStream,
     this.scrollable,
   }) : super(key: key);
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     return FutureBuilder<List<ModelToString>>(
       future: future,
       builder: (context, snapshot) {
@@ -33,7 +35,11 @@ class ModelsErrorFutureBuilder<T> extends StatelessWidget {
           Future.delayed(
               Duration.zero,
               () => showErrorDialog(
-                  snapshot.error!.toString(), () => backToMainMenu(), context));
+                  snapshot.error!.toString(),
+                  () => ref
+                      .read(screenControllerProvider)
+                      .changeFragment(HomeScreen.id),
+                  context));
           return const Loader();
         }
         return StreamBuilder<List<ModelToString>>(
@@ -42,8 +48,12 @@ class ModelsErrorFutureBuilder<T> extends StatelessWidget {
               if (streamSnapshot.hasError) {
                 Future.delayed(
                     Duration.zero,
-                    () => showErrorDialog(streamSnapshot.error!.toString(),
-                        () => backToMainMenu(), context));
+                    () => showErrorDialog(
+                        streamSnapshot.error!.toString(),
+                        () => ref
+                            .read(screenControllerProvider)
+                            .changeFragment(HomeScreen.id),
+                        context));
                 return const Loader();
               }
               return ListView.builder(
@@ -71,11 +81,13 @@ class ModelsErrorFutureBuilder<T> extends StatelessWidget {
                               color: Colors.grey,
                             ))),
                             child: ListTile(
-                              key: ValueKey('list_tile_${data.listViewTitle()}'),
+                              key:
+                                  ValueKey('list_tile_${data.listViewTitle()}'),
                               title: Padding(
                                 padding: const EdgeInsets.only(bottom: 16),
                                 child: Text(
-                                  key: ValueKey('title_${data.listViewTitle()}'),
+                                  key:
+                                      ValueKey('title_${data.listViewTitle()}'),
                                   data.listViewTitle(),
                                   style: const TextStyle(
                                       fontWeight: FontWeight.bold,
@@ -83,7 +95,10 @@ class ModelsErrorFutureBuilder<T> extends StatelessWidget {
                                 ),
                               ),
                               subtitle: Text(
-                                key: ValueKey(data.listViewTitle().split(" - ").length < 2 ? data.listViewTitle().split(" - ")[0] :data.listViewTitle().split(" - ")[1]),
+                                key: ValueKey(
+                                    data.listViewTitle().split(" - ").length < 2
+                                        ? data.listViewTitle().split(" - ")[0]
+                                        : data.listViewTitle().split(" - ")[1]),
                                 data.toStringForListView(),
                                 style: const TextStyle(
                                     color: listviewSubtitleColor),

@@ -5,36 +5,43 @@ import 'package:trus_app/features/statistics/screens/player_beer_stats_screen.da
 import 'package:trus_app/features/statistics/screens/player_fine_stats_screen.dart';
 import 'package:trus_app/features/statistics/screens/match_fine_stats_screen.dart';
 
-class MainStatisticsScreen extends StatefulWidget {
-  final VoidCallback backToMainMenu;
-  const MainStatisticsScreen({super.key, required this.backToMainMenu});
+import '../../../common/widgets/screen/custom_stateful_widget.dart';
+
+class MainStatisticsScreen extends CustomStatefulWidget {
+  static const String id = "main-statistics-screen";
+
+  const MainStatisticsScreen({
+    Key? key,
+  }) : super(key: key, title: "Statistiky pokut/piv", name: id);
 
   @override
   State<MainStatisticsScreen> createState() => _MainStatisticsScreenState();
 }
 
-  class _MainStatisticsScreenState extends State<MainStatisticsScreen> with TickerProviderStateMixin {
+class _MainStatisticsScreenState extends State<MainStatisticsScreen>
+    with TickerProviderStateMixin {
+  late TabController tabController;
+  int activeTab = 0;
 
-    late TabController tabController;
-    int activeTab = 0;
+  @override
+  void initState() {
+    tabController = TabController(
+      vsync: this,
+      length: 4,
+    );
+    super.initState();
+  }
 
-    @override
-    void initState() {
-      tabController = TabController(
-          vsync: this, length: 4,);
-      super.initState();
-    }
+  void changeTab(int tab) {
+    setState(() {
+      activeTab = tab;
+    });
+    tabController.index = tab;
+  }
 
-    void changeTab(int tab) {
-      setState(() {
-        activeTab = tab;
-      });
-      tabController.index = tab;
-    }
-
-    bool isFocused(int index) {
-      return index == activeTab;
-    }
+  bool isFocused(int index) {
+    return index == activeTab;
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -74,10 +81,10 @@ class MainStatisticsScreen extends StatefulWidget {
           body: TabBarView(
             controller: tabController,
             children: [
-              PlayerBeerStatsScreen(isFocused: isFocused(0), backToMainMenu: () => widget.backToMainMenu()),
-              MatchBeerStatsScreen(isFocused: isFocused(1), backToMainMenu: () => widget.backToMainMenu()),
-              PlayerFineStatsScreen(isFocused: isFocused(2), backToMainMenu: () => widget.backToMainMenu()),
-              MatchFineStatsScreen(isFocused: isFocused(3), backToMainMenu: () => widget.backToMainMenu()),
+              PlayerBeerStatsScreen(isFocused: isFocused(0)),
+              MatchBeerStatsScreen(isFocused: isFocused(1)),
+              PlayerFineStatsScreen(isFocused: isFocused(2)),
+              MatchFineStatsScreen(isFocused: isFocused(3)),
             ],
           ),
         ),

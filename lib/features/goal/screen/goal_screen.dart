@@ -7,20 +7,17 @@ import 'package:trus_app/features/goal/controller/goal_controller.dart';
 
 import '../../../common/widgets/button/confirm_button.dart';
 import '../../../common/widgets/rows/stream/row_switch_stream.dart';
+import '../../../common/widgets/screen/custom_consumer_stateful_widget.dart';
+import '../../home/screens/home_screen.dart';
+import '../../main/screen_controller.dart';
 import '../goal_screens.dart';
 
-class GoalScreen extends ConsumerStatefulWidget {
-  final VoidCallback onAddGoalsPressed;
-  final VoidCallback backToMainMenu;
-  final bool isFocused;
-  final int matchId;
+class GoalScreen extends CustomConsumerStatefulWidget {
+  static const String id = "goal-screen";
+
   const GoalScreen({
     Key? key,
-    required this.onAddGoalsPressed,
-    required this.backToMainMenu,
-    required this.isFocused,
-    required this.matchId,
-  }) : super(key: key);
+  }) : super(key: key, title: "Přidání gólů/asistencí", name: id);
 
   @override
   ConsumerState<GoalScreen> createState() => _GoalScreenState();
@@ -31,10 +28,11 @@ class _GoalScreenState extends ConsumerState<GoalScreen> {
   Widget build(BuildContext context) {
     const double padding = 8.0;
     final size = MediaQueryData.fromWindow(WidgetsBinding.instance.window).size;
-    if (widget.isFocused) {
+    if (ref.read(screenControllerProvider).isScreenFocused(GoalScreen.id)) {
       return ErrorFutureBuilder<void>(
-        future: ref.read(goalControllerProvider).setupMatch(widget.matchId),
-        backToMainMenu: () => widget.backToMainMenu(),
+        future: ref
+            .read(goalControllerProvider)
+            .setupMatch(ref.read(screenControllerProvider).matchId!),
         context: context,
         widget: StreamBuilder<GoalScreens>(
             stream: ref.watch(goalControllerProvider).screen(),
@@ -58,7 +56,7 @@ class _GoalScreenState extends ConsumerState<GoalScreen> {
                         padding: padding,
                         textFieldText: "Propsat do pokut?",
                         stream:
-                        ref.watch(goalControllerProvider).rewriteFines(),
+                            ref.watch(goalControllerProvider).rewriteFines(),
                         initStream: () => ref
                             .watch(goalControllerProvider)
                             .initRewriteStream(),
@@ -89,24 +87,22 @@ class _GoalScreenState extends ConsumerState<GoalScreen> {
                       addController: ref.read(goalControllerProvider),
                       appBarText: "Přidej asistence",
                       goal: false,
-                          onBackButtonPressed: () => {
-                            ref
-                                .read(goalControllerProvider)
-                                .navigateToGoalScreen()
-                          },
+                      onBackButtonPressed: () => {
+                        ref.read(goalControllerProvider).navigateToGoalScreen()
+                      },
                     )),
                     Padding(
                       padding: const EdgeInsets.only(bottom: 16.0),
                       child: ConfirmButton(
                         text: "Potvrď změny",
                         context: context,
-                        confirmOperations: ref
-                            .read(goalControllerProvider),
-                        id: widget.matchId,
+                        confirmOperations: ref.read(goalControllerProvider),
+                        id: ref.read(screenControllerProvider).matchId!,
                         onOperationComplete: () {
-                          widget.onAddGoalsPressed();
+                          ref
+                              .read(screenControllerProvider)
+                              .changeFragment(HomeScreen.id);
                         },
-                        backToMainMenu: () => widget.backToMainMenu(),
                       ),
                     )
                   ],

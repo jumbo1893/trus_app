@@ -5,17 +5,15 @@ import '../../../common/widgets/builder/pkfl_stats_error_future_builder.dart';
 import '../../../common/widgets/button/statistics_buttons.dart';
 import '../../../common/widgets/custom_text.dart';
 import '../../../common/widgets/dropdown/pkfl_stats_dropdown.dart';
+import '../../../common/widgets/screen/custom_consumer_stateful_widget.dart';
 import '../controller/pkfl_stats_controller.dart';
 
-class MainPkflStatisticsScreen extends ConsumerStatefulWidget {
-  final bool isFocused;
-  final VoidCallback backToMainMenu;
+class MainPkflStatisticsScreen extends CustomConsumerStatefulWidget {
+  static const String id = "main-pkfl-statistics-screen";
 
   const MainPkflStatisticsScreen({
-    required this.isFocused,
-    required this.backToMainMenu,
     Key? key,
-  }) : super(key: key);
+  }) : super(key: key, title: "Statistika PKFL", name: id);
 
   @override
   ConsumerState<MainPkflStatisticsScreen> createState() =>
@@ -89,7 +87,6 @@ class _MainPkflStatisticsScreenState
                                 .onRevertTap(),
                             padding: padding,
                             size: size,
-                            backToMainMenu: () => widget.backToMainMenu(),
                           )
                         ],
                       ),
@@ -97,7 +94,6 @@ class _MainPkflStatisticsScreenState
                         future:
                             ref.watch(pkflStatsControllerProvider).getModels(),
                         context: context,
-                        backToMainMenu: () => widget.backToMainMenu(),
                         rebuildStream: ref
                             .watch(pkflStatsControllerProvider)
                             .pkflPlayerStats(),
