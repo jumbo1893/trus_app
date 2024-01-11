@@ -24,6 +24,12 @@ class PkflOpponentApiModel {
     );
   }
 
+
+  @override
+  String toString() {
+    return name;
+  }
+
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||

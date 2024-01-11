@@ -6,17 +6,14 @@ import '../../../models/api/pkfl/pkfl_all_individual_stats.dart';
 import '../../../models/api/pkfl/pkfl_card_comment.dart';
 import '../../../models/helper/pkfl_all_individual_stats_with_spinner.dart';
 import '../repository/pkfl_api_service.dart';
-import '../repository/pkfl_repository.dart';
 
 final pkflStatsControllerProvider = Provider((ref) {
-  final pkflRepository = ref.watch(pkflRepositoryProvider);
   final pkflApiService = ref.watch(pkflApiServiceProvider);
   return PkflStatsController(
-      pkflRepository: pkflRepository, ref: ref, pkflApiService: pkflApiService);
+      ref: ref, pkflApiService: pkflApiService);
 });
 
 class PkflStatsController {
-  final PkflRepository pkflRepository;
   final PkflApiService pkflApiService;
   final ProviderRef ref;
   List<PkflAllIndividualStats> matchListCurrentSeason = [];
@@ -31,7 +28,6 @@ class PkflStatsController {
   String? filterText;
 
   PkflStatsController({
-    required this.pkflRepository,
     required this.pkflApiService,
     required this.ref,
   });

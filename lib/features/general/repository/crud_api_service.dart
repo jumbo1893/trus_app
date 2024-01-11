@@ -11,6 +11,7 @@ import '../../../models/api/notification_api_model.dart';
 import '../../../models/api/pkfl/pkfl_all_individual_stats.dart';
 import '../../../models/api/pkfl/pkfl_match_api_model.dart';
 import '../../../models/api/pkfl/pkfl_player_api_model.dart';
+import '../../../models/api/pkfl/pkfl_table_team.dart';
 import '../../../models/api/player_api_model.dart';
 import '../../../models/api/receivedfine/received_fine_api_model.dart';
 import '../../../models/api/season_api_model.dart';
@@ -43,6 +44,8 @@ class CrudApiService extends RequestExecutor {
         return PkflAllIndividualStats.fromJson(json);
       case pkflPlayerApi:
         return PkflPlayerApiModel.fromJson(json);
+      case pkflTableApi:
+        return PkflTableTeam.fromJson(json);
       default:
         throw JsonDecodeException();
     }

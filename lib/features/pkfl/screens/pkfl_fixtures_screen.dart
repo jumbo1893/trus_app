@@ -22,7 +22,7 @@ class PkflFixturesScreen extends CustomConsumerWidget {
           body: Padding(
         padding: const EdgeInsets.only(top: 8.0),
         child: ModelsErrorFutureBuilder(
-          key: const ValueKey('player_list'),
+          key: const ValueKey('pkfl_fixtures'),
           future: ref.watch(pkflControllerProvider).getModels(),
           onPressed: (pkflMatch) => {
             ref

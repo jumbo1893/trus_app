@@ -3,7 +3,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:trus_app/common/utils/utils.dart';
 import 'package:trus_app/common/widgets/loader.dart';
 import 'package:trus_app/models/api/pkfl/pkfl_match_api_model.dart';
-import 'package:trus_app/models/pkfl/pkfl_match.dart';
 
 import '../../../common/widgets/custom_text.dart';
 import '../../home/screens/home_screen.dart';
@@ -56,21 +55,6 @@ class _PkflMatchDetailScreenState extends ConsumerState<PkflMatchDetailScreen> {
                         fontSize: 20,
                       )),
                       CustomText(text: pkflMatch.returnFirstDetailsOfMatch()),
-                      FutureBuilder<PkflMatch>(
-                          future: null,
-                          builder: (context, snapshot) {
-                            if (snapshot.connectionState ==
-                                ConnectionState.waiting) {
-                              return const Loader();
-                            }
-                            return Column(
-                              children: [
-                                CustomText(
-                                    text:
-                                        pkflMatch.returnSecondDetailsOfMatch()),
-                              ],
-                            );
-                          })
                     ],
                   ),
                 ),

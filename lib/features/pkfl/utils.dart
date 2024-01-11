@@ -1,5 +1,5 @@
 import '../../models/api/pkfl/pkfl_match_api_model.dart';
-import '../../models/pkfl/pkfl_team.dart';
+import '../../models/api/pkfl/pkfl_table_team.dart';
 
 List<PkflMatchApiModel> sortMatchesByDate(List<PkflMatchApiModel> matches, bool desc) {
   if (desc) {
@@ -11,7 +11,7 @@ List<PkflMatchApiModel> sortMatchesByDate(List<PkflMatchApiModel> matches, bool 
   return matches;
 }
 
-List<PkflTeam> sortMatchesByPoints(List<PkflTeam> teams) {
+List<PkflTableTeam> sortMatchesByPoints(List<PkflTableTeam> teams) {
   teams.sort((b, a) => a.points.compareTo(b.points));
   return teams;
 }

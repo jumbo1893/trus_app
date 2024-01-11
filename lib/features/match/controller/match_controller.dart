@@ -225,6 +225,15 @@ class MatchController implements CrudOperations {
     return matchDetailOptions;
   }
 
+  Future<List<MatchDetailOptions>> setupScreenForCommonMatchesOnly(int? pkflMatchId) async {
+    List<MatchDetailOptions> matchDetailOptions = [];
+    matchDetailOptions.add(MatchDetailOptions.commonMatches);
+    if(pkflMatchId != null) {
+      pkflMatchDetail = await getPkflMatchDetail(pkflMatchId);
+    }
+    return matchDetailOptions;
+  }
+
   void changeMatchDetailScreen(int option) {
     matchDetailScreenController.add(option);
   }
@@ -232,8 +241,6 @@ class MatchController implements CrudOperations {
   Stream<int> matchDetailScreen() {
     return matchDetailScreenController.stream;
   }
-
-
 
   Stream<String> name() {
     return nameController.stream;

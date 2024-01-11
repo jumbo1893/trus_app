@@ -13,7 +13,7 @@ import 'package:trus_app/features/season/screens/edit_season_screen.dart';
 import 'package:trus_app/features/season/screens/season_screen.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter/material.dart';
-import 'package:trus_app/features/pkfl/screens/pkfl_table_screens.dart';
+import 'package:trus_app/features/pkfl/screens/pkfl_table_screen.dart';
 import 'package:trus_app/models/api/fine_api_model.dart';
 import '../../../models/api/pkfl/pkfl_match_api_model.dart';
 import '../../models/api/match/match_api_model.dart';
@@ -51,6 +51,7 @@ class ScreenController {
 
 
   int? _matchId;
+  int? _pkflMatchId;
   PkflMatchApiModel? _pkflMatch;
   MatchApiModel _matchModel = MatchApiModel.dummy(); // používáme, pokud chceme na další screenu předat třeba i jméno, jinak stačí id
   PlayerApiModel _playerModel = PlayerApiModel.dummy();
@@ -60,6 +61,7 @@ class ScreenController {
   MatchDetailOptions _preferredScreen = MatchDetailOptions.editMatch;
   bool _changedMatch = false;
   String _currentScreenId = HomeScreen.id;
+  bool _commonMatchesOnly = false;
 
   Stream<Widget> screen() {
     return screenController.stream;
@@ -69,13 +71,22 @@ class ScreenController {
 
   void setMatchId(int id) {
     _pkflMatch = null;
+    _commonMatchesOnly = false;
     _matchId = id;
+  }
+
+  int? get pkflMatchId => _pkflMatchId;
+
+  void setPkflMatchIdOnlyForCommonMatches(int id) {
+    _commonMatchesOnly = true;
+    _pkflMatchId = id;
   }
 
   MatchApiModel get matchModel => _matchModel;
 
   void setMatch(MatchApiModel matchModel) {
     _matchModel = matchModel;
+    _commonMatchesOnly = false;
     setMatchId(matchModel.id!);
   }
 
@@ -112,6 +123,7 @@ class ScreenController {
   PkflMatchApiModel? get pkflMatch => _pkflMatch;
 
   void setPkflMatch(PkflMatchApiModel pkflMatch) {
+    _commonMatchesOnly = false;
     _pkflMatch = pkflMatch;
   }
 
@@ -127,10 +139,9 @@ class ScreenController {
     _changedMatch = changedMatch;
   }
 
+  bool get isCommonMatchesOnly => _commonMatchesOnly;
+
   bool isScreenFocused(String screenId) {
-    print("isScreenFocused");
-    print(screenId);
-    print(_currentScreenId);
     return _currentScreenId == screenId;
   }
 

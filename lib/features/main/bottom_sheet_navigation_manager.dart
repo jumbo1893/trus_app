@@ -16,7 +16,7 @@ import 'package:trus_app/features/statistics/screens/goal/main_goal_statistics_s
 import '../../colors.dart';
 import '../match/screens/match_screen.dart';
 import '../pkfl/screens/main_pkfl_statistics_screen.dart';
-import '../pkfl/screens/pkfl_table_screens.dart';
+import '../pkfl/screens/pkfl_table_screen.dart';
 
 class BottomSheetNavigationManager {
   final BuildContext context;

@@ -5,6 +5,7 @@ import 'package:trus_app/models/api/pkfl/pkfl_match_detail.dart';
 import '../../../models/api/interfaces/json_and_http_converter.dart';
 import '../../../models/api/pkfl/pkfl_all_individual_stats.dart';
 import '../../../models/api/pkfl/pkfl_player_api_model.dart';
+import '../../../models/api/pkfl/pkfl_table_team.dart';
 import '../../../models/helper/title_and_text.dart';
 import '../../general/repository/crud_api_service.dart';
 
@@ -18,6 +19,13 @@ class PkflApiService extends CrudApiService {
     await getModelsWithVariableEndpoint<JsonAndHttpConverter>(
         pkflApi, null, "fixtures");
     return decodedBody.map((model) => model as PkflMatchApiModel).toList();
+  }
+
+  Future<List<PkflTableTeam>> getPkflTable() async {
+    final decodedBody =
+    await getModelsWithoutGetAll<JsonAndHttpConverter>(
+        pkflTableApi, null);
+    return decodedBody.map((model) => model as PkflTableTeam).toList();
   }
 
   Future<List<PkflAllIndividualStats>> getPkflAllIndividualStats(bool currentSeason) async {

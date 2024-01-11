@@ -92,8 +92,10 @@ class _MatchDetailScreenState extends ConsumerState<MatchDetailScreen>
     } else {
       if (matchOptionList.contains(MatchDetailOptions.editMatch)) {
         index = 2;
-      } else {
+      } else if (matchOptionList.contains(MatchDetailOptions.pkflDetail)) {
         index = 1;
+      } else {
+        index = 0;
       }
     }
     return index == activeTab;
@@ -121,7 +123,10 @@ class _MatchDetailScreenState extends ConsumerState<MatchDetailScreen>
         }
       } else {
         if (availableOptions.contains(MatchDetailOptions.commonMatches)) {
-          return 1;
+          if (availableOptions.contains(MatchDetailOptions.pkflDetail)) {
+            return 1;
+          }
+          return 0;
         } else {
           return 0;
         }
@@ -138,11 +143,15 @@ class _MatchDetailScreenState extends ConsumerState<MatchDetailScreen>
           ref.read(screenControllerProvider).preferredScreen;
       return MaterialApp(
         home: FutureBuilder<List<MatchDetailOptions>>(
-            future: ref
-                .watch(matchControllerProvider)
-                //.setupScreen(widget.matchId, widget.pkflMatchId),
-                .setupScreen(ref.read(screenControllerProvider).matchId,
-                    ref.read(screenControllerProvider).pkflMatch?.id),
+            future: ref.read(screenControllerProvider).isCommonMatchesOnly
+                ? ref
+                    .read(matchControllerProvider)
+                    .setupScreenForCommonMatchesOnly(
+                        ref.read(screenControllerProvider).pkflMatchId)
+                : ref.read(matchControllerProvider).setupScreen(
+                      ref.read(screenControllerProvider).matchId,
+                      ref.read(screenControllerProvider).pkflMatch?.id,
+                    ),
             builder: (context, snapshot) {
               if (snapshot.connectionState == ConnectionState.waiting) {
                 return const Loader();

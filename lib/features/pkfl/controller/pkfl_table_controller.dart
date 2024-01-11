@@ -1,21 +1,21 @@
 import 'dart:async';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:trus_app/features/pkfl/tasks/retrieve_teams_task.dart';
-import 'package:trus_app/models/pkfl/pkfl_team.dart';
-import '../repository/pkfl_repository.dart';
+import '../../../models/api/pkfl/pkfl_table_team.dart';
+import '../../general/read_operations.dart';
+import '../repository/pkfl_api_service.dart';
 
 final pkflTableControllerProvider = Provider((ref) {
-  final pkflRepository = ref.watch(pkflRepositoryProvider);
-  return PkflTableController(pkflRepository: pkflRepository, ref: ref);
+  final pkflApiService = ref.watch(pkflApiServiceProvider);
+  return PkflTableController(ref: ref, pkflApiService: pkflApiService);
 });
 
-class PkflTableController {
-  final PkflRepository pkflRepository;
+class PkflTableController implements ReadOperations{
+  final PkflApiService pkflApiService;
   final ProviderRef ref;
   final snackBarController = StreamController<String>.broadcast();
   PkflTableController({
-    required this.pkflRepository,
+    required this.pkflApiService,
     required this.ref,
   });
 
@@ -23,17 +23,8 @@ class PkflTableController {
     return snackBarController.stream;
   }
 
-  Future<List<PkflTeam>> getPkflTeams() async {
-    String url = "";
-    List<PkflTeam> teams = [];
-    url = await pkflRepository.getPkflTableUrl();
-    RetrieveTeamsTask teamsTask = RetrieveTeamsTask(url);
-    try {
-      await teamsTask.returnPkflTeams().then((value) => teams = value);
-    } catch (e, stacktrace) {
-      print(stacktrace);
-      snackBarController.add(e.toString());
-    }
-    return teams;
+  @override
+  Future<List<PkflTableTeam>> getModels() async {
+    return await pkflApiService.getPkflTable();
   }
 }

@@ -105,7 +105,7 @@ class MatchApiModel implements ModelToString, JsonAndHttpConverter {
 
   @override
   String toStringForConfirmationDelete() {
-    return "Opravdu chcete smazat tohoto hráče?";
+    return "Opravdu chcete smazat tento zápas?";
   }
 
   @override
