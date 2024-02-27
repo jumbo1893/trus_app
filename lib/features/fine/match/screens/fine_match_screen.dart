@@ -13,6 +13,7 @@ import '../../../../common/widgets/screen/custom_consumer_stateful_widget.dart';
 import '../../../../models/api/match/match_api_model.dart';
 import '../../../main/screen_controller.dart';
 import '../controller/fine_match_controller.dart';
+import 'fine_player_screen.dart';
 
 class FineMatchScreen extends CustomConsumerStatefulWidget {
   static const String id = "fine-match-screen";
@@ -108,7 +109,8 @@ class _FineMatchScreenState extends ConsumerState<FineMatchScreen> {
                       onPlayerSelected: (player) => {
                         ref.read(screenControllerProvider).setPlayer(player),
                         ref.read(screenControllerProvider).setMatch(
-                            ref.read(fineMatchControllerProvider).pickedMatch!)
+                            ref.read(fineMatchControllerProvider).pickedMatch!),
+                      ref.read(screenControllerProvider).changeFragment(FinePlayerScreen.id)
                       },
                       onPlayerChecked: (player) => ref
                           .read(fineMatchControllerProvider)
