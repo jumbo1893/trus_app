@@ -87,7 +87,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         backgroundColor: Colors.white,
         onRefresh: () async {
           return executeApi<void>(() async {
-            return await ref.read(homeControllerProvider).reloadSetupHome();
+            return await ref.read(homeControllerProvider).reloadSetupHome(true);
           }, () => setState(() {}), context, false)
               .whenComplete(() => setState(() {}));
         },

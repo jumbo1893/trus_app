@@ -8,9 +8,10 @@ final homeApiServiceProvider =
 
 class HomeApiService extends CrudApiService {
 
-  Future<HomeSetup> setupHome(int? playerId) async {
+  Future<HomeSetup> setupHome(int? playerId, bool? updateNeeded) async {
     final queryParameters = {
       'playerId': intToString(playerId),
+      'updateNeeded': boolToString(updateNeeded),
     };
     const String url = "$serverUrl/$homeApi/setup";
     final HomeSetup homeSetup = await executeGetRequest(

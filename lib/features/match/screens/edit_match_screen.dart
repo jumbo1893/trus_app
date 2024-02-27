@@ -140,8 +140,8 @@ class _EditMatchScreenState extends ConsumerState<EditMatchScreen> {
             crud: Crud.update,
             crudOperations: ref.read(matchControllerProvider),
             onOperationComplete: (id) {
-              ref.read(screenControllerProvider).changeFragment(HomeScreen.id);
               ref.read(screenControllerProvider).setChangedMatch(true);
+              ref.read(screenControllerProvider).changeFragment(HomeScreen.id);
             },
             id: ref.read(matchControllerProvider).returnEditMatch().id!,
           ),
@@ -152,8 +152,8 @@ class _EditMatchScreenState extends ConsumerState<EditMatchScreen> {
             crud: Crud.delete,
             crudOperations: ref.read(matchControllerProvider),
             onOperationComplete: (id) {
-              ref.read(screenControllerProvider).changeFragment(HomeScreen.id);
               ref.read(screenControllerProvider).setChangedMatch(true);
+              ref.read(screenControllerProvider).changeFragment(HomeScreen.id);
             },
             id: ref.read(matchControllerProvider).returnEditMatch().id!,
             modelToString: ref.read(matchControllerProvider).matchSetup.match!,

@@ -62,14 +62,14 @@ class HomeController implements ReadOperations {
     await authRepository.editCurrentUser(null, null, playerId);
   }
 
-  Future<void> reloadSetupHome() async {
-    HomeSetup homeSetup = await homeApiService.setupHome(playerId);
+  Future<void> reloadSetupHome(bool? updateNeeded) async {
+    HomeSetup homeSetup = await homeApiService.setupHome(playerId, updateNeeded);
     this.homeSetup = homeSetup;
   }
 
   Future<HomeSetup> setupHome(bool changedMatch) async {
     if(homeSetup == null || changedMatch) {
-      await reloadSetupHome();
+      await reloadSetupHome(false);
     }
     birthday = homeSetup!.nextBirthday;
     randomFacts = homeSetup!.randomFacts;

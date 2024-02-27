@@ -149,10 +149,11 @@ class _AddMatchScreenState extends ConsumerState<AddMatchScreen> {
                   crudOperations: ref.read(matchControllerProvider),
                   onOperationComplete: (id) {
                     ref.read(screenControllerProvider).setMatchId(id);
+                    ref.read(screenControllerProvider).setChangedMatch(true);
                     ref
                         .read(screenControllerProvider)
                         .changeFragment(HomeScreen.id);
-                    ref.read(screenControllerProvider).setChangedMatch(true);
+
                   },
                 ),
                 CrudButton(
