@@ -17,6 +17,7 @@ import '../../colors.dart';
 import '../match/screens/match_screen.dart';
 import '../pkfl/screens/main_pkfl_statistics_screen.dart';
 import '../pkfl/screens/pkfl_table_screen.dart';
+import '../steps/screens/step_screen.dart';
 
 class BottomSheetNavigationManager {
   final BuildContext context;
@@ -310,6 +311,16 @@ class BottomSheetNavigationManager {
                     ),
                     title: const Text("Nastavení sezon"),
                     onTap: () => onModalBottomSheetMenuTapped(SeasonScreen.id),
+                  ),
+                  ListTile(
+                    key: const ValueKey('steps'),
+                    leading: const Icon(
+                      Icons.edit_calendar,
+                      color: Colors.orange,
+                    ),
+                    title: const Text("Kroky"),
+                    onTap: () => onModalBottomSheetMenuTapped(StepScreen.id),
+
                   ),
                 ],
               ),
