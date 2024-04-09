@@ -61,7 +61,6 @@ dependencies:
   cupertino_http: ^0.1.2
   provider: ^6.1.1
   permission_handler: ^11.0.1
-  workmanager: ^0.5.1
 
 flutter_icons:
   android: true
