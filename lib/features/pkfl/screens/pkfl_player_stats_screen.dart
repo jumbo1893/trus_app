@@ -12,7 +12,7 @@ class PkflPlayerStatsScreen extends CustomConsumerWidget {
 
   const PkflPlayerStatsScreen({
     Key? key,
-  }) : super(key: key, title: "Detail zápasu", name: id);
+  }) : super(key: key, title: "Hráčské statistiky", name: id);
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
