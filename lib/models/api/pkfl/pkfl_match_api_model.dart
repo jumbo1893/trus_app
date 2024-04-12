@@ -6,8 +6,6 @@ import 'package:trus_app/models/api/pkfl/pkfl_opponent_api_model.dart';
 import 'package:trus_app/models/api/pkfl/pkfl_referee_api_model.dart';
 import 'package:trus_app/models/api/pkfl/pkfl_season_api_model.dart';
 import 'package:trus_app/models/api/pkfl/pkfl_stadium_api_model.dart';
-import 'package:trus_app/models/api/season_api_model.dart';
-
 import '../../../common/utils/calendar.dart';
 
 class PkflMatchApiModel implements JsonAndHttpConverter, ModelToString {
@@ -182,7 +180,7 @@ class PkflMatchApiModel implements JsonAndHttpConverter, ModelToString {
     if (playerList.isNotEmpty) {
       for (PkflIndividualStatsApiModel player in playerList) {
         if (player.bestPlayer) {
-          return ("\nHvězda zápasu: ${player.player.name}");
+          return ("\n\nHvězda zápasu: ${player.player.name}");
         }
       }
     }
@@ -220,7 +218,7 @@ class PkflMatchApiModel implements JsonAndHttpConverter, ModelToString {
       }
     }
     if (text.isNotEmpty) {
-      return ("\nStřelci vlastňáků:\n") + text;
+      return ("\n\nStřelci vlastňáků:\n") + text;
     }
     return text;
   }
@@ -235,7 +233,7 @@ class PkflMatchApiModel implements JsonAndHttpConverter, ModelToString {
       }
     }
     if (text.isNotEmpty) {
-      return ("\nŽluté karty:\n") + text;
+      return ("\n\nŽluté karty:\n") + text;
     }
     return text;
   }
@@ -249,7 +247,7 @@ class PkflMatchApiModel implements JsonAndHttpConverter, ModelToString {
         }
       }
       if (text.isNotEmpty) {
-        return ("\nČervené karty:\n") + text;
+        return ("\n\nČervené karty:\n") + text;
       }
     }
     return text;

@@ -17,6 +17,7 @@ import '../../colors.dart';
 import '../match/screens/match_screen.dart';
 import '../pkfl/screens/main_pkfl_statistics_screen.dart';
 import '../pkfl/screens/pkfl_table_screen.dart';
+import '../statistics/screens/main_statistics_screen.dart';
 import '../steps/screens/step_screen.dart';
 
 class BottomSheetNavigationManager {
@@ -253,7 +254,7 @@ class BottomSheetNavigationManager {
                       color: Colors.orange,
                     ),
                     title: const Text("Statistiky piv/pokut"),
-                    onTap: () => onModalBottomSheetMenuTapped(MainPkflStatisticsScreen.id),
+                    onTap: () => onModalBottomSheetMenuTapped(MainStatisticsScreen.id),
                   ),
                   ListTile(
                     key: const ValueKey('menu_goal_stats'),
@@ -312,7 +313,7 @@ class BottomSheetNavigationManager {
                     title: const Text("Nastavení sezon"),
                     onTap: () => onModalBottomSheetMenuTapped(SeasonScreen.id),
                   ),
-                  ListTile(
+                  /*ListTile(
                     key: const ValueKey('steps'),
                     leading: const Icon(
                       Icons.edit_calendar,
@@ -321,7 +322,7 @@ class BottomSheetNavigationManager {
                     title: const Text("Kroky"),
                     onTap: () => onModalBottomSheetMenuTapped(StepScreen.id),
 
-                  ),
+                  ),*/
                 ],
               ),
             ));

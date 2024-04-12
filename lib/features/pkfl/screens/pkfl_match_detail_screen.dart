@@ -55,6 +55,7 @@ class _PkflMatchDetailScreenState extends ConsumerState<PkflMatchDetailScreen> {
                         fontSize: 20,
                       )),
                       CustomText(text: pkflMatch.returnFirstDetailsOfMatch()),
+                      CustomText(text: pkflMatch.returnSecondDetailsOfMatch()),
                     ],
                   ),
                 ),
