@@ -33,7 +33,7 @@ import '../pkfl/screens/match_detail_screen.dart';
 import '../pkfl/screens/pkfl_fixtures_screen.dart';
 import '../pkfl/screens/pkfl_player_stats_screen.dart';
 import '../season/screens/add_season_screen.dart';
-import '../statistics/screens/goal/main_goal_statistics_screen.dart';
+import '../statistics/screens/main_goal_statistics_screen.dart';
 import '../statistics/screens/main_statistics_screen.dart';
 import '../steps/screens/step_screen.dart';
 

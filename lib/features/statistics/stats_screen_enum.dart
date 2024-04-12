@@ -1,4 +1,4 @@
-enum FineScreenEnum {
+enum StatsScreenEnum {
   firstScreen,
   detailScreen,
   fineScreen

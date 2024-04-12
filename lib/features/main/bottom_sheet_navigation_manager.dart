@@ -11,7 +11,7 @@ import 'package:trus_app/features/pkfl/screens/pkfl_player_stats_screen.dart';
 import 'package:trus_app/features/player/screens/add_player_screen.dart';
 import 'package:trus_app/features/player/screens/player_screen.dart';
 import 'package:trus_app/features/season/screens/season_screen.dart';
-import 'package:trus_app/features/statistics/screens/goal/main_goal_statistics_screen.dart';
+import 'package:trus_app/features/statistics/screens/main_goal_statistics_screen.dart';
 
 import '../../colors.dart';
 import '../match/screens/match_screen.dart';

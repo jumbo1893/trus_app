@@ -108,49 +108,51 @@ class StatisticsErrorFutureBuilder<T> extends ConsumerWidget {
                           ),
                         );
                       }),
-                  ListView.builder(
-                    shrinkWrap: true,
-                    physics: const NeverScrollableScrollPhysics(),
-                    itemCount:
-                        streamSnapshot.data?.length ?? snapshot.data!.length,
-                    itemBuilder: (context, index) {
-                      var data =
-                          streamSnapshot.data?[index] ?? snapshot.data![index];
-                      return Column(
-                        children: [
-                          InkWell(
-                            onTap: () => onPressed(data),
-                            child: Padding(
-                              padding: const EdgeInsets.only(
-                                  bottom: 8.0, left: 8, right: 8),
-                              child: Container(
-                                decoration: const BoxDecoration(
-                                    border: Border(
-                                        bottom: BorderSide(
-                                  color: Colors.grey,
-                                ))),
-                                child: ListTile(
-                                  title: Padding(
-                                    padding: const EdgeInsets.only(bottom: 16),
-                                    child: Text(
-                                      data.listViewTitle(),
-                                      style: const TextStyle(
-                                          fontWeight: FontWeight.bold,
-                                          fontSize: 18),
+                  Expanded(
+                    child: ListView.builder(
+                      shrinkWrap: true,
+                      physics: null,
+                      itemCount:
+                          streamSnapshot.data?.length ?? snapshot.data!.length,
+                      itemBuilder: (context, index) {
+                        var data =
+                            streamSnapshot.data?[index] ?? snapshot.data![index];
+                        return Column(
+                          children: [
+                            InkWell(
+                              onTap: () => onPressed(data),
+                              child: Padding(
+                                padding: const EdgeInsets.only(
+                                    bottom: 8.0, left: 8, right: 8),
+                                child: Container(
+                                  decoration: const BoxDecoration(
+                                      border: Border(
+                                          bottom: BorderSide(
+                                    color: Colors.grey,
+                                  ))),
+                                  child: ListTile(
+                                    title: Padding(
+                                      padding: const EdgeInsets.only(bottom: 16),
+                                      child: Text(
+                                        data.listViewTitle(),
+                                        style: const TextStyle(
+                                            fontWeight: FontWeight.bold,
+                                            fontSize: 18),
+                                      ),
                                     ),
-                                  ),
-                                  subtitle: Text(
-                                    data.toStringForListView(),
-                                    style: const TextStyle(
-                                        color: listviewSubtitleColor),
+                                    subtitle: Text(
+                                      data.toStringForListView(),
+                                      style: const TextStyle(
+                                          color: listviewSubtitleColor),
+                                    ),
                                   ),
                                 ),
                               ),
-                            ),
-                          )
-                        ],
-                      );
-                    },
+                            )
+                          ],
+                        );
+                      },
+                    ),
                   ),
                 ],
               );

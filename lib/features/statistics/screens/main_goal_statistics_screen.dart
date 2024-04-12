@@ -1,25 +1,25 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:trus_app/colors.dart';
+import 'package:trus_app/features/statistics/screens/stats_screen.dart';
 
 import '../../../common/widgets/screen/custom_consumer_stateful_widget.dart';
-import '../controller/beer_stats_controller.dart';
-import '../controller/fine_stats_controller.dart';
-import 'stats_screen.dart';
+import '../controller/goal_stats_controller.dart';
 
-class MainStatisticsScreen extends CustomConsumerStatefulWidget {
-  static const String id = "main-statistics-screen";
+class MainGoalStatisticsScreen extends CustomConsumerStatefulWidget {
+  static const String id = "main-goal-statistics-screen";
 
-  const MainStatisticsScreen({
+  const MainGoalStatisticsScreen({
     Key? key,
-  }) : super(key: key, title: "Statistiky pokut/piv", name: id);
+  }) : super(key: key, title: "Statistika gólů/asistencí", name: id);
 
   @override
-  ConsumerState<MainStatisticsScreen> createState() =>
-      _MainStatisticsScreenState();
+  ConsumerState<MainGoalStatisticsScreen> createState() =>
+      _MainGoalStatisticsScreenState();
 }
 
-class _MainStatisticsScreenState extends ConsumerState<MainStatisticsScreen>
+class _MainGoalStatisticsScreenState
+    extends ConsumerState<MainGoalStatisticsScreen>
     with TickerProviderStateMixin {
   late TabController tabController;
   int activeTab = 0;
@@ -28,7 +28,7 @@ class _MainStatisticsScreenState extends ConsumerState<MainStatisticsScreen>
   void initState() {
     tabController = TabController(
       vsync: this,
-      length: 4,
+      length: 2,
     );
     super.initState();
   }
@@ -48,7 +48,7 @@ class _MainStatisticsScreenState extends ConsumerState<MainStatisticsScreen>
   Widget build(BuildContext context) {
     return MaterialApp(
       home: DefaultTabController(
-        length: 4,
+        length: 2,
         child: Scaffold(
           appBar: AppBar(
             backgroundColor: Colors.white,
@@ -60,21 +60,12 @@ class _MainStatisticsScreenState extends ConsumerState<MainStatisticsScreen>
               tabs: const [
                 FittedBox(
                   child: Tab(
-                    text: 'Piva\nhráči',
+                    text: 'Body\nhráči',
                   ),
                 ),
                 FittedBox(
                     child: Tab(
-                  text: "Piva\nzápasy",
-                )),
-                FittedBox(
-                  child: Tab(
-                    text: 'Pokuty\nhráči',
-                  ),
-                ),
-                FittedBox(
-                    child: Tab(
-                  text: "Pokuty\nzápasy",
+                  text: "Body\nzápasy",
                 )),
               ],
             ),
@@ -84,32 +75,18 @@ class _MainStatisticsScreenState extends ConsumerState<MainStatisticsScreen>
             children: [
               StatsScreen(
                 isFocused: isFocused(0),
-                controller: ref.watch(beerStatsControllerProvider),
-                detailedText: "Detail pitiva pro ",
+                controller: ref.watch(goalStatsControllerProvider),
+                detailedText: "Detail kanadských bodů pro",
                 matchStatsOrPlayerStats: false,
                 doubleDetail: false,
               ),
               StatsScreen(
                 isFocused: isFocused(1),
-                controller: ref.watch(beerStatsControllerProvider),
-                detailedText: "Detail pitiva pro ",
+                controller: ref.watch(goalStatsControllerProvider),
+                detailedText: "Detail kanadských bodů pro",
                 matchStatsOrPlayerStats: true,
                 doubleDetail: false,
-              ),
-              StatsScreen(
-                isFocused: isFocused(2),
-                controller: ref.watch(fineStatsControllerProvider),
-                detailedText: "Detail pokut pro",
-                matchStatsOrPlayerStats: false,
-                doubleDetail: true,
-              ),
-              StatsScreen(
-                isFocused: isFocused(3),
-                controller: ref.watch(fineStatsControllerProvider),
-                detailedText: "Detail pokut pro",
-                matchStatsOrPlayerStats: true,
-                doubleDetail: true,
-              ),
+              )
             ],
           ),
         ),
