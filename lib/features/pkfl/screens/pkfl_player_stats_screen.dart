@@ -2,8 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../common/widgets/builder/models_error_future_builder.dart';
+import '../../../common/widgets/dropdown/custom_dropdown.dart';
 import '../../../common/widgets/dropdown/pkfl_player_api_dropdown.dart';
 import '../../../common/widgets/screen/custom_consumer_widget.dart';
+import '../../../models/api/pkfl/pkfl_player_api_model.dart';
 import '../../main/screen_controller.dart';
 import '../controller/pkfl_player_stats_controller.dart';
 
@@ -32,20 +34,21 @@ class PkflPlayerStatsScreen extends CustomConsumerWidget {
                 children: [
                   SizedBox(
                       width: size.width / 2 - padding,
-                      child: PkflPlayerApiDropdown(
-                        key: const ValueKey('season_dropdown'),
-                        onPlayerSelected: (player) => ref
+                      child: CustomDropdown(
+                        key: const ValueKey('player_dropdown'),
+                        onItemSelected: (player) => ref
                             .watch(pkflPlayerStatsControllerProvider)
-                            .setPickedPlayer(player),
-                        playerList: ref
+                            .setPickedPlayer(player as PkflPlayerApiModel),
+                        dropdownList: ref
                             .watch(pkflPlayerStatsControllerProvider)
                             .getPlayers(),
-                        pickedPlayer: ref
+                        pickedItem: ref
                             .watch(pkflPlayerStatsControllerProvider)
                             .pickedPlayer(),
                         initData: () => ref
                             .watch(pkflPlayerStatsControllerProvider)
                             .setCurrentPlayer(),
+                        hint: 'Vyber hráče',
                       )),
                 ],
               ),

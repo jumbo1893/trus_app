@@ -1,9 +1,10 @@
 
 
 import '../../../config.dart';
+import '../interfaces/dropdown_item.dart';
 import '../interfaces/json_and_http_converter.dart';
 
-class PkflPlayerApiModel implements JsonAndHttpConverter {
+class PkflPlayerApiModel implements JsonAndHttpConverter, DropdownItem {
   int id;
   String name;
 
@@ -42,6 +43,11 @@ class PkflPlayerApiModel implements JsonAndHttpConverter {
   @override
   String httpRequestClass() {
     return pkflPlayerApi;
+  }
+
+  @override
+  String dropdownText() {
+    return name ?? "";
   }
 
 }

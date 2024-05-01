@@ -3,14 +3,13 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:trus_app/common/utils/utils.dart';
 import 'package:trus_app/common/widgets/dropdown/match_dropdown.dart';
 import 'package:trus_app/features/fine/match/screens/multiple_fine_players_screen.dart';
-import 'package:trus_app/models/api/player_api_model.dart';
 
 import '../../../../common/widgets/builder/error_future_builder.dart';
 import '../../../../common/widgets/button/floating_finematch_button.dart';
-import '../../../../common/widgets/dropdown/season_api_dropdown.dart';
+import '../../../../common/widgets/dropdown/custom_dropdown.dart';
 import '../../../../common/widgets/listview/fine_match_listview.dart';
 import '../../../../common/widgets/screen/custom_consumer_stateful_widget.dart';
-import '../../../../models/api/match/match_api_model.dart';
+import '../../../../models/api/season_api_model.dart';
 import '../../../main/screen_controller.dart';
 import '../controller/fine_match_controller.dart';
 import 'fine_player_screen.dart';
@@ -81,20 +80,21 @@ class _FineMatchScreenState extends ConsumerState<FineMatchScreen> {
                       children: [
                         SizedBox(
                             width: size.width / 2 - padding,
-                            child: SeasonApiDropdown(
+                            child: CustomDropdown(
                               key: const ValueKey("season_dropdown"),
-                              onSeasonSelected: (season) => ref
+                              onItemSelected: (season) => ref
                                   .watch(fineMatchControllerProvider)
-                                  .setSeason(season),
-                              seasonList: ref
+                                  .setSeason(season as SeasonApiModel),
+                              dropdownList: ref
                                   .watch(fineMatchControllerProvider)
                                   .getSeasons(),
-                              pickedSeason: ref
+                              pickedItem: ref
                                   .watch(fineMatchControllerProvider)
                                   .pickedSeason(),
                               initData: () => ref
                                   .watch(fineMatchControllerProvider)
                                   .setInitSeason(),
+                              hint: 'Vyber sezonu',
                             )),
                       ],
                     ),

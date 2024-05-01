@@ -6,7 +6,8 @@ import 'package:trus_app/common/widgets/custom_text.dart';
 import '../../../common/widgets/builder/models_error_future_builder.dart';
 import '../../../common/widgets/builder/statistics_error_future_builder.dart';
 import '../../../common/widgets/button/statistics_buttons.dart';
-import '../../../common/widgets/dropdown/season_api_dropdown.dart';
+import '../../../common/widgets/dropdown/custom_dropdown.dart';
+import '../../../models/api/season_api_model.dart';
 import '../controller/stats_controller.dart';
 import '../stats_screen_enum.dart';
 
@@ -27,10 +28,10 @@ class StatsScreen extends ConsumerStatefulWidget {
   }) : super(key: key);
 
   @override
-  ConsumerState<StatsScreen> createState() => _PlayerGoalStatsScreenState();
+  ConsumerState<StatsScreen> createState() => _StatsScreenState();
 }
 
-class _PlayerGoalStatsScreenState extends ConsumerState<StatsScreen> {
+class _StatsScreenState extends ConsumerState<StatsScreen> {
   @override
   Widget build(BuildContext context) {
     if (widget.isFocused) {
@@ -50,13 +51,14 @@ class _PlayerGoalStatsScreenState extends ConsumerState<StatsScreen> {
                         children: [
                           SizedBox(
                               width: size.width / 2.5 - padding,
-                              child: SeasonApiDropdown(
-                                onSeasonSelected: (season) =>
-                                    widget.controller.setPickedSeason(season),
-                                seasonList: widget.controller.getSeasons(),
-                                pickedSeason: widget.controller.pickedSeason(),
+                              child: CustomDropdown(
+                                onItemSelected: (season) =>
+                                    widget.controller.setPickedSeason(season as SeasonApiModel),
+                                dropdownList: widget.controller.getSeasons(),
+                                pickedItem: widget.controller.pickedSeason(),
                                 initData: () =>
                                     widget.controller.setCurrentSeason(),
+                                hint: 'Vyber sezonu',
                               )),
                           StatisticsButtons(
                             onSearchButtonClicked: (text) =>

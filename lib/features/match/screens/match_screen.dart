@@ -3,9 +3,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:trus_app/features/match/screens/add_match_screen.dart';
 
 import '../../../common/widgets/builder/models_error_future_builder.dart';
-import '../../../common/widgets/dropdown/season_api_dropdown.dart';
+import '../../../common/widgets/dropdown/custom_dropdown.dart';
 import '../../../common/widgets/screen/custom_consumer_widget.dart';
-import '../../../models/api/match/match_api_model.dart';
+import '../../../models/api/season_api_model.dart';
 import '../../main/screen_controller.dart';
 import '../../pkfl/screens/match_detail_screen.dart';
 import '../controller/match_screen_controller.dart';
@@ -33,20 +33,21 @@ class MatchScreen extends CustomConsumerWidget {
                     children: [
                       SizedBox(
                           width: size.width / 2 - padding,
-                          child: SeasonApiDropdown(
+                          child: CustomDropdown(
                             key: const ValueKey('season_dropdown'),
-                            onSeasonSelected: (season) => ref
+                            onItemSelected: (season) => ref
                                 .watch(matchScreenControllerProvider)
-                                .setPickedSeason(season),
-                            seasonList: ref
+                                .setPickedSeason(season as SeasonApiModel),
+                            dropdownList: ref
                                 .watch(matchScreenControllerProvider)
                                 .getSeasons(),
-                            pickedSeason: ref
+                            pickedItem: ref
                                 .watch(matchScreenControllerProvider)
                                 .pickedSeason(),
                             initData: () => ref
                                 .watch(matchScreenControllerProvider)
                                 .setCurrentSeason(),
+                            hint: 'Vyber sezonu',
                           )),
                     ],
                   ),

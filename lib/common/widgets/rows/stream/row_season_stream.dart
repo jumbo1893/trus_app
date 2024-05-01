@@ -5,7 +5,7 @@ import 'package:flutter/material.dart';
 import '../../../../models/api/season_api_model.dart';
 import '../../../utils/utils.dart';
 import '../../custom_text.dart';
-import '../../dropdown/season_api_dropdown.dart';
+import '../../dropdown/custom_dropdown.dart';
 
 class RowSeasonStream extends StatefulWidget {
   final Size size;
@@ -40,12 +40,13 @@ class _RowSeasonStream extends State<RowSeasonStream> {
               key: ValueKey("${getValueFromValueKey(widget.key!)}_text"))),
       SizedBox(
           width: (widget.size.width / 1.5) - widget.padding,
-          child: SeasonApiDropdown(
+          child: CustomDropdown(
             key: ValueKey("${getValueFromValueKey(widget.key!)}_dropdown"),
-            onSeasonSelected: (season) => widget.onSeasonChanged(season),
-            seasonList: widget.seasonList,
-            pickedSeason: widget.pickedSeason,
+            onItemSelected: (season) => widget.onSeasonChanged(season as SeasonApiModel),
+            dropdownList: widget.seasonList,
+            pickedItem: widget.pickedSeason,
             initData: widget.initData,
+            hint: 'Vyber sezonu',
           )),
     ]);
   }

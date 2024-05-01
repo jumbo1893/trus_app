@@ -2,9 +2,10 @@ import 'package:trus_app/common/utils/calendar.dart';
 import 'package:trus_app/models/api/interfaces/json_and_http_converter.dart';
 
 import '../../config.dart';
+import 'interfaces/dropdown_item.dart';
 import 'interfaces/model_to_string.dart';
 
-class SeasonApiModel implements ModelToString, JsonAndHttpConverter {
+class SeasonApiModel implements ModelToString, JsonAndHttpConverter, DropdownItem {
   int? id;
   final String name;
   final DateTime fromDate;
@@ -95,5 +96,10 @@ class SeasonApiModel implements ModelToString, JsonAndHttpConverter {
   @override
   int getId() {
     return id ?? -1;
+  }
+
+  @override
+  String dropdownText() {
+    return name;
   }
 }

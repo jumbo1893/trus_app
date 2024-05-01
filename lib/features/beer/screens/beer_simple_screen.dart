@@ -3,14 +3,14 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:trus_app/features/beer/controller/beer_controller.dart';
 import 'package:trus_app/features/beer/screens/beer_paint_screen.dart';
 import 'package:trus_app/features/home/screens/home_screen.dart';
-import 'package:trus_app/models/api/match/match_api_model.dart';
 import '../../../colors.dart';
 import '../../../common/widgets/builder/error_future_builder.dart';
 import '../../../common/widgets/builder/stream_add_builder.dart';
 import '../../../common/widgets/button/confirm_button.dart';
+import '../../../common/widgets/dropdown/custom_dropdown.dart';
 import '../../../common/widgets/dropdown/match_dropdown.dart';
-import '../../../common/widgets/dropdown/season_api_dropdown.dart';
 import '../../../common/widgets/screen/custom_consumer_stateful_widget.dart';
+import '../../../models/api/season_api_model.dart';
 import '../../main/screen_controller.dart';
 
 class BeerSimpleScreen extends CustomConsumerStatefulWidget {
@@ -59,16 +59,17 @@ class _BeerSimpleScreenState extends ConsumerState<BeerSimpleScreen> {
                   children: [
                     SizedBox(
                         width: size.width / 2 - padding,
-                        child: SeasonApiDropdown(
-                          onSeasonSelected: (season) => ref
+                        child: CustomDropdown(
+                          onItemSelected: (season) => ref
                               .watch(beerControllerProvider)
-                              .setSeason(season),
-                          seasonList:
+                              .setSeason(season as SeasonApiModel),
+                          dropdownList:
                               ref.watch(beerControllerProvider).getSeasons(),
-                          pickedSeason:
+                          pickedItem:
                               ref.watch(beerControllerProvider).pickedSeason(),
                           initData: () =>
                               ref.watch(beerControllerProvider).setInitSeason(),
+                          hint: 'Vyber sezonu',
                         )),
                     SizedBox(width: size.width / 4 - padding),
                     SizedBox(

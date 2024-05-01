@@ -23,6 +23,7 @@ const devUrl = "https://192.168.0.150:8080";
 const serverUrl = "https://trus.up.railway.app";
 const automation = false;
 const matchApi = "match";
+const statsApi = "beer/stats";
 const playerApi = "player";
 const seasonApi = "season";
 const fineApi = "fine";
