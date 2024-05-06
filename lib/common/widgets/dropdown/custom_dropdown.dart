@@ -36,7 +36,7 @@ class _CustomDropdownState extends ConsumerState<CustomDropdown> {
             child: Padding(
               padding: const EdgeInsets.symmetric(horizontal: 8.0),
               child: Text(
-                item.dropdownText(),
+                item.dropdownItem(),
                 style: const TextStyle(
                   fontSize: 14,
                 ),

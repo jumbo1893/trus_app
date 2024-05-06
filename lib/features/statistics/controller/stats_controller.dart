@@ -71,10 +71,6 @@ abstract class StatsController {
     }
   }
 
-  Stream<List<SeasonApiModel>> seasons() {
-    return seasonListController.stream;
-  }
-
   Stream<SeasonApiModel> pickedSeason() {
     return pickedSeasonController.stream;
   }

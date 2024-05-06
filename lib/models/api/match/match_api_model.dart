@@ -95,7 +95,7 @@ class MatchApiModel implements ModelToString, JsonAndHttpConverter {
 
   @override
   String listViewTitle() {
-    return home ? "Liščí Trus - $name" : "$name - Liščí Trus";
+    return (home ? "Liščí Trus - $name" : "$name - Liščí Trus") + (pkflMatch!=null ? " ${pkflMatch!.simpleResultToString()}" : "");
   }
 
   @override

@@ -49,4 +49,20 @@ class PlayerStats implements ModelToString {
   String toStringForListView() {
     return text;
   }
+
+  @override
+  String toString() {
+    return text;
+  }
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is PlayerStats &&
+          runtimeType == other.runtimeType &&
+          player == other.player &&
+          text == other.text;
+
+  @override
+  int get hashCode => player.hashCode ^ text.hashCode;
 }

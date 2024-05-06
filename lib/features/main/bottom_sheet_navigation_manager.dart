@@ -17,6 +17,7 @@ import '../../colors.dart';
 import '../match/screens/match_screen.dart';
 import '../pkfl/screens/main_pkfl_statistics_screen.dart';
 import '../pkfl/screens/pkfl_table_screen.dart';
+import '../statistics/screens/double_dropdown_stats_screen.dart';
 import '../statistics/screens/main_statistics_screen.dart';
 import '../steps/screens/step_screen.dart';
 
@@ -255,6 +256,16 @@ class BottomSheetNavigationManager {
                     ),
                     title: const Text("Statistiky piv/pokut"),
                     onTap: () => onModalBottomSheetMenuTapped(MainStatisticsScreen.id),
+                  ),
+                  ListTile(
+                    key: const ValueKey('beer_detail'),
+                    leading: const Icon(
+                      Icons.query_stats,
+                      color: Colors.orange,
+                    ),
+                    title: const Text("Detail piv"),
+                    onTap: () => onModalBottomSheetMenuTapped(DoubleDropdownStatsScreen.id),
+
                   ),
                   ListTile(
                     key: const ValueKey('menu_goal_stats'),

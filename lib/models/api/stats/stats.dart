@@ -1,9 +1,10 @@
 import 'package:trus_app/models/api/stats/player_stats.dart';
 
 import '../../../config.dart';
+import '../interfaces/dropdown_item.dart';
 import '../interfaces/json_and_http_converter.dart';
 
-class Stats implements JsonAndHttpConverter {
+class Stats implements JsonAndHttpConverter, DropdownItem {
   final String dropdownText;
   final List<PlayerStats> playerStats;
 
@@ -29,7 +30,23 @@ class Stats implements JsonAndHttpConverter {
   Map<String, dynamic> toJson() {
     return {
       "playerStats": playerStats,
-      "dropdownText": dropdownText,
+      "dropdownText": dropdownItem,
     };
   }
+
+  @override
+  String dropdownItem() {
+    return dropdownText;
+  }
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is Stats &&
+          runtimeType == other.runtimeType &&
+          dropdownText == other.dropdownText &&
+          playerStats == other.playerStats;
+
+  @override
+  int get hashCode => dropdownText.hashCode ^ playerStats.hashCode;
 }

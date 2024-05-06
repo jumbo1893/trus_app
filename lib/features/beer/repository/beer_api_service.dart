@@ -10,6 +10,7 @@ import '../../../models/api/beer/beer_list.dart';
 import '../../../models/api/beer/beer_multi_add_response.dart';
 import '../../../models/api/beer/beer_setup_response.dart';
 import '../../../models/api/interfaces/json_and_http_converter.dart';
+import '../../../models/api/stats/stats.dart';
 import '../../general/repository/crud_api_service.dart';
 
 final beerApiServiceProvider =
@@ -61,5 +62,16 @@ class BeerApiService extends CrudApiService {
         (dynamic json) => BeerDetailedResponse.fromJson(json),
         queryParameters);
     return beerDetailedResponse;
+  }
+
+  Future<List<Stats>> getBeerStats(
+      int? seasonId) async {
+    final queryParameters = {
+      'seasonId': intToString(seasonId),
+    };
+    final decodedBody =
+    await getModelsWithVariableControllerEndpoint<JsonAndHttpConverter>(
+        beerApi, queryParameters, statsApi);
+    return decodedBody.map((model) => model as Stats).toList();
   }
 }

@@ -46,8 +46,8 @@ class PkflPlayerApiModel implements JsonAndHttpConverter, DropdownItem {
   }
 
   @override
-  String dropdownText() {
-    return name ?? "";
+  String dropdownItem() {
+    return name;
   }
 
 }

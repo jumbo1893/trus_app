@@ -1,4 +1,4 @@
 
 abstract class DropdownItem {
-  String dropdownText();
+  String dropdownItem();
 }

@@ -15,6 +15,7 @@ import '../../../models/api/pkfl/pkfl_table_team.dart';
 import '../../../models/api/player_api_model.dart';
 import '../../../models/api/receivedfine/received_fine_api_model.dart';
 import '../../../models/api/season_api_model.dart';
+import '../../../models/api/stats/stats.dart';
 import '../../../models/api/step/step_api_model.dart';
 import '../../../models/api/user_api_model.dart';
 import '../../general/repository/request_executor.dart';
@@ -49,6 +50,8 @@ class CrudApiService extends RequestExecutor {
         return PkflTableTeam.fromJson(json);
       case stepApi:
         return StepApiModel.fromJson(json);
+      case statsApi:
+        return Stats.fromJson(json);
       default:
         throw JsonDecodeException();
     }
@@ -93,10 +96,28 @@ class CrudApiService extends RequestExecutor {
   /// vrací list modelů zabalené v classe JsonAndHttpConverter
   Future<List<T>> getModelsWithVariableEndpoint<T extends JsonAndHttpConverter>(
       String apiClass,
-      Map<String, String>? queryParameters,
+      Map<String, String?>? queryParameters,
       String endpoint) async {
     final decodedBody = await executeGetRequest<List<JsonAndHttpConverter>>(
         Uri.parse("$serverUrl/$apiClass/$endpoint"),
+            (dynamic body) => (body as List<dynamic>)
+            .map((e) => _mapToModel(e as Map<String, dynamic>, apiClass) as T)
+            .toList(),
+        queryParameters);
+    return decodedBody.cast<T>();
+  }
+
+  ///get request na server
+  /// místo get-all máme variabilní endpoint
+  /// [apiClass] třída na kterou posíláme req
+  /// [queryParameters] parametry requestu
+  /// vrací list modelů zabalené v classe JsonAndHttpConverter
+  Future<List<T>> getModelsWithVariableControllerEndpoint<T extends JsonAndHttpConverter>(
+      String controllerEndpoint,
+      Map<String, String?>? queryParameters,
+      String apiClass) async {
+    final decodedBody = await executeGetRequest<List<JsonAndHttpConverter>>(
+        Uri.parse("$serverUrl/$controllerEndpoint/$apiClass"),
             (dynamic body) => (body as List<dynamic>)
             .map((e) => _mapToModel(e as Map<String, dynamic>, apiClass) as T)
             .toList(),

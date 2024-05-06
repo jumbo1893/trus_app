@@ -99,7 +99,7 @@ class SeasonApiModel implements ModelToString, JsonAndHttpConverter, DropdownIte
   }
 
   @override
-  String dropdownText() {
+  String dropdownItem() {
     return name;
   }
 }
