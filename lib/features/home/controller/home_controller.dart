@@ -30,6 +30,7 @@ class HomeController implements ReadOperations {
   String birthday = "";
   List<String> randomFacts = [];
   Chart? chart;
+  List<Chart>? charts;
   int? playerId;
   PkflMatchApiModel? nextMatch;
   PkflMatchApiModel? lastMatch;
@@ -74,6 +75,7 @@ class HomeController implements ReadOperations {
     birthday = homeSetup!.nextBirthday;
     randomFacts = homeSetup!.randomFacts;
     chart = homeSetup!.chart;
+    charts = homeSetup!.charts;
     nextMatch = homeSetup!.nextAndLastPkflMatch[0];
     lastMatch = homeSetup!.nextAndLastPkflMatch[1];
     return homeSetup!;

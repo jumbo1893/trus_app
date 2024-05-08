@@ -95,7 +95,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           return notification.depth == 0;
         },
         child: FutureBuilder<HomeSetup?>(
-            //future: ref.read(homeControllerProvider).setupHome()
             future: executeApi<HomeSetup?>(() async {
               return await ref
                   .read(homeControllerProvider)
@@ -192,6 +191,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                             ? (homeSetup.chart!.coordinates.isNotEmpty
                                 ? HomeChart(
                                     chart: homeSetup.chart!,
+                                    charts: homeSetup.charts!,
                                   )
                                 : Container())
                             : PickChartPlayer(

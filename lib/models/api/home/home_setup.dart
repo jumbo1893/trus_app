@@ -7,13 +7,15 @@ class HomeSetup {
   List<String> randomFacts;
   Chart? chart;
   List<PkflMatchApiModel?> nextAndLastPkflMatch;
+  List<Chart>? charts;
 
 
   HomeSetup({
     required this.nextBirthday,
     required this.randomFacts,
     required this.chart,
-    required this.nextAndLastPkflMatch
+    required this.nextAndLastPkflMatch,
+    required this.charts
   });
 
 
@@ -24,6 +26,7 @@ class HomeSetup {
       randomFacts: (json['randomFacts'] as List).cast<String>(),
       chart: json["chart"] != null ? Chart.fromJson(json["chart"]) : null,
       nextAndLastPkflMatch: List<PkflMatchApiModel>.from((json['nextAndLastPkflMatch'] as List<dynamic>).map((fine) => PkflMatchApiModel.fromJson(fine))),
+      charts: List<Chart>.from((json['charts'] as List<dynamic>).map((fine) => Chart.fromJson(fine))),
     );
   }
 

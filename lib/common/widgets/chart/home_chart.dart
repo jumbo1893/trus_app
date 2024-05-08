@@ -4,10 +4,12 @@ import 'package:trus_app/models/api/home/coordinate.dart';
 
 import '../../../colors.dart';
 import '../../../models/api/home/chart.dart';
+import 'legend.dart';
 
 class HomeChart extends StatefulWidget {
   final Chart chart;
-  const HomeChart({super.key, required this.chart});
+  final List<Chart> charts;
+  const HomeChart({super.key, required this.chart, required this.charts});
 
   @override
   State<HomeChart> createState() => _HomeChartState();
@@ -15,6 +17,11 @@ class HomeChart extends StatefulWidget {
 
 class _HomeChartState extends State<HomeChart> {
   List<Color> gradientBeerColors = [
+    orangeColor,
+    Colors.yellow,
+  ];
+
+  List<Color> gradientMainPlayerColors = [
     orangeColor,
     Colors.yellow,
   ];
@@ -33,63 +40,77 @@ class _HomeChartState extends State<HomeChart> {
 
   @override
   Widget build(BuildContext context) {
-    return Stack(
-      children: <Widget>[
-        AspectRatio(
-          aspectRatio: 1.70,
-          child: Padding(
-            padding: const EdgeInsets.only(
-              right: 18,
-              left: 12,
-              top: 24,
-              bottom: 12,
-            ),
-            child: LineChart(
-              showFines ? fineData() : beerData(),
-            ),
-          ),
-        ),
-        Align(
-          alignment: Alignment.center,
-          child: Padding(
-            padding: const EdgeInsets.only(bottom: 8.0),
-            child: SizedBox(
-              height: 34,
-              child: Text(
-                showFines ? "statistika pokut" : "statistika pivek/panáků",
-                style: const TextStyle(
-                  fontSize: 12,
-                  color: Colors.black,
+    return Column(
+      children: [
+        Stack(
+          children: <Widget>[
+            AspectRatio(
+              aspectRatio: 1.70,
+              child: Padding(
+                padding: const EdgeInsets.only(
+                  right: 18,
+                  left: 12,
+                  top: 24,
+                  bottom: 12,
+                ),
+                child: LineChart(
+                  beerData(!showFines),
                 ),
               ),
             ),
-          ),
-        ),
-        Align(
-          alignment: Alignment.centerRight,
-          child: Padding(
-            padding: const EdgeInsets.only(bottom: 8.0),
-            child: SizedBox(
-              height: 34,
-              child: TextButton(
-                onPressed: () {
-                  setState(() {
-                    showFines = !showFines;
-                  });
-                },
-                child: Text(
-                  showFines ? "přepni na pivka" : "přepni na pokuty",
-                  style: const TextStyle(
-                    fontSize: 12,
-                    color: Colors.black,
+            Align(
+              alignment: Alignment.center,
+              child: Padding(
+                padding: const EdgeInsets.only(bottom: 8.0),
+                child: SizedBox(
+                  height: 34,
+                  child: Text(
+                    showFines ? "statistika panáků" : "statistika pivek",
+                    style: const TextStyle(
+                      fontSize: 12,
+                      color: Colors.black,
+                    ),
                   ),
                 ),
               ),
             ),
-          ),
+            Align(
+              alignment: Alignment.centerRight,
+              child: Padding(
+                padding: const EdgeInsets.only(bottom: 8.0),
+                child: SizedBox(
+                  height: 34,
+                  child: TextButton(
+                    onPressed: () {
+                      setState(() {
+                        showFines = !showFines;
+                      });
+                    },
+                    child: Text(
+                      showFines ? "přepni na pivka" : "přepni na panáky",
+                      style: const TextStyle(
+                        fontSize: 12,
+                        color: Colors.black,
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ],
         ),
+        Row(mainAxisAlignment: MainAxisAlignment.center,children: getLegends(),)
       ],
     );
+  }
+
+  List<Widget> getLegends() {
+    List<Widget> legends = [];
+    for(Chart chart in widget.charts) {
+      legends.add(Legend(text: chart.player.name, gradientColors: getPlayerColors(chart)));
+      legends.add(const SizedBox(width: 4,));
+    }
+    return legends;
   }
 
   double calculateHorizontalInterval(List<int> labels) {
@@ -125,26 +146,6 @@ class _HomeChartState extends State<HomeChart> {
       fontSize: 12,
     );
     Widget text = Text(widget.chart.coordinates[value.toInt()].matchInitials, style: style,);
-    /*switch (value.toInt()) {
-      case 0:
-        text = const Text('SEH', style: style);
-        break;
-      case 1:
-        text = const Text('PUA', style: style);
-        break;
-      case 2:
-        text = const Text('KAM', style: style);
-        break;
-      case 3:
-        text = const Text('EIN', style: style);
-        break;
-      case 4:
-        text = const Text('MOD', style: style);
-        break;
-      default:
-        text = const Text('', style: style);
-        break;
-    }*/
 
     return SideTitleWidget(
       axisSide: meta.axisSide,
@@ -152,74 +153,23 @@ class _HomeChartState extends State<HomeChart> {
     );
   }
 
-  Widget leftTitleWidgetsForBeers(double value, TitleMeta meta) {
-    const style = TextStyle(
-      fontWeight: FontWeight.bold,
-      fontSize: 14,
-    );
-    String text;
-    //String text = widget.chart.beerLabels[value.toInt()].toString();
-    switch (value.toInt()) {
-      case 0:
-        text = '0';
-        break;
-      case 5:
-        text = '5';
-        break;
-      case 10:
-        text = '10';
-        break;
-      /*case 15:
-        text = '15';
-        break;*/
-      default:
-        return Container();
-    }
-
-    return Text(text, style: style, textAlign: TextAlign.left);
-  }
-
-  Widget leftTitleWidgets(double value, TitleMeta meta) {
-    const style = TextStyle(
-      fontWeight: FontWeight.bold,
-      fontSize: 14,
-    );
-    String text;
-    //String text = widget.chart.coordinates[value.toInt()].matchInitials;
-    switch (value.toInt()) {
-      case 0:
-        text = '0';
-        break;
-      case 5:
-        text = '5';
-        break;
-      case 10:
-        text = '10';
-        break;
-      case 15:
-        text = '15';
-        break;
-      default:
-        return Container();
-    }
-
-    return Text(text, style: style, textAlign: TextAlign.left);
-  }
-
-  LineChartData beerData() {
+  LineChartData beerData(bool beer) {
     return LineChartData(
       lineTouchData: LineTouchData(
         touchTooltipData: LineTouchTooltipData(
           getTooltipItems: (value) {
             return value
                 .map((e) => LineTooltipItem(
-                "${e.barIndex == 0 ? 'Piva:' : 'Panáky:'} ${e.y.toInt()} ",
+                "${widget.charts[e.barIndex].player.name} ${e.y.toInt()}",
                 const TextStyle(
                   fontWeight: FontWeight.bold,
                   fontSize: 14,)))
                 .toList();
-          }
-        )
+          },
+          tooltipBgColor: Colors.white,
+          showOnTopOfTheChartBoxArea: true
+
+        ),
       ),
       gridData: FlGridData(
         show: true,
@@ -266,54 +216,67 @@ class _HomeChartState extends State<HomeChart> {
       ),
       borderData: FlBorderData(
         show: true,
-        border: Border.all(color: const Color(0xff37434d)),
+        border: Border.all(color:  Colors.black),
       ),
       minX: 0,
       maxX: (widget.chart.coordinates.length-1).toDouble(),
       minY: 0,
       maxY: widget.chart.beerMaximum.toDouble(),
-      lineBarsData: [
-        LineChartBarData(
-          spots: getFlSpots(widget.chart.coordinates, true, false, false),
-          isCurved: true,
-          gradient: LinearGradient(
-            colors: gradientBeerColors,
-          ),
-          barWidth: 4,
-          isStrokeCapRound: true,
-          dotData: FlDotData(
-            show: false,
-          ),
-          belowBarData: BarAreaData(
-            show: true,
-            gradient: LinearGradient(
-              colors: gradientColors
-                  .map((color) => color.withOpacity(0.3))
-                  .toList(),
-            ),
-          ),
-        ),LineChartBarData(
-          spots: getFlSpots(widget.chart.coordinates, false, true, false),
-          isCurved: true,
-          gradient: LinearGradient(
-            colors: gradientLiquorColors,
-          ),
-          barWidth: 4,
-          isStrokeCapRound: true,
-          dotData: FlDotData(
-            show: false,
-          ),
-          belowBarData: BarAreaData(
-            show: true,
-            gradient: LinearGradient(
-              colors: gradientColors
-                  .map((color) => color.withOpacity(0.3))
-                  .toList(),
-            ),
-          ),
-        ),
-      ],
+      lineBarsData: getBeerCharData(beer)
     );
+  }
+
+  List<Color> getPlayerColors(Chart chart) {
+    List<Chart> chartList = [];
+    chartList.addAll(widget.charts);
+    chartList.removeWhere((element) => element.mainPlayer);
+    List<List<Color>> gradientColorsList = [[
+      Colors.blue,
+      Colors.blueGrey,
+    ], [
+      Colors.red,
+      Colors.brown,
+    ], [
+      Colors.black26,
+      Colors.grey,
+    ], [
+      Colors.green,
+      Colors.greenAccent,
+    ]
+    ];
+    if(chart.mainPlayer) {
+      return [
+        orangeColor,
+        Colors.yellow,
+      ];
+    }
+    return gradientColorsList[chartList.indexOf(chart)];
+  }
+
+  List<LineChartBarData> getBeerCharData(bool beer) {
+    List<LineChartBarData> lineCharBarDataList = [];
+    for(Chart chart in widget.charts) {
+      LineChartBarData lineChartBarData = LineChartBarData(spots: getFlSpots(chart.coordinates, beer, !beer, false),
+          isCurved: true,
+          gradient: LinearGradient(
+            colors: getPlayerColors(chart),
+          ),
+          barWidth: 4,
+          isStrokeCapRound: true,
+          dotData: FlDotData(
+            show: false,
+          ),
+          belowBarData: BarAreaData(
+            show: true,
+            gradient: LinearGradient(
+              colors: gradientColors
+                  .map((color) => color.withOpacity(0.3))
+                  .toList(),
+            ),
+          ));
+      lineCharBarDataList.add(lineChartBarData);
+    }
+    return lineCharBarDataList;
   }
 
   LineChartData fineData() {
