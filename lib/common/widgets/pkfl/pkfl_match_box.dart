@@ -15,6 +15,7 @@ class PkflMatchBox extends StatefulWidget implements PreferredSizeWidget {
     required this.onButtonAddBeerClick,
     required this.onButtonAddFineClick,
     required this.onCommonMatchesClick,
+    required this.onButtonDetailMatchClick,
   });
 
   final Future<PkflMatchApiModel?> pkflMatchFuture;
@@ -25,6 +26,7 @@ class PkflMatchBox extends StatefulWidget implements PreferredSizeWidget {
   final Function(PkflMatchApiModel pkflMatchApiModel) onButtonAddBeerClick;
   final Function(PkflMatchApiModel pkflMatchApiModel) onButtonAddFineClick;
   final Function(PkflMatchApiModel pkflMatchApiModel) onCommonMatchesClick;
+  final Function(PkflMatchApiModel pkflMatchApiModel) onButtonDetailMatchClick;
 
   @override
   Size get preferredSize => const Size.fromHeight(kMinInteractiveDimension);
@@ -131,7 +133,7 @@ class _PkflMatchBoxState extends State<PkflMatchBox>
               child: Row(
                 children: [
                   SizedBox(
-                    width: width / 5 - insidePadding*4/5,
+                    width: width / 6 - insidePadding*4/6,
                     child: DecoratedBox(
                       decoration:
                           const BoxDecoration(border: Border(
@@ -141,7 +143,7 @@ class _PkflMatchBoxState extends State<PkflMatchBox>
                     ),
                   ),
                   SizedBox(
-                    width: width / 5 - insidePadding*4/5,
+                    width: width / 6 - insidePadding*4/6,
                     child: DecoratedBox(
                       decoration:
                       const BoxDecoration(border: Border(
@@ -151,7 +153,7 @@ class _PkflMatchBoxState extends State<PkflMatchBox>
                     ),
                   ),
                   SizedBox(
-                    width: width / 5 - insidePadding*4/5,
+                    width: width / 6 - insidePadding*4/6,
                     child: DecoratedBox(
                       decoration:
                       const BoxDecoration(border: Border(
@@ -161,12 +163,17 @@ class _PkflMatchBoxState extends State<PkflMatchBox>
                     ),
                   ),
                   SizedBox(
-                    width: width / 5 - insidePadding*4/5,
+                    width: width / 6 - insidePadding*4/6,
                     child: EnabledIconButton(
                       onPressed: () => widget.onButtonAddFineClick(pkflMatch), icon: const Icon(Icons.savings), enabled: isMatchButtonEnabled(pkflMatch), text: "Přidat pokuty"),
                   ),
                   SizedBox(
-                    width: width / 5 - insidePadding*4/5,
+                    width: width / 6 - insidePadding*4/6,
+                    child: EnabledIconButton(
+                        onPressed: () => widget.onButtonDetailMatchClick(pkflMatch), icon: const Icon(Icons.summarize), enabled: true, text: "Detail zápasu"),
+                  ),
+                  SizedBox(
+                    width: width / 6 - insidePadding*4/6,
                     child: EnabledIconButton(
                       onPressed: () => widget.onCommonMatchesClick(pkflMatch), icon: const Icon(Icons.compare), enabled: true,text: "Vzájemné zápasy"),
                   ),

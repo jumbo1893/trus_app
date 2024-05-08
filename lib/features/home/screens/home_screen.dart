@@ -44,6 +44,14 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     ref.read(screenControllerProvider).changeFragment(MatchDetailScreen.id);
   }
 
+  void setScreenToMatchDetail(PkflMatchApiModel pkflMatchApiModel) {
+    ref
+        .read(screenControllerProvider)
+        .setPreferredScreen(MatchDetailOptions.pkflDetail);
+    ref.read(screenControllerProvider).setPkflMatch(pkflMatchApiModel);
+    ref.read(screenControllerProvider).changeFragment(MatchDetailScreen.id);
+  }
+
   void setScreenToEditMatch(int matchId) {
     ref
         .read(screenControllerProvider)
@@ -143,6 +151,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                               {setScreenAddFines(pkflMatch.matchIdList[0])},
                           onCommonMatchesClick: (pkflMatch) =>
                               {setScreenToCommonMatches(pkflMatch)},
+                          onButtonDetailMatchClick:  (pkflMatch) =>
+                          {setScreenToMatchDetail(pkflMatch)},
                         ),
                         PkflMatchBox(
                           pkflMatchFuture: ref
@@ -160,6 +170,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                               {setScreenAddFines(pkflMatch.matchIdList[0])},
                           onCommonMatchesClick: (pkflMatch) =>
                               {setScreenToCommonMatches(pkflMatch)},
+                          onButtonDetailMatchClick:  (pkflMatch) =>
+                          {setScreenToMatchDetail(pkflMatch)},
                         ),
                         const SizedBox(
                           height: 15,
