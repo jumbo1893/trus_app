@@ -82,6 +82,7 @@ class _StatsScreenState extends ConsumerState<StatsScreen> {
                           overallStream: widget.controller.overAllStatsStream(),
                           overAllStatsInit: () =>
                               widget.controller.initOverallStats(),
+                          includeOverAllStream: true,
                         ),
                       )
                     ],

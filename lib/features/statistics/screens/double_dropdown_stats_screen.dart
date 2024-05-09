@@ -67,8 +67,9 @@ class _DoubleDropdownStatsScreenState extends ConsumerState<DoubleDropdownStatsS
                           },
                           context: context,
                           rebuildStream: ref.read(doubleDropdownStatsControllerProvider).listStream(),
-                          overallStream: ref.read(doubleDropdownStatsControllerProvider).overAllStatsStream(),
-                          overAllStatsInit: () =>  ref.read(doubleDropdownStatsControllerProvider).initOverallStats(),
+                          overallStream: null,
+                          overAllStatsInit: null,
+                          includeOverAllStream: false,
 
                         ),
                       )

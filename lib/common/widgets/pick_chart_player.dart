@@ -38,7 +38,7 @@ class _PickChartPlayerState extends State<PickChartPlayer> {
                   Icons.warning, color: orangeColor, size: 40,
                 ),
                 Flexible(
-                  child: Text("Pro zobrazení grafu vyber hráče/fanouška pod kterým piješ",
+                  child: Text("Pro zobrazení svého grafu vyber hráče/fanouška pod kterým piješ. Do té doby zde budeš mít graf největších borců",
                     textAlign: TextAlign.center,
                   ),
                 ),

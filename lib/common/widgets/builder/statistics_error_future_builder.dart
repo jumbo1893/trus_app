@@ -11,10 +11,11 @@ import '../loader.dart';
 class StatisticsErrorFutureBuilder<T> extends ConsumerWidget {
   final Future<List<ModelToString>> future;
   final Stream<List<ModelToString>> rebuildStream;
-  final Stream<String> overallStream;
+  final Stream<String>? overallStream;
   final Function(ModelToString model) onPressed;
   final BuildContext context;
-  final VoidCallback overAllStatsInit;
+  final VoidCallback? overAllStatsInit;
+  final bool includeOverAllStream;
 
   const StatisticsErrorFutureBuilder({
     Key? key,
@@ -24,6 +25,7 @@ class StatisticsErrorFutureBuilder<T> extends ConsumerWidget {
     required this.overallStream,
     required this.rebuildStream,
     required this.overAllStatsInit,
+    required this.includeOverAllStream,
   }) : super(key: key);
 
   @override
@@ -60,54 +62,58 @@ class StatisticsErrorFutureBuilder<T> extends ConsumerWidget {
               }
               return Column(
                 children: [
-                  StreamBuilder<String>(
-                      stream: overallStream,
-                      builder: (context, overallSnapshot) {
-                        if (overallSnapshot.hasError) {
-                          Future.delayed(
-                              Duration.zero,
-                              () => showErrorDialog(
-                                  overallSnapshot.error!.toString(),
-                                  () => ref
-                                      .read(screenControllerProvider)
-                                      .changeFragment(HomeScreen.id),
-                                  context));
-                          return const Loader();
-                        } else if (overallSnapshot.connectionState ==
-                            ConnectionState.waiting) {
-                          overAllStatsInit();
-                          return const Loader();
-                        }
-                        return InkWell(
-                          child: Padding(
-                            padding: const EdgeInsets.only(
-                                bottom: 8.0, left: 8, right: 8),
-                            child: Container(
-                              decoration: const BoxDecoration(
-                                  border: Border(
-                                      bottom: BorderSide(
-                                color: Colors.grey,
-                              ))),
-                              child: ListTile(
-                                title: const Padding(
-                                  padding: EdgeInsets.only(bottom: 16),
-                                  child: Text(
-                                    "Celkem:",
-                                    style: TextStyle(
-                                        fontWeight: FontWeight.bold,
-                                        fontSize: 18),
+                  Builder(
+                    builder: (context) {
+                      return includeOverAllStream ? StreamBuilder<String>(
+                          stream: overallStream,
+                          builder: (context, overallSnapshot) {
+                            if (overallSnapshot.hasError) {
+                              Future.delayed(
+                                  Duration.zero,
+                                  () => showErrorDialog(
+                                      overallSnapshot.error!.toString(),
+                                      () => ref
+                                          .read(screenControllerProvider)
+                                          .changeFragment(HomeScreen.id),
+                                      context));
+                              return const Loader();
+                            } else if (overallSnapshot.connectionState ==
+                                ConnectionState.waiting) {
+                              overAllStatsInit!();
+                              return const Loader();
+                            }
+                            return InkWell(
+                              child: Padding(
+                                padding: const EdgeInsets.only(
+                                    bottom: 8.0, left: 8, right: 8),
+                                child: Container(
+                                  decoration: const BoxDecoration(
+                                      border: Border(
+                                          bottom: BorderSide(
+                                    color: Colors.grey,
+                                  ))),
+                                  child: ListTile(
+                                    title: const Padding(
+                                      padding: EdgeInsets.only(bottom: 16),
+                                      child: Text(
+                                        "Celkem:",
+                                        style: TextStyle(
+                                            fontWeight: FontWeight.bold,
+                                            fontSize: 18),
+                                      ),
+                                    ),
+                                    subtitle: Text(
+                                      overallSnapshot.data!,
+                                      style: const TextStyle(
+                                          color: listviewSubtitleColor),
+                                    ),
                                   ),
                                 ),
-                                subtitle: Text(
-                                  overallSnapshot.data!,
-                                  style: const TextStyle(
-                                      color: listviewSubtitleColor),
-                                ),
                               ),
-                            ),
-                          ),
-                        );
-                      }),
+                            );
+                          }) : Container();
+                    }
+                  ),
                   Expanded(
                     child: ListView.builder(
                       shrinkWrap: true,

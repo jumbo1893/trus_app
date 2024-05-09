@@ -7,9 +7,8 @@ import '../../../models/api/home/chart.dart';
 import 'legend.dart';
 
 class HomeChart extends StatefulWidget {
-  final Chart chart;
   final List<Chart> charts;
-  const HomeChart({super.key, required this.chart, required this.charts});
+  const HomeChart({super.key, required this.charts});
 
   @override
   State<HomeChart> createState() => _HomeChartState();
@@ -145,12 +144,45 @@ class _HomeChartState extends State<HomeChart> {
       fontWeight: FontWeight.bold,
       fontSize: 12,
     );
-    Widget text = Text(widget.chart.coordinates[value.toInt()].matchInitials, style: style,);
+    Widget text;
+    if(widget.charts.isNotEmpty) {
+      text = Text(widget.charts[0].coordinates[value.toInt()].matchInitials, style: style,);
+    }
+    else {
+      text = const Text("");
+    }
 
     return SideTitleWidget(
       axisSide: meta.axisSide,
       child: text,
     );
+  }
+
+  List<int> findHorizontalInterval() {
+    if(widget.charts.isNotEmpty) {
+      return findChartWithTheHighestBeerMaximum().beerLabels;
+    }
+    return [0,5];
+  }
+
+  double findMaxX() {
+    if(widget.charts.isNotEmpty) {
+      return (findChartWithTheHighestBeerMaximum().coordinates.length-1).toDouble();
+    }
+    return 4;
+  }
+
+  double findMaxY() {
+    if(widget.charts.isNotEmpty) {
+      return findChartWithTheHighestBeerMaximum().beerMaximum.toDouble();
+    }
+    return 10;
+  }
+
+  Chart findChartWithTheHighestBeerMaximum() {
+    List<Chart> chartList = [];
+    chartList.addAll(widget.charts);
+    return chartList.reduce((currentChart, nextChart) => currentChart.beerMaximum > nextChart.beerMaximum ? currentChart : nextChart);
   }
 
   LineChartData beerData(bool beer) {
@@ -174,7 +206,7 @@ class _HomeChartState extends State<HomeChart> {
       gridData: FlGridData(
         show: true,
         drawVerticalLine: true,
-        horizontalInterval: calculateHorizontalInterval(widget.chart.beerLabels),
+        horizontalInterval: calculateHorizontalInterval(findHorizontalInterval()),
         verticalInterval: 1,
         getDrawingHorizontalLine: (value) {
           return FlLine(
@@ -219,9 +251,9 @@ class _HomeChartState extends State<HomeChart> {
         border: Border.all(color:  Colors.black),
       ),
       minX: 0,
-      maxX: (widget.chart.coordinates.length-1).toDouble(),
+      maxX: findMaxX(),
       minY: 0,
-      maxY: widget.chart.beerMaximum.toDouble(),
+      maxY: findMaxY(),
       lineBarsData: getBeerCharData(beer)
     );
   }
@@ -242,7 +274,11 @@ class _HomeChartState extends State<HomeChart> {
     ], [
       Colors.green,
       Colors.greenAccent,
-    ]
+    ],
+      [
+        orangeColor,
+        Colors.yellow,
+      ]
     ];
     if(chart.mainPlayer) {
       return [
@@ -277,97 +313,5 @@ class _HomeChartState extends State<HomeChart> {
       lineCharBarDataList.add(lineChartBarData);
     }
     return lineCharBarDataList;
-  }
-
-  LineChartData fineData() {
-    return LineChartData(
-      lineTouchData: LineTouchData(
-          touchTooltipData: LineTouchTooltipData(
-              getTooltipItems: (value) {
-                return value
-                    .map((e) => LineTooltipItem(
-                    "Pokuty: ${e.y.toInt()} Kč",
-                    const TextStyle(
-                      fontWeight: FontWeight.bold,
-                      fontSize: 14,)))
-                    .toList();
-              }
-          )
-      ),
-      gridData: FlGridData(
-        show: true,
-        drawVerticalLine: true,
-        horizontalInterval: calculateHorizontalInterval(
-            widget.chart.fineLabels),
-        verticalInterval: 1,
-        getDrawingHorizontalLine: (value) {
-          return FlLine(
-            color: orangeColor,
-            strokeWidth: 1,
-          );
-        },
-        getDrawingVerticalLine: (value) {
-          return FlLine(
-            color: Colors.orange,
-            strokeWidth: 1,
-          );
-        },
-      ),
-      titlesData: FlTitlesData(
-        show: true,
-        rightTitles: AxisTitles(
-          sideTitles: SideTitles(showTitles: false),
-        ),
-        topTitles: AxisTitles(
-          sideTitles: SideTitles(showTitles: false),
-        ),
-        bottomTitles: AxisTitles(
-          sideTitles: SideTitles(
-            showTitles: true,
-            reservedSize: 30,
-            interval: 1,
-            getTitlesWidget: bottomTitleWidgets,
-          ),
-        ),
-        leftTitles: AxisTitles(
-          sideTitles: SideTitles(
-            showTitles: true,
-            interval: null,
-            getTitlesWidget: null,
-            reservedSize: 42,
-          ),
-        ),
-      ),
-      borderData: FlBorderData(
-        show: true,
-        border: Border.all(color: const Color(0xff37434d)),
-      ),
-      minX: 0,
-      maxX: (widget.chart.coordinates.length - 1).toDouble(),
-      minY: 0,
-      maxY: widget.chart.fineMaximum.toDouble(),
-      lineBarsData: [
-        LineChartBarData(
-          spots: getFlSpots(widget.chart.coordinates, false, false, true),
-          isCurved: true,
-          gradient: LinearGradient(
-            colors: gradientBeerColors,
-          ),
-          barWidth: 4,
-          isStrokeCapRound: true,
-          dotData: FlDotData(
-            show: false,
-          ),
-          belowBarData: BarAreaData(
-            show: true,
-            gradient: LinearGradient(
-              colors: gradientColors
-                  .map((color) => color.withOpacity(0.3))
-                  .toList(),
-            ),
-          ),
-        )
-      ],
-    );
   }
 }

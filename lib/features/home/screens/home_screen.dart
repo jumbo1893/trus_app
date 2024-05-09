@@ -24,10 +24,9 @@ import '../controller/home_controller.dart';
 class HomeScreen extends CustomConsumerStatefulWidget {
   static const String id = "home-screen";
 
-  const HomeScreen(
-      {Key? key,
-      })
-      : super(key: key, title: "Trusí appka", name: id);
+  const HomeScreen({
+    Key? key,
+  }) : super(key: key, title: "Trusí appka", name: id);
 
   @override
   ConsumerState<HomeScreen> createState() => _HomeScreenState();
@@ -104,9 +103,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         },
         child: FutureBuilder<HomeSetup?>(
             future: executeApi<HomeSetup?>(() async {
-              return await ref
-                  .read(homeControllerProvider)
-                  .setupHome(ref.read(screenControllerProvider).isChangedMatch());
+              return await ref.read(homeControllerProvider).setupHome(
+                  ref.read(screenControllerProvider).isChangedMatch());
             }, () => setState(() {}), context, false),
             builder: (context, snapshot) {
               if (snapshot.connectionState == ConnectionState.waiting ||
@@ -151,8 +149,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                               {setScreenAddFines(pkflMatch.matchIdList[0])},
                           onCommonMatchesClick: (pkflMatch) =>
                               {setScreenToCommonMatches(pkflMatch)},
-                          onButtonDetailMatchClick:  (pkflMatch) =>
-                          {setScreenToMatchDetail(pkflMatch)},
+                          onButtonDetailMatchClick: (pkflMatch) =>
+                              {setScreenToMatchDetail(pkflMatch)},
                         ),
                         PkflMatchBox(
                           pkflMatchFuture: ref
@@ -170,8 +168,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                               {setScreenAddFines(pkflMatch.matchIdList[0])},
                           onCommonMatchesClick: (pkflMatch) =>
                               {setScreenToCommonMatches(pkflMatch)},
-                          onButtonDetailMatchClick:  (pkflMatch) =>
-                          {setScreenToMatchDetail(pkflMatch)},
+                          onButtonDetailMatchClick: (pkflMatch) =>
+                              {setScreenToMatchDetail(pkflMatch)},
                         ),
                         const SizedBox(
                           height: 15,
@@ -201,10 +199,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                         ),
                         homeSetup.chart != null
                             ? (homeSetup.chart!.coordinates.isNotEmpty
-                                ? HomeChart(
-                                    chart: homeSetup.chart!,
-                                    charts: homeSetup.charts!,
-                                  )
+                                ? Container()
                                 : Container())
                             : PickChartPlayer(
                                 size: size,
@@ -218,6 +213,11 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                                               .playerId = player.id!;
                                         })),
                               ),
+                        (homeSetup.charts != null
+                            ? HomeChart(
+                                charts: homeSetup.charts!,
+                              )
+                            : Container()),
                         RandomFactBox(
                           padding: padding,
                           randomFactStream: ref
