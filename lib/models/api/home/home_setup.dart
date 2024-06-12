@@ -25,7 +25,9 @@ class HomeSetup {
       nextBirthday: json["nextBirthday"] ?? "",
       randomFacts: (json['randomFacts'] as List).cast<String>(),
       chart: json["chart"] != null ? Chart.fromJson(json["chart"]) : null,
-      nextAndLastPkflMatch: List<PkflMatchApiModel>.from((json['nextAndLastPkflMatch'] as List<dynamic>).map((fine) => PkflMatchApiModel.fromJson(fine))),
+      nextAndLastPkflMatch: (json['nextAndLastPkflMatch'] as List<dynamic>)
+          .map((item) => item != null ? PkflMatchApiModel.fromJson(item) : null)
+          .toList(),
       charts: List<Chart>.from((json['charts'] as List<dynamic>).map((fine) => Chart.fromJson(fine))),
     );
   }
