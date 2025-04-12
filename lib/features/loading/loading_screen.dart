@@ -30,8 +30,8 @@ class LoadingScreen extends StatelessWidget {
             stream: loadingFlag,
             builder: (context, snapshot) {
               if (snapshot.connectionState == ConnectionState.waiting || (snapshot.hasData && snapshot.data!)) {
-                return Column(
-                  children: const [
+                return const Column(
+                  children: [
                     CustomText(text: "Načítám...", fontSize: 25,),
                     Loader(),
                   ],

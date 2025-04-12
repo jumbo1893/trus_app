@@ -14,7 +14,6 @@ import 'package:trus_app/features/mixin/view_controller_mixin.dart';
 import 'package:trus_app/features/user/widget/i_user_key.dart';
 import 'package:trus_app/models/api/auth/user_api_model.dart';
 import 'package:trus_app/models/api/auth/user_team_role_api_model.dart';
-import 'package:trus_app/models/api/football/football_player_api_model.dart';
 
 import '../../../common/repository/exception/internal_snackbar_exception.dart';
 import '../../../common/utils/field_validator.dart';
@@ -44,16 +43,6 @@ class UserController
     required this.authApiService,
     required this.ref,
   });
-
-  /*void loadEditPlayer() {
-    initDropdown(
-        playerSetup.primaryFootballPlayer, playerSetup.footballPlayerList, footballerKey());
-    initStringFields(playerSetup.player!.name, nameKey());
-    originalPlayerName = playerSetup.player!.name;
-    initDateFields(playerSetup.player!.birthday, dateKey());
-    initBooleanFields(playerSetup.player!.active, activeKey());
-    initBooleanFields(playerSetup.player!.fan, fanKey());
-  }*/
 
   void loadViewUser() {
     int appTeamId = ref.read(globalVariablesControllerProvider).appTeam!.id;
@@ -88,14 +77,6 @@ class UserController
     userApiModel = await _setupUser();
   }
 
-  /*Future<void> setupEditPlayer(int id) async {
-    playerSetup = await _setupPlayer(id);
-  }*/
-
-  /*Future<void> editPlayer() async {
-    Future.delayed(Duration.zero, () => loadEditPlayer());
-  }*/
-
   Future<void> viewUser() async {
     Future.delayed(Duration.zero, () => loadViewUser());
   }
@@ -112,14 +93,6 @@ class UserController
       throw Exception("Uživatel nebyl načten.");
     }
     return user;
-  }
-
-  FootballPlayerApiModel? _getPickedFootballer() {
-    /*FootballPlayerApiModel footballer = dropdownValues[footballerKey()] as FootballPlayerApiModel;
-    if(footballer.id! == 0) {
-      return null;
-    }
-    return footballer;*/
   }
 
   @override
@@ -153,19 +126,6 @@ class UserController
 
   @override
   Future<String?> editModel(int id) async {
-    /*if (validateFields()) {
-      PlayerApiModel response = await playerApiService.editPlayer(
-          PlayerApiModel(
-              id: id,
-              name: stringValues[nameKey()]!,
-              birthday: dateValues[dateKey()]!,
-              fan: boolValues[fanKey()]!,
-              active: boolValues[activeKey()]!,
-              footballPlayer: _getPickedFootballer()),
-          id);
-
-      return response.toStringForEdit(originalPlayerName);
-    }*/
     return null;
   }
 

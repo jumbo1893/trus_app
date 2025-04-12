@@ -37,6 +37,7 @@ class LeagueApiModel implements JsonAndHttpConverter, ModelToString  {
         tableTeamIdList = [],
         currentLeague = false;
 
+  @override
   Map<String, dynamic> toJson() {
     return {
       "id": id,

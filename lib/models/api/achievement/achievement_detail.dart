@@ -111,7 +111,7 @@ class AchievementDetail implements JsonAndHttpConverter, ModelToString {
 
   @override
   String toStringForListView() {
-    return "splněno u ${getSuccessRate} hráčů, $accomplishedCount/$totalCount";
+    return "splněno u $getSuccessRate hráčů, $accomplishedCount/$totalCount";
   }
 
   @override

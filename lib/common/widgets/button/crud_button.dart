@@ -46,10 +46,10 @@ class _CrudButtonState extends ConsumerState<CrudButton> {
       child: ElevatedButton(
         onPressed: _isLoading ? null : onPressed,
         style: ButtonStyle(
-          backgroundColor: MaterialStateProperty.all<Color>(Colors.orange),
+          backgroundColor: WidgetStateProperty.all<Color>(Colors.orange),
           minimumSize:
-              MaterialStateProperty.all(const Size(double.infinity, 50)),
-          shape: MaterialStateProperty.all<RoundedRectangleBorder>(
+              WidgetStateProperty.all(const Size(double.infinity, 50)),
+          shape: WidgetStateProperty.all<RoundedRectangleBorder>(
             RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(18.0),
               side: const BorderSide(color: Colors.orange),

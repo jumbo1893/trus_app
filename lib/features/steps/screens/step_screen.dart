@@ -128,20 +128,20 @@ class _StepScreenState extends ConsumerState<StepScreen> {
     double distance = sqrt(x * x + y * y + z * z);
     getPreviousValue();
     double mode = distance - previousDistance;
-    setprefData(distance);
+    setPrefData(distance);
     return mode;
   }
 
   void getPreviousValue() async {
-    SharedPreferences _pref = await SharedPreferences.getInstance();
+    SharedPreferences pref = await SharedPreferences.getInstance();
     setState(() {
-      previousDistance = _pref.getDouble("previousDistance") ?? 0;
+      previousDistance = pref.getDouble("previousDistance") ?? 0;
     });
   }
 
-  void setprefData(double predistance) async {
-    SharedPreferences _pref = await SharedPreferences.getInstance();
-    _pref.setDouble("previousDistance", predistance);
+  void setPrefData(double predistance) async {
+    SharedPreferences pref = await SharedPreferences.getInstance();
+    pref.setDouble("previousDistance", predistance);
   }
 
   @override
@@ -158,9 +158,9 @@ class _StepScreenState extends ConsumerState<StepScreen> {
               x = 1;
               y = 1;
               z = 1;
-              print("x" + x.toString());
-              print("y" + y.toString());
-              print("z" + z.toString());
+              print("x$x");
+              print("y$y");
+              print("z$z");
               exactDistance = calculateMagnitude(x, y, z);
               if (exactDistance > 6) {
                 steps++;
@@ -173,11 +173,11 @@ class _StepScreenState extends ConsumerState<StepScreen> {
                 children: <Widget>[
                   Text(
                     "Steps You Have Hove" + steps.toString(),
-                    style: TextStyle(fontSize: 30),
+                    style: const TextStyle(fontSize: 30),
                   ),
                   Text(
                     _steps,
-                    style: TextStyle(fontSize: 60),
+                    style: const TextStyle(fontSize: 60),
                   ),
                 ],
               ),

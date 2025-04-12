@@ -48,7 +48,7 @@ class _ListviewAddModel extends State<ListviewAddModel> {
   @override
   Widget build(BuildContext context) {
     textEditingController.text = widget.addToString.numberToString(widget.goal);
-    final size = MediaQueryData.fromWindow(WidgetsBinding.instance.window).size;
+    final size = MediaQueryData.fromView(WidgetsBinding.instance.window).size;
     return Row(
       children: [
         SizedBox(

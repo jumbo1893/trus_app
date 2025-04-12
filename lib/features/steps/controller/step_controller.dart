@@ -15,7 +15,7 @@ final stepControllerProvider = Provider((ref) {
 
 class StepController implements CrudOperations, ReadOperations {
   final StepApiService stepApiService;
-  final ProviderRef ref;
+  final Ref ref;
   final stepController = StreamController<int>.broadcast();
   int stepNumber = 0;
 

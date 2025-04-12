@@ -11,7 +11,7 @@ import '../stats_screen_enum.dart';
 
 abstract class StatsController {
   final SeasonApiService seasonApiService;
-  final ProviderRef ref;
+  final Ref ref;
 
   StatsController({
     required this.seasonApiService,

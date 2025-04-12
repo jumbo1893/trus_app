@@ -49,10 +49,4 @@ class Stats implements JsonAndHttpConverter, DropdownItem {
 
   @override
   int get hashCode => dropdownText.hashCode ^ playerStats.hashCode;
-
-  @override
-  DropdownItem dummy() {
-    // TODO: implement dummy
-    throw UnimplementedError();
-  }
 }

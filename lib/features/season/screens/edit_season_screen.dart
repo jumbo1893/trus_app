@@ -32,7 +32,7 @@ class _EditSeasonScreenState extends ConsumerState<EditSeasonScreen> {
         .isScreenFocused(EditSeasonScreen.id)) {
       const double padding = 8.0;
       final size =
-          MediaQueryData.fromWindow(WidgetsBinding.instance.window).size;
+          MediaQueryData.fromView(WidgetsBinding.instance.window).size;
       return ColumnFutureBuilder(
         loadModelFuture: ref.watch(seasonControllerProvider).season(season),
         columns: [

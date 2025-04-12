@@ -29,7 +29,6 @@ class _EditMatchScreenState extends ConsumerState<EditMatchScreen> {
   @override
   Widget build(BuildContext context) {
     if (widget.isFocused) {
-      const double padding = 8.0;
       final size = MediaQueryData.fromView(WidgetsBinding.instance.window).size;
       return ColumnFutureBuilder(
         loadModelFuture: ref.watch(matchControllerProvider).editMatch(),

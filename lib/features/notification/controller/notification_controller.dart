@@ -12,7 +12,7 @@ final notificationControllerProvider = Provider((ref) {
 
 class NotificationController {
   final NotificationApiService notificationApiService;
-  final ProviderRef ref;
+  final Ref ref;
   final notificationsController = StreamController<List<NotificationApiModel>>.broadcast();
   final showNextButtonController = StreamController<bool>.broadcast();
   final showPreviousButtonController = StreamController<bool>.broadcast();

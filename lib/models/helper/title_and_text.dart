@@ -43,7 +43,7 @@ class TitleAndText implements ModelToString {
 
   @override
   String toStringForConfirmationDelete() {
-    return "";;
+    return "";
   }
 
   @override

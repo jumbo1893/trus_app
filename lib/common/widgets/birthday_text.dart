@@ -29,8 +29,6 @@ class _BirthdayTextState extends State<BirthdayText> {
   @override
   Widget build(BuildContext context) {
     final size = MediaQuery.of(context).size;
-    final double width = size.width - widget.padding * 2;
-    const double insidePadding = 3.0;
     return StreamBuilder<String>(
         stream: widget.viewControllerMixin.viewValue(widget.hashKey),
         builder: (context, snapshot) {

@@ -336,13 +336,6 @@ class FootballMatchApiModel implements JsonAndHttpConverter, ModelToString {
     return text;
   }
 
-  bool _isHomeTeamToShow(int teamId) {
-    if(awayTeam != null && teamId == awayTeam!.id) {
-      return false;
-    }
-    return true;
-  }
-
   String toStringWithTeamsDateAndResult() {
     return "${bothTeamsToString()} ${simpleResultToString()}, ${formatDateForFrontend(date)}";
   }

@@ -29,7 +29,6 @@ class _AddMatchScreenState extends ConsumerState<AddMatchScreen> {
   @override
   Widget build(BuildContext context) {
     if (ref.read(screenControllerProvider).isScreenFocused(AddMatchScreen.id)) {
-      const double padding = 8.0;
       final size = MediaQueryData.fromView(WidgetsBinding.instance.window).size;
       return FutureBuilder<void>(
           future: ref.watch(matchControllerProvider).setupNewMatch(),

@@ -22,7 +22,7 @@ final matchScreenControllerProvider = Provider((ref) {
 class MatchScreenController implements ReadOperations {
   final MatchApiService matchApiService;
   final SeasonApiService seasonApiService;
-  final ProviderRef ref;
+  final Ref ref;
   final seasonListController =
       StreamController<List<SeasonApiModel>>.broadcast();
   final pickedSeasonController =

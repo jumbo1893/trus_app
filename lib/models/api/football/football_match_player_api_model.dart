@@ -60,6 +60,7 @@ class FootballMatchPlayerApiModel implements JsonAndHttpConverter, ModelToString
     );
   }
 
+  @override
   Map<String, dynamic> toJson() {
     return {
       "id": id,

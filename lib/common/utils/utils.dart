@@ -27,8 +27,8 @@ void showSnackBar({required BuildContext context, required String content}) {
 
 void showLoaderSnackBar({required BuildContext context}) {
   ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-      content: Row(
-        children: const [CircularProgressIndicator(),
+      content: const Row(
+        children: [CircularProgressIndicator(),
           SizedBox(height: 10,),
           Text(
             "načítám",

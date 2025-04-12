@@ -32,7 +32,7 @@ final beerControllerProvider = Provider((ref) {
 class BeerController implements MatchReader, StreamAddController, ConfirmOperations {
   final SeasonApiService seasonApiService;
   final BeerApiService beerApiRepository;
-  final ProviderRef ref;
+  final Ref ref;
   final seasonListController =
   StreamController<List<SeasonApiModel>>.broadcast();
   final pickedSeasonController =

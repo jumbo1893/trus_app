@@ -27,7 +27,7 @@ final finePlayerController = Provider((ref) {
 class FinePlayerController implements FutureAddController, ConfirmOperations {
   final FineMatchApiService fineMatchApiService;
   final FineApiService fineApiService;
-  final ProviderRef ref;
+  final Ref ref;
   List<ReceivedFineApiModel> receivedFines = [];
   late int playerId;
   late int matchId;

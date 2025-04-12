@@ -73,9 +73,9 @@ class _MatchDetailScreenState extends ConsumerState<MatchDetailScreen>
   List<Widget> getWidgets(List<MatchDetailOptions> matchOptionList) {
     List<Widget> widgets = [];
     if (matchOptionList.contains(MatchDetailOptions.editMatch)) {
-      widgets.add(EditMatchScreen(
+      widgets.add(const EditMatchScreen(
           isFocused:
-              true //isFocused(MatchDetailOptions.editMatch, matchOptionList),
+              true
           ));
     }
     if (matchOptionList.contains(MatchDetailOptions.footballMatchDetail)) {

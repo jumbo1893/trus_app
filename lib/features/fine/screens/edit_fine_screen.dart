@@ -30,7 +30,7 @@ class _EditFineScreenState extends ConsumerState<EditFineScreen> {
       FineApiModel fine = ref.watch(screenControllerProvider).fineModel;
       const double padding = 8.0;
       final size =
-          MediaQueryData.fromWindow(WidgetsBinding.instance.window).size;
+          MediaQueryData.fromView(WidgetsBinding.instance.window).size;
       return ColumnFutureBuilder(
         loadModelFuture: ref.watch(fineControllerProvider).fine(fine),
         columns: [
