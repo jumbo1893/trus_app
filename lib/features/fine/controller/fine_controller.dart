@@ -1,6 +1,8 @@
 import 'dart:async';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:trus_app/features/mixin/boolean_controller_mixin.dart';
+import 'package:trus_app/features/mixin/string_controller_mixin.dart';
 
 import '../../../common/utils/field_validator.dart';
 import '../../../models/api/fine_api_model.dart';
@@ -15,19 +17,15 @@ final fineControllerProvider = Provider((ref) {
   return FineController(fineApiService: fineApiService, ref: ref);
 });
 
-class FineController implements CrudOperations, ReadOperations {
+class FineController with StringControllerMixin, BooleanControllerMixin implements CrudOperations, ReadOperations {
   final FineApiService fineApiService;
-  final ProviderRef ref;
-  final nameController = StreamController<String>.broadcast();
-  final amountController = StreamController<String>.broadcast();
-  final inactiveController = StreamController<bool>.broadcast();
-  final nameErrorTextController = StreamController<String>.broadcast();
-  final amountErrorTextController = StreamController<String>.broadcast();
+  final Ref ref;
   final loadingController = StreamController<bool>.broadcast();
   String originalFineName = "";
-  String fineName = "";
-  String fineAmount = "0";
-  bool fineInactive = false;
+
+  String nameKey = "name";
+  String amountKey = "amount";
+  String inactiveKey = "inactive";
 
   FineController({
     required this.fineApiService,
@@ -35,35 +33,15 @@ class FineController implements CrudOperations, ReadOperations {
   });
 
   void loadFine(FineApiModel fine) {
-    setEditControllers(fine);
-    resetErrorTextControllers();
-    setFieldsToPlayer(fine);
+    initStringFields(fine.name, nameKey);
+    initStringFields(fine.amount.toString(), amountKey);
+    initBooleanFields(fine.inactive, inactiveKey);
     originalFineName = fine.name;
   }
 
   void loadNewFine() {
-    nameController.add("");
-    amountController.add("0");
-    resetErrorTextControllers();
-    fineName = "";
-    fineAmount = "0";
-  }
-
-  void resetErrorTextControllers() {
-    nameErrorTextController.add("");
-    amountErrorTextController.add("");
-  }
-
-  void setFieldsToPlayer(FineApiModel fine) {
-    fineName = fine.name;
-    fineAmount = fine.amount.toString();
-    fineInactive = fine.inactive;
-  }
-
-  void setEditControllers(FineApiModel fine) {
-    nameController.add(fine.name);
-    amountController.add(fine.amount.toString());
-    inactiveController.add(fine.inactive);
+    initStringFields("", nameKey);
+    initStringFields("0", amountKey);
   }
 
   Future<void> fine(FineApiModel fine) async {
@@ -82,46 +60,11 @@ class FineController implements CrudOperations, ReadOperations {
     return loadingController.stream;
   }
 
-  Stream<String> name() {
-    return nameController.stream;
-  }
-
-  Stream<bool> inactive() {
-    return inactiveController.stream;
-  }
-
-  Stream<String> nameErrorText() {
-    return nameErrorTextController.stream;
-  }
-
-  Stream<String> amountErrorText() {
-    return amountErrorTextController.stream;
-  }
-
-  Stream<String> amount() {
-    return amountController.stream;
-  }
-
-  void setName(String name) {
-    nameController.add(name);
-    fineName = name;
-  }
-
-  void setAmount(String amount) {
-    amountController.add(amount);
-    fineAmount = amount;
-  }
-
-  void setInactive(bool inactive) {
-    inactiveController.add(inactive);
-    fineInactive = inactive;
-  }
-
   bool validateFields() {
-    String errorText = validateEmptyField(fineName.trim());
-    String amountErrorText = validateAmountField(fineAmount);
-    nameErrorTextController.add(errorText);
-    amountErrorTextController.add(amountErrorText);
+    String errorText = validateEmptyField(stringValues[nameKey]!.trim());
+    String amountErrorText = validateAmountField(stringValues[amountKey]!.trim());
+    stringErrorTextControllers[nameKey]!.add(errorText);
+    stringErrorTextControllers[amountKey]!.add(amountErrorText);
     return (errorText.isEmpty && amountErrorText.isEmpty);
   }
 
@@ -130,7 +73,7 @@ class FineController implements CrudOperations, ReadOperations {
     loadingController.add(true);
     if(validateFields()) {
       return await fineApiService.addFine(
-          FineApiModel(name: fineName, amount: int.parse(fineAmount), inactive: false));
+          FineApiModel(name: stringValues[nameKey]!, amount: int.parse(stringValues[amountKey]!.trim()), inactive: false));
     }
     return null;
   }
@@ -145,7 +88,7 @@ class FineController implements CrudOperations, ReadOperations {
   Future<String?> editModel(int id) async {
     if(validateFields()) {
       FineApiModel response = await fineApiService.editFine(FineApiModel(id: id,
-          name: fineName, amount: int.parse(fineAmount), inactive: fineInactive), id);
+          name: stringValues[nameKey]!, amount: int.parse(stringValues[amountKey]!.trim()), inactive: boolValues[inactiveKey]!), id);
 
       return response.toStringForEdit(originalFineName);
     }

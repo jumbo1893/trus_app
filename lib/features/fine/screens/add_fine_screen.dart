@@ -4,7 +4,7 @@ import 'package:trus_app/features/fine/screens/fine_screen.dart';
 
 import '../../../common/widgets/builder/column_future_builder.dart';
 import '../../../common/widgets/button/crud_button.dart';
-import '../../../common/widgets/rows/stream/row_text_field_stream.dart';
+import '../../../common/widgets/rows/crud/row_text_field_stream.dart';
 import '../../../common/widgets/screen/custom_consumer_stateful_widget.dart';
 import '../../../models/enum/crud.dart';
 import '../../main/screen_controller.dart';
@@ -27,7 +27,7 @@ class _AddFineScreenState extends ConsumerState<AddFineScreen> {
     if (ref.read(screenControllerProvider).isScreenFocused(AddFineScreen.id)) {
       const double padding = 8.0;
       final size =
-          MediaQueryData.fromWindow(WidgetsBinding.instance.window).size;
+          MediaQueryData.fromView(WidgetsBinding.instance.window).size;
       return ColumnFutureBuilder(
         loadModelFuture: ref.watch(fineControllerProvider).newFine(),
         columns: [
@@ -37,10 +37,8 @@ class _AddFineScreenState extends ConsumerState<AddFineScreen> {
             labelText: "název",
             textFieldText: "Název pokuty:",
             padding: padding,
-            textStream: ref.watch(fineControllerProvider).name(),
-            errorTextStream: ref.watch(fineControllerProvider).nameErrorText(),
-            onTextChanged: (name) =>
-                {ref.watch(fineControllerProvider).setName(name)},
+            stringControllerMixin: ref.watch(fineControllerProvider),
+            hashKey: ref.read(fineControllerProvider).nameKey,
           ),
           const SizedBox(height: 10),
           RowTextFieldStream(
@@ -49,11 +47,8 @@ class _AddFineScreenState extends ConsumerState<AddFineScreen> {
             labelText: "v Kč",
             textFieldText: "Výše pokuty:",
             padding: padding,
-            textStream: ref.watch(fineControllerProvider).amount(),
-            errorTextStream:
-                ref.watch(fineControllerProvider).amountErrorText(),
-            onTextChanged: (amount) =>
-                {ref.watch(fineControllerProvider).setAmount(amount)},
+            stringControllerMixin: ref.watch(fineControllerProvider),
+            hashKey: ref.read(fineControllerProvider).amountKey,
             number: true,
           ),
           const SizedBox(height: 10),

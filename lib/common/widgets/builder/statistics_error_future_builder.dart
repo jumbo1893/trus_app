@@ -39,7 +39,7 @@ class StatisticsErrorFutureBuilder<T> extends ConsumerWidget {
           Future.delayed(
               Duration.zero,
               () => showErrorDialog(
-                  snapshot.error!.toString(),
+                  snapshot,
                   () => ref
                       .read(screenControllerProvider)
                       .changeFragment(HomeScreen.id),
@@ -53,7 +53,7 @@ class StatisticsErrorFutureBuilder<T> extends ConsumerWidget {
                 Future.delayed(
                     Duration.zero,
                     () => showErrorDialog(
-                        streamSnapshot.error!.toString(),
+                        streamSnapshot,
                         () => ref
                             .read(screenControllerProvider)
                             .changeFragment(HomeScreen.id),
@@ -71,7 +71,7 @@ class StatisticsErrorFutureBuilder<T> extends ConsumerWidget {
                               Future.delayed(
                                   Duration.zero,
                                   () => showErrorDialog(
-                                      overallSnapshot.error!.toString(),
+                                      overallSnapshot,
                                       () => ref
                                           .read(screenControllerProvider)
                                           .changeFragment(HomeScreen.id),

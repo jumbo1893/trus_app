@@ -12,9 +12,11 @@ import '../../../../models/api/receivedfine/received_fine_setup.dart';
 import '../../../general/repository/crud_api_service.dart';
 
 final fineMatchApiServiceProvider =
-    Provider<FineMatchApiService>((ref) => FineMatchApiService());
+    Provider<FineMatchApiService>((ref) => FineMatchApiService(ref));
 
 class FineMatchApiService extends CrudApiService {
+  FineMatchApiService(super.ref);
+
   Future<ReceivedFineSetup> setupFineMatch(int? matchId, int? seasonId) async {
     final queryParameters = {
       'seasonId': intToString(seasonId),

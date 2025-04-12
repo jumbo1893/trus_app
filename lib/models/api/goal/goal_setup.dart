@@ -1,6 +1,6 @@
 import 'package:trus_app/config.dart';
 import 'package:trus_app/models/api/interfaces/json_and_http_converter.dart';
-import 'package:trus_app/models/api/player_api_model.dart';
+import 'package:trus_app/models/api/player/player_api_model.dart';
 
 import '../interfaces/add_to_string.dart';
 

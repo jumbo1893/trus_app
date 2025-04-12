@@ -1,9 +1,9 @@
 import 'dart:math';
+import 'dart:ui' as ui;
 
 import 'package:flutter/material.dart';
 import 'package:trus_app/features/beer/lines/player_lines.dart';
 import 'package:trus_app/features/beer/lines/player_lines_calculator.dart';
-import 'dart:ui' as ui;
 
 import 'new_player_lines_calculator.dart';
 

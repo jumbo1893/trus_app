@@ -1,7 +1,8 @@
 
+import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
 import 'package:trus_app/colors.dart';
-import 'dart:math' as math;
 
 class FloatingFineMatchButton extends StatefulWidget {
   final Function(bool multiselect) onMultiselectClicked;

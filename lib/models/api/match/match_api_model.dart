@@ -1,10 +1,9 @@
 import 'package:trus_app/common/utils/calendar.dart';
 import 'package:trus_app/config.dart';
+import 'package:trus_app/models/api/football/football_match_api_model.dart';
 import 'package:trus_app/models/api/interfaces/json_and_http_converter.dart';
 import 'package:trus_app/models/api/interfaces/model_to_string.dart';
-import 'package:trus_app/models/api/player_api_model.dart';
-
-import '../pkfl/pkfl_match_api_model.dart';
+import 'package:trus_app/models/api/player/player_api_model.dart';
 
 class MatchApiModel implements ModelToString, JsonAndHttpConverter {
   int? id;
@@ -13,7 +12,7 @@ class MatchApiModel implements ModelToString, JsonAndHttpConverter {
   final int seasonId;
   final bool home;
   final List<int> playerIdList;
-  PkflMatchApiModel? pkflMatch;
+  FootballMatchApiModel? footballMatch;
 
   MatchApiModel({
     required this.name,
@@ -22,7 +21,7 @@ class MatchApiModel implements ModelToString, JsonAndHttpConverter {
     required this.home,
     required this.playerIdList,
     this.id,
-    this.pkflMatch
+    this.footballMatch
   });
 
   MatchApiModel.withPlayers({
@@ -32,7 +31,7 @@ class MatchApiModel implements ModelToString, JsonAndHttpConverter {
     required this.home,
     List<PlayerApiModel>? players,
     this.id,
-    this.pkflMatch
+    this.footballMatch
   }) : playerIdList = _getIdsFromPlayers(players ?? []);
 
   static List<int> _getIdsFromPlayers(List<PlayerApiModel> players) {
@@ -61,7 +60,7 @@ class MatchApiModel implements ModelToString, JsonAndHttpConverter {
       "home": home,
       "seasonId": seasonId,
       "playerIdList": playerIdList,
-      "pkflMatch": pkflMatch,
+      "footballMatch": footballMatch?.toJson(),
     };
   }
 
@@ -74,7 +73,7 @@ class MatchApiModel implements ModelToString, JsonAndHttpConverter {
       home: json["home"] ?? false,
       seasonId: json['seasonId'] ?? 0,
       playerIdList: List<int>.from((json['playerIdList'])),
-      pkflMatch: json["pkflMatch"] != null ? PkflMatchApiModel.fromJson(json["pkflMatch"]) : null,
+      footballMatch: json["footballMatch"] != null ? FootballMatchApiModel.fromJson(json["footballMatch"]) : null,
     );
   }
 
@@ -95,7 +94,7 @@ class MatchApiModel implements ModelToString, JsonAndHttpConverter {
 
   @override
   String listViewTitle() {
-    return (home ? "Liščí Trus - $name" : "$name - Liščí Trus") + (pkflMatch!=null ? " ${pkflMatch!.simpleResultToString()}" : "");
+    return "${home ? "Liščí Trus - $name" : "$name - Liščí Trus, "}${footballMatch!=null ? " ${footballMatch!.simpleResultToString()}" : ""}, ${dateTimeToString(date)}";
   }
 
   @override

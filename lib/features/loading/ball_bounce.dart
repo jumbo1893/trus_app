@@ -1,5 +1,6 @@
-import 'package:flutter/animation.dart';
 import 'dart:math' as math;
+
+import 'package:flutter/animation.dart';
 
 class BallBounce extends Curve {
   @override

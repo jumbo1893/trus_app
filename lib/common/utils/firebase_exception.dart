@@ -1,5 +1,5 @@
-import 'package:trus_app/common/utils/utils.dart';
 import 'package:flutter/material.dart';
+import 'package:trus_app/common/utils/utils.dart';
 
 class CustomFirebaseException {
 

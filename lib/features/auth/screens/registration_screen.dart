@@ -1,12 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:trus_app/features/auth/controller/auth_controller.dart';
 import 'package:trus_app/features/auth/screens/user_information_screen.dart';
 
 import '../../../common/utils/field_validator.dart';
 import '../../../common/widgets/custom_button.dart';
 import '../../../common/widgets/custom_text_field.dart';
-import 'package:trus_app/features/auth/controller/auth_controller.dart';
-
 import '../../general/error/api_executor.dart';
 
 class RegistrationScreen extends ConsumerStatefulWidget {

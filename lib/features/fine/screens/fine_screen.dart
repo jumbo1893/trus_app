@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:trus_app/features/fine/screens/add_fine_screen.dart';
 import 'package:trus_app/features/fine/screens/edit_fine_screen.dart';
+
 import '../../../common/widgets/builder/models_error_future_builder.dart';
 import '../../../common/widgets/screen/custom_consumer_widget.dart';
 import '../../../models/api/fine_api_model.dart';

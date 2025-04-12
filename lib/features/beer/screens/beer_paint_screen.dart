@@ -9,7 +9,6 @@ import 'package:trus_app/common/widgets/error.dart';
 import 'package:trus_app/features/beer/controller/beer_controller.dart';
 import 'package:trus_app/features/beer/lines/player_lines.dart';
 
-
 import '../../../colors.dart';
 import '../../../common/widgets/loader.dart';
 import '../lines/new_player_lines_calculator.dart';

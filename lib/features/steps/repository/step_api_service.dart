@@ -5,9 +5,11 @@ import '../../../models/api/step/step_api_model.dart';
 import '../../general/repository/crud_api_service.dart';
 
 final stepApiServiceProvider =
-    Provider<StepApiService>((ref) => StepApiService());
+    Provider<StepApiService>((ref) => StepApiService(ref));
 
 class StepApiService extends CrudApiService {
+  StepApiService(super.ref);
+
   /*Future<List<MatchApiModel>> getMatches() async {
     final decodedBody = await getModels<JsonAndHttpConverter>(matchApi, null);
     return decodedBody.map((model) => model as MatchApiModel).toList();

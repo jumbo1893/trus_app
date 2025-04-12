@@ -1,7 +1,7 @@
+import 'package:dropdown_button2/dropdown_button2.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:trus_app/common/widgets/loader.dart';
-import 'package:dropdown_button2/dropdown_button2.dart';
 
 import '../../../models/api/interfaces/dropdown_item.dart';
 
@@ -11,6 +11,8 @@ class CustomDropdown extends ConsumerStatefulWidget {
   final Stream<DropdownItem> pickedItem;
   final VoidCallback? initData;
   final String hint;
+  final bool enabled;
+
   const CustomDropdown({
     Key? key,
     required this.onItemSelected,
@@ -18,6 +20,7 @@ class CustomDropdown extends ConsumerStatefulWidget {
     required this.pickedItem,
     required this.hint,
     this.initData,
+    this.enabled = true,
   }) : super(key: key);
 
   @override
@@ -25,8 +28,8 @@ class CustomDropdown extends ConsumerStatefulWidget {
 }
 
 class _CustomDropdownState extends ConsumerState<CustomDropdown> {
-
-  List<DropdownMenuItem<DropdownItem>> _addDividersAfterItems(List<DropdownItem> items) {
+  List<DropdownMenuItem<DropdownItem>> _addDividersAfterItems(
+      List<DropdownItem> items) {
     List<DropdownMenuItem<DropdownItem>> menuItems = [];
     for (var item in items) {
       menuItems.addAll(
@@ -76,56 +79,54 @@ class _CustomDropdownState extends ConsumerState<CustomDropdown> {
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
             return const Loader();
-          }
-          else if (snapshot.hasError) {
+          } else if (snapshot.hasError) {
             return Container();
           }
           List<DropdownItem> dropdownItems = snapshot.data!;
           return StreamBuilder<DropdownItem>(
-            stream: widget.pickedItem,
-            builder: (context, snapshot) {
-              if (snapshot.connectionState == ConnectionState.waiting) {
-                if(widget.initData != null) {
-                  widget.initData!();
+              stream: widget.pickedItem,
+              builder: (context, snapshot) {
+                if (snapshot.connectionState == ConnectionState.waiting) {
+                  if (widget.initData != null) {
+                    widget.initData!();
+                  } else {
+                    widget.onItemSelected(dropdownItems[0]);
+                  }
+                  return const Loader();
                 }
-                else {
-                  widget.onItemSelected(dropdownItems[0]);
-                }
-                return const Loader();
-              }
-              DropdownItem dropdownItem = snapshot.data!;
-              return DropdownButtonHideUnderline(
-                key: const ValueKey("season_items"),
-                child: DropdownButton2(
-                  isExpanded: true,
-                  hint: Text(
-                    widget.hint,
-                    style: TextStyle(
-                      fontSize: 14,
-                      color: Theme.of(context).hintColor,
+                DropdownItem dropdownItem = snapshot.data!;
+                return DropdownButtonHideUnderline(
+                  key: const ValueKey("season_items"),
+                  child: DropdownButton2(
+                    isExpanded: true,
+                    hint: Text(
+                      widget.hint,
+                      style: TextStyle(
+                        fontSize: 14,
+                        color: Theme.of(context).hintColor,
+                      ),
                     ),
-                  ),
-                  items: _addDividersAfterItems(dropdownItems),
-                  value: dropdownItem,
-                  onChanged: (value) {
-                    //setState(() {
+                    items: _addDividersAfterItems(dropdownItems),
+                    value: dropdownItem,
+                    onChanged: (value) {
+                      //setState(() {
                       //selectedValue = value as SeasonModel;
                       widget.onItemSelected(value as DropdownItem);
-                    //});
-                  },
-                  buttonStyleData: const ButtonStyleData(height: 40, width: 140),
-                  dropdownStyleData: const DropdownStyleData(
-                    maxHeight: 200,
+                      //});
+                    },
+                    buttonStyleData:
+                        const ButtonStyleData(height: 40, width: 140),
+                    dropdownStyleData: const DropdownStyleData(
+                      maxHeight: 200,
+                    ),
+                    menuItemStyleData: MenuItemStyleData(
+                      padding: const EdgeInsets.symmetric(horizontal: 8.0),
+                      customHeights:
+                          _getCustomItemsHeights(dropdownItems.length),
+                    ),
                   ),
-                  menuItemStyleData: MenuItemStyleData(
-                    padding: const EdgeInsets.symmetric(horizontal: 8.0),
-                    customHeights: _getCustomItemsHeights(dropdownItems.length),
-                  ),
-                ),
-              );
-            }
-          );
-        }
-    );
+                );
+              });
+        });
   }
 }

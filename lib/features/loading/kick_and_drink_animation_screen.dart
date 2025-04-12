@@ -1,9 +1,10 @@
+import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
 import 'package:trus_app/features/loading/paint/beer_paint.dart';
 import 'package:trus_app/features/loading/paint/goal_paint.dart';
 import 'package:trus_app/features/loading/paint/table_paint.dart';
 import 'package:trus_app/features/loading/ticketprovider/my_ticket_provider_factory.dart';
-import 'dart:math' as math;
 
 import 'ball_bounce.dart';
 import 'body_tween_sequence_components.dart';

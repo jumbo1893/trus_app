@@ -2,11 +2,9 @@ import 'dart:async';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-
 import '../../../../common/repository/exception/loading_exception.dart';
-
 import '../../../../models/api/match/match_api_model.dart';
-import '../../../../models/api/player_api_model.dart';
+import '../../../../models/api/player/player_api_model.dart';
 import '../../../../models/api/receivedfine/received_fine_setup.dart';
 import '../../../../models/api/season_api_model.dart';
 import '../../../general/match_reader.dart';

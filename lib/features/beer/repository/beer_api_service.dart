@@ -4,7 +4,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:trus_app/config.dart';
 
 import '../../../models/api/beer/beer_api_model.dart';
-
 import '../../../models/api/beer/beer_detailed_response.dart';
 import '../../../models/api/beer/beer_list.dart';
 import '../../../models/api/beer/beer_multi_add_response.dart';
@@ -14,9 +13,10 @@ import '../../../models/api/stats/stats.dart';
 import '../../general/repository/crud_api_service.dart';
 
 final beerApiServiceProvider =
-    Provider<BeerApiService>((ref) => BeerApiService());
+    Provider<BeerApiService>((ref) => BeerApiService(ref));
 
 class BeerApiService extends CrudApiService {
+  BeerApiService(super.ref);
 
 
   Future<List<BeerApiModel>> getBeers() async {

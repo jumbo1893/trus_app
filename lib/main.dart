@@ -46,14 +46,21 @@ class MyApp extends ConsumerWidget {
         ),
         onGenerateRoute:  (settings) => generateRoute(settings),
         home: ref.watch(userDataAuthProvider).when(
-            data: (user) {
-              if (user == null) {
-                return const LoginScreen();
+            data: (redirect) {
+              switch(redirect) {
+                case LoginRedirect.needToLogin:
+                  return const LoginScreen();
+                case LoginRedirect.completeUserInformation:
+                  return const UserInformationScreen();
+                case LoginRedirect.setAppTeam:
+                  return const LoginScreen();
+                case LoginRedirect.chooseAppTeam:
+                  return const LoginScreen();
+                case LoginRedirect.ok:
+                  return const MainScreen();
+                default:
+                  return const LoginScreen();
               }
-              else if (user.name == null || user.name!.isEmpty) {
-                return const UserInformationScreen();
-              }
-              return const MainScreen();
             }, error: (error, trace) {
           //showSnackBar(context: context, content: error.toString());
               return const LoginScreen();

@@ -2,17 +2,17 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:trus_app/common/utils/field_validator.dart';
+import 'package:trus_app/common/utils/utils.dart';
 import 'package:trus_app/common/widgets/custom_text_button.dart';
 import 'package:trus_app/common/widgets/custom_text_field.dart';
 import 'package:trus_app/features/auth/controller/auth_controller.dart';
 import 'package:trus_app/features/auth/screens/registration_screen.dart';
-import 'package:trus_app/common/utils/field_validator.dart';
 import 'package:trus_app/features/auth/screens/user_information_screen.dart';
 import 'package:trus_app/features/main/main_screen.dart';
-import 'package:trus_app/common/utils/utils.dart';
 
 import '../../../common/widgets/custom_button.dart';
-import '../../../models/api/user_api_model.dart';
+import '../../../models/api/auth/user_api_model.dart';
 import '../../general/error/api_executor.dart';
 import '../../loading/loading_screen.dart';
 

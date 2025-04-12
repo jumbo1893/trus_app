@@ -6,9 +6,11 @@ import '../../../models/api/notification_api_model.dart';
 import '../../general/repository/crud_api_service.dart';
 
 final notificationApiServiceProvider =
-    Provider<NotificationApiService>((ref) => NotificationApiService());
+    Provider<NotificationApiService>((ref) => NotificationApiService(ref));
 
 class NotificationApiService extends CrudApiService {
+  NotificationApiService(super.ref);
+
 
   Future<List<NotificationApiModel>> getNotifications(int? page) async {
     final queryParameters = {

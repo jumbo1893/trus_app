@@ -17,9 +17,9 @@ class CustomButton extends StatelessWidget {
       child: ElevatedButton(
         onPressed: () => {onPressed(), FocusManager.instance.primaryFocus?.unfocus()},
         style: ButtonStyle(
-          backgroundColor: MaterialStateProperty.all<Color>(Colors.orange),
-          minimumSize: MaterialStateProperty.all(const Size(double.infinity, 50)),
-          shape: MaterialStateProperty.all<RoundedRectangleBorder>(
+          backgroundColor: WidgetStateProperty.all<Color>(Colors.orange),
+          minimumSize: WidgetStateProperty.all(const Size(double.infinity, 50)),
+          shape: WidgetStateProperty.all<RoundedRectangleBorder>(
             RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(18.0),
               side: const BorderSide(color: Colors.orange),

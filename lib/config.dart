@@ -16,13 +16,15 @@ const int allSeasonId = -3;
 
 
 //api
-const testUrl = "https://192.168.0.150:8443";
+const testUrl = "https://192.168.0.10:8443";
 const prodUrl = "https://trus.up.railway.app";
 const devUrl = "https://192.168.0.150:8080";
-//const serverUrl = "https://192.168.0.150:8443";
-const serverUrl = "https://trus.up.railway.app";
+const serverUrl = testUrl;
+//const serverUrl = "https://trus.up.railway.app";
 const automation = false;
 const matchApi = "match";
+const achievementApi = "achievement";
+const playerAchievementApi = "achievement/player";
 const statsApi = "stats";
 const playerApi = "player";
 const seasonApi = "season";
@@ -32,9 +34,9 @@ const beerApi = "beer";
 const receivedFineApi = "fine/received";
 const authApi = "user";
 const homeApi = "home";
-const pkflApi = "pkfl";
-const pkflAllIndividualStatsApi = "pkfl/player-stats";
-const pkflTableApi = "pkfl/table";
-const pkflPlayerApi = "pkfl/player";
+const football = "football";
+const footballAllIndividualStatsApi = "football/player-stats";
+const footballTableApi = "football/table";
+const footballPlayerApi = "football/player";
 const notificationApi = "notification";
 const stepApi = "step";

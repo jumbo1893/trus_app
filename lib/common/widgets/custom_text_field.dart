@@ -9,6 +9,7 @@ class CustomTextField extends StatelessWidget {
   final bool password;
   final String errorText;
   final bool number;
+  final bool enabled;
   final Function(String)? onChanged;
 
   const CustomTextField({
@@ -19,11 +20,13 @@ class CustomTextField extends StatelessWidget {
     this.password = false,
     this.number = false,
     this.errorText = "",
+    this.enabled = true,
   }) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
     return TextField(
+      enabled: enabled,
       controller: textController,
       onChanged: (value) {
         if (onChanged != null && value.isNotEmpty) {
@@ -51,7 +54,7 @@ class CustomTextField extends StatelessWidget {
                       color: Colors.grey,
                       key: ValueKey("${getValueFromValueKey(key!)}_button")))
               : null),
-      textAlign: TextAlign.right,
+      textAlign: TextAlign.left,
       obscureText: password,
       keyboardType: (number ? TextInputType.number : TextInputType.text),
     );

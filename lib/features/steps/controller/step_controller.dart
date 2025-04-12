@@ -3,7 +3,7 @@ import 'dart:async';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:trus_app/features/general/crud_operations.dart';
 
-import '../../../models/api/player_api_model.dart';
+import '../../../models/api/player/player_api_model.dart';
 import '../../../models/api/step/step_api_model.dart';
 import '../../general/read_operations.dart';
 import '../repository/step_api_service.dart';

@@ -1,5 +1,5 @@
 
-import '../player_api_model.dart';
+import '../player/player_api_model.dart';
 import 'coordinate.dart';
 
 class Chart {
@@ -21,6 +21,15 @@ class Chart {
     required this.player,
     required this.mainPlayer,
   });
+
+  Chart.dummy()
+      : fineMaximum = 0,
+        beerMaximum = 0,
+        beerLabels = [],
+        mainPlayer = false,
+        fineLabels = [],
+        coordinates = [],
+        player = PlayerApiModel.dummy();
 
 
   @override

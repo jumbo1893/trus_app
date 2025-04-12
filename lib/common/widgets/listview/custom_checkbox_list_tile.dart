@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:trus_app/models/api/player_api_model.dart';
+import 'package:trus_app/models/api/player/player_api_model.dart';
 
 import '../../../colors.dart';
 

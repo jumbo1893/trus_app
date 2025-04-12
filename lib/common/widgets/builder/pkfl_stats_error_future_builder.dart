@@ -8,12 +8,12 @@ import '../../../models/helper/pkfl_all_individual_stats_with_spinner.dart';
 import '../../utils/utils.dart';
 import '../loader.dart';
 
-class PkflStatsErrorFutureBuilder<T> extends ConsumerWidget {
-  final Future<PkflAllIndividualStatsWithSpinner> future;
-  final Stream<PkflAllIndividualStatsWithSpinner> rebuildStream;
+class FootballStatsErrorFutureBuilder<T> extends ConsumerWidget {
+  final Future<FootballAllIndividualStatsWithSpinner> future;
+  final Stream<FootballAllIndividualStatsWithSpinner> rebuildStream;
   final BuildContext context;
 
-  const PkflStatsErrorFutureBuilder({
+  const FootballStatsErrorFutureBuilder({
     Key? key,
     required this.future,
     required this.context,
@@ -22,7 +22,7 @@ class PkflStatsErrorFutureBuilder<T> extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    return FutureBuilder<PkflAllIndividualStatsWithSpinner>(
+    return FutureBuilder<FootballAllIndividualStatsWithSpinner>(
       future: future,
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
@@ -31,21 +31,21 @@ class PkflStatsErrorFutureBuilder<T> extends ConsumerWidget {
           Future.delayed(
               Duration.zero,
               () => showErrorDialog(
-                  snapshot.error!.toString(),
+                  snapshot,
                   () => ref
                       .read(screenControllerProvider)
                       .changeFragment(HomeScreen.id),
                   context));
           return const Loader();
         }
-        return StreamBuilder<PkflAllIndividualStatsWithSpinner>(
+        return StreamBuilder<FootballAllIndividualStatsWithSpinner>(
             stream: rebuildStream,
             builder: (context, streamSnapshot) {
               if (streamSnapshot.hasError) {
                 Future.delayed(
                     Duration.zero,
                     () => showErrorDialog(
-                        streamSnapshot.error!.toString(),
+                        streamSnapshot,
                         () => ref
                             .read(screenControllerProvider)
                             .changeFragment(HomeScreen.id),
@@ -55,12 +55,12 @@ class PkflStatsErrorFutureBuilder<T> extends ConsumerWidget {
               return ListView.builder(
                 shrinkWrap: true,
                 physics: const NeverScrollableScrollPhysics(),
-                itemCount: streamSnapshot.data?.pkflAllIndividualStats.length ??
-                    snapshot.data!.pkflAllIndividualStats.length,
+                itemCount: streamSnapshot.data?.footballAllIndividualStats.length ??
+                    snapshot.data!.footballAllIndividualStats.length,
                 itemBuilder: (context, index) {
                   var data =
-                      streamSnapshot.data?.pkflAllIndividualStats[index] ??
-                          snapshot.data!.pkflAllIndividualStats[index];
+                      streamSnapshot.data?.footballAllIndividualStats[index] ??
+                          snapshot.data!.footballAllIndividualStats[index];
                   return Column(
                     children: [
                       InkWell(

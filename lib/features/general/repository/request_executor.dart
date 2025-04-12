@@ -1,43 +1,33 @@
+import 'dart:convert';
+import 'dart:io' show HttpClient, Platform, X509Certificate;
+
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:http/http.dart' as http;
 import 'package:http/io_client.dart';
-import 'dart:io' show Platform;
 import 'package:native_dio_adapter/native_dio_adapter.dart';
-import 'dart:convert';
-import '../../../common/repository/cookies/cookie_manager.dart';
-import '../../../common/repository/cookies/custom_cookie_manager.dart';
+import 'package:trus_app/config.dart';
+
 import '../../../common/repository/exception/handler/response_validator.dart';
 import '../../../common/repository/exception/login_exception.dart';
 import '../../../common/repository/exception/model/login_expired_exception.dart';
-import '../../../config.dart';
-import '../../../models/api/user_api_model.dart';
+import '../../../common/repository/header/cookies/header_provider.dart';
+import '../../../models/api/auth/user_api_model.dart';
 
 class RequestExecutor extends ResponseValidator {
-  FirebaseAuth auth = FirebaseAuth.instance;
+  final FirebaseAuth auth = FirebaseAuth.instance;
+  final Ref ref;
 
-  CustomCookieManager cookieJar = CookieManager().cookieJar;
+  RequestExecutor(this.ref);
 
-  /*Dio getDioClient() {
-    final Dio dioClient = Dio();
-    if(serverUrl == "https://192.168.0.150:8443") { //pro testovac9 prostredi
-      (dioClient.httpClientAdapter as IOHttpClientAdapter).onHttpClientCreate =
-          (HttpClient client) {
-        client.badCertificateCallback =
-            (X509Certificate cert, String host, int port) => true;
-        return client;
-      };
-    }
-    else if (Platform.isIOS || Platform.isMacOS || Platform.isAndroid) {
-      dioClient.httpClientAdapter = NativeAdapter();
-    }
-
-    dioClient.options.validateStatus = (status) {
-      return true;
-    };
-    return dioClient;
-  }*/
+  HeaderProvider get _headerProvider => HeaderProvider(ref); // fallback
 
   http.Client getClient() {
+    if (isTestEnvironment()) {
+      HttpClient httpClient = HttpClient();
+      httpClient.badCertificateCallback = (X509Certificate cert, String host, int port) => true;
+      return IOClient(httpClient);
+    }
     if (Platform.isIOS) {
       final config = URLSessionConfiguration.ephemeralSessionConfiguration()
         ..allowsCellularAccess = false
@@ -45,86 +35,113 @@ class RequestExecutor extends ResponseValidator {
         ..allowsExpensiveNetworkAccess = false;
       return CupertinoClient.fromSessionConfiguration(config);
     } else {
-      IOClient io = IOClient();
       return IOClient(); // Uses an HTTP client based on dart:io
     }
   }
 
+  bool isTestEnvironment() {
+    return serverUrl != prodUrl;
+  }
+
   ///[request] request do kterým se ptáme
   /// [mapFunction] mapování na které se namapuje response
-  Future<T> _executeRequest<T extends dynamic>(Future<http.Response> Function() request, T Function(dynamic) mapFunction, bool secondTry) async {
+  Future<T> _executeRequest<T extends dynamic>(
+      Future<http.Response> Function(http.Client) request,
+      T Function(dynamic) mapFunction,
+      bool secondTry
+      ) async {
+    final client = getClient();
     dynamic response;
     try {
-      response = await request();
+      response = await request(client);
       validateStatusCode(response);
-      cookieJar.updateCookie(response);
+      _headerProvider.cookieJar.updateCookie(response);
       if (response.body.isNotEmpty) {
         final decodedBody = json.decode(utf8.decode(response.bodyBytes));
         return mapFunction(decodedBody);
       }
     } catch (e, stack) {
       if(e is LoginExpiredException && !secondTry) {
-        if(auth.currentUser==null) {
+        if(auth.currentUser == null) {
           throw LoginException("Byl jste automaticky odhlášen, nelze pokračovat");
         }
         await reLoginToServer(auth.currentUser!.email!, auth.currentUser!.uid);
         return await _executeRequest(request, mapFunction, true);
       }
-      else {
-        print(e);
-        print(stack);
-        rethrow;
-      }
+      print(e);
+      print(stack);
+      rethrow;
     }
     return mapFunction(response);
   }
 
-  Future<T> executeGetRequest<T extends dynamic>(Uri uri, T Function(dynamic) mapFunction, Map<String, String?>? queryParameters) async {
+
+  Future<T> executeGetRequest<T extends dynamic>(
+      Uri uri,
+      T Function(dynamic) mapFunction,
+      Map<String, String?>? queryParameters
+      ) async {
+    final headers = await _headerProvider.getHeaders();
     return await _executeRequest(
-            () =>
-            http.get(
-              uri.replace(queryParameters: queryParameters),
-              headers: {...cookieJar.getCookies(), 'Content-Type': 'application/json; charset=UTF-8'},
-            ),
+            (client) => client.get(
+          uri.replace(queryParameters: queryParameters),
+          headers: headers,
+        ),
         mapFunction, false
     );
   }
 
-  Future<T> executePostRequest<T extends dynamic>(Uri uri, T Function(dynamic) mapFunction, Object body) async {
+
+  Future<T> executePostRequest<T extends dynamic>(
+      Uri uri,
+      T Function(dynamic) mapFunction,
+      Object body
+      ) async {
+    final headers = await _headerProvider.getHeaders();
     return await _executeRequest(
-            () =>
-            http.post(
-              uri,
-              headers: {...cookieJar.getCookies(), 'Content-Type': 'application/json; charset=UTF-8'},
-              body: body,
-            ),
+            (client) => client.post(
+          uri,
+          headers: headers,
+          body: body,
+        ),
         mapFunction, false
     );
   }
 
-  Future<T> executePutRequest<T extends dynamic>(Uri uri, T Function(dynamic) mapFunction, Object body) async {
+
+  Future<T> executePutRequest<T extends dynamic>(
+      Uri uri,
+      T Function(dynamic) mapFunction,
+      Object body
+      ) async {
+    final headers = await _headerProvider.getHeaders();
     return await _executeRequest(
-            () =>
-            http.put(
-              uri,
-              headers: {...cookieJar.getCookies(), 'Content-Type': 'application/json; charset=UTF-8'},
-              body: body,
-            ),
+            (client) => client.put(
+          uri,
+          headers: headers,
+          body: body,
+        ),
         mapFunction, false
     );
   }
 
-  Future<T> executeDeleteRequest<T extends dynamic>(Uri uri, T Function(dynamic) mapFunction, Object? body) async {
+
+  Future<T> executeDeleteRequest<T extends dynamic>(
+      Uri uri,
+      T Function(dynamic) mapFunction,
+      Object? body
+      ) async {
+    final headers = await _headerProvider.getHeaders();
     return await _executeRequest(
-            () =>
-            http.delete(
-              uri,
-              headers: {...cookieJar.getCookies(), 'Content-Type': 'application/json; charset=UTF-8'},
-              body: body,
-            ),
+            (client) => client.delete(
+          uri,
+          headers: headers,
+          body: body,
+        ),
         mapFunction, false
     );
   }
+
 
   Future<void> reLoginToServer(String email, String password) async {
     var url = Uri.parse("$serverUrl/$authApi/auth");

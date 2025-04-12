@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:trus_app/config.dart';
 import 'package:trus_app/models/api/goal/goal_list_multi_add.dart';
 import 'package:trus_app/models/api/goal/goal_setup.dart';
+
 import '../../../models/api/goal/goal_api_model.dart';
 import '../../../models/api/goal/goal_detailed_response.dart';
 import '../../../models/api/goal/goal_multi_add_response.dart';
@@ -11,9 +12,11 @@ import '../../../models/api/interfaces/json_and_http_converter.dart';
 import '../../general/repository/crud_api_service.dart';
 
 final goalApiServiceProvider =
-    Provider<GoalApiService>((ref) => GoalApiService());
+    Provider<GoalApiService>((ref) => GoalApiService(ref));
 
 class GoalApiService extends CrudApiService {
+  GoalApiService(super.ref);
+
   Future<List<GoalApiModel>> getGoals() async {
     final decodedBody = await getModels<JsonAndHttpConverter>(goalApi, null);
     return decodedBody.map((model) => model as GoalApiModel).toList();

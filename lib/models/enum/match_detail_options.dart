@@ -1,5 +1,7 @@
 enum MatchDetailOptions {
   editMatch,
-  pkflDetail,
-  commonMatches,
+  footballMatchDetail,
+  mutualMatches,
+  homeMatchDetail,
+  awayMatchDetail,
 }

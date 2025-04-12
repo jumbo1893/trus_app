@@ -7,9 +7,11 @@ import '../../general/repository/crud_api_service.dart';
 
 
 final fineApiServiceProvider =
-    Provider<FineApiService>((ref) => FineApiService());
+    Provider<FineApiService>((ref) => FineApiService(ref));
 
 class FineApiService extends CrudApiService {
+  FineApiService(super.ref);
+
 
   Future<List<FineApiModel>> getFines() async {
     final decodedBody = await getModels<JsonAndHttpConverter>(fineApi, null);

@@ -1,12 +1,12 @@
-import '../api/pkfl/pkfl_all_individual_stats.dart';
+import '../api/football/stats/football_all_individual_stats_api_model.dart';
 import '../enum/spinner_options.dart';
 
-class PkflAllIndividualStatsWithSpinner {
-  final List<PkflAllIndividualStats> pkflAllIndividualStats;
+class FootballAllIndividualStatsWithSpinner {
+  final List<FootballAllIndividualStatsApiModel> footballAllIndividualStats;
   final SpinnerOption option;
 
-  PkflAllIndividualStatsWithSpinner({
-    required this.pkflAllIndividualStats,
+  FootballAllIndividualStatsWithSpinner({
+    required this.footballAllIndividualStats,
     required this.option,
   });
 }

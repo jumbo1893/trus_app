@@ -3,10 +3,12 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:trus_app/colors.dart';
 import 'package:trus_app/features/auth/screens/login_screen.dart';
 import 'package:trus_app/features/fine/match/screens/fine_match_screen.dart';
+import 'package:trus_app/features/general/global_variables_controller.dart';
 import 'package:trus_app/features/general/screen_name.dart';
 import 'package:trus_app/features/goal/screen/goal_screen.dart';
 import 'package:trus_app/features/main/screen_controller.dart';
 import 'package:trus_app/features/match/screens/add_match_screen.dart';
+
 import '../../common/utils/utils.dart';
 import '../../common/widgets/confirmation_dialog.dart';
 import '../auth/controller/auth_controller.dart';
@@ -16,8 +18,8 @@ import '../general/error/api_executor.dart';
 import '../home/screens/home_screen.dart';
 import '../notification/screen/notification_screen.dart';
 import '../statistics/screens/main_statistics_screen.dart';
-import 'bottom_sheet_navigation_manager.dart';
 import 'appbar_title_manager.dart';
+import 'bottom_sheet_navigation_manager.dart';
 
 class MainScreen extends ConsumerStatefulWidget {
   const MainScreen({Key? key}) : super(key: key);
@@ -42,7 +44,7 @@ class _MainScreenState extends ConsumerState<MainScreen> {
   @override
   void initState() {
     super.initState();
-    _bottomSheetNavigationManager = BottomSheetNavigationManager(context);
+    _bottomSheetNavigationManager = BottomSheetNavigationManager(context, ref.read(globalVariablesControllerProvider).appTeam);
     _appBarTitleManager = AppBarTitleManager();
   }
 
@@ -90,14 +92,12 @@ class _MainScreenState extends ConsumerState<MainScreen> {
       signOut();
     });
   }
+
   /// Funkce zmanaguje zpětné tlačítko, změní barvu dolního menu a přepne fragment
   void changeFragment(Widget widget) {
-    int index = ref
-        .read(screenControllerProvider)
-        .widgetList
-        .indexOf(widget);
+    int index = ref.read(screenControllerProvider).widgetList.indexOf(widget);
     String screenId = (widget as ScreenName).screenName();
-    if(!backButtonTapped) {
+    if (!backButtonTapped) {
       manageBackButton(screenId);
     }
     backButtonTapped = false;
@@ -108,27 +108,26 @@ class _MainScreenState extends ConsumerState<MainScreen> {
   int getSelectedBottomSheetIndex() {
     if (_selectedBottomSheetScreenId == HomeScreen.id) {
       return 0;
-    }
-      else if (_selectedBottomSheetScreenId == FineMatchScreen.id) {
-        return 1;
-    }
-    else if (_selectedBottomSheetScreenId == MainStatisticsScreen.id) {
+    } else if (_selectedBottomSheetScreenId == FineMatchScreen.id) {
+      return 1;
+    } else if (_selectedBottomSheetScreenId == MainStatisticsScreen.id) {
       return 3;
-    }
-    else {
+    } else {
       return 2;
     }
   }
 
   /// Zapíše do globální proměnné _selectedBottomSheetScreenId současné id aktivní obrazovku pokud je v bottomsheetu. Pokud není, zapíše NOT_IN_BOTTOM_SHEET
   void changeBottomSheetColor(String screenId) {
-      if (screenId == HomeScreen.id || screenId == FineMatchScreen.id || screenId == MainStatisticsScreen.id) {
-        _selectedBottomSheetScreenId = screenId;
-      }
-        else {
-        _selectedBottomSheetScreenId = "NOT_IN_BOTTOM_SHEET";
-      }
+    if (screenId == HomeScreen.id ||
+        screenId == FineMatchScreen.id ||
+        screenId == MainStatisticsScreen.id) {
+      _selectedBottomSheetScreenId = screenId;
+    } else {
+      _selectedBottomSheetScreenId = "NOT_IN_BOTTOM_SHEET";
+    }
   }
+
   ///Přidá fragment do fronty fragmentů fragmentList, pokud je seznam prázdný, skryje zpětné tlačítko
   void manageBackButton(String screenId) {
     fragmentList.add(screenId);
@@ -137,11 +136,12 @@ class _MainScreenState extends ConsumerState<MainScreen> {
       fragmentList.clear();
     }
     if (fragmentList.isEmpty && backButtonVisibility) {
-        backButtonVisibility = false;
+      backButtonVisibility = false;
     } else if (fragmentList.isNotEmpty && !backButtonVisibility) {
-        backButtonVisibility = true;
+      backButtonVisibility = true;
     }
   }
+
   /// obstará logiku po kliku na zpětné tlačítko. Vybere poslední fragment z fronty a přesměruje aktivní obrazovku na něj. Pokud je seznam prázdný, vrátí domovskou obrazovku
   void onBackButtonTap() {
     if (_currentScreenId == GoalScreen.id) {
@@ -244,16 +244,20 @@ class _MainScreenState extends ConsumerState<MainScreen> {
                     : null,
                 title: Text(getTitle(ref
                     .read(screenControllerProvider)
-                    .getFragmentByFragmentId(_currentScreenId))),
+                    .getFragmentByFragmentId(_currentScreenId)),
+                style: const TextStyle(color: Colors.white),),
                 actions: [
                   IconButton(
                       key: const ValueKey('plus_button'),
-                      onPressed: () =>
-                          ref.read(screenControllerProvider).changeFragment(AddMatchScreen.id),
+                      onPressed: () => ref
+                          .read(screenControllerProvider)
+                          .changeFragment(AddMatchScreen.id),
                       icon: const Icon(Icons.add)),
                   IconButton(
                       key: const ValueKey('notifications_button'),
-                      onPressed: () => ref.read(screenControllerProvider).changeFragment(NotificationScreen.id),
+                      onPressed: () => ref
+                          .read(screenControllerProvider)
+                          .changeFragment(NotificationScreen.id),
                       icon: const Icon(Icons.notifications)),
                 ],
               ),
@@ -262,7 +266,9 @@ class _MainScreenState extends ConsumerState<MainScreen> {
                   physics: const NeverScrollableScrollPhysics(),
                   children: ref.read(screenControllerProvider).widgetList),
               floatingActionButton: FloatingActionButton(
-                onPressed: () => ref.read(screenControllerProvider).changeFragment(BeerSimpleScreen.id),
+                onPressed: () => ref
+                    .read(screenControllerProvider)
+                    .changeFragment(BeerSimpleScreen.id),
                 elevation: 4.0,
                 backgroundColor: Colors.orange,
                 key: const ValueKey('beer_button'),

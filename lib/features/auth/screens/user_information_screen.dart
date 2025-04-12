@@ -1,11 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:trus_app/features/auth/controller/auth_controller.dart';
 
 import '../../../common/utils/field_validator.dart';
 import '../../../common/widgets/custom_button.dart';
 import '../../../common/widgets/custom_text_field.dart';
-import 'package:trus_app/features/auth/controller/auth_controller.dart';
-
 import '../../general/error/api_executor.dart';
 import '../../main/main_screen.dart';
 
@@ -65,6 +64,7 @@ class _UserInformationScreenState extends ConsumerState<UserInformationScreen> {
                 text: "Dokonči registraci",
                 onPressed: () => storeUserData(),
                 key: const ValueKey('confirm_button')),
+            const Text("A tým za který chceš pít"),
           ],
         ),
       ),

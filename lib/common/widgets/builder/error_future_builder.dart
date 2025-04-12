@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:trus_app/features/home/screens/home_screen.dart';
+
 import '../../../features/main/screen_controller.dart';
 import '../../utils/utils.dart';
 import '../loader.dart';
@@ -28,7 +29,7 @@ class ErrorFutureBuilder<T> extends ConsumerWidget {
           Future.delayed(
               Duration.zero,
               () => showErrorDialog(
-                  snapshot.error!.toString(),
+                  snapshot,
                   () =>
                       ref
                       .read(screenControllerProvider)

@@ -1,14 +1,14 @@
-import 'package:trus_app/models/api/player_api_model.dart';
+import 'package:trus_app/models/api/football/football_match_api_model.dart';
+import 'package:trus_app/models/api/player/player_api_model.dart';
 import 'package:trus_app/models/api/season_api_model.dart';
 
 import '../../../config.dart';
 import '../interfaces/json_and_http_converter.dart';
-import '../pkfl/pkfl_match_api_model.dart';
 import 'match_api_model.dart';
 
 class MatchSetup implements JsonAndHttpConverter {
   MatchApiModel? match;
-  PkflMatchApiModel? pkflMatch;
+  FootballMatchApiModel? footballMatch;
   final List<SeasonApiModel> seasonList;
   final List<PlayerApiModel> playerList;
   final List<PlayerApiModel> fanList;
@@ -20,7 +20,7 @@ class MatchSetup implements JsonAndHttpConverter {
     required this.fanList,
     required this.primarySeason,
     this.match,
-    this.pkflMatch,
+    this.footballMatch,
   });
 
   @override
@@ -31,7 +31,7 @@ class MatchSetup implements JsonAndHttpConverter {
       "playerList": playerList,
       "fanList": fanList,
       "primarySeason": primarySeason,
-      "pkflMatch": pkflMatch,
+      "footballMatch": footballMatch,
     };
   }
 
@@ -39,7 +39,7 @@ class MatchSetup implements JsonAndHttpConverter {
   factory MatchSetup.fromJson(Map<String, dynamic> json) {
     return MatchSetup(
       match: json["match"] != null ? MatchApiModel.fromJson(json["match"]) : null,
-      pkflMatch: json["pkflMatch"] != null ? PkflMatchApiModel.fromJson(json["pkflMatch"]) : null,
+      footballMatch: json["footballMatch"] != null ? FootballMatchApiModel.fromJson(json["footballMatch"]) : null,
       seasonList: List<SeasonApiModel>.from((json['seasonList'] as List<dynamic>).map((season) => SeasonApiModel.fromJson(season))),
       playerList: List<PlayerApiModel>.from((json['playerList'] as List<dynamic>).map((player) => PlayerApiModel.fromJson(player))),
       fanList: List<PlayerApiModel>.from((json['fanList'] as List<dynamic>).map((fan) => PlayerApiModel.fromJson(fan))),
@@ -54,6 +54,6 @@ class MatchSetup implements JsonAndHttpConverter {
 
   @override
   String toString() {
-    return 'MatchSetup{match: $match, pkflMatch: $pkflMatch, seasonList: $seasonList, playerList: $playerList, fanList: $fanList}';
+    return 'MatchSetup{match: $match, footballMatch: $footballMatch, seasonList: $seasonList, playerListSize: ${playerList.length}, fanListSize: ${fanList.length}}';
   }
 }

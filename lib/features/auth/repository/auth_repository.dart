@@ -1,28 +1,33 @@
 import 'dart:convert';
 
-import 'package:flutter/material.dart';
-
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:trus_app/common/utils/utils.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:trus_app/common/utils/utils.dart';
 import 'package:trus_app/config.dart';
+import 'package:trus_app/models/api/player/player_api_model.dart';
 
 import '../../../common/repository/exception/login_exception.dart';
 import '../../../common/repository/exception/server_exception.dart';
+import '../../../models/api/auth/user_api_model.dart';
 import '../../../models/api/interfaces/json_and_http_converter.dart';
-import '../../../models/api/user_api_model.dart';
 import '../../general/repository/crud_api_service.dart';
 
-final authRepositoryProvider = Provider(
-  (ref) => AuthRepository(
-      firestore: FirebaseFirestore.instance),
-);
+final authRepositoryProvider = Provider<AuthRepository>((ref) {
+  return AuthRepository(
+    firestore: FirebaseFirestore.instance,
+    ref: ref,
+  );
+});
 
 class AuthRepository extends CrudApiService {
   final FirebaseFirestore firestore;
 
-  AuthRepository({required this.firestore});
+  AuthRepository({
+    required this.firestore,
+    required Ref ref,
+  }) : super(ref);
 
   Future<UserApiModel?> fastLogin() async {
     UserApiModel userApiModel;
@@ -30,7 +35,9 @@ class AuthRepository extends CrudApiService {
       userApiModel = await signInWithEmailToServer(
           auth.currentUser!.email!, auth.currentUser!.uid);
     } catch (e) {
+      print("Je nutné se projednou přihlásit ručně");
       throw LoginException("Je nutné se projednou přihlásit ručně");
+
     }
     return userApiModel;
   }
@@ -46,16 +53,21 @@ class AuthRepository extends CrudApiService {
     return auth.currentUser?.displayName;
   }
 
-  Future<List<UserApiModel>> getUsers() async {
-    final decodedBody = await getModels<JsonAndHttpConverter>(authApi, null);
+  Future<List<UserApiModel>> getUsers(bool? appTeamTeamRolesOnly) async {
+    Map<String, String?>? queryParameters;
+    if(appTeamTeamRolesOnly != null) {
+      queryParameters = {
+        'appTeamTeamRolesOnly': appTeamTeamRolesOnly.toString(),
+      };
+    }
+    final decodedBody = await getModels<JsonAndHttpConverter>(authApi, queryParameters);
     return decodedBody.map((model) => model as UserApiModel).toList();
   }
 
-  Future<UserApiModel> setUserWritePermissions(
-      UserApiModel user, bool write) async {
-    user.admin = write;
-    final decodedBody = await editModel<JsonAndHttpConverter>(user, user.id!);
-    return decodedBody as UserApiModel;
+  Future<void> setUserWritePermissions(
+      int userRoleId, String role) async {
+    var url = Uri.parse("$serverUrl/$authApi/$userRoleId/role-change?role=$role");
+    return await executePutRequest(url, (_) => null, jsonEncode(null));
   }
 
   Future<bool> deleteAccount() async {
@@ -159,7 +171,7 @@ class AuthRepository extends CrudApiService {
     var url = Uri.parse("$serverUrl/$authApi/update");
     user.admin = admin;
     user.name = name;
-    user.playerId = playerId;
+    //user.playerId = playerId;
     final UserApiModel userApiModel = await executePostRequest(
         url,
         (dynamic json) => UserApiModel.fromJson(json),
@@ -167,10 +179,12 @@ class AuthRepository extends CrudApiService {
     return userApiModel;
   }
 
-  Future<UserApiModel> setUserPlayerId(UserApiModel user, int playerId) async {
-    user.playerId = playerId;
-    final decodedBody = await editModel<JsonAndHttpConverter>(user, user.id!);
-    return decodedBody as UserApiModel;
+  Future<void> setUserPlayerId(PlayerApiModel playerApiModel) async {
+    var url = Uri.parse("$serverUrl/$authApi/player-add");
+    await executePostRequest(
+        url,
+            (_) => null,
+        jsonEncode(playerApiModel.toJson()));
   }
 
   Future<bool> sendForgottenPassword(BuildContext context, String email) async {

@@ -1,15 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:riverpod/riverpod.dart';
+import 'package:trus_app/features/general/global_variables_controller.dart';
 import 'package:trus_app/features/general/read_operations.dart';
+import 'package:trus_app/models/api/auth/app_team_api_model.dart';
 import 'package:trus_app/models/api/interfaces/model_to_string.dart';
 
-import '../../../common/repository/exception/internal_snackbar_exception.dart';
-import '../../../models/api/user_api_model.dart';
+import '../../../models/api/auth/user_api_model.dart';
 import '../repository/auth_repository.dart';
 
 final authControllerProvider = Provider((ref) {
   final authRepository = ref.watch(authRepositoryProvider);
-  return AuthController(authRepository: authRepository);
+  final globalVariablesController = ref.watch(globalVariablesControllerProvider);
+  return AuthController(authRepository: authRepository, globalVariablesController: globalVariablesController);
   });
 
 final userDataAuthProvider = FutureProvider((ref) {
@@ -19,25 +21,15 @@ final userDataAuthProvider = FutureProvider((ref) {
 
 class AuthController implements ReadOperations {
   final AuthRepository authRepository;
+  final GlobalVariablesController globalVariablesController;
 
   AuthController({
     required this.authRepository,
+    required this.globalVariablesController,
   });
 
   Future<List<UserApiModel>> users() async {
-    return await authRepository.getUsers();
-  }
-
-  Future<void> changeWritePermissions(
-      BuildContext context, UserApiModel user,
-      ) async {
-    await getUserData();
-    if(user == await getUserData()) {
-
-      throw InternalSnackBarException("Nemůžeš změnit práva sám sobě");
-    }
-    bool write = !user.admin!;
-    await authRepository.setUserWritePermissions(user, write);
+    return await authRepository.getUsers(null);
   }
 
   Future<UserApiModel?> getUserData() async {
@@ -45,9 +37,9 @@ class AuthController implements ReadOperations {
     return user;
   }
 
-  Future<UserApiModel?> fastLogin() async {
+  Future<LoginRedirect> fastLogin() async {
     UserApiModel? user = await authRepository.fastLogin();
-    return user;
+    return chooseLoginRedirect(user);
   }
 
   String? getCurrentUserName() {
@@ -60,6 +52,8 @@ class AuthController implements ReadOperations {
 
   Future<UserApiModel?> signInWithEmail(String email, String password) async {
     UserApiModel? result = await authRepository.signInWithEmail(email, password);
+    if(result != null) {
+    }
      return result;
   }
 
@@ -86,8 +80,52 @@ class AuthController implements ReadOperations {
     await authRepository.editCurrentUser(false, username, null);
   }
 
+  void saveAppTeam(AppTeamApiModel appTeam) {
+    globalVariablesController.setAppTeam(appTeam);
+  }
+
+  LoginRedirect chooseLoginRedirect(UserApiModel? user) {
+    if(user == null) {
+      return LoginRedirect.needToLogin;
+    }
+    else if (user.name == null || user.name!.isEmpty) {
+      return LoginRedirect.completeUserInformation;
+    }
+    else if (isNeededToSetAppTeam(user)) {
+      return LoginRedirect.setAppTeam;
+    }
+    else if (isNeededToChooseAppTeam(user)) {
+      return LoginRedirect.chooseAppTeam;
+    }
+    ///TO_DO
+    saveAppTeam(user.teamRoles![0].appTeam);
+    return LoginRedirect.ok;
+  }
+
+  bool isNeededToSetAppTeam(UserApiModel user) {
+    if(user.teamRoles == null || user.teamRoles!.isEmpty) {
+      return true;
+    }
+    return false;
+  }
+
+  bool isNeededToChooseAppTeam(UserApiModel user) {
+    if(user.teamRoles!.length > 1) {
+      return true;
+    }
+    return false;
+  }
+
   @override
   Future<List<ModelToString>> getModels() async {
-    return await authRepository.getUsers();
+    return await authRepository.getUsers(null);
   }
+}
+
+enum LoginRedirect {
+  needToLogin,
+  completeUserInformation,
+  ok,
+  chooseAppTeam,
+  setAppTeam,
 }

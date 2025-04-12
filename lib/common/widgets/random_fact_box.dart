@@ -3,15 +3,18 @@ import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:trus_app/colors.dart';
 import 'package:trus_app/common/widgets/loader.dart';
+import 'package:trus_app/features/mixin/string_list_controller_mixin.dart';
 
 class RandomFactBox extends StatefulWidget implements PreferredSizeWidget {
   const RandomFactBox({
     super.key,
-    required this.randomFactStream,
+    required this.stringListControllerMixin,
+    required this.hashKey,
     required this.padding,
   });
 
-  final Future<List<String>> randomFactStream;
+  final StringListControllerMixin stringListControllerMixin;
+  final String hashKey;
   final double padding;
 
   @override
@@ -74,8 +77,8 @@ class _RandomFactBoxState extends State<RandomFactBox>
         child: Row(
           children: [
             Expanded(
-              child: FutureBuilder<List<String>>(
-                  future: widget.randomFactStream,
+              child: StreamBuilder<List<String>>(
+                  stream: widget.stringListControllerMixin.stringListValue(widget.hashKey),
                   builder: (context, snapshot) {
                     if (snapshot.connectionState == ConnectionState.waiting) {
                       return const Loader();

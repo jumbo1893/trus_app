@@ -2,10 +2,20 @@ import 'dart:async';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:trus_app/features/general/crud_operations.dart';
+import 'package:trus_app/features/mixin/achievement_controller_mixin.dart';
+import 'package:trus_app/features/mixin/boolean_controller_mixin.dart';
+import 'package:trus_app/features/mixin/date_controller_mixin.dart';
+import 'package:trus_app/features/mixin/string_controller_mixin.dart';
+import 'package:trus_app/features/mixin/view_controller_mixin.dart';
+import 'package:trus_app/features/player/widget/i_player_hash_key.dart';
+import 'package:trus_app/models/api/football/football_player_api_model.dart';
 
+import '../../../common/utils/calendar.dart';
 import '../../../common/utils/field_validator.dart';
-import '../../../models/api/player_api_model.dart';
+import '../../../models/api/player/player_api_model.dart';
+import '../../../models/api/player/player_setup.dart';
 import '../../general/read_operations.dart';
+import '../../mixin/dropdown_controller_mixin.dart';
 import '../repository/player_api_service.dart';
 
 final playerControllerProvider = Provider((ref) {
@@ -13,123 +23,108 @@ final playerControllerProvider = Provider((ref) {
   return PlayerController(playerApiService: playerApiService, ref: ref);
 });
 
-class PlayerController implements CrudOperations, ReadOperations {
+class PlayerController
+    with DropdownControllerMixin, StringControllerMixin, DateControllerMixin, BooleanControllerMixin, ViewControllerMixin, AchievementControllerMixin
+    implements CrudOperations, ReadOperations, IPlayerHashKey {
   final PlayerApiService playerApiService;
-  final ProviderRef ref;
-  final nameController = StreamController<String>.broadcast();
-  final dateController = StreamController<DateTime>.broadcast();
-  final activeController = StreamController<bool>.broadcast();
-  final fanController = StreamController<bool>.broadcast();
-  final nameErrorTextController = StreamController<String>.broadcast();
+  final Ref ref;
   String originalPlayerName = "";
-  String playerName = "";
-  bool playerFan = false;
-  bool playerActive = true;
-  DateTime playerDate = DateTime.now();
+  late PlayerSetup playerSetup;
 
   PlayerController({
     required this.playerApiService,
     required this.ref,
   });
 
-  void loadPlayer(PlayerApiModel player) {
-    setEditControllers(player);
-    nameErrorTextController.add("");
-    setFieldsToPlayer(player);
-    originalPlayerName = player.name;
+  void loadEditPlayer() {
+    initDropdown(
+        playerSetup.primaryFootballPlayer, playerSetup.footballPlayerList, footballerKey());
+    initStringFields(playerSetup.player!.name, nameKey());
+    originalPlayerName = playerSetup.player!.name;
+    initDateFields(playerSetup.player!.birthday, dateKey());
+    initBooleanFields(playerSetup.player!.active, activeKey());
+    initBooleanFields(playerSetup.player!.fan, fanKey());
+  }
+
+  void loadViewPlayer() {
+    initViewFields(
+        playerSetup.primaryFootballPlayer.dropdownItem(), footballerKey());
+    initViewFields(
+        playerSetup.player!.name, nameKey());
+    initViewFields(
+        dateTimeToString(playerSetup.player!.birthday), dateKey());
+    initViewFields(playerSetup.getPlayerStats(), footballerDetailKey());
+    initAchievementFields(playerSetup.achievementPlayerDetail!, achievementsKey());
+  }
+
+  String getNameViewField() {
+    if (playerSetup.player!.fan) {
+      return "Fanoušek:";
+    }
+    else if (playerSetup.player!.active) {
+      return "Aktivní hráč:";
+    }
+    else {
+      return "Neaktivní hráč:";
+    }
   }
 
   void loadNewPlayer() {
-    playerName = "";
-    nameController.add("");
-    playerDate = DateTime.utc(DateTime.now().year, 1, 1);
-    dateController.add(DateTime.utc(DateTime.now().year, 1, 1));
-    fanController.add(false);
-    activeController.add(true);
-    nameErrorTextController.add("");
-    playerFan = false;
-    playerActive = true;
+    initDropdown(
+        playerSetup.primaryFootballPlayer, playerSetup.footballPlayerList, footballerKey());
+    initStringFields("", nameKey());
+    initDateFields(DateTime.utc(DateTime.now().year, 1, 1), dateKey());
+    initBooleanFields(true, activeKey());
+    initBooleanFields(false, fanKey());
   }
 
-  void setFieldsToPlayer(PlayerApiModel player) {
-    playerName = player.name;
-    playerFan = player.fan;
-    playerActive = player.active;
-    playerDate = player.birthday;
+  Future<void> setupNewPlayer() async {
+    playerSetup = await _setupPlayer(null);
   }
 
-  void setEditControllers(PlayerApiModel player) {
-    nameController.add(player.name);
-    dateController.add(player.birthday);
-    fanController.add(player.fan);
-    activeController.add(player.active);
-  }
-
-  Future<void> player(PlayerApiModel player) async {
-    Future.delayed(
-        Duration.zero,
-            () => loadPlayer(player));
+  Future<void> setupEditPlayer(int id) async {
+    playerSetup = await _setupPlayer(id);
   }
 
   Future<void> newPlayer() async {
-    Future.delayed(
-        Duration.zero,
-            () => loadNewPlayer());
+    await Future.delayed(Duration.zero, () => loadNewPlayer());
   }
 
-  Stream<String> name() {
-    return nameController.stream;
+  Future<void> editPlayer() async {
+    Future.delayed(Duration.zero, () => loadEditPlayer());
   }
 
-  Stream<String> nameErrorText() {
-    return nameErrorTextController.stream;
-  }
-
-  Stream<DateTime> date() {
-    return dateController.stream;
-  }
-
-  Stream<bool> fan() {
-    return fanController.stream;
-  }
-
-  Stream<bool> active() {
-    return activeController.stream;
-  }
-
-  void setName(String name) {
-    nameController.add(name);
-    playerName = name;
-  }
-
-  void setDate(DateTime date) {
-    dateController.add(date);
-    playerDate = date;
-  }
-
-  void setFan(bool fan) {
-    fanController.add(fan);
-    playerFan = fan;
-  }
-
-  void setActive(bool active) {
-    activeController.add(active);
-    playerActive = active;
+  Future<void> viewPlayer() async {
+    Future.delayed(Duration.zero, () => loadViewPlayer());
   }
 
   bool validateFields() {
-    String errorText = validateEmptyField(playerName.trim());
-    nameErrorTextController.add(errorText);
+    String errorText = validateEmptyField(stringValues[nameKey()]!.trim());
+    stringErrorTextControllers[nameKey()]!.add(errorText);
     return errorText.isEmpty;
+  }
+
+  Future<PlayerSetup> _setupPlayer(int? id) async {
+    return await playerApiService.setupPlayer(id);
+  }
+
+  FootballPlayerApiModel? _getPickedFootballer() {
+    FootballPlayerApiModel footballer = dropdownValues[footballerKey()] as FootballPlayerApiModel;
+    if(footballer.id! == 0) {
+      return null;
+    }
+    return footballer;
   }
 
   @override
   Future<PlayerApiModel?> addModel() async {
     if (validateFields()) {
-      return await playerApiService.addPlayer(PlayerApiModel(name: playerName,
-          birthday: playerDate,
-          fan: playerFan,
-          active: playerActive));
+      return await playerApiService.addPlayer(PlayerApiModel(
+          name: stringValues[nameKey()]!,
+          birthday: dateValues[dateKey()]!,
+          fan: boolValues[fanKey()]!,
+          active: boolValues[activeKey()]!,
+          footballPlayer: _getPickedFootballer()));
     }
     return null;
   }
@@ -142,9 +137,16 @@ class PlayerController implements CrudOperations, ReadOperations {
 
   @override
   Future<String?> editModel(int id) async {
-    if(validateFields()) {
-      PlayerApiModel response = await playerApiService.editPlayer(PlayerApiModel(id: id,
-          name: playerName, birthday: playerDate, fan: playerFan, active: playerActive), id);
+    if (validateFields()) {
+      PlayerApiModel response = await playerApiService.editPlayer(
+          PlayerApiModel(
+              id: id,
+              name: stringValues[nameKey()]!,
+              birthday: dateValues[dateKey()]!,
+              fan: boolValues[fanKey()]!,
+              active: boolValues[activeKey()]!,
+              footballPlayer: _getPickedFootballer()),
+          id);
 
       return response.toStringForEdit(originalPlayerName);
     }
@@ -154,5 +156,40 @@ class PlayerController implements CrudOperations, ReadOperations {
   @override
   Future<List<PlayerApiModel>> getModels() async {
     return await playerApiService.getPlayers();
+  }
+
+  @override
+  String activeKey() {
+    return "player_active";
+  }
+
+  @override
+  String dateKey() {
+    return "player_date";
+  }
+
+  @override
+  String fanKey() {
+    return "player_fan";
+  }
+
+  @override
+  String footballerKey() {
+    return "player_footballer";
+  }
+
+  @override
+  String nameKey() {
+    return "player_name";
+  }
+
+  @override
+  String footballerDetailKey() {
+    return "player_footballerDetail";
+  }
+
+  @override
+  String achievementsKey() {
+    return "player_achievement";
   }
 }

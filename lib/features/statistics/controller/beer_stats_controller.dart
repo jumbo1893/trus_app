@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:trus_app/features/statistics/controller/stats_controller.dart';
 import 'package:trus_app/models/api/interfaces/model_to_string.dart';
+
 import '../../../models/api/beer/beer_detailed_model.dart';
 import '../../../models/api/beer/beer_detailed_response.dart';
 import '../../beer/repository/beer_api_service.dart';

@@ -5,8 +5,8 @@ import 'package:trus_app/features/season/screens/season_screen.dart';
 
 import '../../../common/widgets/builder/column_future_builder.dart';
 import '../../../common/widgets/button/crud_button.dart';
-import '../../../common/widgets/rows/stream/row_calendar_stream.dart';
-import '../../../common/widgets/rows/stream/row_text_field_stream.dart';
+import '../../../common/widgets/rows/crud/row_calendar_stream.dart';
+import '../../../common/widgets/rows/crud/row_text_field_stream.dart';
 import '../../../common/widgets/screen/custom_consumer_stateful_widget.dart';
 import '../../../models/api/season_api_model.dart';
 import '../../../models/enum/crud.dart';
@@ -42,11 +42,8 @@ class _EditSeasonScreenState extends ConsumerState<EditSeasonScreen> {
             labelText: "název",
             padding: padding,
             textFieldText: "Název sezony:",
-            textStream: ref.watch(seasonControllerProvider).name(),
-            errorTextStream:
-                ref.watch(seasonControllerProvider).nameErrorText(),
-            onTextChanged: (name) =>
-                {ref.watch(seasonControllerProvider).setName(name)},
+            stringControllerMixin: ref.watch(seasonControllerProvider),
+            hashKey: ref.read(seasonControllerProvider).nameKey,
           ),
           const SizedBox(height: 10),
           RowCalendarStream(
@@ -54,12 +51,8 @@ class _EditSeasonScreenState extends ConsumerState<EditSeasonScreen> {
             size: size,
             padding: padding,
             textFieldText: "Začátek sezony:",
-            onDateChanged: (date) {
-              ref.watch(seasonControllerProvider).setFromDate(date);
-            },
-            dateStream: ref.watch(seasonControllerProvider).fromDate(),
-            errorTextStream:
-                ref.watch(seasonControllerProvider).fromDateErrorText(),
+            dateControllerMixin: ref.watch(seasonControllerProvider),
+            hashKey: ref.read(seasonControllerProvider).fromKey,
           ),
           const SizedBox(height: 10),
           RowCalendarStream(
@@ -67,12 +60,8 @@ class _EditSeasonScreenState extends ConsumerState<EditSeasonScreen> {
             size: size,
             padding: padding,
             textFieldText: "Konec sezony:",
-            onDateChanged: (date) {
-              ref.watch(seasonControllerProvider).setToDate(date);
-            },
-            dateStream: ref.watch(seasonControllerProvider).toDate(),
-            errorTextStream:
-                ref.watch(seasonControllerProvider).toDateErrorText(),
+            dateControllerMixin: ref.watch(seasonControllerProvider),
+            hashKey: ref.read(seasonControllerProvider).toKey,
           ),
           const SizedBox(height: 10),
           const SizedBox(height: 10),

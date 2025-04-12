@@ -1,26 +1,29 @@
 import 'dart:convert';
 
 import 'package:trus_app/config.dart';
+import 'package:trus_app/models/api/achievement/achievement_detail.dart';
+import 'package:trus_app/models/api/achievement/player_achievement_api_model.dart';
+import 'package:trus_app/models/api/football/football_match_api_model.dart';
+import 'package:trus_app/models/api/football/football_player_api_model.dart';
+import 'package:trus_app/models/api/football/stats/football_all_individual_stats_api_model.dart';
+import 'package:trus_app/models/api/football/table_team_api_model.dart';
 
 import '../../../common/repository/exception/json_decode_exception.dart';
+import '../../../models/api/auth/user_api_model.dart';
 import '../../../models/api/fine_api_model.dart';
 import '../../../models/api/goal/goal_api_model.dart';
 import '../../../models/api/interfaces/json_and_http_converter.dart';
 import '../../../models/api/match/match_api_model.dart';
 import '../../../models/api/notification_api_model.dart';
-import '../../../models/api/pkfl/pkfl_all_individual_stats.dart';
-import '../../../models/api/pkfl/pkfl_match_api_model.dart';
-import '../../../models/api/pkfl/pkfl_player_api_model.dart';
-import '../../../models/api/pkfl/pkfl_table_team.dart';
-import '../../../models/api/player_api_model.dart';
+import '../../../models/api/player/player_api_model.dart';
 import '../../../models/api/receivedfine/received_fine_api_model.dart';
 import '../../../models/api/season_api_model.dart';
 import '../../../models/api/stats/stats.dart';
 import '../../../models/api/step/step_api_model.dart';
-import '../../../models/api/user_api_model.dart';
 import '../../general/repository/request_executor.dart';
 
 class CrudApiService extends RequestExecutor {
+  CrudApiService(super.ref);
   ///mapuje json na objecty podle parametru apiClass
   JsonAndHttpConverter _mapToModel(Map<String, dynamic> json, String apiClass) {
     switch (apiClass) {
@@ -40,18 +43,22 @@ class CrudApiService extends RequestExecutor {
         return UserApiModel.fromJson(json);
       case notificationApi:
         return NotificationApiModel.fromJson(json);
-      case pkflApi:
-        return PkflMatchApiModel.fromJson(json);
-      case pkflAllIndividualStatsApi:
-        return PkflAllIndividualStats.fromJson(json);
-      case pkflPlayerApi:
-        return PkflPlayerApiModel.fromJson(json);
-      case pkflTableApi:
-        return PkflTableTeam.fromJson(json);
+      case football:
+        return FootballMatchApiModel.fromJson(json);
+      case footballAllIndividualStatsApi:
+        return FootballAllIndividualStatsApiModel.fromJson(json);
+      case footballPlayerApi:
+        return FootballPlayerApiModel.fromJson(json);
+      case footballTableApi:
+        return TableTeamApiModel.fromJson(json);
       case stepApi:
         return StepApiModel.fromJson(json);
       case statsApi:
         return Stats.fromJson(json);
+      case achievementApi:
+        return AchievementDetail.fromJson(json);
+      case playerAchievementApi:
+        return PlayerAchievementApiModel.fromJson(json);
       default:
         throw JsonDecodeException();
     }

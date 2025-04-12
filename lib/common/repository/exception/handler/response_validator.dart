@@ -1,7 +1,8 @@
 import 'dart:convert';
-import 'package:trus_app/common/repository/exception/model/field_validation_response.dart';
 
 import 'package:http/http.dart' as http;
+import 'package:trus_app/common/repository/exception/model/field_validation_response.dart';
+
 import '../field_validation_exception.dart';
 import '../internal_snackbar_exception.dart';
 import '../login_exception.dart';
@@ -27,7 +28,9 @@ class ResponseValidator {
         throw LoginException(errorResponse.message);
       }
     } else if (value == 403) {
-      throw ServerException('Nedostačující práva na úpravu');
+      final decodedBody = json.decode(utf8.decode(response.bodyBytes));
+      ErrorResponse errorResponse = ErrorResponse.fromJson(decodedBody);
+      throw ServerException(errorResponse.message);
     } else if (value == 400) {
       try {
         final decodedBody = json.decode(utf8.decode(response.bodyBytes));

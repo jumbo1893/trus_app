@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:trus_app/features/home/screens/home_screen.dart';
+
 import '../../../features/main/screen_controller.dart';
 import '../../../models/api/notification_api_model.dart';
 import '../../utils/utils.dart';
@@ -30,7 +31,7 @@ class NotificationsErrorFutureBuilder<T> extends ConsumerWidget {
           Future.delayed(
               Duration.zero,
               () => showErrorDialog(
-                  snapshot.error!.toString(),
+                  snapshot,
                   () => ref
                       .read(screenControllerProvider)
                       .changeFragment(HomeScreen.id),
@@ -44,7 +45,7 @@ class NotificationsErrorFutureBuilder<T> extends ConsumerWidget {
                 Future.delayed(
                     Duration.zero,
                     () => showErrorDialog(
-                        streamSnapshot.error!.toString(),
+                        streamSnapshot,
                         () => ref
                             .read(screenControllerProvider)
                             .changeFragment(HomeScreen.id),

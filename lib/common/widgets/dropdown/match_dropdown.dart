@@ -1,8 +1,9 @@
+import 'package:dropdown_button2/dropdown_button2.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:trus_app/common/widgets/loader.dart';
-import 'package:dropdown_button2/dropdown_button2.dart';
 import 'package:trus_app/models/api/match/match_api_model.dart';
+
 import '../../../features/general/match_reader.dart';
 import '../../repository/exception/loading_exception.dart';
 import '../../utils/utils.dart';
@@ -74,7 +75,7 @@ class _MatchDropdownState extends ConsumerState<MatchDropdown> {
                   if(streamSnapshot.error is LoadingException) {
                     return const Loader();
                   }
-                  Future.delayed(Duration.zero, () => showErrorDialog(streamSnapshot.error!.toString(), () => {}, context));
+                  Future.delayed(Duration.zero, () => showErrorDialog(streamSnapshot, () => {}, context));
                   return const Loader();
                 }
                 List<MatchApiModel> matches = streamSnapshot.data!;

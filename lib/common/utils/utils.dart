@@ -44,11 +44,21 @@ void hideSnackBar(BuildContext context) {
   ScaffoldMessenger.of(context).hideCurrentSnackBar();
 }
 
-void showErrorDialog(String snapshotError, VoidCallback onDialogCancel, BuildContext context) {
-  var dialog = ErrorDialog("Chyba!", snapshotError, () => onDialogCancel());
+void showErrorDialog(AsyncSnapshot<void> snapshot, VoidCallback onDialogCancel, BuildContext context) {
+  print('error: ${snapshot.stackTrace}');
+  var dialog = ErrorDialog("Chyba!", snapshot.error.toString(), () => onDialogCancel());
+  showDialog(context: context, builder: (BuildContext context) => dialog);
+}
+
+void showErrorDialogString(String error, VoidCallback onDialogCancel, BuildContext context) {
+  var dialog = ErrorDialog("Chyba!", error.toString(), () => onDialogCancel());
   showDialog(context: context, builder: (BuildContext context) => dialog);
 }
 
 String getValueFromValueKey(Key key) {
   return key.toString().substring(3, key.toString().length - 3);
+}
+
+int castDoubleToPercentage(double? number) {
+  return ((number?? 0)*100).toInt();
 }

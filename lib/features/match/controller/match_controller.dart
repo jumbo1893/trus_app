@@ -1,146 +1,161 @@
 import 'dart:async';
 
+import 'package:collection/collection.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:trus_app/features/season/repository/season_api_service.dart';
-import 'package:trus_app/models/api/player_api_model.dart';
+import 'package:trus_app/features/general/global_variables_controller.dart';
+import 'package:trus_app/features/match/widget/i_match_hash_key.dart';
+import 'package:trus_app/features/mixin/boolean_controller_mixin.dart';
+import 'package:trus_app/features/mixin/checked_list_controller_mixin.dart';
+import 'package:trus_app/features/mixin/date_controller_mixin.dart';
+import 'package:trus_app/features/mixin/string_controller_mixin.dart';
+import 'package:trus_app/models/api/football/helper/mutual_matches.dart';
+import 'package:trus_app/models/api/player/player_api_model.dart';
 import 'package:trus_app/models/api/season_api_model.dart';
 
 import '../../../common/static_text.dart';
 import '../../../common/utils/field_validator.dart';
+import '../../../models/api/football/detail/football_match_detail.dart';
+import '../../../models/api/football/football_match_api_model.dart';
 import '../../../models/api/match/match_api_model.dart';
 import '../../../models/api/match/match_setup.dart';
-import '../../../models/api/pkfl/pkfl_match_api_model.dart';
-import '../../../models/api/pkfl/pkfl_match_detail.dart';
 import '../../../models/enum/match_detail_options.dart';
+import '../../football/repository/football_api_service.dart';
 import '../../general/crud_operations.dart';
-import '../../pkfl/repository/pkfl_api_service.dart';
+import '../../mixin/dropdown_controller_mixin.dart';
 import '../repository/match_api_service.dart';
-import 'package:collection/collection.dart';
 
 final matchControllerProvider = Provider((ref) {
-  final pkflApiService = ref.watch(pkflApiServiceProvider);
+  final footballApiService = ref.watch(footballApiServiceProvider);
   final matchApiService = ref.watch(matchApiServiceProvider);
-  final seasonApiService = ref.watch(seasonApiServiceProvider);
+  final globalVariablesController = ref.watch(globalVariablesControllerProvider);
   return MatchController(
-      pkflApiService: pkflApiService,
+      footballApiService: footballApiService,
       matchApiService: matchApiService,
-      seasonApiService: seasonApiService,
+      globalVariablesController: globalVariablesController,
       ref: ref);
 });
 
-class MatchController implements CrudOperations {
-  final PkflApiService pkflApiService;
+class MatchController with DropdownControllerMixin, StringControllerMixin, DateControllerMixin, CheckedListControllerMixin, BooleanControllerMixin, IMatchHashKey implements CrudOperations {
+  final FootballApiService footballApiService;
   final MatchApiService matchApiService;
-  final SeasonApiService seasonApiService;
-  final ProviderRef ref;
-  final nameController = StreamController<String>.broadcast();
-  final nameErrorTextController = StreamController<String>.broadcast();
-  final seasonController = StreamController<SeasonApiModel>.broadcast();
-  final playerErrorTextController = StreamController<String>.broadcast();
-  final checkedFanController =
-      StreamController<List<PlayerApiModel>>.broadcast();
-  final checkedPlayerController =
-      StreamController<List<PlayerApiModel>>.broadcast();
-  final dateController = StreamController<DateTime>.broadcast();
-  final homeController = StreamController<bool>.broadcast();
-  final connectWithPkflController = StreamController<bool>.broadcast();
+  final GlobalVariablesController globalVariablesController;
+  final Ref ref;
+  final connectWithFootballController = StreamController<bool>.broadcast();
   final matchDetailScreenController = StreamController<int>.broadcast();
   String originalOpponentName = "";
-  String matchName = "";
-  DateTime matchDate = DateTime.now();
-  bool matchHome = true;
-  bool connectWithPkflMatch = true;
-  List<PlayerApiModel> matchPlayers = [];
-  List<PlayerApiModel> matchFans = [];
-  List<SeasonApiModel> seasons = [];
-  List<PlayerApiModel> players = [];
-  List<PlayerApiModel> fans = [];
-  SeasonApiModel matchSeason = SeasonApiModel.dummy();
+  bool connectWithFootballMatch = true;
   late MatchSetup matchSetup;
-  PkflMatchDetail? pkflMatchDetail;
-  PkflMatchApiModel? pkflMatch;
+  FootballMatchDetail? footballMatchDetail;
+  FootballMatchApiModel? footballMatch;
+  int matchOptionIndex = 0;
+  List<MatchDetailOptions> defaultMatchDetailOptions = [];
 
   MatchController({
-    required this.pkflApiService,
+    required this.footballApiService,
     required this.matchApiService,
-    required this.seasonApiService,
+    required this.globalVariablesController,
     required this.ref,
   });
 
   Future<void> loadNewMatch() async {
-    matchName = "";
-    nameController.add("");
-    dateController.add(DateTime.now());
-    setSeason(matchSetup.primarySeason);
-    seasons = matchSetup.seasonList;
-    players = matchSetup.playerList;
-    fans = matchSetup.fanList;
-    matchPlayers = [];
-    matchFans = [];
-    checkedPlayerController.add([]);
-    checkedFanController.add([]);
-    matchHome = true;
-    homeController.add(true);
-    nameErrorTextController.add("");
-    playerErrorTextController.add("");
-    pkflMatch = matchSetup.pkflMatch;
-    setupPkflController();
+    initStringFields("", nameKey());
+    initDateFields(DateTime.now(), dateKey());
+    initDropdown(matchSetup.primarySeason, matchSetup.seasonList, seasonKey());
+    initCheckedListFields(matchSetup.playerList, [], playerKey());
+    initCheckedListFields(matchSetup.fanList, [], fanKey());
+    initBooleanFields(true, homeKey());
+    footballMatch = matchSetup.footballMatch;
+    setupFootballController();
   }
 
   void loadEditMatch() {
-    matchName = matchSetup.match!.name;
+    initStringFields(matchSetup.match!.name, nameKey());
     originalOpponentName = matchSetup.match!.name;
-    nameController.add(matchSetup.match!.name);
-    matchDate = matchSetup.match!.date;
-    dateController.add(matchSetup.match!.date);
-    setSeason(matchSetup.primarySeason);
-    seasons = matchSetup.seasonList;
-    players = matchSetup.playerList;
-    fans = matchSetup.fanList;
-    matchPlayers =
-        _getListOfPlayersByIds(players, matchSetup.match!.playerIdList);
-    matchFans = _getListOfPlayersByIds(fans, matchSetup.match!.playerIdList);
-    checkedPlayerController.add(matchPlayers);
-    checkedFanController.add(matchFans);
-    matchHome = matchSetup.match!.home;
-    homeController.add(matchSetup.match!.home);
-    nameErrorTextController.add("");
-    playerErrorTextController.add("");
-    pkflMatch = matchSetup.pkflMatch;
-    setupPkflController();
+    initDateFields(matchSetup.match!.date, dateKey());
+    initDropdown(matchSetup.primarySeason, matchSetup.seasonList, seasonKey());
+    initCheckedListFields(matchSetup.playerList, _getListOfPlayersByIds(matchSetup.playerList, matchSetup.match!.playerIdList), playerKey());
+    initCheckedListFields(matchSetup.fanList, _getListOfPlayersByIds(matchSetup.fanList, matchSetup.match!.playerIdList), fanKey());
+    initBooleanFields(matchSetup.match!.home, homeKey());
+    footballMatch = matchSetup.footballMatch;
+    setupFootballController();
   }
 
-  Future<void> loadNewMatchByPkflMatch(PkflMatchApiModel pkflMatch) async {
-    String name = pkflMatch.opponent == null ? "" : pkflMatch.opponent!.name;
-    matchName = name;
-    nameController.add(name);
-    DateTime date = pkflMatch.date;
-    matchDate = date;
-    dateController.add(date);
-    setSeason(matchSetup.primarySeason);
-    seasons = matchSetup.seasonList;
-    players = matchSetup.playerList;
-    fans = matchSetup.fanList;
-    matchPlayers = [];
-    matchFans = [];
-    checkedPlayerController.add([]);
-    checkedFanController.add([]);
-    bool homeMatch = pkflMatch.homeMatch;
-    matchHome = homeMatch;
-    homeController.add(homeMatch);
-    nameErrorTextController.add("");
-    playerErrorTextController.add("");
-    setupPkflController();
+  Future<void> loadNewMatchByFootballMatch(FootballMatchApiModel footballMatch) async {
+    initStringFields(getOpponentName(footballMatch), nameKey());
+    initDateFields(footballMatch.date, dateKey());
+    initDropdown(matchSetup.primarySeason, matchSetup.seasonList, seasonKey());
+    initCheckedListFields(matchSetup.playerList, [], playerKey());
+    initCheckedListFields(matchSetup.fanList, [], fanKey());
+    initBooleanFields(isHomeMatch(footballMatch), homeKey());
+    setupFootballController();
   }
 
-  setupPkflController() {
-    if(pkflMatch != null) {
-      connectWithPkflMatch = true;
+  int getInitialIndex(MatchDetailOptions preferredScreen,
+      List<MatchDetailOptions> availableOptions) {
+    if (preferredScreen == MatchDetailOptions.editMatch) {
+      matchOptionIndex = 0;
+    } else if (preferredScreen == MatchDetailOptions.footballMatchDetail) {
+      if (availableOptions.contains(MatchDetailOptions.editMatch) &&
+          availableOptions.contains(MatchDetailOptions.footballMatchDetail)) {
+        matchOptionIndex =  1;
+      } else {
+        matchOptionIndex =  0;
+      }
+    } else {
+      if (availableOptions.contains(MatchDetailOptions.editMatch)) {
+        if (availableOptions.contains(MatchDetailOptions.mutualMatches)) {
+          matchOptionIndex =  4;
+        } else if (availableOptions
+            .contains(MatchDetailOptions.footballMatchDetail)) {
+          matchOptionIndex =  1;
+        } else {
+          matchOptionIndex =  0;
+        }
+      } else {
+        if (availableOptions.contains(MatchDetailOptions.mutualMatches)) {
+          matchOptionIndex = 3;
+        }
+      }
+    }
+    return matchOptionIndex;
+  }
+
+  String getOpponentName(FootballMatchApiModel footballMatch) {
+    int userTeamId = globalVariablesController.appTeam!.team.id;
+    if(footballMatch.homeTeam == null) {
+      return "";
+    }
+    else if(userTeamId == footballMatch.homeTeam!.id) {
+      return footballMatch.awayTeam!.name;
+    }
+    else if(footballMatch.awayTeam == null) {
+      return "";
+    }
+    else if(userTeamId == footballMatch.awayTeam!.id) {
+      return footballMatch.homeTeam!.name;
+    }
+    return "";
+  }
+
+  bool isHomeMatch(FootballMatchApiModel footballMatch) {
+    int userTeamId = globalVariablesController.appTeam!.team.id;
+    if(footballMatch.homeTeam != null && userTeamId == footballMatch.homeTeam!.id) {
+      return true;
+    }
+    else if(footballMatch.awayTeam != null && userTeamId == footballMatch.awayTeam!.id) {
+      return false;
+    }
+    return true;
+  }
+
+  void setupFootballController() {
+    if(footballMatch != null) {
+      connectWithFootballMatch = true;
     }
     else {
-      connectWithPkflMatch = false;
+      connectWithFootballMatch = false;
     }
-    connectWithPkflController.add(connectWithPkflMatch);
+    connectWithFootballController.add(connectWithFootballMatch);
   }
 
   List<PlayerApiModel> _getListOfPlayersByIds(
@@ -161,80 +176,92 @@ class MatchController implements CrudOperations {
     await Future.delayed(Duration.zero, () => loadNewMatch());
   }
 
-  Future<void> newMatchByPkflMatch(PkflMatchApiModel pkflMatch) async {
-    this.pkflMatch = pkflMatch;
+  Future<void> newMatchByFootballMatch(FootballMatchApiModel footballMatch) async {
+    this.footballMatch = footballMatch;
     await Future.delayed(
-        Duration.zero, () => loadNewMatchByPkflMatch(pkflMatch));
+        Duration.zero, () => loadNewMatchByFootballMatch(footballMatch));
   }
 
-  Future<void> editMatch() async {
+  Future editMatch() async {
     Future.delayed(Duration.zero, () => loadEditMatch());
   }
 
   Future<void> setupNewMatch() async {
     matchSetup = await _setupMatch(null);
-    pkflMatch = matchSetup.pkflMatch; //musíme udělat předtim, než to vrátíme
+    footballMatch = matchSetup.footballMatch; //musíme udělat předtim, než to vrátíme
   }
 
   Future<void> setupEditMatch(int id) async {
     matchSetup = await _setupMatch(id);
-    pkflMatch = matchSetup.pkflMatch;
+    footballMatch = matchSetup.footballMatch;
   }
 
   MatchApiModel returnEditMatch() {
     return matchSetup.match!;
   }
 
-  Future<PkflMatchApiModel> returnPkflMatch() async {
-      return pkflMatchDetail!.pkflMatch;
+  FootballMatchApiModel returnFootballMatch() {
+      return footballMatchDetail!.footballMatch;
   }
 
-  Future<PkflMatchDetail> returnPkflMatchDetail() async {
-    return pkflMatchDetail!;
+  Future<MutualMatches> returnMutualMatches() async {
+    return MutualMatches(mutualMatches: footballMatchDetail!.mutualMatches, aggregateScore: footballMatchDetail!.aggregateScore, aggregateMatches: footballMatchDetail!.aggregateMatches);
   }
 
-  Future<List<MatchDetailOptions>> loadPkflMatchDetail(int? pkflMatchId, bool editMatch) async {
+  Future<List<MatchDetailOptions>> loadFootballMatchDetail(int? footballMatchId, bool editMatch) async {
     List<MatchDetailOptions> matchDetailOptions = [];
-    if(pkflMatchId != null) {
-      pkflMatchDetail = await getPkflMatchDetail(pkflMatchId);
-      matchDetailOptions.add(MatchDetailOptions.pkflDetail);
-      if(pkflMatchDetail!.commonMatches.isNotEmpty) {
-        matchDetailOptions.add(MatchDetailOptions.commonMatches);
+    if(footballMatchId != null) {
+      footballMatchDetail = await getFootballMatchDetail(footballMatchId);
+      matchDetailOptions.add(MatchDetailOptions.footballMatchDetail);
+      matchDetailOptions.add(MatchDetailOptions.homeMatchDetail);
+      matchDetailOptions.add(MatchDetailOptions.awayMatchDetail);
+      if(footballMatchDetail!.mutualMatches.isNotEmpty) {
+        matchDetailOptions.add(MatchDetailOptions.mutualMatches);
       }
-      if(pkflMatchDetail!.pkflMatch.matchIdList.isNotEmpty && editMatch) {
-        await setupEditMatch(pkflMatchDetail!.pkflMatch.matchIdList[0]);
+      int matchId = footballMatchDetail!.footballMatch.findMatchIdForCurrentAppTeamInMatchIdAndAppTeamIdList(ref.read(globalVariablesControllerProvider).appTeam);
+      if(matchId != -1 && editMatch) {
+        await setupEditMatch(matchId);
         matchDetailOptions.add(MatchDetailOptions.editMatch);
       }
     }
+    defaultMatchDetailOptions = matchDetailOptions;
     return matchDetailOptions;
   }
 
-  Future<List<MatchDetailOptions>> setupScreen(int? matchId, int? pkflMatchId) async {
+  Future<List<MatchDetailOptions>> setupScreen(int? matchId, int? footballMatchId) async {
     List<MatchDetailOptions> matchDetailOptions = [];
-    if(pkflMatchId != null) {
-      return await loadPkflMatchDetail(pkflMatchId, true);
+    if(footballMatchId != null) {
+      return await loadFootballMatchDetail(footballMatchId, true);
     }
     else if(matchId != null) {
       await setupEditMatch(matchId);
       matchDetailOptions.add(MatchDetailOptions.editMatch);
-      if (pkflMatch != null) {
-        matchDetailOptions.addAll(
-            await loadPkflMatchDetail(pkflMatch!.id, false));
+      if (footballMatch != null) {
+        matchDetailOptions = (
+            await loadFootballMatchDetail(footballMatch!.id, true));
       }
     }
     return matchDetailOptions;
   }
 
-  Future<List<MatchDetailOptions>> setupScreenForCommonMatchesOnly(int? pkflMatchId) async {
+  Future<List<MatchDetailOptions>> setupScreenForCommonMatchesOnly(int? footballTeamId) async {
     List<MatchDetailOptions> matchDetailOptions = [];
-    matchDetailOptions.add(MatchDetailOptions.commonMatches);
-    if(pkflMatchId != null) {
-      pkflMatchDetail = await getPkflMatchDetail(pkflMatchId);
+    matchDetailOptions.add(MatchDetailOptions.mutualMatches);
+    if(footballTeamId != null) {
+      footballMatchDetail = await getFootballMatchDetail(footballTeamId);
     }
     return matchDetailOptions;
   }
 
+  int getMatchDetailOptionForFootballDetail() {
+    if(defaultMatchDetailOptions.contains(MatchDetailOptions.editMatch)) {
+      return matchOptionIndex;
+    }
+    return matchOptionIndex+1;
+  }
+
   void changeMatchDetailScreen(int option) {
+    matchOptionIndex = option;
     matchDetailScreenController.add(option);
   }
 
@@ -242,131 +269,25 @@ class MatchController implements CrudOperations {
     return matchDetailScreenController.stream;
   }
 
-  Stream<String> name() {
-    return nameController.stream;
+  Stream<bool> connectWithFootball() {
+    return connectWithFootballController.stream;
   }
 
-  Stream<String> nameErrorText() {
-    return nameErrorTextController.stream;
-  }
-
-  Stream<SeasonApiModel> season() {
-    return seasonController.stream;
-  }
-
-  Future<List<SeasonApiModel>> seasonList() {
-    return Future.delayed(Duration.zero, () => seasons);
-  }
-
-  Future<List<PlayerApiModel>> playerList() {
-    return Future.delayed(Duration.zero, () => players);
-  }
-
-  Future<List<PlayerApiModel>> fanList() {
-    return Future.delayed(Duration.zero, () => fans);
-  }
-
-  Stream<String> playerErrorText() {
-    return playerErrorTextController.stream;
-  }
-
-  Stream<List<PlayerApiModel>> checkedPlayers() {
-    return checkedPlayerController.stream;
-  }
-
-  Stream<List<PlayerApiModel>> checkedFans() {
-    return checkedFanController.stream;
-  }
-
-  void initCheckedPlayers() {
-    checkedPlayerController.add(matchPlayers);
-  }
-
-  void initCheckedFans() {
-    checkedFanController.add(matchFans);
-  }
-
-  void initSeason() {
-    seasonController.add(matchSeason);
-  }
-
-  Stream<bool> home() {
-    return homeController.stream;
-  }
-
-  Stream<bool> connectWithPkfl() {
-    return connectWithPkflController.stream;
-  }
-
-  Stream<DateTime> date() {
-    return dateController.stream;
-  }
-
-  void setName(String name) {
-    nameController.add(name);
-    matchName = name;
-  }
-
-  void setSeason(SeasonApiModel season) {
-    seasonController.add(season);
-    matchSeason = season;
-  }
-
-  void setDate(DateTime date) {
-    dateController.add(date);
-    matchDate = date;
-  }
-
-  void setHome(bool home) {
-    homeController.add(home);
-    matchHome = home;
-  }
-
-  void setConnectWithPkflMatch(bool connect) {
-    connectWithPkflController.add(connect);
-    connectWithPkflMatch = connect;
-  }
-
-  void addPlayer(PlayerApiModel player) {
-    matchPlayers.add(player);
-    checkedPlayerController.add(matchPlayers);
-  }
-
-  void removePlayer(PlayerApiModel player) {
-    matchPlayers.remove(player);
-    checkedPlayerController.add(matchPlayers);
-  }
-
-  void addFan(PlayerApiModel fan) {
-    matchFans.add(fan);
-    checkedFanController.add(matchFans);
-  }
-
-  void removeFan(PlayerApiModel fan) {
-    matchFans.remove(fan);
-    checkedFanController.add(matchFans);
-  }
-
-  void setPlayers(List<PlayerApiModel> players) {
-    matchPlayers = players;
-    checkedPlayerController.add(players);
-  }
-
-  void setFans(List<PlayerApiModel> fans) {
-    matchFans = fans;
-    checkedFanController.add(fans);
+  void setConnectWithFootballMatch(bool connect) {
+    connectWithFootballController.add(connect);
+    connectWithFootballMatch = connect;
   }
 
   bool validateFields() {
-    String errorText = validateEmptyField(matchName.trim());
+    String errorText = validateEmptyField(stringValues[nameKey()]!.trim());
     String playerErrorText;
-    if (matchPlayers.isEmpty) {
+    if (checkedModelsLists[playerKey()]!.isEmpty) {
       playerErrorText = atLeastOnePlayerMustBePresentValidation;
     } else {
       playerErrorText = "";
     }
-    nameErrorTextController.add(errorText);
-    playerErrorTextController.add(playerErrorText);
+    stringErrorTextControllers[nameKey()]!.add(errorText);
+    checkedListsErrorTextControllers[playerKey()]!.add(playerErrorText);
     return errorText.isEmpty && playerErrorText.isEmpty;
   }
 
@@ -374,20 +295,24 @@ class MatchController implements CrudOperations {
     return await matchApiService.setupMatch(id);
   }
 
-  Future<PkflMatchDetail> getPkflMatchDetail(int id) async {
-    return await pkflApiService.getPkflMatchDetail(id);
+  Future<FootballMatchDetail> getFootballMatchDetail(int id) async {
+    return await footballApiService.getFootballMatchDetail(id);
+  }
+
+  Future<FootballMatchDetail> getFootballTeamDetail(int id) async {
+    return await footballApiService.getFootballMatchDetail(id);
   }
 
   @override
   Future<MatchApiModel?> addModel() async {
     if (validateFields()) {
       return await matchApiService.addMatch(MatchApiModel.withPlayers(
-          name: matchName,
-          date: matchDate,
-          seasonId: matchSeason.id!,
-          home: matchHome,
-          players: matchPlayers + matchFans,
-          pkflMatch: connectWithPkflMatch ? pkflMatch : null));
+          name: stringValues[nameKey()]!,
+          date: dateValues[dateKey()]!,
+          seasonId: (dropdownValues[seasonKey()] as SeasonApiModel).id!,
+          home: boolValues[homeKey()]!,
+          players: checkedModelsLists[playerKey()]!.cast<PlayerApiModel>() + checkedModelsLists[fanKey()]!.cast<PlayerApiModel>(),
+          footballMatch: connectWithFootballMatch ? footballMatch : null));
     }
     return null;
   }
@@ -403,17 +328,46 @@ class MatchController implements CrudOperations {
     if (validateFields()) {
       MatchApiModel response = await matchApiService.editMatch(
           MatchApiModel.withPlayers(
-              pkflMatch: connectWithPkflMatch ? pkflMatch : null,
+              footballMatch: connectWithFootballMatch ? footballMatch : null,
               id: id,
-              name: matchName,
-              date: matchDate,
-              seasonId: matchSeason.id!,
-              home: matchHome,
-              players: matchPlayers + matchFans),
+              name: stringValues[nameKey()]!,
+              date: dateValues[dateKey()]!,
+              seasonId: (dropdownValues[seasonKey()] as SeasonApiModel).id!,
+              home: boolValues[homeKey()]!,
+              players: checkedModelsLists[playerKey()]!.cast<PlayerApiModel>() + checkedModelsLists[fanKey()]!.cast<PlayerApiModel>()),
           id);
 
       return response.toStringForEdit(originalOpponentName);
     }
     return null;
+  }
+  @override
+  String dateKey() {
+    return "match_date";
+  }
+
+  @override
+  String fanKey() {
+    return "match_fan";
+  }
+
+  @override
+  String homeKey() {
+    return "match_home";
+  }
+
+  @override
+  String nameKey() {
+    return "match_name";
+  }
+
+  @override
+  String playerKey() {
+    return "match_player";
+  }
+
+  @override
+  String seasonKey() {
+    return "match_season";
   }
 }

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+
 import '../../../features/home/screens/home_screen.dart';
 import '../../../features/main/screen_controller.dart';
 import '../../utils/utils.dart';
@@ -9,11 +10,13 @@ class ColumnFutureBuilder<T> extends ConsumerWidget {
   final Future<void> loadModelFuture;
   final Stream<bool>? loadingScreen;
   final List<Widget> columns;
+  final CrossAxisAlignment? crossAxisAlignment;
 
   const ColumnFutureBuilder({
     Key? key,
     required this.loadModelFuture,
     this.loadingScreen,
+    this.crossAxisAlignment,
     required this.columns,
   }) : super(key: key);
 
@@ -36,7 +39,7 @@ class ColumnFutureBuilder<T> extends ConsumerWidget {
                     Future.delayed(
                         Duration.zero,
                         () => showErrorDialog(
-                            snapshot.error!.toString(),
+                            snapshot,
                             () => ref
                                 .read(screenControllerProvider)
                                 .changeFragment(HomeScreen.id),
@@ -47,7 +50,9 @@ class ColumnFutureBuilder<T> extends ConsumerWidget {
                     padding: const EdgeInsets.all(padding),
                     child: SafeArea(
                       child: SingleChildScrollView(
-                        child: Column(children: columns),
+                        child: Column(
+                          crossAxisAlignment: crossAxisAlignment != null? crossAxisAlignment! : CrossAxisAlignment.start,
+                            children: columns),
                       ),
                     ),
                   );

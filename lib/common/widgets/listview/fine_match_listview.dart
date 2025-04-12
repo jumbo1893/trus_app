@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../../colors.dart';
-import '../../../models/api/player_api_model.dart';
+import '../../../models/api/player/player_api_model.dart';
 import '../../repository/exception/loading_exception.dart';
 import '../loader.dart';
 import 'custom_checkbox_list_tile.dart';

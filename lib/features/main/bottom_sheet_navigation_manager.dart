@@ -1,31 +1,37 @@
 import 'package:flutter/material.dart';
-import 'package:trus_app/features/auth/screens/user_screen.dart';
+import 'package:trus_app/features/achievement/screens/achievement_screen.dart';
 import 'package:trus_app/features/beer/screens/beer_simple_screen.dart';
 import 'package:trus_app/features/fine/match/screens/fine_match_screen.dart';
 import 'package:trus_app/features/fine/screens/fine_screen.dart';
 import 'package:trus_app/features/home/screens/home_screen.dart';
 import 'package:trus_app/features/info/screens/info_screen.dart';
 import 'package:trus_app/features/match/screens/add_match_screen.dart';
-import 'package:trus_app/features/pkfl/screens/pkfl_fixtures_screen.dart';
-import 'package:trus_app/features/pkfl/screens/pkfl_player_stats_screen.dart';
 import 'package:trus_app/features/player/screens/add_player_screen.dart';
 import 'package:trus_app/features/player/screens/player_screen.dart';
 import 'package:trus_app/features/season/screens/season_screen.dart';
 import 'package:trus_app/features/statistics/screens/main_goal_statistics_screen.dart';
+import 'package:trus_app/features/user/screens/view_user_screen.dart';
+import 'package:trus_app/models/api/auth/app_team_api_model.dart';
 
 import '../../colors.dart';
+import '../football/screens/football_fixtures_screen.dart';
+import '../football/screens/football_player_stats_screen.dart';
+import '../football/screens/main_football_statistics_screen.dart';
+import '../football/table/screens/football_table_screen.dart';
 import '../match/screens/match_screen.dart';
-import '../pkfl/screens/main_pkfl_statistics_screen.dart';
-import '../pkfl/screens/pkfl_table_screen.dart';
 import '../statistics/screens/double_dropdown_stats_screen.dart';
 import '../statistics/screens/main_statistics_screen.dart';
-import '../steps/screens/step_screen.dart';
-
+import '../user/screens/user_screen.dart';
 class BottomSheetNavigationManager {
   final BuildContext context;
   static const String deleteAccount = "DELETE_ACCOUNT";
+  final AppTeamApiModel? appTeamApiModel;
 
-  BottomSheetNavigationManager(this.context);
+  BottomSheetNavigationManager(this.context, this.appTeamApiModel);
+
+  bool isTableTeamFromAppTeamUsable() {
+    return appTeamApiModel != null && appTeamApiModel!.team.currentTableTeam != null;
+  }
 
   void showBottomSheetNavigation(Function(String) onModalBottomSheetMenuTapped,
       String userName, VoidCallback signOut) {
@@ -77,8 +83,8 @@ class BottomSheetNavigationManager {
                     title: const Text("Přehled"),
                     onTap: () => onModalBottomSheetMenuTapped(HomeScreen.id),
                   ),
-                  Row(
-                    children: const [
+                  const Row(
+                    children: [
                       Padding(
                         padding: EdgeInsets.only(left: 10.0),
                         child: Text(
@@ -107,12 +113,12 @@ class BottomSheetNavigationManager {
                     title: const Text("Seznam zápasů"),
                     onTap: () => onModalBottomSheetMenuTapped(MatchScreen.id),
                   ),
-                  Row(
-                    children: const [
+                  const Row(
+                    children: [
                       Padding(
                         padding: EdgeInsets.only(left: 10.0),
                         child: Text(
-                          "PKFL",
+                          "LIGA",
                           textAlign: TextAlign.left,
                           style: TextStyle(color: Colors.black54, fontSize: 14),
                         ),
@@ -120,43 +126,43 @@ class BottomSheetNavigationManager {
                     ],
                   ),
                   ListTile(
-                    key: const ValueKey('menu_pkfl_match_list'),
+                    key: const ValueKey('menu_football_match_list'),
                     leading: const Icon(
                       Icons.sports_soccer,
                       color: Colors.orange,
                     ),
                     title: const Text("Program zápasů"),
-                    onTap: () => onModalBottomSheetMenuTapped(PkflFixturesScreen.id),
+                    onTap: () => onModalBottomSheetMenuTapped(FootballFixturesScreen.id),
                   ),
                   ListTile(
-                    key: const ValueKey('menu_pkfl_table'),
+                    key: const ValueKey('menu_football_table'),
                     leading: const Icon(
                       Icons.scoreboard_rounded,
                       color: Colors.orange,
                     ),
-                    title: const Text("PKFL tabulka"),
-                    onTap: () => onModalBottomSheetMenuTapped(PkflTableScreen.id),
+                    title: const Text("Ligová tabulka"),
+                    onTap: () => onModalBottomSheetMenuTapped(FootballTableScreen.id),
                   ),
                   ListTile(
-                    key: const ValueKey('menu_pkfl_stats'),
+                    key: const ValueKey('menu_football_stats'),
                     leading: const Icon(
                       Icons.equalizer,
                       color: Colors.orange,
                     ),
-                    title: const Text("Statistiky z PKFL"),
-                    onTap: () => onModalBottomSheetMenuTapped(MainPkflStatisticsScreen.id),
+                    title: isTableTeamFromAppTeamUsable() ? Text("Statistiky z ${appTeamApiModel!.team.currentTableTeam!.league.organization}") : const Text("Statistiky z Ligy"),
+                    onTap: () => onModalBottomSheetMenuTapped(MainFootballStatisticsScreen.id),
                   ),
                   ListTile(
-                    key: const ValueKey('menu_pkfl_player_stats'),
+                    key: const ValueKey('menu_football_player_stats'),
                     leading: const Icon(
                       Icons.stacked_bar_chart,
                       color: Colors.orange,
                     ),
-                    title: const Text("Hráčské statistiky z PKFL"),
-                    onTap: () => onModalBottomSheetMenuTapped(PkflPlayerStatsScreen.id),
+                    title: isTableTeamFromAppTeamUsable() ? Text("Hráčské statistiky z ${appTeamApiModel!.team.currentTableTeam!.league.organization}") : const Text("Hráčské statistiky z ligy"),
+                    onTap: () => onModalBottomSheetMenuTapped(FootballPlayerStatsScreen.id),
                   ),
-                  Row(
-                    children: const [
+                  const Row(
+                    children: [
                       Padding(
                         padding: EdgeInsets.only(left: 10.0),
                         child: Text(
@@ -185,8 +191,8 @@ class BottomSheetNavigationManager {
                     title: const Text("Seznam hráčů"),
                     onTap: () => onModalBottomSheetMenuTapped(PlayerScreen.id),
                   ),
-                  Row(
-                    children: const [
+                  const Row(
+                    children: [
                       Padding(
                         padding: EdgeInsets.only(left: 10.0),
                         child: Text(
@@ -215,8 +221,8 @@ class BottomSheetNavigationManager {
                     title: const Text("Přidat pokutu v zápase"),
                     onTap: () => onModalBottomSheetMenuTapped(FineMatchScreen.id),
                   ),
-                  Row(
-                    children: const [
+                  const Row(
+                    children: [
                       Padding(
                         padding: EdgeInsets.only(left: 10.0),
                         child: Text(
@@ -236,8 +242,8 @@ class BottomSheetNavigationManager {
                     title: const Text("Přidat pivo v zápase"),
                     onTap: () => onModalBottomSheetMenuTapped(BeerSimpleScreen.id),
                   ),
-                  Row(
-                    children: const [
+                  const Row(
+                    children: [
                       Padding(
                         padding: EdgeInsets.only(left: 10.0),
                         child: Text(
@@ -247,6 +253,15 @@ class BottomSheetNavigationManager {
                         ),
                       ),
                     ],
+                  ),
+                  ListTile(
+                    key: const ValueKey('menu_achievements'),
+                    leading: const Icon(
+                      Icons.star,
+                      color: Colors.orange,
+                    ),
+                    title: const Text("Seznam achievementů"),
+                    onTap: () => onModalBottomSheetMenuTapped(AchievementScreen.id),
                   ),
                   ListTile(
                     key: const ValueKey('menu_stats'),
@@ -276,8 +291,8 @@ class BottomSheetNavigationManager {
                     title: const Text("Statistiky gólů/asistencí"),
                     onTap: () => onModalBottomSheetMenuTapped(MainGoalStatisticsScreen.id),
                   ),
-                  Row(
-                    children: const [
+                  const Row(
+                    children: [
                       Padding(
                         padding: EdgeInsets.only(left: 10.0),
                         child: Text(
@@ -303,8 +318,17 @@ class BottomSheetNavigationManager {
                       Icons.manage_accounts,
                       color: Colors.orange,
                     ),
-                    title: const Text("Nastavení uživatele"),
+                    title: const Text("Změnit pravomoce uživatelů"),
                     onTap: () => onModalBottomSheetMenuTapped(UserScreen.id),
+                  ),
+                  ListTile(
+                    key: const ValueKey('menu_user_settings'),
+                    leading: const Icon(
+                      Icons.account_box,
+                      color: Colors.orange,
+                    ),
+                    title: const Text("Nastavení uživatele"),
+                    onTap: () => onModalBottomSheetMenuTapped(ViewUserScreen.id),
                   ),
                   ListTile(
                     key: const ValueKey('menu_delete_account'),

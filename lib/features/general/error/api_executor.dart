@@ -1,12 +1,12 @@
 
 
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/material.dart';
 
 import '../../../common/repository/exception/internal_snackbar_exception.dart';
 import '../../../common/repository/exception/login_exception.dart';
 import '../../../common/repository/exception/server_exception.dart';
 import '../../../common/utils/utils.dart';
-import 'package:flutter/material.dart';
 
 Future<T?> executeApi<T> (Future<T> Function() function, VoidCallback onDialogCancel, BuildContext context, bool loader) async {
   try {
@@ -23,7 +23,7 @@ Future<T?> executeApi<T> (Future<T> Function() function, VoidCallback onDialogCa
     Future.delayed(Duration.zero, () =>  showSnackBarWithPostFrame(context: context, content: e.cause));
   } on ServerException catch (e) {
     hideSnackBar(context);
-    Future.delayed(Duration.zero, () =>  showErrorDialog(e.cause, onDialogCancel, context,));
+    Future.delayed(Duration.zero, () =>  showErrorDialogString(e.cause, onDialogCancel, context,));
   } on InternalSnackBarException catch (e) {
     hideSnackBar(context);
     Future.delayed(

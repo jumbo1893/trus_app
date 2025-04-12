@@ -8,7 +8,7 @@ import '../../../../common/widgets/builder/add_builder.dart';
 import '../../../../common/widgets/builder/error_future_builder.dart';
 import '../../../../common/widgets/button/confirm_button.dart';
 import '../../../../common/widgets/screen/custom_consumer_stateful_widget.dart';
-import '../../../../models/api/player_api_model.dart';
+import '../../../../models/api/player/player_api_model.dart';
 import '../../../main/screen_controller.dart';
 
 class FinePlayerScreen extends CustomConsumerStatefulWidget {

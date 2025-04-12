@@ -5,8 +5,8 @@ import 'package:trus_app/models/api/fine_api_model.dart';
 
 import '../../../common/widgets/builder/column_future_builder.dart';
 import '../../../common/widgets/button/crud_button.dart';
-import '../../../common/widgets/rows/stream/row_switch_stream.dart';
-import '../../../common/widgets/rows/stream/row_text_field_stream.dart';
+import '../../../common/widgets/rows/crud/row_switch_stream.dart';
+import '../../../common/widgets/rows/crud/row_text_field_stream.dart';
 import '../../../common/widgets/screen/custom_consumer_stateful_widget.dart';
 import '../../../models/enum/crud.dart';
 import '../../main/screen_controller.dart';
@@ -40,10 +40,8 @@ class _EditFineScreenState extends ConsumerState<EditFineScreen> {
             labelText: "název",
             textFieldText: "Název pokuty:",
             padding: padding,
-            textStream: ref.watch(fineControllerProvider).name(),
-            errorTextStream: ref.watch(fineControllerProvider).nameErrorText(),
-            onTextChanged: (name) =>
-                {ref.watch(fineControllerProvider).setName(name)},
+            stringControllerMixin: ref.watch(fineControllerProvider),
+            hashKey: ref.read(fineControllerProvider).nameKey,
           ),
           const SizedBox(height: 10),
           RowTextFieldStream(
@@ -52,24 +50,18 @@ class _EditFineScreenState extends ConsumerState<EditFineScreen> {
             labelText: "v Kč",
             textFieldText: "Výše pokuty:",
             padding: padding,
-            textStream: ref.watch(fineControllerProvider).amount(),
-            errorTextStream:
-                ref.watch(fineControllerProvider).amountErrorText(),
-            onTextChanged: (amount) =>
-                {ref.watch(fineControllerProvider).setAmount(amount)},
+            stringControllerMixin: ref.watch(fineControllerProvider),
+            hashKey: ref.read(fineControllerProvider).amountKey,
             number: true,
           ),
           const SizedBox(height: 10),
           RowSwitchStream(
-            key: const ValueKey('fine_switch_field'),
-            size: size,
-            padding: padding,
-            textFieldText: "Pouze pro nově udělené pokuty?",
-            stream: ref.watch(fineControllerProvider).inactive(),
-            onChecked: (inactive) {
-              ref.watch(fineControllerProvider).setInactive(inactive);
-            },
-          ),
+              key: const ValueKey('fine_switch_field'),
+              size: size,
+              padding: padding,
+              textFieldText: "Pouze pro nově udělené pokuty?",
+              booleanControllerMixin: ref.watch(fineControllerProvider),
+              hashKey: ref.read(fineControllerProvider).inactiveKey),
           const SizedBox(
             height: 20,
           ),

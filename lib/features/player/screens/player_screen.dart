@@ -1,12 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:trus_app/features/player/screens/add_player_screen.dart';
-import 'package:trus_app/models/api/player_api_model.dart';
+import 'package:trus_app/features/player/screens/view_player_screen.dart';
+import 'package:trus_app/models/api/player/player_api_model.dart';
+
 import '../../../common/widgets/builder/models_error_future_builder.dart';
 import '../../../common/widgets/screen/custom_consumer_widget.dart';
 import '../../main/screen_controller.dart';
 import '../controller/player_controller.dart';
-import 'edit_player_screen.dart';
 
 class PlayerScreen extends CustomConsumerWidget {
   static const String id = "player-screen";
@@ -22,7 +23,7 @@ class PlayerScreen extends CustomConsumerWidget {
           body: Padding(
             padding: const EdgeInsets.only(top: 8.0),
             child: ModelsErrorFutureBuilder(
-              key: const ValueKey('player_list'),
+              key: const ValueKey('achievement_detail'),
               future: ref.watch(playerControllerProvider).getModels(),
               onPressed: (player) => {
                 ref
@@ -30,7 +31,7 @@ class PlayerScreen extends CustomConsumerWidget {
                     .setPlayer(player as PlayerApiModel),
                 ref
                     .read(screenControllerProvider)
-                    .changeFragment(EditPlayerScreen.id)
+                    .changeFragment(ViewPlayerScreen.id)
               },
               context: context,
             ),

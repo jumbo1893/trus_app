@@ -6,9 +6,11 @@ import '../../../models/api/interfaces/json_and_http_converter.dart';
 import '../../../models/api/season_api_model.dart';
 
 final seasonApiServiceProvider =
-    Provider<SeasonApiService>((ref) => SeasonApiService());
+    Provider<SeasonApiService>((ref) => SeasonApiService(ref));
 
 class SeasonApiService extends CrudApiService {
+  SeasonApiService(super.ref);
+
 
   Future<List<SeasonApiModel>> getSeasons(bool automaticSeason, bool otherSeason, bool allSeason) async {
     final queryParameters = {

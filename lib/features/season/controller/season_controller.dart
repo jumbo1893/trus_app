@@ -2,6 +2,8 @@ import 'dart:async';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:trus_app/features/general/crud_operations.dart';
+import 'package:trus_app/features/mixin/date_controller_mixin.dart';
+import 'package:trus_app/features/mixin/string_controller_mixin.dart';
 
 import '../../../common/repository/exception/field_validation_exception.dart';
 import '../../../common/repository/exception/model/field_model.dart';
@@ -15,19 +17,16 @@ final seasonControllerProvider = Provider((ref) {
   return SeasonController(seasonApiService: seasonApiService, ref: ref);
 });
 
-class SeasonController implements CrudOperations, ReadOperations {
+class SeasonController
+    with StringControllerMixin, DateControllerMixin
+    implements CrudOperations, ReadOperations {
   final SeasonApiService seasonApiService;
-  final ProviderRef ref;
-  final nameController = StreamController<String>.broadcast();
-  final fromDateController = StreamController<DateTime>.broadcast();
-  final toDateController = StreamController<DateTime>.broadcast();
-  final nameErrorTextController = StreamController<String>.broadcast();
-  final fromDateErrorTextController = StreamController<String>.broadcast();
-  final toDateErrorTextController = StreamController<String>.broadcast();
+  final Ref ref;
   String originalSeasonName = "";
-  String seasonName = "";
-  DateTime seasonToDate = DateTime.now();
-  DateTime seasonFromDate = DateTime.now();
+
+  String nameKey = "name";
+  String fromKey = "from";
+  String toKey = "to";
 
   SeasonController({
     required this.seasonApiService,
@@ -35,23 +34,15 @@ class SeasonController implements CrudOperations, ReadOperations {
   });
 
   void loadSeason(SeasonApiModel season) {
-    setEditControllers(season);
-    resetErrorTextControllers();
-    setFieldsToSeason(season);
+    initStringFields(season.name, nameKey);
+    initDateFields(season.toDate, toKey);
+    initDateFields(season.fromDate, fromKey);
     originalSeasonName = season.name;
   }
 
   void loadNewSeason() {
-    seasonName = "";
-    nameController.add("");
+    initStringFields("", nameKey);
     setDatesToNewSeason();
-    resetErrorTextControllers();
-  }
-
-  void resetErrorTextControllers() {
-    nameErrorTextController.add("");
-    fromDateErrorTextController.add("");
-    toDateErrorTextController.add("");
   }
 
   void setDatesToNewSeason() {
@@ -61,95 +52,39 @@ class SeasonController implements CrudOperations, ReadOperations {
     DateTime toDate;
     if (month <= 6) {
       fromDate = DateTime.utc(year, 1, 1);
-      toDate = DateTime.utc(year, 1, 1);
+      toDate = DateTime.utc(year, 7, 1);
     } else {
       fromDate = DateTime.utc(year, 9, 1);
       toDate = DateTime.utc(year, 12, 31);
     }
-    seasonFromDate = fromDate;
-    seasonToDate = toDate;
-    fromDateController.add(fromDate);
-    toDateController.add(toDate);
-  }
-
-  void setFieldsToSeason(SeasonApiModel season) {
-    seasonName = season.name;
-    seasonToDate = season.toDate;
-    seasonFromDate = season.fromDate;
-  }
-
-  void setEditControllers(SeasonApiModel season) {
-    nameController.add(season.name);
-    fromDateController.add(season.fromDate);
-    toDateController.add(season.toDate);
+    initDateFields(toDate, toKey);
+    initDateFields(fromDate, fromKey);
   }
 
   Future<void> season(SeasonApiModel season) async {
     Future.delayed(Duration.zero, () => loadSeason(season));
   }
 
-  Stream<String> name() {
-    return nameController.stream;
-  }
-
   Future<void> newSeason() async {
     Future.delayed(Duration.zero, () => loadNewSeason());
   }
 
-  Stream<String> nameErrorText() {
-    return nameErrorTextController.stream;
-  }
-
-  Stream<String> fromDateErrorText() {
-    return fromDateErrorTextController.stream;
-  }
-
-  Stream<String> toDateErrorText() {
-    return toDateErrorTextController.stream;
-  }
-
-  Stream<DateTime> toDate() {
-    return toDateController.stream;
-  }
-
-  Stream<DateTime> fromDate() {
-    return fromDateController.stream;
-  }
-
-  void setName(String name) {
-    nameController.add(name);
-    seasonName = name;
-  }
-
-  void setToDate(DateTime date) {
-    toDateController.add(date);
-    seasonToDate = date;
-    toDateErrorTextController.add("");
-    fromDateErrorTextController.add("");
-  }
-
-  void setFromDate(DateTime date) {
-    fromDateController.add(date);
-    seasonFromDate = date;
-    toDateErrorTextController.add("");
-    fromDateErrorTextController.add("");
-  }
-
   bool validateFields() {
-    String errorText = validateEmptyField(seasonName.trim());
-    nameErrorTextController.add(errorText);
+    String errorText = validateEmptyField((stringValues[nameKey]!.trim()));
+    stringErrorTextControllers[nameKey]!.add(errorText);
     return validateNameField() && validateCalendarField();
   }
 
   bool validateNameField() {
-    String errorText = validateEmptyField(seasonName.trim());
-    nameErrorTextController.add(errorText);
+    String errorText = validateEmptyField(stringValues[nameKey]!.trim());
+    stringErrorTextControllers[nameKey]!.add(errorText);
     return errorText.isEmpty;
   }
 
   bool validateCalendarField() {
-    String errorText = validateSeasonDate(seasonFromDate, seasonToDate);
-    toDateErrorTextController.add(errorText);
+    String errorText =
+        validateSeasonDate(dateValues[fromKey]!, dateValues[toKey]!);
+    dateErrorTextControllers[toKey]!.add(errorText);
     return errorText.isEmpty;
   }
 
@@ -158,15 +93,16 @@ class SeasonController implements CrudOperations, ReadOperations {
     if (validateFields()) {
       try {
         return await seasonApiService.addSeason(SeasonApiModel(
-            name: seasonName, fromDate: seasonFromDate, toDate: seasonToDate));
+            name: stringValues[nameKey]!,
+            fromDate: dateValues[fromKey]!,
+            toDate: dateValues[toKey]!));
       } on FieldValidationException catch (e) {
         if (e.fields != null) {
           for (FieldModel fieldModel in e.fields!) {
-            if (fieldModel.field! =="toDate") {
-              toDateErrorTextController.add(fieldModel.message!);
-            }
-            else if(fieldModel.field! =="fromDate") {
-              fromDateErrorTextController.add(fieldModel.message!);
+            if (fieldModel.field! == "toDate") {
+              dateErrorTextControllers[toKey]!.add(fieldModel.message!);
+            } else if (fieldModel.field! == "fromDate") {
+              dateErrorTextControllers[fromKey]!.add(fieldModel.message!);
             }
           }
         }
@@ -189,20 +125,22 @@ class SeasonController implements CrudOperations, ReadOperations {
   ) async {
     if (validateFields()) {
       try {
-      SeasonApiModel response = await seasonApiService.editSeason(
-          SeasonApiModel(id: id,
-              name: seasonName, toDate: seasonToDate, fromDate: seasonFromDate),
-          id);
+        SeasonApiModel response = await seasonApiService.editSeason(
+            SeasonApiModel(
+                id: id,
+                name: stringValues[nameKey]!,
+                toDate: dateValues[toKey]!,
+                fromDate: dateValues[fromKey]!),
+            id);
 
-      return response.toStringForEdit(originalSeasonName);
+        return response.toStringForEdit(originalSeasonName);
       } on FieldValidationException catch (e) {
         if (e.fields != null) {
           for (FieldModel fieldModel in e.fields!) {
-            if (fieldModel.field! =="toDate") {
-              toDateErrorTextController.add(fieldModel.message!);
-            }
-            else if(fieldModel.field! =="fromDate") {
-              fromDateErrorTextController.add(fieldModel.message!);
+            if (fieldModel.field! == "toDate") {
+              dateErrorTextControllers[toKey]!.add(fieldModel.message!);
+            } else if (fieldModel.field! == "fromDate") {
+              dateErrorTextControllers[fromKey]!.add(fieldModel.message!);
             }
           }
         }

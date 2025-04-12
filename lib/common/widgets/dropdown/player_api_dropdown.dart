@@ -1,15 +1,16 @@
+import 'package:dropdown_button2/dropdown_button2.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:trus_app/common/widgets/loader.dart';
-import 'package:trus_app/features/home/controller/home_controller.dart';
-import 'package:dropdown_button2/dropdown_button2.dart';
-import 'package:trus_app/models/api/player_api_model.dart';
+import 'package:trus_app/models/api/player/player_api_model.dart';
 
 class PlayerApiDropdown extends ConsumerStatefulWidget {
   final Function(PlayerApiModel player) onPlayerSelected;
+  final Future<List<PlayerApiModel>> getPlayers;
   const PlayerApiDropdown({
     Key? key,
     required this.onPlayerSelected,
+    required this.getPlayers,
   }) : super(key: key);
 
   @override
@@ -64,7 +65,7 @@ class _PlayerApiDropdownState extends ConsumerState<PlayerApiDropdown> {
   @override
   Widget build(BuildContext context) {
     return FutureBuilder<List<PlayerApiModel>>(
-        future: ref.watch(homeControllerProvider).getModels(),
+        future: widget.getPlayers,
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
             return const Loader();

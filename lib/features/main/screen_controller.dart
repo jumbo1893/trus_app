@@ -1,42 +1,53 @@
 import 'dart:async';
+
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:trus_app/features/achievement/screens/achievement_screen.dart';
+import 'package:trus_app/features/achievement/screens/view_achievement_detail_screen.dart';
+import 'package:trus_app/features/achievement/screens/view_player_achievement_detail_screen.dart';
 import 'package:trus_app/features/fine/match/screens/fine_match_screen.dart';
 import 'package:trus_app/features/fine/match/screens/fine_player_screen.dart';
 import 'package:trus_app/features/fine/screens/fine_screen.dart';
+import 'package:trus_app/features/football/table/screens/main_table_team_screen.dart';
 import 'package:trus_app/features/goal/screen/goal_screen.dart';
 import 'package:trus_app/features/match/screens/add_match_screen.dart';
 import 'package:trus_app/features/match/screens/match_screen.dart';
-import 'package:trus_app/features/pkfl/screens/main_pkfl_statistics_screen.dart';
 import 'package:trus_app/features/player/screens/add_player_screen.dart';
 import 'package:trus_app/features/player/screens/edit_player_screen.dart';
 import 'package:trus_app/features/player/screens/player_screen.dart';
 import 'package:trus_app/features/season/screens/edit_season_screen.dart';
 import 'package:trus_app/features/season/screens/season_screen.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:flutter/material.dart';
-import 'package:trus_app/features/pkfl/screens/pkfl_table_screen.dart';
+import 'package:trus_app/features/user/screens/view_user_screen.dart';
+import 'package:trus_app/models/api/achievement/achievement_detail.dart';
+import 'package:trus_app/models/api/achievement/player_achievement_api_model.dart';
 import 'package:trus_app/models/api/fine_api_model.dart';
-import '../../../models/api/pkfl/pkfl_match_api_model.dart';
+import 'package:trus_app/models/api/football/football_match_api_model.dart';
+import 'package:trus_app/models/api/football/table_team_api_model.dart';
+
 import '../../models/api/match/match_api_model.dart';
-import '../../models/api/player_api_model.dart';
+import '../../models/api/player/player_api_model.dart';
 import '../../models/api/season_api_model.dart';
 import '../../models/enum/match_detail_options.dart';
-import '../auth/screens/user_screen.dart';
 import '../beer/screens/beer_simple_screen.dart';
 import '../fine/match/screens/multiple_fine_players_screen.dart';
 import '../fine/screens/add_fine_screen.dart';
 import '../fine/screens/edit_fine_screen.dart';
+import '../football/screens/football_fixtures_screen.dart';
+import '../football/screens/football_player_stats_screen.dart';
+import '../football/screens/main_football_statistics_screen.dart';
+import '../football/screens/match_detail_screen.dart';
+import '../football/table/screens/football_table_screen.dart';
 import '../general/screen_name.dart';
 import '../home/screens/home_screen.dart';
 import '../info/screens/info_screen.dart';
 import '../notification/screen/notification_screen.dart';
-import '../pkfl/screens/match_detail_screen.dart';
-import '../pkfl/screens/pkfl_fixtures_screen.dart';
-import '../pkfl/screens/pkfl_player_stats_screen.dart';
+import '../player/screens/view_player_screen.dart';
 import '../season/screens/add_season_screen.dart';
 import '../statistics/screens/double_dropdown_stats_screen.dart';
 import '../statistics/screens/main_goal_statistics_screen.dart';
 import '../statistics/screens/main_statistics_screen.dart';
 import '../steps/screens/step_screen.dart';
+import '../user/screens/user_screen.dart';
 
 final screenControllerProvider = Provider((ref) {
   return ScreenController(
@@ -44,7 +55,7 @@ final screenControllerProvider = Provider((ref) {
 });
 
 class ScreenController {
-  final ProviderRef ref;
+  final Ref ref;
   final screenController = StreamController<Widget>.broadcast();
 
   ScreenController({
@@ -53,10 +64,13 @@ class ScreenController {
 
 
   int? _matchId;
-  int? _pkflMatchId;
-  PkflMatchApiModel? _pkflMatch;
+  int? _footballTeamId;
+  FootballMatchApiModel? _footballMatch;
+  TableTeamApiModel _tableTeamApiModel = TableTeamApiModel.dummy();
   MatchApiModel _matchModel = MatchApiModel.dummy(); // používáme, pokud chceme na další screenu předat třeba i jméno, jinak stačí id
   PlayerApiModel _playerModel = PlayerApiModel.dummy();
+  PlayerAchievementApiModel _playerAchievementApiModel = PlayerAchievementApiModel.dummy();
+  AchievementDetail _achievementDetail = AchievementDetail.dummy();
   SeasonApiModel _seasonModel = SeasonApiModel.dummy();
   FineApiModel _fineModel = FineApiModel.dummy();
   List<int> _playerIdList = [];
@@ -72,16 +86,16 @@ class ScreenController {
   int? get matchId => _matchId;
 
   void setMatchId(int id) {
-    _pkflMatch = null;
+    _footballMatch = null;
     _commonMatchesOnly = false;
     _matchId = id;
   }
 
-  int? get pkflMatchId => _pkflMatchId;
+  int? get footballTeamId => _footballTeamId;
 
-  void setPkflMatchIdOnlyForCommonMatches(int id) {
+  void setFootballTeamIdOnlyForCommonMatches(int id) {
     _commonMatchesOnly = true;
-    _pkflMatchId = id;
+    _footballTeamId = id;
   }
 
   MatchApiModel get matchModel => _matchModel;
@@ -90,6 +104,24 @@ class ScreenController {
     _matchModel = matchModel;
     _commonMatchesOnly = false;
     setMatchId(matchModel.id!);
+  }
+
+  TableTeamApiModel get tableTeamApiModel => _tableTeamApiModel;
+
+  void setTableTeamApiModel(TableTeamApiModel tableTeamApiModel) {
+    _tableTeamApiModel = tableTeamApiModel;
+  }
+
+  PlayerAchievementApiModel get playerAchievementApiModel => _playerAchievementApiModel;
+
+  void setPlayerAchievement(PlayerAchievementApiModel playerAchievementApiModel) {
+    _playerAchievementApiModel = playerAchievementApiModel;
+  }
+
+  AchievementDetail get achievementDetail => _achievementDetail;
+
+  void setAchievementDetail(AchievementDetail achievementDetail) {
+    _achievementDetail = achievementDetail;
   }
 
   PlayerApiModel get playerModel => _playerModel;
@@ -122,11 +154,11 @@ class ScreenController {
     _preferredScreen = preferredScreen;
   }
 
-  PkflMatchApiModel? get pkflMatch => _pkflMatch;
+  FootballMatchApiModel? get footballMatch => _footballMatch;
 
-  void setPkflMatch(PkflMatchApiModel pkflMatch) {
+  void setFootballMatch(FootballMatchApiModel footballMatch) {
     _commonMatchesOnly = false;
-    _pkflMatch = pkflMatch;
+    _footballMatch = footballMatch;
   }
 
   bool isChangedMatch() {
@@ -196,7 +228,7 @@ class ScreenController {
     const AddMatchScreen(
       //10
     ),
-    const PkflPlayerStatsScreen(
+    const FootballPlayerStatsScreen(
       //11
     ),
     const FineScreen(
@@ -220,13 +252,13 @@ class ScreenController {
     const PlayerScreen(
       //18
     ),
-    const PkflFixturesScreen(
+    const FootballFixturesScreen(
       //19
     ),
-    const MainPkflStatisticsScreen(
+    const MainFootballStatisticsScreen(
       //20
     ),
-    const PkflTableScreen(
+    const FootballTableScreen(
       //21
     ),
     const MainGoalStatisticsScreen(
@@ -252,7 +284,25 @@ class ScreenController {
     ),
     const DoubleDropdownStatsScreen(
       //29
-    )
+    ),
+    const ViewPlayerScreen(
+      //30
+    ),
+    const ViewPlayerAchievementDetailScreen(
+      //31
+    ),
+    const ViewAchievementDetailScreen(
+      //32
+    ),
+    const AchievementScreen(
+      //33
+    ),
+    const MainTableTeamScreen(
+      //34
+    ),
+    const ViewUserScreen(
+      //35
+    ),
   ];
 
   List<Widget> get widgetList => _widgetList;

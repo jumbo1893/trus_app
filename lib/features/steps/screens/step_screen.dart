@@ -1,14 +1,14 @@
+import 'dart:io';
 import 'dart:math';
 
 import 'package:flutter/material.dart';
-import 'dart:io';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:permission_handler/permission_handler.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:trus_app/common/utils/utils.dart';
 
 import '../../../common/widgets/confirmation_dialog.dart';
 import '../../../common/widgets/screen/custom_consumer_stateful_widget.dart';
-import 'package:permission_handler/permission_handler.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 
 
 class StepScreen extends CustomConsumerStatefulWidget {

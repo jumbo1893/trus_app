@@ -6,8 +6,8 @@ import '../../../common/widgets/builder/models_error_future_builder.dart';
 import '../../../common/widgets/dropdown/custom_dropdown.dart';
 import '../../../common/widgets/screen/custom_consumer_widget.dart';
 import '../../../models/api/season_api_model.dart';
+import '../../football/screens/match_detail_screen.dart';
 import '../../main/screen_controller.dart';
-import '../../pkfl/screens/match_detail_screen.dart';
 import '../controller/match_screen_controller.dart';
 
 class MatchScreen extends CustomConsumerWidget {

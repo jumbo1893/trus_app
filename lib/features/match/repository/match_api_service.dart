@@ -7,9 +7,11 @@ import '../../../models/api/match/match_api_model.dart';
 import '../../general/repository/crud_api_service.dart';
 
 final matchApiServiceProvider =
-    Provider<MatchApiService>((ref) => MatchApiService());
+    Provider<MatchApiService>((ref) => MatchApiService(ref));
 
 class MatchApiService extends CrudApiService {
+  MatchApiService(super.ref);
+
   Future<List<MatchApiModel>> getMatches() async {
     final decodedBody = await getModels<JsonAndHttpConverter>(matchApi, null);
     return decodedBody.map((model) => model as MatchApiModel).toList();
