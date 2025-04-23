@@ -34,13 +34,7 @@ class _RowSwitchStream extends State<RowSwitchStream> {
         stream: widget.booleanControllerMixin.boolean(widget.hashKey),
         builder: (context, snapshot) {
           bool isChecked = false;
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            /*if (widget.booleanControllerMixin. != null) {
-              widget.initStream!();
-            }*/
-            return const Loader();
-          }
-          isChecked = snapshot.data!;
+          isChecked = snapshot.data?? widget.booleanControllerMixin.boolValues[widget.hashKey]!;
           return Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [

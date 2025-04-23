@@ -4,7 +4,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:trus_app/common/widgets/loader.dart';
 import 'package:trus_app/features/auth/controller/auth_controller.dart';
-import 'package:trus_app/features/auth/screens/login_screen.dart';
 import 'package:trus_app/features/main/main_screen.dart';
 import 'package:trus_app/router.dart';
 import 'package:trus_app/colors.dart';
@@ -13,6 +12,8 @@ import 'package:trus_app/firebase_options.dart';
 import 'package:flutter_driver/driver_extension.dart';
 
 import 'config.dart';
+import 'features/auth/login/controller/auth_login_controller.dart';
+import 'features/auth/login/screens/login_screen.dart';
 import 'features/auth/screens/user_information_screen.dart';
 import 'features/general/repository/queue/lifecycle_event_handler.dart';
 import 'my_http_overrides.dart';

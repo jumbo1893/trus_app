@@ -9,6 +9,7 @@ import '../loader.dart';
 class ColumnFutureBuilder<T> extends ConsumerWidget {
   final Future<void> loadModelFuture;
   final Stream<bool>? loadingScreen;
+  final Widget? loadingScreenWidget;
   final List<Widget> columns;
   final CrossAxisAlignment? crossAxisAlignment;
 
@@ -16,6 +17,7 @@ class ColumnFutureBuilder<T> extends ConsumerWidget {
     Key? key,
     required this.loadModelFuture,
     this.loadingScreen,
+    this.loadingScreenWidget,
     this.crossAxisAlignment,
     required this.columns,
   }) : super(key: key);
@@ -30,7 +32,7 @@ class ColumnFutureBuilder<T> extends ConsumerWidget {
             if (loadingSnapshot.connectionState != ConnectionState.waiting &&
                 loadingSnapshot.hasData &&
                 loadingSnapshot.data!) {
-              return const Loader();
+              return loadingScreenWidget?? const Loader();
             }
             return FutureBuilder<void>(
                 future: loadModelFuture,

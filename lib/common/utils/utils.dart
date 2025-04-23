@@ -50,6 +50,25 @@ void showErrorDialog(AsyncSnapshot<void> snapshot, VoidCallback onDialogCancel, 
   showDialog(context: context, builder: (BuildContext context) => dialog);
 }
 
+void showInfoDialog(BuildContext context, String message) {
+  if(message.isNotEmpty) {
+    showDialog(
+      context: context,
+      builder: (context) =>
+          AlertDialog(
+            title: const Text("Informace"),
+            content: Text(message),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.of(context).pop(),
+                child: const Text("OK"),
+              ),
+            ],
+          ),
+    );
+  }
+}
+
 void showErrorDialogString(String error, VoidCallback onDialogCancel, BuildContext context) {
   var dialog = ErrorDialog("Chyba!", error.toString(), () => onDialogCancel());
   showDialog(context: context, builder: (BuildContext context) => dialog);

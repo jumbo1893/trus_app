@@ -10,7 +10,7 @@ mixin BooleanControllerMixin {
     createdBoolChecker[key] = true;
   }
 
-  void _createBooleanCheckedList(String key) {
+  void createBooleanCheckedList(String key) {
     if(!(createdBoolChecker[key]?? false)) {
       _setAlreadyCreated(key);
       boolValues[key] = true;
@@ -19,18 +19,22 @@ mixin BooleanControllerMixin {
   }
 
   Stream<bool> boolean(String key) {
-    _createBooleanCheckedList(key);
+    createBooleanCheckedList(key);
     return boolControllers[key]?.stream ?? const Stream.empty();
   }
 
   void setBoolean(bool boolean, String key) {
-    _createBooleanCheckedList(key);
+    _setBoolean(boolean, key);
+  }
+
+  void _setBoolean(bool boolean, String key) {
+    createBooleanCheckedList(key);
     boolValues[key] = boolean;
     boolControllers[key]?.add(boolean);
   }
 
   void initBooleanFields(bool boolean, String key) {
-    _createBooleanCheckedList(key);
-    setBoolean(boolean, key);
+    createBooleanCheckedList(key);
+    _setBoolean(boolean, key);
   }
 }

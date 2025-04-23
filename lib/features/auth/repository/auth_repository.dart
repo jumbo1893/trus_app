@@ -6,7 +6,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:trus_app/common/utils/utils.dart';
 import 'package:trus_app/config.dart';
+import 'package:trus_app/models/api/auth/registration/registration_setup.dart';
 import 'package:trus_app/models/api/player/player_api_model.dart';
+import 'package:trus_app/models/helper/bool_and_string.dart';
 
 import '../../../common/repository/exception/login_exception.dart';
 import '../../../common/repository/exception/server_exception.dart';
@@ -187,55 +189,45 @@ class AuthRepository extends CrudApiService {
         jsonEncode(playerApiModel.toJson()));
   }
 
-  Future<bool> sendForgottenPassword(BuildContext context, String email) async {
+  Future<BoolAndString> sendForgottenPassword(String email) async {
     try {
       await auth.sendPasswordResetEmail(email: email);
-      showSnackBarWithPostFrame(
-          context: context,
-          content:
-              "Na mail $email, zaslán link pro reset hesla. Stojí tě to přesně jednu rundu");
+      return BoolAndString(true, "Na mail $email byl zaslán link pro reset hesla. Stojí tě to přesně jednu rundu");
+
     } on FirebaseAuthException catch (e) {
-      showSnackBarError(context, e);
+      return BoolAndString(false, convertFirebaseAuthExceptionToString(e));
     }
-    return false;
   }
 
-  void signInAnonymously(BuildContext context) async {
-    try {
-      await auth.signInAnonymously();
-    } on FirebaseAuthException catch (e) {
-      showSnackBarWithPostFrame(context: context, content: e.message!);
+  Future<RegistrationSetup> setupRegistration() async {
+    const String url = "$serverUrl/$authApi/$registrationSetupApi";
+    final RegistrationSetup registrationSetup = await executeGetRequest(
+        Uri.parse(url), (dynamic json) => RegistrationSetup.fromJson(json), null);
+    return registrationSetup;
+  }
+
+  String convertFirebaseAuthExceptionToString(FirebaseAuthException e) {
+    if (e.code == 'user-not-found') {
+      return "Uživatel/email nebyl nalezen!";
+    } else if (e.code == 'wrong-password') {
+      return "Zadal jsi špatné heslo!";
+    } else if (e.code == 'invalid-email') {
+      return "Email není ve správném formátu";
+    } else if (e.code == 'user-disabled') {
+      return "Uživatel je blokovanej, asi sis čárkoval víc než si měl vole";
+    } else if (e.code == 'email-already-in-use') {
+      return "Na tento mail se již někdo zaregistroval";
+    } else if (e.code == 'operation-not-allowed') {
+      return "Operace není povolena! Řekni adminovi co to je za klauni, že se nedá registrovat";
+    } else if (e.code == 'weak-password') {
+      return "Moc slabý heslo, zadej takový aby vyhovovalo googlu";
+    } else {
+      return e.message!;
     }
   }
 
   void showSnackBarError(BuildContext context, FirebaseAuthException e) {
-    if (e.code == 'user-not-found') {
-      showSnackBarWithPostFrame(context: context, content: "uživatel nebyl nalezen!");
-    } else if (e.code == 'wrong-password') {
-      showSnackBarWithPostFrame(context: context, content: "zadal jsi špatné heslo!");
-    } else if (e.code == 'invalid-email') {
-      showSnackBarWithPostFrame(context: context, content: "email není ve správném formátu");
-    } else if (e.code == 'user-disabled') {
-      showSnackBarWithPostFrame(
-          context: context,
-          content:
-              "uživatel je blokovanej, asi sis čárkoval víc než si měl vole");
-    } else if (e.code == 'email-already-in-use') {
-      showSnackBarWithPostFrame(
-          context: context,
-          content: "na tento mail se již někdo zaregistroval");
-    } else if (e.code == 'operation-not-allowed') {
-      showSnackBarWithPostFrame(
-          context: context,
-          content:
-              "Operace není povolena! Řekni adminovi co to je za klauni, že se nedá registrovat");
-    } else if (e.code == 'weak-password') {
-      showSnackBarWithPostFrame(
-          context: context,
-          content: "Moc slabý heslo, zadej takový aby vyhovovalo googlu");
-    } else {
-      showSnackBarWithPostFrame(context: context, content: e.message!);
-    }
+    showSnackBarWithPostFrame(context: context, content: convertFirebaseAuthExceptionToString(e));
   }
 
   void showSnackBarServerError(BuildContext context, ServerException e) {

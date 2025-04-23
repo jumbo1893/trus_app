@@ -9,6 +9,7 @@ class CustomDropdown extends ConsumerStatefulWidget {
   final Function(DropdownItem dropdownItem) onItemSelected;
   final Future<List<DropdownItem>>? dropdownList;
   final Stream<DropdownItem> pickedItem;
+  final Stream<List<DropdownItem>>? dropDownListStream;
   final VoidCallback? initData;
   final String hint;
   final bool enabled;
@@ -19,6 +20,7 @@ class CustomDropdown extends ConsumerStatefulWidget {
     required this.dropdownList,
     required this.pickedItem,
     required this.hint,
+    this.dropDownListStream = const Stream.empty(),
     this.initData,
     this.enabled = true,
   }) : super(key: key);
@@ -83,49 +85,56 @@ class _CustomDropdownState extends ConsumerState<CustomDropdown> {
             return Container();
           }
           List<DropdownItem> dropdownItems = snapshot.data!;
-          return StreamBuilder<DropdownItem>(
-              stream: widget.pickedItem,
+          return StreamBuilder<List<DropdownItem>>(
+              stream: widget.dropDownListStream,
               builder: (context, snapshot) {
-                if (snapshot.connectionState == ConnectionState.waiting) {
-                  if (widget.initData != null) {
-                    widget.initData!();
-                  } else {
-                    widget.onItemSelected(dropdownItems[0]);
-                  }
-                  return const Loader();
+                if (snapshot.hasData) {
+                  dropdownItems = snapshot.data!;
                 }
-                DropdownItem dropdownItem = snapshot.data!;
-                return DropdownButtonHideUnderline(
-                  key: const ValueKey("season_items"),
-                  child: DropdownButton2(
-                    isExpanded: true,
-                    hint: Text(
-                      widget.hint,
-                      style: TextStyle(
-                        fontSize: 14,
-                        color: Theme.of(context).hintColor,
-                      ),
-                    ),
-                    items: _addDividersAfterItems(dropdownItems),
-                    value: dropdownItem,
-                    onChanged: (value) {
-                      //setState(() {
-                      //selectedValue = value as SeasonModel;
-                      widget.onItemSelected(value as DropdownItem);
-                      //});
-                    },
-                    buttonStyleData:
-                        const ButtonStyleData(height: 40, width: 140),
-                    dropdownStyleData: const DropdownStyleData(
-                      maxHeight: 200,
-                    ),
-                    menuItemStyleData: MenuItemStyleData(
-                      padding: const EdgeInsets.symmetric(horizontal: 8.0),
-                      customHeights:
-                          _getCustomItemsHeights(dropdownItems.length),
-                    ),
-                  ),
-                );
+                return StreamBuilder<DropdownItem>(
+                    stream: widget.pickedItem,
+                    builder: (context, snapshot) {
+                      if (snapshot.connectionState == ConnectionState.waiting) {
+                        if (widget.initData != null) {
+                          widget.initData!();
+                        } else {
+                          widget.onItemSelected(dropdownItems[0]);
+                        }
+                        return const Loader();
+                      }
+                      DropdownItem dropdownItem = snapshot.data!;
+                      return DropdownButtonHideUnderline(
+                        key: const ValueKey("season_items"),
+                        child: DropdownButton2(
+                          isExpanded: true,
+                          hint: Text(
+                            widget.hint,
+                            style: TextStyle(
+                              fontSize: 14,
+                              color: Theme
+                                  .of(context)
+                                  .hintColor,
+                            ),
+                          ),
+                          items: _addDividersAfterItems(dropdownItems),
+                          value: dropdownItem,
+                          onChanged: (value) {
+                            widget.onItemSelected(value as DropdownItem);
+                          },
+                          buttonStyleData:
+                          const ButtonStyleData(height: 40, width: 140),
+                          dropdownStyleData: const DropdownStyleData(
+                            maxHeight: 200,
+                          ),
+                          menuItemStyleData: MenuItemStyleData(
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 8.0),
+                            customHeights:
+                            _getCustomItemsHeights(dropdownItems.length),
+                          ),
+                        ),
+                      );
+                    });
               });
         });
   }

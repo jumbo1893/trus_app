@@ -14,11 +14,6 @@ final authControllerProvider = Provider((ref) {
   return AuthController(authRepository: authRepository, globalVariablesController: globalVariablesController);
   });
 
-final userDataAuthProvider = FutureProvider((ref) {
-  final authController = ref.watch(authControllerProvider);
-  return authController.fastLogin();
-});
-
 class AuthController implements ReadOperations {
   final AuthRepository authRepository;
   final GlobalVariablesController globalVariablesController;
@@ -37,11 +32,6 @@ class AuthController implements ReadOperations {
     return user;
   }
 
-  Future<LoginRedirect> fastLogin() async {
-    UserApiModel? user = await authRepository.fastLogin();
-    return chooseLoginRedirect(user);
-  }
-
   String? getCurrentUserName() {
     return authRepository.getCurrentUserName();
   }
@@ -55,11 +45,6 @@ class AuthController implements ReadOperations {
     if(result != null) {
     }
      return result;
-  }
-
-  Future<bool> sendForgottenPassword(BuildContext context, String email) async {
-    bool result = await authRepository.sendForgottenPassword(context, email);
-    return result;
   }
 
   Future<bool> signUpWithEmail(String email, String password) async {
@@ -84,24 +69,6 @@ class AuthController implements ReadOperations {
     globalVariablesController.setAppTeam(appTeam);
   }
 
-  LoginRedirect chooseLoginRedirect(UserApiModel? user) {
-    if(user == null) {
-      return LoginRedirect.needToLogin;
-    }
-    else if (user.name == null || user.name!.isEmpty) {
-      return LoginRedirect.completeUserInformation;
-    }
-    else if (isNeededToSetAppTeam(user)) {
-      return LoginRedirect.setAppTeam;
-    }
-    else if (isNeededToChooseAppTeam(user)) {
-      return LoginRedirect.chooseAppTeam;
-    }
-    ///TO_DO
-    saveAppTeam(user.teamRoles![0].appTeam);
-    return LoginRedirect.ok;
-  }
-
   bool isNeededToSetAppTeam(UserApiModel user) {
     if(user.teamRoles == null || user.teamRoles!.isEmpty) {
       return true;
@@ -120,12 +87,4 @@ class AuthController implements ReadOperations {
   Future<List<ModelToString>> getModels() async {
     return await authRepository.getUsers(null);
   }
-}
-
-enum LoginRedirect {
-  needToLogin,
-  completeUserInformation,
-  ok,
-  chooseAppTeam,
-  setAppTeam,
 }

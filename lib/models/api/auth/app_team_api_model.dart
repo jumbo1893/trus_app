@@ -1,15 +1,19 @@
+import 'package:trus_app/models/api/interfaces/dropdown_item.dart';
+
 import '../football/team_api_model.dart';
 
-class AppTeamApiModel {
+class AppTeamApiModel implements DropdownItem {
   final int id;
   final String name;
   final int? ownerId;
+  final String ownerName;
   final TeamApiModel team;
 
   AppTeamApiModel({
     required this.id,
     required this.name,
     this.ownerId,
+    required this.ownerName,
     required this.team,
   });
 
@@ -28,6 +32,7 @@ class AppTeamApiModel {
       id: json["id"],
       name: json["name"],
       ownerId: json["ownerId"],
+      ownerName: json["ownerName"],
       team: TeamApiModel.fromJson(json["team"]),
     );
   }
@@ -45,5 +50,10 @@ class AppTeamApiModel {
   @override
   String toString() {
     return 'AppTeamApiModel{id: $id, name: $name, ownerId: $ownerId, team: $team}';
+  }
+
+  @override
+  String dropdownItem() {
+    return "$name (adm. $ownerName)";
   }
 }

@@ -47,6 +47,7 @@ class _RowApiModelDropDownStream extends State<RowApiModelDropDownStream> {
             dropdownList: widget.dropdownControllerMixin.dropdownItemList(widget.hashKey),
             pickedItem: widget.dropdownControllerMixin.dropdownItem(widget.hashKey),
             initData: () => widget.dropdownControllerMixin.initDropdownItem(widget.hashKey),
+            dropDownListStream: widget.dropdownControllerMixin.dropdownItemListStream(widget.hashKey),
             hint: widget.hint,
             enabled: widget.editEnabled,
           )),

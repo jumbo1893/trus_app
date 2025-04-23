@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:trus_app/common/widgets/error.dart';
-import 'package:trus_app/features/auth/screens/login_screen.dart';
-import 'package:trus_app/features/auth/screens/registration_screen.dart';
+import 'package:trus_app/features/auth/login/screens/login_screen.dart';
+import 'package:trus_app/features/auth/registration/screens/registration_screen.dart';
 import 'package:trus_app/features/auth/screens/user_information_screen.dart';
 
 import 'features/main/main_screen.dart';

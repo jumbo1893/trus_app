@@ -45,7 +45,7 @@ class PlayerSetup implements JsonAndHttpConverter {
 
   @override
   String httpRequestClass() {
-    return matchApi;
+    return "";
   }
 
   @override
