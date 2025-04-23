@@ -2,7 +2,7 @@ import 'dart:async';
 
 import 'package:riverpod/riverpod.dart';
 import 'package:trus_app/features/general/global_variables_controller.dart';
-import 'package:trus_app/features/helper/SharedPrefsHelper.dart';
+import 'package:trus_app/features/helper/shared_prefs_helper.dart';
 import 'package:trus_app/features/mixin/boolean_controller_mixin.dart';
 import 'package:trus_app/features/mixin/dropdown_controller_mixin.dart';
 import 'package:trus_app/features/mixin/string_controller_mixin.dart';
