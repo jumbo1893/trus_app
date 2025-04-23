@@ -14,20 +14,34 @@ import 'package:flutter_driver/driver_extension.dart';
 
 import 'config.dart';
 import 'features/auth/screens/user_information_screen.dart';
+import 'features/general/repository/queue/lifecycle_event_handler.dart';
 import 'my_http_overrides.dart';
 
+final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
+
 void main() async {
-  if(automation) {
+  if (automation) {
     enableFlutterDriverExtension();
   }
-  if(serverUrl == testUrl) {
+  if (serverUrl == testUrl) {
     HttpOverrides.global = MyHttpOverrides();
   }
+
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp(
-      options: DefaultFirebaseOptions.currentPlatform
+    options: DefaultFirebaseOptions.currentPlatform,
   );
-  runApp(const ProviderScope(child: MyApp()));
+
+  final container = ProviderContainer();
+
+  WidgetsBinding.instance.addObserver(
+    LifecycleEventHandler(container: container),
+  );
+
+  runApp(UncontrolledProviderScope(
+    container: container,
+    child: const MyApp(),
+  ));
 }
 
 class MyApp extends ConsumerWidget {
@@ -37,6 +51,7 @@ class MyApp extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     return MaterialApp(
         debugShowCheckedModeBanner: false,
+        navigatorKey: navigatorKey,
         title: "Trusí aplikace",
         theme: ThemeData.light().copyWith(
             scaffoldBackgroundColor: backgroundColor,
