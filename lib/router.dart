@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:trus_app/common/widgets/error.dart';
+import 'package:trus_app/features/auth/app_team/screens/app_team_registration_screen.dart';
 import 'package:trus_app/features/auth/login/screens/login_screen.dart';
 import 'package:trus_app/features/auth/registration/screens/registration_screen.dart';
 import 'package:trus_app/features/auth/screens/user_information_screen.dart';
@@ -13,6 +14,8 @@ Route<dynamic> generateRoute(RouteSettings settings) {
     case RegistrationScreen.routeName:
       return MaterialPageRoute(builder: (context) => const RegistrationScreen());
     case UserInformationScreen.routeName:
+      return MaterialPageRoute(builder: (context) => const AppTeamRegistrationScreen());
+    case AppTeamRegistrationScreen.routeName:
       return MaterialPageRoute(builder: (context) => const UserInformationScreen());
     case MainScreen.routeName:
       return MaterialPageRoute(builder: (context) => const MainScreen());

@@ -6,7 +6,6 @@ import 'package:trus_app/features/mixin/string_controller_mixin.dart';
 import '../../../utils/utils.dart';
 import '../../custom_text.dart';
 import '../../custom_text_field.dart';
-import '../../loader.dart';
 
 class RowTextFieldStream extends StatefulWidget {
   final Size size;
@@ -39,7 +38,6 @@ class RowTextFieldStream extends StatefulWidget {
 }
 
 class _RowTextFieldStream extends State<RowTextFieldStream> {
-  String errorText = "";
   final _nameController = TextEditingController();
   StreamSubscription<String>? _textStreamSubscription;
 
@@ -103,7 +101,6 @@ class _RowTextFieldStream extends State<RowTextFieldStream> {
                       widget.hashKey,
                       widget.stringControllerMixin,
                       widget.labelText,
-                      errorText,
                       _nameController,
                       widget.key!,
                       widget.number,
@@ -116,7 +113,6 @@ class _RowTextFieldStream extends State<RowTextFieldStream> {
               widget.hashKey,
               widget.stringControllerMixin,
               widget.labelText,
-              errorText,
               _nameController,
               widget.key!,
               widget.number,
@@ -131,7 +127,6 @@ class _RowTextFieldStream extends State<RowTextFieldStream> {
       String hashKey,
       StringControllerMixin stringControllerMixin,
       String labelText,
-      String errorText,
       TextEditingController nameController,
       Key key,
       bool number,
@@ -140,14 +135,11 @@ class _RowTextFieldStream extends State<RowTextFieldStream> {
     return StreamBuilder<String>(
       stream: stringControllerMixin.stringErrorText(hashKey),
       builder: (context, errorSnapshot) {
-        if (errorSnapshot.hasData) {
-          errorText = errorSnapshot.data!;
-        }
         return CustomTextField(
           key: ValueKey("${getValueFromValueKey(key)}_text"),
           textController: nameController,
           labelText: labelText,
-          errorText: errorText,
+          errorText: errorSnapshot.data ?? "",
           number: number,
           password: password,
           onChanged: (string) =>

@@ -7,6 +7,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:http/http.dart' as http;
 import 'package:http/io_client.dart';
 import 'package:native_dio_adapter/native_dio_adapter.dart';
+import 'package:trus_app/common/repository/exception/client_timeout_exception.dart';
 import 'package:trus_app/config.dart';
 import 'package:trus_app/features/general/repository/queue/queued_request.dart';
 
@@ -28,7 +29,7 @@ class RequestExecutor extends ResponseValidator {
 
   HeaderProvider get _headerProvider => HeaderProvider(ref);
 
-  final Duration timeoutDuration = const Duration(seconds: 20);
+  final Duration timeoutDuration = const Duration(seconds: 30);
 
   //final List<Future<void> Function()> _requestQueue = [];
 
@@ -41,9 +42,9 @@ class RequestExecutor extends ResponseValidator {
     }
     if (Platform.isIOS) {
       final config = URLSessionConfiguration.ephemeralSessionConfiguration()
-        ..allowsCellularAccess = false
-        ..allowsConstrainedNetworkAccess = false
-        ..allowsExpensiveNetworkAccess = false;
+        ..allowsCellularAccess = true
+        ..allowsConstrainedNetworkAccess = true
+        ..allowsExpensiveNetworkAccess = true;
       return CupertinoClient.fromSessionConfiguration(config);
     } else {
       return IOClient(); // Uses an HTTP client based on dart:io
@@ -83,8 +84,7 @@ class RequestExecutor extends ResponseValidator {
       }
       if (e is TimeoutException || e is http.ClientException) {
         _enqueueRequest(request, mapFunction);
-        /*throw Exception(
-            "Request byl přerušen kvůli timeoutu a bude zkusit znovu po návratu z pozadí.");*/
+        throw ClientTimeoutException();
       }
       else {
         print(e);

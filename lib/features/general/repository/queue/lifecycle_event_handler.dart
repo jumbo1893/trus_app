@@ -1,5 +1,4 @@
 import 'package:flutter/cupertino.dart';
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -15,11 +14,11 @@ class LifecycleEventHandler extends WidgetsBindingObserver {
   void didChangeAppLifecycleState(AppLifecycleState state) {
     if (state == AppLifecycleState.resumed) {
       final context = navigatorKey.currentContext;
-      if (context != null) {
+      /*if (context != null) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text("Obnovuji požadavky...")),
         );
-      }
+      }*/
 
       container.read(requestExecutorProvider).retryQueuedRequests();
     }

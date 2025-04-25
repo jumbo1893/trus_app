@@ -1,6 +1,10 @@
 import 'dart:async';
 
+import 'package:flutter/cupertino.dart';
 import 'package:riverpod/riverpod.dart';
+import 'package:trus_app/common/repository/exception/field_validation_exception.dart';
+import 'package:trus_app/common/repository/exception/model/field_model.dart';
+import 'package:trus_app/features/auth/app_team/screens/app_team_registration_screen.dart';
 import 'package:trus_app/features/general/global_variables_controller.dart';
 import 'package:trus_app/features/helper/shared_prefs_helper.dart';
 import 'package:trus_app/features/mixin/string_controller_mixin.dart';
@@ -8,8 +12,12 @@ import 'package:trus_app/models/api/auth/app_team_api_model.dart';
 import 'package:trus_app/models/helper/bool_and_string.dart';
 
 import '../../../../common/utils/field_validator.dart';
+import '../../../../common/utils/utils.dart';
 import '../../../../models/api/auth/user_api_model.dart';
+import '../../../main/main_screen.dart';
 import '../../repository/auth_repository.dart';
+import '../../screens/user_information_screen.dart';
+import '../screens/login_screen.dart';
 import '../widget/i_user_login_key.dart';
 
 
@@ -55,24 +63,76 @@ class AuthLoginController with StringControllerMixin implements IUserLoginKey {
     return await sharedPrefsHelper.getUserWithEmailAndPasswordOnly();
   }
 
-  Future<void> sendEmailAndPassword() async {
+  Future<LoginRedirect> sendEmailAndPassword() async {
     String email = stringValues[emailKey()]!.trim();
     String password = stringValues[passwordKey()]!.trim();
     loadingController.add(true);
     if (validateFields(email, password)) {
-      UserApiModel? user = await signInWithEmail(email, password);
-      if (user != null) {
-        sharedPrefsHelper.setEmailAndPassword(email, password);
-        loadedUser = user;
-        loadingSuccessController.add(true);
-      }
-      else {
+      try {
+        UserApiModel? user = await signInWithEmail(email, password);
+
+        if (user != null) {
+          sharedPrefsHelper.setEmailAndPassword(email, password);
+          loadedUser = user;
+          loadingSuccessController.add(true);
+        }
+        else {
+          loadingController.add(false);
+          loadingSuccessController.add(false);
+        }
+        return chooseLoginRedirect(user);
+      } on FieldValidationException catch (e) {
         loadingController.add(false);
-        loadingSuccessController.add(false);
+        setErrorFieldByFieldValidationException(e);
+        return LoginRedirect.needToLogin;
+      } catch (e, stack) {
+        loadingController.add(false);
+        showGlobalErrorDialog(e, stack);
+        return LoginRedirect.needToLogin;
       }
+
     }
     else {
       loadingController.add(false);
+      return LoginRedirect.needToLogin;
+    }
+  }
+
+  Future<void> setErrorFieldByFieldValidationException(FieldValidationException e) async {
+    await Future.delayed(const Duration(milliseconds: 200), ()
+    {
+      if (e.fields != null) {
+        for (FieldModel fieldModel in e.fields!) {
+          if (fieldModel.field != null) {
+            if (fieldModel.field == "email") {
+              print("nastavuju chybu");
+              stringErrorTextControllers[emailKey()]!.add(
+                  fieldModel.message ?? "test");
+            }
+            if (fieldModel.field == "password") {
+              stringErrorTextControllers[passwordKey()]!.add(
+                  fieldModel.message ?? "test");
+            }
+          }
+        }
+      }
+    });
+  }
+
+  Widget chooseScreenByLoginRedirect(LoginRedirect redirect) {
+    switch(redirect) {
+      case LoginRedirect.needToLogin:
+        return const LoginScreen();
+      case LoginRedirect.completeUserInformation:
+        return const UserInformationScreen();
+      case LoginRedirect.setAppTeam:
+        return const AppTeamRegistrationScreen();
+      case LoginRedirect.chooseAppTeam:
+        return const LoginScreen();
+      case LoginRedirect.ok:
+        return const MainScreen();
+      default:
+        return const LoginScreen();
     }
   }
 
@@ -106,6 +166,7 @@ class AuthLoginController with StringControllerMixin implements IUserLoginKey {
 
   Future<LoginRedirect> fastLogin() async {
     UserApiModel? user = await authRepository.fastLogin();
+    print(user);
     return chooseLoginRedirect(user);
   }
 

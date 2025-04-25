@@ -34,6 +34,7 @@ const beerApi = "beer";
 const registrationSetupApi = "registration-setup";
 const receivedFineApi = "fine/received";
 const authApi = "user";
+const appTeamApi = "appteam";
 const homeApi = "home";
 const football = "football";
 const footballAllIndividualStatsApi = "football/player-stats";

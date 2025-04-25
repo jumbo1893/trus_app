@@ -1,4 +1,3 @@
-import 'package:flutter/material.dart';
 import 'package:riverpod/riverpod.dart';
 import 'package:trus_app/features/general/global_variables_controller.dart';
 import 'package:trus_app/features/general/read_operations.dart';
@@ -38,18 +37,6 @@ class AuthController implements ReadOperations {
 
   String getCurrentUserId() {
     return authRepository.returnUserId();
-  }
-
-  Future<UserApiModel?> signInWithEmail(String email, String password) async {
-    UserApiModel? result = await authRepository.signInWithEmail(email, password);
-    if(result != null) {
-    }
-     return result;
-  }
-
-  Future<bool> signUpWithEmail(String email, String password) async {
-    bool result = await authRepository.signUpWithEmail(email, password);
-    return result;
   }
 
   Future<bool> signOut() async {

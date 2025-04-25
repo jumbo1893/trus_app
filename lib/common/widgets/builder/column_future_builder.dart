@@ -29,15 +29,14 @@ class ColumnFutureBuilder<T> extends ConsumerWidget {
       body: StreamBuilder<bool>(
           stream: loadingScreen,
           builder: (context, loadingSnapshot) {
-            if (loadingSnapshot.connectionState != ConnectionState.waiting &&
-                loadingSnapshot.hasData &&
-                loadingSnapshot.data!) {
-              return loadingScreenWidget?? const Loader();
+            if (loadingSnapshot.hasData && loadingSnapshot.data == true) {
+              return loadingScreenWidget ?? const Loader();
             }
             return FutureBuilder<void>(
                 future: loadModelFuture,
                 builder: (context, snapshot) {
                   if (snapshot.hasError) {
+                    print("mám error");
                     Future.delayed(
                         Duration.zero,
                         () => showErrorDialog(

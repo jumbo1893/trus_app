@@ -4,8 +4,11 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:trus_app/common/repository/exception/field_validation_exception.dart';
+import 'package:trus_app/common/repository/exception/model/field_model.dart';
 import 'package:trus_app/common/utils/utils.dart';
 import 'package:trus_app/config.dart';
+import 'package:trus_app/models/api/auth/registration/app_team_registration.dart';
 import 'package:trus_app/models/api/auth/registration/registration_setup.dart';
 import 'package:trus_app/models/api/player/player_api_model.dart';
 import 'package:trus_app/models/helper/bool_and_string.dart';
@@ -79,13 +82,25 @@ class AuthRepository extends CrudApiService {
   }
 
   Future<bool> deleteAccountFromFirebase() async {
-    await auth.currentUser!.delete();
-    return true;
+    try {
+      await auth.currentUser!.delete();
+      return true;
+    }
+    catch (e) {
+    print(e);
+    return false;
+    }
   }
 
   Future<bool> deleteAccountFromServer() async {
     var url = Uri.parse("$serverUrl/$authApi/delete");
-    return await executeDeleteRequest(url, (_) => true, jsonEncode(null));
+    try {
+      return await executeDeleteRequest(url, (_) => true, jsonEncode(null));
+    }
+    catch (e) {
+      print(e);
+      return false;
+    }
   }
 
   Future<bool> signOut() async {
@@ -116,9 +131,13 @@ class AuthRepository extends CrudApiService {
 
   Future<String> signInWithEmailToFirebase(
       String email, String password) async {
-    UserCredential credentials =
-        await auth.signInWithEmailAndPassword(email: email, password: password);
-    return credentials.user!.uid;
+    try {
+      UserCredential credentials =
+      await auth.signInWithEmailAndPassword(email: email, password: password);
+      return credentials.user!.uid;
+    } on FirebaseAuthException catch (e) {
+      throw convertFireBaseExceptionToFieldValidationException(e);
+    }
   }
 
   Future<UserApiModel> signInWithEmailToServer(
@@ -132,14 +151,20 @@ class AuthRepository extends CrudApiService {
     return userApiModel;
   }
 
-  Future<bool> signUpWithEmail(String email, String password) async {
+  Future<bool> signUpWithEmail(String email, String password, String name) async {
     String userId = await signUpWithEmailToFireBase(email, password);
     if (userId.isNotEmpty) {
-      await signUpWithEmailToServer(
-              email, auth.currentUser!.uid)
-          .whenComplete(() async =>
-              await signInWithEmailToFirebase(email, password).whenComplete(
-                  () => signInWithEmailToServer(email, auth.currentUser!.uid)));
+      await auth.currentUser!.updateDisplayName(name);
+      try {
+        await signUpWithEmailToServer(
+            email, auth.currentUser!.uid, name);
+        await signInWithEmailToFirebase(email, password);
+        await signInWithEmailToServer(email, auth.currentUser!.uid);
+      }
+      catch (e) {
+        deleteAccount();
+        rethrow;
+      }
       return true;
     }
     return false;
@@ -147,21 +172,46 @@ class AuthRepository extends CrudApiService {
 
   Future<String> signUpWithEmailToFireBase(
       String email, String password) async {
-    final credential = await auth.createUserWithEmailAndPassword(
-      email: email,
-      password: password,
-    );
-    return credential.user!.uid;
+    try {
+      final credential = await auth.createUserWithEmailAndPassword(
+        email: email,
+        password: password,
+      );
+      return credential.user!.uid;
+    } on FirebaseAuthException catch (e) {
+      throw convertFireBaseExceptionToFieldValidationException(e);
+    }
   }
 
   Future<UserApiModel> signUpWithEmailToServer(
-      String email, String password) async {
+      String email, String password, String name) async {
     var url = Uri.parse("$serverUrl/$authApi/create");
-    UserApiModel user = UserApiModel(password: password, mail: email);
+    UserApiModel user = UserApiModel(password: password, mail: email, name: name);
     final UserApiModel userApiModel = await executePostRequest(
         url,
         (dynamic json) => UserApiModel.fromJson(json),
         jsonEncode(user.toJson()));
+    return userApiModel;
+  }
+
+  Future<UserApiModel> createNewAppTeam(
+      String name, int footballTeamId) async {
+    var url = Uri.parse("$serverUrl/$appTeamApi/create");
+    AppTeamRegistration appTeamRegistration = AppTeamRegistration(name: name, footballTeamId: footballTeamId);
+    final UserApiModel userApiModel = await executePostRequest(
+        url,
+            (dynamic json) => UserApiModel.fromJson(json),
+        jsonEncode(appTeamRegistration.toJson()));
+    return userApiModel;
+  }
+
+  Future<UserApiModel> addUserToAppTeam(
+      int appTeamId) async {
+    var url = Uri.parse("$serverUrl/$appTeamApi/add");
+    final UserApiModel userApiModel = await executePostRequest(
+        url,
+            (dynamic json) => UserApiModel.fromJson(json),
+        jsonEncode(appTeamId));
     return userApiModel;
   }
 
@@ -204,6 +254,38 @@ class AuthRepository extends CrudApiService {
     final RegistrationSetup registrationSetup = await executeGetRequest(
         Uri.parse(url), (dynamic json) => RegistrationSetup.fromJson(json), null);
     return registrationSetup;
+  }
+
+  FieldValidationException convertFireBaseExceptionToFieldValidationException(FirebaseAuthException e) {
+    String emailField = "email";
+    String passwordField = "password";
+    List<FieldModel> fields = [];
+    if (e.code == 'user-not-found') {
+      FieldModel fieldModel = FieldModel(field: emailField, message: "Uživatel/email nebyl nalezen!");
+      fields.add(fieldModel);
+    } else if (e.code == 'wrong-password') {
+      FieldModel fieldModel = FieldModel(field: passwordField, message: "Špatné heslo!");
+      fields.add(fieldModel);
+    } else if (e.code == 'invalid-email') {
+      FieldModel fieldModel = FieldModel(field: emailField, message: "Email není ve správném formátu");
+      fields.add(fieldModel);
+    } else if (e.code == 'user-disabled') {
+      FieldModel fieldModel = FieldModel(field: emailField, message: "Uživatel je blokovanej, asi sis čárkoval víc než si měl vole");
+      fields.add(fieldModel);
+    } else if (e.code == 'email-already-in-use') {
+      FieldModel fieldModel = FieldModel(field: emailField, message: "Na tento mail se již někdo zaregistroval");
+      fields.add(fieldModel);
+    } else if (e.code == 'operation-not-allowed') {
+      FieldModel fieldModel = FieldModel(field: emailField, message: "Operace není povolena! Řekni adminovi co to je za klauni, že se nedá registrovat");
+      fields.add(fieldModel);
+    } else if (e.code == 'weak-password') {
+      FieldModel fieldModel = FieldModel(field: passwordField, message: "Moc slabý heslo, zadej takový aby vyhovovalo googlu");
+      fields.add(fieldModel);
+    } else {
+      FieldModel fieldModel = FieldModel(field: emailField, message: e.message);
+      fields.add(fieldModel);
+    }
+    return FieldValidationException(fields);
   }
 
   String convertFirebaseAuthExceptionToString(FirebaseAuthException e) {

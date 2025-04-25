@@ -44,9 +44,11 @@ class UserApiModel implements ModelToString, JsonAndHttpConverter {
       name: json["name"] ?? "",
       id: json["id"],
       admin: json['admin'] ?? false,
-      teamRoles: List<UserTeamRoleApiModel>.from(
+      teamRoles: json['teamRoles'] != null
+          ? List<UserTeamRoleApiModel>.from(
           (json['teamRoles'] as List<dynamic>)
-              .map((role) => UserTeamRoleApiModel.fromJson(role))),
+              .map((role) => UserTeamRoleApiModel.fromJson(role)))
+          : null,
     );
   }
 

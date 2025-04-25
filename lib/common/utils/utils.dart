@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
 
+import '../../main.dart';
+import '../repository/exception/client_timeout_exception.dart';
 import '../widgets/dialog/error_dialog.dart';
 
 void showSnackBarWithPostFrame({required BuildContext context, required String content}) {
@@ -45,9 +47,48 @@ void hideSnackBar(BuildContext context) {
 }
 
 void showErrorDialog(AsyncSnapshot<void> snapshot, VoidCallback onDialogCancel, BuildContext context) {
-  print('error: ${snapshot.stackTrace}');
+  final error = snapshot.error;
+  if (isIgnorableError(error)) {
+    debugPrint("Zachycena ClientTimeoutException, dialog nebude zobrazen.");
+    return;
+  }
+  debugPrint('Chyba zachycena: $error\nStackTrace: ${snapshot.stackTrace}');
   var dialog = ErrorDialog("Chyba!", snapshot.error.toString(), () => onDialogCancel());
   showDialog(context: context, builder: (BuildContext context) => dialog);
+}
+
+bool isIgnorableError(Object? error) {
+  if (error is ClientTimeoutException) {
+    return true;
+  }
+  return false;
+}
+
+void showGlobalErrorDialog(Object error, [StackTrace? stackTrace]) {
+  final context = navigatorKey.currentContext;
+  if (context == null) {
+    debugPrint("Nebyl nalezen context pro navigatorKey!");
+    return;
+  }
+  if (isIgnorableError(error)) {
+    debugPrint("Zachycena ClientTimeoutException, dialog nebude zobrazen.");
+    return;
+  }
+  debugPrint('Chyba zachycena: ${error.toString()} \nStackTrace: $stackTrace');
+  showDialog(
+    context: context,
+    builder: (context) =>
+        AlertDialog(
+          title: const Text("Chyba!"),
+          content: Text(error.toString()),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: const Text("OK"),
+            ),
+          ],
+        ),
+  );
 }
 
 void showInfoDialog(BuildContext context, String message) {
