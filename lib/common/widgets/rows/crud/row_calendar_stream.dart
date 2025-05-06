@@ -73,6 +73,7 @@ class _RowCalendarStream extends State<RowCalendarStream> {
                           showCalendar(context, date).then((value) {
                             (date) => widget.dateControllerMixin.setDate(date, widget.hashKey);
                             _calendarController.text = dateTimeToString(value);
+                            widget.dateControllerMixin.setDate(value, widget.hashKey);
                           }, onError: (e) {
                             print(e);
                           });
