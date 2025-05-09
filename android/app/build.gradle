@@ -30,7 +30,7 @@ if (keystorePropertiesFile.exists()) {
 }
 
 android {
-    compileSdkVersion 34
+    compileSdkVersion 35
     namespace 'com.jumbo.trus_app'
     ndkVersion flutter.ndkVersion
 

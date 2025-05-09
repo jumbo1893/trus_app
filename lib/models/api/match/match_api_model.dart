@@ -5,7 +5,9 @@ import 'package:trus_app/models/api/interfaces/json_and_http_converter.dart';
 import 'package:trus_app/models/api/interfaces/model_to_string.dart';
 import 'package:trus_app/models/api/player/player_api_model.dart';
 
-class MatchApiModel implements ModelToString, JsonAndHttpConverter {
+import '../interfaces/dropdown_item.dart';
+
+class MatchApiModel implements ModelToString, JsonAndHttpConverter, DropdownItem {
   int? id;
   final String name;
   final DateTime date;
@@ -120,5 +122,10 @@ class MatchApiModel implements ModelToString, JsonAndHttpConverter {
   @override
   int getId() {
     return id ?? -1;
+  }
+
+  @override
+  String dropdownItem() {
+    return listViewTitle();
   }
 }

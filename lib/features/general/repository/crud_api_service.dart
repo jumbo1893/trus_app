@@ -7,6 +7,7 @@ import 'package:trus_app/models/api/football/football_match_api_model.dart';
 import 'package:trus_app/models/api/football/football_player_api_model.dart';
 import 'package:trus_app/models/api/football/stats/football_all_individual_stats_api_model.dart';
 import 'package:trus_app/models/api/football/table_team_api_model.dart';
+import 'package:trus_app/models/api/strava/athlete_activities.dart';
 
 import '../../../common/repository/exception/json_decode_exception.dart';
 import '../../../models/api/auth/user_api_model.dart';
@@ -59,6 +60,8 @@ class CrudApiService extends RequestExecutor {
         return AchievementDetail.fromJson(json);
       case playerAchievementApi:
         return PlayerAchievementApiModel.fromJson(json);
+      case stravaApi:
+        return AthleteActivities.fromJson(json);
       default:
         throw JsonDecodeException();
     }

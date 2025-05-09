@@ -65,6 +65,7 @@ dependencies:
   pedometer: ^4.0.1
   device_info_plus: ^9.1.2
   cupertino_http: ^2.1.1
+  url_launcher: ^6.2.4
 
 flutter_icons:
   android: true

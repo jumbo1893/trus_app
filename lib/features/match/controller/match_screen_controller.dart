@@ -38,10 +38,6 @@ class MatchScreenController implements ReadOperations {
     required this.ref,
   });
 
-  Future<List<MatchApiModel>> matches() {
-    return matchApiService.getMatches();
-  }
-
   Stream<List<MatchApiModel>> streamMatches() {
     return matchListStream.stream;
   }

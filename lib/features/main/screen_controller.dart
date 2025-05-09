@@ -47,6 +47,7 @@ import '../statistics/screens/double_dropdown_stats_screen.dart';
 import '../statistics/screens/main_goal_statistics_screen.dart';
 import '../statistics/screens/main_statistics_screen.dart';
 import '../steps/screens/step_screen.dart';
+import '../strava/screens/strava_football_match_screen.dart';
 import '../user/screens/user_screen.dart';
 
 final screenControllerProvider = Provider((ref) {
@@ -302,6 +303,9 @@ class ScreenController {
     ),
     const ViewUserScreen(
       //35
+    ),
+    StravaFootballMatchScreen(
+      //36
     ),
   ];
 

@@ -21,6 +21,12 @@ String dateTimeToString(DateTime dateTime) {
   return returnDate;
 }
 
+String dateTimeToTimeString(DateTime dateTime) {
+  final formatter = DateFormat('HH:mm:ss');
+  final returnDate = formatter.format(dateTime.toLocal());
+  return returnDate;
+}
+
 bool isSameDay(DateTime dateTime1, DateTime dateTime2) {
 
   if (dateTime2.compareTo(dateTime1) == 0) {
