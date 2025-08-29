@@ -4,7 +4,7 @@ import 'package:trus_app/features/achievement/controller/achievement_controller.
 import 'package:trus_app/features/achievement/screens/view_achievement_detail_screen.dart';
 import 'package:trus_app/models/api/achievement/achievement_detail.dart';
 
-import '../../../common/widgets/builder/models_error_future_builder.dart';
+import '../../../common/widgets/builder/models_cache_builder.dart';
 import '../../../common/widgets/screen/custom_consumer_widget.dart';
 import '../../main/screen_controller.dart';
 class AchievementScreen extends CustomConsumerWidget {
@@ -17,12 +17,15 @@ class AchievementScreen extends CustomConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     if (ref.read(screenControllerProvider).isScreenFocused(AchievementScreen.id)) {
+      var provider = ref.watch(achievementControllerProvider);
       return Scaffold(
           body: Padding(
             padding: const EdgeInsets.only(top: 8.0),
-            child: ModelsErrorFutureBuilder(
+            child: ModelsCacheBuilder(
               key: const ValueKey('achievement_list'),
-              future: ref.watch(achievementControllerProvider).getModels(),
+              listSetup: provider.setupAchievementList(),
+              modelToStringListControllerMixin: provider,
+              hashKey: provider.achievementListId,
               onPressed: (achievement) => {
                 ref
                     .read(screenControllerProvider)
@@ -31,7 +34,6 @@ class AchievementScreen extends CustomConsumerWidget {
                     .read(screenControllerProvider)
                     .changeFragment(ViewAchievementDetailScreen.id)
               },
-              context: context,
             ),
           ),
           );

@@ -1,12 +1,14 @@
 import 'package:trus_app/config.dart';
+import 'package:trus_app/features/general/cache/i_endpoint_id.dart';
 import 'package:trus_app/models/api/interfaces/json_and_http_converter.dart';
 import 'package:trus_app/models/api/interfaces/model_to_string.dart';
 
-class FineApiModel implements ModelToString, JsonAndHttpConverter {
+class FineApiModel implements ModelToString, JsonAndHttpConverter, IEndpointId {
   int? id;
   final String name;
   final int amount;
   bool inactive;
+  static const endpointId = "fine_api_model";
 
   FineApiModel({
     required this.name,
@@ -92,5 +94,10 @@ class FineApiModel implements ModelToString, JsonAndHttpConverter {
   @override
   int getId() {
     return id ?? -1;
+  }
+
+  @override
+  String getEndpointId() {
+    return endpointId;
   }
 }

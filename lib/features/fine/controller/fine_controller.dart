@@ -1,13 +1,13 @@
 import 'dart:async';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:trus_app/features/general/cache/cache_processor.dart';
 import 'package:trus_app/features/mixin/boolean_controller_mixin.dart';
 import 'package:trus_app/features/mixin/string_controller_mixin.dart';
 
 import '../../../common/utils/field_validator.dart';
 import '../../../models/api/fine_api_model.dart';
 import '../../general/crud_operations.dart';
-import '../../general/read_operations.dart';
 import '../repository/fine_api_service.dart';
 
 
@@ -17,20 +17,20 @@ final fineControllerProvider = Provider((ref) {
   return FineController(fineApiService: fineApiService, ref: ref);
 });
 
-class FineController with StringControllerMixin, BooleanControllerMixin implements CrudOperations, ReadOperations {
+class FineController extends CacheProcessor with StringControllerMixin, BooleanControllerMixin implements CrudOperations {
   final FineApiService fineApiService;
-  final Ref ref;
   final loadingController = StreamController<bool>.broadcast();
   String originalFineName = "";
 
-  String nameKey = "name";
-  String amountKey = "amount";
-  String inactiveKey = "inactive";
+  final String nameKey = "name";
+  final String amountKey = "amount";
+  final String inactiveKey = "inactive";
+  static const String fineListId = "fineList";
 
   FineController({
     required this.fineApiService,
-    required this.ref,
-  });
+    required Ref ref,
+  }) : super(ref);
 
   void loadFine(FineApiModel fine) {
     initStringFields(fine.name, nameKey);
@@ -95,9 +95,8 @@ class FineController with StringControllerMixin, BooleanControllerMixin implemen
     return null;
   }
 
-  @override
-  Future<List<FineApiModel>> getModels() async {
-    return await fineApiService.getFines();
+  Future<void> setupFineList() async {
+    await initSetupList<List<FineApiModel>>(() async => fineApiService.getFines(), fineListId);
   }
 
 }

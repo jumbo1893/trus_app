@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:trus_app/features/general/cache/cache_processor.dart';
 import 'package:trus_app/features/general/crud_operations.dart';
 import 'package:trus_app/features/mixin/achievement_controller_mixin.dart';
 import 'package:trus_app/features/mixin/boolean_controller_mixin.dart';
@@ -23,18 +24,18 @@ final playerControllerProvider = Provider((ref) {
   return PlayerController(playerApiService: playerApiService, ref: ref);
 });
 
-class PlayerController
+class PlayerController extends CacheProcessor
     with DropdownControllerMixin, StringControllerMixin, DateControllerMixin, BooleanControllerMixin, ViewControllerMixin, AchievementControllerMixin
     implements CrudOperations, ReadOperations, IPlayerHashKey {
   final PlayerApiService playerApiService;
-  final Ref ref;
   String originalPlayerName = "";
   late PlayerSetup playerSetup;
+  final String playerListId = "playerListId";
 
   PlayerController({
     required this.playerApiService,
-    required this.ref,
-  });
+    required Ref ref,
+  }) : super(ref);
 
   void loadEditPlayer() {
     initDropdown(
@@ -156,6 +157,10 @@ class PlayerController
   @override
   Future<List<PlayerApiModel>> getModels() async {
     return await playerApiService.getPlayers();
+  }
+
+  Future<void> setupPlayerList() async {
+    await initSetupList<List<PlayerApiModel>>(() async => playerApiService.getPlayers(), playerListId);
   }
 
   @override

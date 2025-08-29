@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:trus_app/common/widgets/builder/models_cache_builder.dart';
 import 'package:trus_app/features/fine/screens/add_fine_screen.dart';
 import 'package:trus_app/features/fine/screens/edit_fine_screen.dart';
 
-import '../../../common/widgets/builder/models_error_future_builder.dart';
 import '../../../common/widgets/screen/custom_consumer_widget.dart';
 import '../../../models/api/fine_api_model.dart';
 import '../../main/screen_controller.dart';
@@ -19,12 +19,15 @@ class FineScreen extends CustomConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     if (ref.read(screenControllerProvider).isScreenFocused(FineScreen.id)) {
+      var provider = ref.watch(fineControllerProvider);
       return Scaffold(
           body: Padding(
             padding: const EdgeInsets.only(top: 8.0),
-            child: ModelsErrorFutureBuilder(
+            child: ModelsCacheBuilder(
               key: const ValueKey('fine_list'),
-              future: ref.watch(fineControllerProvider).getModels(),
+              listSetup: provider.setupFineList(),
+              modelToStringListControllerMixin: provider,
+              hashKey: FineController.fineListId,
               onPressed: (fine) => {
                 ref
                     .read(screenControllerProvider)
@@ -33,7 +36,6 @@ class FineScreen extends CustomConsumerWidget {
                     .read(screenControllerProvider)
                     .changeFragment(EditFineScreen.id)
               },
-              context: context,
             ),
           ),
           floatingActionButton: FloatingActionButton(

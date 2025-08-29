@@ -64,7 +64,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                   }
                   return ColumnFutureBuilder(
                     loadModelFuture:
-                        ref.watch(homeControllerProvider).homeSetupView(),
+                        ref.watch(homeControllerProvider).loadModel(),
                     loadingScreen: null,
                     crossAxisAlignment: CrossAxisAlignment.center,
                     columns: [

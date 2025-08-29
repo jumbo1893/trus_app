@@ -4,7 +4,7 @@ import 'package:trus_app/features/player/screens/add_player_screen.dart';
 import 'package:trus_app/features/player/screens/view_player_screen.dart';
 import 'package:trus_app/models/api/player/player_api_model.dart';
 
-import '../../../common/widgets/builder/models_error_future_builder.dart';
+import '../../../common/widgets/builder/models_cache_builder.dart';
 import '../../../common/widgets/screen/custom_consumer_widget.dart';
 import '../../main/screen_controller.dart';
 import '../controller/player_controller.dart';
@@ -19,12 +19,15 @@ class PlayerScreen extends CustomConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     if (ref.read(screenControllerProvider).isScreenFocused(id)) {
+      var provider = ref.watch(playerControllerProvider);
       return Scaffold(
           body: Padding(
             padding: const EdgeInsets.only(top: 8.0),
-            child: ModelsErrorFutureBuilder(
-              key: const ValueKey('achievement_detail'),
-              future: ref.watch(playerControllerProvider).getModels(),
+            child: ModelsCacheBuilder(
+              key: const ValueKey('fine_list'),
+              listSetup: provider.setupPlayerList(),
+              modelToStringListControllerMixin: provider,
+              hashKey: provider.playerListId,
               onPressed: (player) => {
                 ref
                     .read(screenControllerProvider)
@@ -33,7 +36,6 @@ class PlayerScreen extends CustomConsumerWidget {
                     .read(screenControllerProvider)
                     .changeFragment(ViewPlayerScreen.id)
               },
-              context: context,
             ),
           ),
           floatingActionButton: FloatingActionButton(

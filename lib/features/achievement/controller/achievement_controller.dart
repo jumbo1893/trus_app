@@ -9,8 +9,8 @@ import 'package:trus_app/features/mixin/view_controller_mixin.dart';
 import 'package:trus_app/models/api/achievement/achievement_detail.dart';
 import 'package:trus_app/models/api/achievement/player_achievement_api_model.dart';
 import 'package:trus_app/models/api/interfaces/model_to_string.dart';
+import 'package:trus_app/features/general/cache/cache_processor.dart';
 
-import '../../general/read_operations.dart';
 
 final achievementControllerProvider = Provider((ref) {
   final achievementApiService = ref.watch(achievementApiServiceProvider);
@@ -18,15 +18,15 @@ final achievementControllerProvider = Provider((ref) {
       achievementApiService: achievementApiService, ref: ref);
 });
 
-class AchievementController with ViewControllerMixin implements ReadOperations, IAchievementHashKey, IAchievementNeededFields, CrudOperations {
+class AchievementController extends CacheProcessor with ViewControllerMixin implements IAchievementHashKey, IAchievementNeededFields, CrudOperations {
   final AchievementApiService achievementApiService;
-  final Ref ref;
   late AchievementDetail achievementDetail;
+  final String achievementListId = "achievementList";
 
   AchievementController({
     required this.achievementApiService,
-    required this.ref,
-  });
+    required Ref ref,
+  }) : super(ref);
 
   void loadViewAchievement() {
     initViewFields(achievementDetail.getPlayerAchievementName, playerName());
@@ -67,9 +67,8 @@ class AchievementController with ViewControllerMixin implements ReadOperations, 
     return await achievementApiService.getAchievementDetail(id);
   }
 
-  @override
-  Future<List<AchievementDetail>> getModels() async {
-    return await achievementApiService.getAllDetailed();
+  Future<void> setupAchievementList() async {
+    await initSetupList<List<AchievementDetail>>(() async => achievementApiService.getAllDetailed(), achievementListId);
   }
 
   @override

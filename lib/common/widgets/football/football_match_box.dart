@@ -58,7 +58,8 @@ class _FootballMatchBoxState extends State<FootballMatchBox>
     return match.toStringForLastMatchHomeScreen();
   }
 
-  List<WarningText> returnWarnings(FootballMatchDetail? footballMatchDetail, int matchApiModelId) {
+  List<WarningText> returnWarnings(
+      FootballMatchDetail? footballMatchDetail, int matchApiModelId) {
     List<WarningText> texts = [];
     if (footballMatchDetail == null) {
       return [];
@@ -71,14 +72,15 @@ class _FootballMatchBoxState extends State<FootballMatchBox>
     }
     if (widget.isNextMatch) {
       texts.add(WarningText(
-        text: "Průměrný rok narození domácích: ${footballMatchDetail.homeTeamAverageBirthYear} X hostů : ${footballMatchDetail.awayTeamAverageBirthYear}",
+        text:
+            "Průměrný rok narození domácích: ${footballMatchDetail.homeTeamAverageBirthYear} X hostů : ${footballMatchDetail.awayTeamAverageBirthYear}",
         warningType: WarningType.info,
       ));
-      if(footballMatchDetail.homeTeamBestScorer != null && footballMatchDetail.awayTeamBestScorer != null) {
+      if (footballMatchDetail.homeTeamBestScorer != null &&
+          footballMatchDetail.awayTeamBestScorer != null) {
         texts.add(WarningText(
-          text: "Nejlepší střelec domácích: ${footballMatchDetail
-              .homeTeamBestScorer} X hostů : ${footballMatchDetail
-              .awayTeamBestScorer}",
+          text:
+              "Nejlepší střelec domácích: ${footballMatchDetail.homeTeamBestScorer} X hostů : ${footballMatchDetail.awayTeamBestScorer}",
           warningType: WarningType.info,
         ));
       }
@@ -102,20 +104,22 @@ class _FootballMatchBoxState extends State<FootballMatchBox>
     const double insidePadding = 3.0;
     _animation = Tween<double>(begin: 0, end: 1).animate(_animationController);
     return StreamBuilder<FootballMatchDetail?>(
-        stream: widget.footballMatchDetailControllerMixin.footballMatchDetailValue(widget.hashKey),
+        stream: widget.footballMatchDetailControllerMixin
+            .footballMatchDetailValue(widget.hashKey),
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
             return const Loader();
           }
           var footballMatchDetail = snapshot.data;
           int matchId;
-          if(footballMatchDetail == null) {
+          if (footballMatchDetail == null) {
             matchId = -1;
+          } else {
+            matchId = footballMatchDetail.footballMatch
+                .findMatchIdForCurrentAppTeamInMatchIdAndAppTeamIdList(
+                    widget.appTeamApiModel);
           }
-          else {
-            matchId = footballMatchDetail.footballMatch.findMatchIdForCurrentAppTeamInMatchIdAndAppTeamIdList(widget.appTeamApiModel);
-          }
-          double footballBoxButtonWidth = width / 6 - insidePadding /7;
+          double footballBoxButtonWidth = width / 6 - insidePadding / 7;
           return Column(
             children: [
               Container(
@@ -165,8 +169,8 @@ class _FootballMatchBoxState extends State<FootballMatchBox>
                           SizedBox(
                             width: footballBoxButtonWidth,
                             child: EnabledIconButton(
-                                onPressed: () =>
-                                    widget.footballMatchBoxCallback.onButtonAddPlayersClick(
+                                onPressed: () => widget.footballMatchBoxCallback
+                                    .onButtonAddPlayersClick(
                                         footballMatchDetail.footballMatch),
                                 icon: const Icon(Icons.person_add),
                                 enabled: true,
@@ -175,8 +179,9 @@ class _FootballMatchBoxState extends State<FootballMatchBox>
                           SizedBox(
                             width: footballBoxButtonWidth,
                             child: EnabledIconButton(
-                                onPressed: () => widget.footballMatchBoxCallback.onButtonAddGoalsClick(
-                                    footballMatchDetail.footballMatch),
+                                onPressed: () => widget.footballMatchBoxCallback
+                                    .onButtonAddGoalsClick(
+                                        footballMatchDetail.footballMatch),
                                 icon: const Icon(Icons.sports_soccer),
                                 enabled: isMatchButtonEnabled(
                                     footballMatchDetail.footballMatch, matchId),
@@ -185,8 +190,9 @@ class _FootballMatchBoxState extends State<FootballMatchBox>
                           SizedBox(
                             width: footballBoxButtonWidth,
                             child: EnabledIconButton(
-                                onPressed: () => widget.footballMatchBoxCallback.onButtonAddBeerClick(
-                                    footballMatchDetail.footballMatch),
+                                onPressed: () => widget.footballMatchBoxCallback
+                                    .onButtonAddBeerClick(
+                                        footballMatchDetail.footballMatch),
                                 icon: const Icon(Icons.sports_bar),
                                 enabled: isMatchButtonEnabled(
                                     footballMatchDetail.footballMatch, matchId),
@@ -195,8 +201,9 @@ class _FootballMatchBoxState extends State<FootballMatchBox>
                           SizedBox(
                             width: footballBoxButtonWidth,
                             child: EnabledIconButton(
-                                onPressed: () => widget.footballMatchBoxCallback.onButtonAddFineClick(
-                                    footballMatchDetail.footballMatch),
+                                onPressed: () => widget.footballMatchBoxCallback
+                                    .onButtonAddFineClick(
+                                        footballMatchDetail.footballMatch),
                                 icon: const Icon(Icons.savings),
                                 enabled: isMatchButtonEnabled(
                                     footballMatchDetail.footballMatch, matchId),
@@ -205,8 +212,8 @@ class _FootballMatchBoxState extends State<FootballMatchBox>
                           SizedBox(
                             width: footballBoxButtonWidth,
                             child: EnabledIconButton(
-                                onPressed: () =>
-                                    widget.footballMatchBoxCallback.onButtonDetailMatchClick(
+                                onPressed: () => widget.footballMatchBoxCallback
+                                    .onButtonDetailMatchClick(
                                         footballMatchDetail.footballMatch),
                                 icon: const Icon(Icons.summarize),
                                 enabled: true,
@@ -215,8 +222,9 @@ class _FootballMatchBoxState extends State<FootballMatchBox>
                           SizedBox(
                             width: footballBoxButtonWidth,
                             child: EnabledIconButton(
-                                onPressed: () => widget.footballMatchBoxCallback.onCommonMatchesClick(
-                                    footballMatchDetail.footballMatch),
+                                onPressed: () => widget.footballMatchBoxCallback
+                                    .onCommonMatchesClick(
+                                        footballMatchDetail.footballMatch),
                                 icon: const Icon(Icons.compare),
                                 enabled: true,
                                 hasRightBorder: false,
@@ -235,20 +243,19 @@ class _FootballMatchBoxState extends State<FootballMatchBox>
                       right: BorderSide(color: Colors.black54)),
                 ),
                 child: Column(
-                    children:
-                        returnWarnings(footballMatchDetail, matchId)),
+                    children: returnWarnings(footballMatchDetail, matchId)),
               ),
               Container(
                 margin: const EdgeInsets.only(left: 5.0, right: 5.0),
                 width: width,
-                decoration: returnWarnings(footballMatchDetail, matchId)
-                        .isNotEmpty
-                    ? const BoxDecoration(
-                        border: Border(
-                          bottom: BorderSide(color: Colors.black54),
-                        ),
-                      )
-                    : null,
+                decoration:
+                    returnWarnings(footballMatchDetail, matchId).isNotEmpty
+                        ? const BoxDecoration(
+                            border: Border(
+                              bottom: BorderSide(color: Colors.black54),
+                            ),
+                          )
+                        : null,
               )
             ],
           );

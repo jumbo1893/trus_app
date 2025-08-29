@@ -1,14 +1,16 @@
 
+import 'package:trus_app/features/general/cache/i_endpoint_id.dart';
 import 'package:trus_app/models/api/football/detail/football_match_detail.dart';
 
 import 'chart.dart';
 
-class HomeSetup {
+class HomeSetup implements IEndpointId {
   String nextBirthday;
   List<String> randomFacts;
   Chart? chart;
   List<FootballMatchDetail?> nextAndLastFootballMatch;
   final List<Chart> charts;
+  static const endpointId = "home_setup";
 
 
   HomeSetup({
@@ -31,6 +33,11 @@ class HomeSetup {
           .toList(),
       charts: List<Chart>.from((json['charts'] as List<dynamic>).map((fine) => Chart.fromJson(fine))),
     );
+  }
+
+  @override
+  String getEndpointId() {
+    return endpointId;
   }
 
 }
