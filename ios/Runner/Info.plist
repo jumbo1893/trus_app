@@ -22,9 +22,12 @@
 	<string>????</string>
 	<key>NSMotionUsageDescription</key>
     <string>Tato aplikace počítá vaše kroky</string>
+    <key>NSPushNotificationsUsageDescription</key>
+    <string>Aplikace chce odesílat oznámení o výsledcích zápasů</string>
     <key>UIBackgroundModes</key>
     <array>
         <string>processing</string>
+        <string>remote-notification</string>
     </array>
 	<key>CFBundleVersion</key>
 	<string>$(FLUTTER_BUILD_NUMBER)</string>
