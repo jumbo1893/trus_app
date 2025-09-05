@@ -3,7 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:trus_app/features/home/screens/home_screen.dart';
 
 import '../../../features/main/screen_controller.dart';
-import '../../../models/api/notification_api_model.dart';
+import '../../../models/api/notification/notification_api_model.dart';
 import '../../utils/utils.dart';
 import '../loader.dart';
 import '../notification_list_tile.dart';

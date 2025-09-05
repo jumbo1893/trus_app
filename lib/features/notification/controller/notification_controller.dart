@@ -2,7 +2,7 @@ import 'dart:async';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../../models/api/notification_api_model.dart';
+import '../../../models/api/notification/notification_api_model.dart';
 import '../repository/notification_api_service.dart';
 
 final notificationControllerProvider = Provider((ref) {

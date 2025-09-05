@@ -1,7 +1,7 @@
 import 'package:trus_app/config.dart';
 
-import '../../common/utils/calendar.dart';
-import 'interfaces/json_and_http_converter.dart';
+import '../../../common/utils/calendar.dart';
+import '../interfaces/json_and_http_converter.dart';
 
 class NotificationApiModel implements JsonAndHttpConverter {
   final int id;

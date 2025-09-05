@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import '../../models/api/notification_api_model.dart';
+import '../../models/api/notification/notification_api_model.dart';
 import '../utils/calendar.dart';
 
 class NotificationListTile extends StatelessWidget {

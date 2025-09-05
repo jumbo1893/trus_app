@@ -8,6 +8,7 @@ import 'package:trus_app/colors.dart';
 import 'package:trus_app/common/widgets/loader.dart';
 import 'package:trus_app/firebase_options.dart';
 import 'package:trus_app/router.dart';
+import 'package:trus_app/services/notification_init_provider.dart';
 
 import 'config.dart';
 import 'features/auth/login/controller/auth_login_controller.dart';
@@ -29,7 +30,6 @@ void main() async {
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
   );
-
   final container = ProviderContainer();
 
   WidgetsBinding.instance.addObserver(
@@ -47,6 +47,7 @@ class MyApp extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    ref.watch(notificationsInitProvider);
     return MaterialApp(
         debugShowCheckedModeBanner: false,
         navigatorKey: navigatorKey,

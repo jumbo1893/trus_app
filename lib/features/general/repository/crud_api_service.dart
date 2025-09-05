@@ -7,6 +7,7 @@ import 'package:trus_app/models/api/football/football_match_api_model.dart';
 import 'package:trus_app/models/api/football/football_player_api_model.dart';
 import 'package:trus_app/models/api/football/stats/football_all_individual_stats_api_model.dart';
 import 'package:trus_app/models/api/football/table_team_api_model.dart';
+import 'package:trus_app/models/api/notification/push/device_token_api_model.dart';
 import 'package:trus_app/models/api/strava/athlete_activities.dart';
 
 import '../../../common/repository/exception/json_decode_exception.dart';
@@ -15,7 +16,7 @@ import '../../../models/api/fine_api_model.dart';
 import '../../../models/api/goal/goal_api_model.dart';
 import '../../../models/api/interfaces/json_and_http_converter.dart';
 import '../../../models/api/match/match_api_model.dart';
-import '../../../models/api/notification_api_model.dart';
+import '../../../models/api/notification/notification_api_model.dart';
 import '../../../models/api/player/player_api_model.dart';
 import '../../../models/api/receivedfine/received_fine_api_model.dart';
 import '../../../models/api/season_api_model.dart';
@@ -62,6 +63,8 @@ class CrudApiService extends RequestExecutor {
         return PlayerAchievementApiModel.fromJson(json);
       case stravaApi:
         return AthleteActivities.fromJson(json);
+      case tokenApi:
+        return DeviceTokenApiModel.fromJson(json);
       default:
         throw JsonDecodeException();
     }
