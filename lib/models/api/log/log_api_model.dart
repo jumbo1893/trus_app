@@ -28,6 +28,6 @@ class LogApiModel implements JsonAndHttpConverter {
 
   @override
   String httpRequestClass() {
-    return tokenApi;
+    return logApi;
   }
 }
