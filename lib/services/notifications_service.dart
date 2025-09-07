@@ -5,6 +5,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:trus_app/firebase_options.dart';
+import 'package:trus_app/models/api/log/log_api_model.dart';
 
 import '../features/general/repository/crud_api_service.dart';
 import '../models/api/notification/push/device_token_api_model.dart';
@@ -22,52 +23,70 @@ class NotificationsService {
   FlutterLocalNotificationsPlugin();
 
   static Future<void> initialize(Ref ref) async {
-    // Inicializace Firebase Messaging
+    // Background handler
     FirebaseMessaging.onBackgroundMessage(firebaseMessagingBackgroundHandler);
 
-    // Android 13+ permission
+    // Android permission
     if (Platform.isAndroid) {
       final messaging = FirebaseMessaging.instance;
       final settings = await messaging.requestPermission();
+      _sendLogToBackend(
+          'Android permission status: ${settings.authorizationStatus}', ref);
       if (kDebugMode) {
         print('Android permission status: ${settings.authorizationStatus}');
       }
     }
 
-    // iOS permission
+    // iOS permission + extra logy
     if (Platform.isIOS) {
       final settings = await FirebaseMessaging.instance.requestPermission(
         alert: true,
         badge: true,
         sound: true,
       );
-        print('iOS permission status: ${settings.authorizationStatus}');
+      _sendLogToBackend(
+          'iOS permission status: ${settings.authorizationStatus} '
+              '(alert=${settings.alert}, badge=${settings.badge}, sound=${settings.sound})',
+          ref);
+      print(
+          'iOS permission status: ${settings.authorizationStatus} (alert=${settings.alert}, badge=${settings.badge}, sound=${settings.sound})');
 
+      // Zjistit autoInit
+      await FirebaseMessaging.instance.setAutoInitEnabled(true);
+      final autoInit = FirebaseMessaging.instance.isAutoInitEnabled;
+      _sendLogToBackend('iOS isAutoInitEnabled: $autoInit', ref);
+
+      // Log APNs tokenu
+      final apnsToken = await FirebaseMessaging.instance.getAPNSToken();
+      _sendLogToBackend('APNs Token: $apnsToken', ref);
+      print('APNs Token: $apnsToken');
     }
 
     // Local notifications init
     const AndroidInitializationSettings androidInitSettings =
     AndroidInitializationSettings('@mipmap/ic_launcher');
-
     const DarwinInitializationSettings iosInitSettings =
     DarwinInitializationSettings();
-
     const InitializationSettings initSettings = InitializationSettings(
       android: androidInitSettings,
       iOS: iosInitSettings,
     );
-
     await _localNotifications.initialize(initSettings);
 
     // --- TOKEN handling ---
     final token = await FirebaseMessaging.instance.getToken();
+    if (token == null) {
+      _sendLogToBackend('FCM getToken() returned NULL', ref);
+      print('FCM getToken() returned NULL');
+    } else {
+      _sendLogToBackend('FCM Token acquired: $token', ref);
       print('FCM Token: $token');
-    if (token != null) {
       await _sendTokenToBackend(token, ref);
     }
 
-    // Pokud se token změní (např. reinstall app, odhlášení Google účtu…)
+    // Pokud se token změní
     FirebaseMessaging.instance.onTokenRefresh.listen((newToken) async {
+      _sendLogToBackend('FCM Token refresh: $newToken', ref);
       if (kDebugMode) {
         print('FCM Token refresh: $newToken');
       }
@@ -76,25 +95,25 @@ class NotificationsService {
 
     // Foreground zprávy
     FirebaseMessaging.onMessage.listen((RemoteMessage message) {
+      _sendLogToBackend('Foreground zpráva: ${message.data}', ref);
       if (kDebugMode) {
         print('Doručena foreground zpráva: ${message.data}');
       }
 
-      // Na Androidu použijeme vlastní notifikaci s BigTextStyle
       if (message.data.isNotEmpty) {
         _showLocalNotificationFromData(message.data);
       } else if (message.notification != null) {
-        // fallback pro iOS (notification payload)
         _showLocalNotification(message);
       }
     });
 
     // Kliknutí na notifikaci
     FirebaseMessaging.onMessageOpenedApp.listen((RemoteMessage message) {
+      _sendLogToBackend(
+          'Notifikace otevřena: ${message.notification?.title}', ref);
       if (kDebugMode) {
         print('Notifikace otevřena: ${message.notification?.title}');
       }
-      // Sem můžeš dát navigaci
     });
   }
 
@@ -103,9 +122,24 @@ class NotificationsService {
     try {
       final crud = CrudApiService(ref);
       await crud.addModel(DeviceTokenApiModel(token: token));
+      _sendLogToBackend("Token $token poslán na backend přes CrudApiService", ref);
       if (kDebugMode) {
         print("Token $token poslán na backend přes CrudApiService");
       }
+    } catch (e) {
+      _sendLogToBackend("Chyba při posílání tokenu: $e", ref);
+      if (kDebugMode) {
+        rethrow;
+      }
+    }
+  }
+
+  /// Pošle log na backend
+  static Future<void> _sendLogToBackend(String message, Ref ref) async {
+    try {
+      final crud = CrudApiService(ref);
+      await crud.addModel(
+          LogApiModel(message: message, logClass: "NotificationsService"));
     } catch (e) {
       if (kDebugMode) {
         rethrow;
@@ -135,7 +169,9 @@ class NotificationsService {
       platformDetails,
     );
   }
-  static Future<void> _showLocalNotificationFromData(Map<String, dynamic> data) async {
+
+  static Future<void> _showLocalNotificationFromData(
+      Map<String, dynamic> data) async {
     final title = data['title'] ?? 'Notifikace';
     final body = data['body'] ?? '';
 
@@ -145,7 +181,8 @@ class NotificationsService {
       'Obecné',
       importance: Importance.max,
       priority: Priority.high,
-      styleInformation: BigTextStyleInformation(''), // umožní zobrazit dlouhý text
+      styleInformation:
+      BigTextStyleInformation(''), // umožní zobrazit dlouhý text
     );
 
     const NotificationDetails platformDetails =
@@ -158,5 +195,4 @@ class NotificationsService {
       platformDetails,
     );
   }
-
 }

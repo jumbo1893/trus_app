@@ -7,6 +7,7 @@ import 'package:trus_app/models/api/football/football_match_api_model.dart';
 import 'package:trus_app/models/api/football/football_player_api_model.dart';
 import 'package:trus_app/models/api/football/stats/football_all_individual_stats_api_model.dart';
 import 'package:trus_app/models/api/football/table_team_api_model.dart';
+import 'package:trus_app/models/api/log/log_api_model.dart';
 import 'package:trus_app/models/api/notification/push/device_token_api_model.dart';
 import 'package:trus_app/models/api/strava/athlete_activities.dart';
 
@@ -65,6 +66,8 @@ class CrudApiService extends RequestExecutor {
         return AthleteActivities.fromJson(json);
       case tokenApi:
         return DeviceTokenApiModel.fromJson(json);
+      case logApi:
+        return LogApiModel.fromJson(json);
       default:
         throw JsonDecodeException();
     }
