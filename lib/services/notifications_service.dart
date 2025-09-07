@@ -5,7 +5,6 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:trus_app/firebase_options.dart';
-import 'package:http/http.dart' as http;
 
 import '../features/general/repository/crud_api_service.dart';
 import '../models/api/notification/push/device_token_api_model.dart';
@@ -42,9 +41,8 @@ class NotificationsService {
         badge: true,
         sound: true,
       );
-      if (kDebugMode) {
         print('iOS permission status: ${settings.authorizationStatus}');
-      }
+
     }
 
     // Local notifications init
@@ -63,9 +61,7 @@ class NotificationsService {
 
     // --- TOKEN handling ---
     final token = await FirebaseMessaging.instance.getToken();
-    if (kDebugMode) {
       print('FCM Token: $token');
-    }
     if (token != null) {
       await _sendTokenToBackend(token, ref);
     }
@@ -78,7 +74,6 @@ class NotificationsService {
       await _sendTokenToBackend(newToken, ref);
     });
 
-    // Foreground zprávy
     // Foreground zprávy
     FirebaseMessaging.onMessage.listen((RemoteMessage message) {
       if (kDebugMode) {
