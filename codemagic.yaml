@@ -1,12 +1,17 @@
 workflows:
   ios-production:
     name: iOS Production Build
+
+    integrations:
+      app_store_connect: app-store-connect
+
     environment:
       flutter: stable
       xcode: latest
       vars:
         APP_STORE_APP_ID: 6467466590
         ENTITLEMENTS_FILE: "ios/Runner/RunnerProduction.entitlements"
+
     scripts:
       - name: Set entitlements for Production
         script: |
@@ -16,10 +21,12 @@ workflows:
         script: flutter pub get
       - name: Build iOS (release)
         script: flutter build ipa --release
+
     artifacts:
       - build/ios/ipa/*.ipa
+
     publishing:
       app_store_connect:
-        auth: integration  # použije App Store Connect API key, který jsi nastavil v UI Codemagic
+        auth: integration
         submit_to_testflight: true
         submit_to_app_store: false
