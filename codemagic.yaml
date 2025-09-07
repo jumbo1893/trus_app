@@ -1,30 +1,11 @@
 workflows:
-  ios-development:
-    name: iOS Development Build
-    environment:
-      flutter: stable
-      xcode: latest
-      vars:
-        ENTITLEMENTS_FILE: "ios/Runner/RunnerDevelopment.entitlements"
-    scripts:
-      - name: Set entitlements for Development
-        script: |
-          echo "Using Development entitlements"
-          cp $ENTITLEMENTS_FILE ios/Runner/Runner.entitlements
-      - name: Flutter pub get
-        script: flutter pub get
-      - name: Build iOS (debug)
-        script: flutter build ios --debug --no-codesign
-    artifacts:
-      - build/ios/iphoneos/*.app
-      - build/ios/ipa/*.ipa
-
   ios-production:
     name: iOS Production Build
     environment:
       flutter: stable
       xcode: latest
       vars:
+        APP_STORE_APP_ID: 6467466590
         ENTITLEMENTS_FILE: "ios/Runner/RunnerProduction.entitlements"
     scripts:
       - name: Set entitlements for Production
@@ -34,6 +15,11 @@ workflows:
       - name: Flutter pub get
         script: flutter pub get
       - name: Build iOS (release)
-        script: flutter build ios --release --no-codesign
+        script: flutter build ipa --release
     artifacts:
       - build/ios/ipa/*.ipa
+    publishing:
+      app_store_connect:
+        auth: integration  # použije App Store Connect API key, který jsi nastavil v UI Codemagic
+        submit_to_testflight: true
+        submit_to_app_store: false
