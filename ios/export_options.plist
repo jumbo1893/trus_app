@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>method</key>
+    <string>app-store</string>
+
+    <key>teamID</key>
+    <string>W2Y3H5JG6C</string>
+
+    <key>provisioningProfiles</key>
+    <dict>
+        <key>com.jumbo.trus</key>
+        <string>trusi appka ios_app_store 1757109737</string>
+    </dict>
+
+    <key>compileBitcode</key>
+    <false/>
+
+    <key>destination</key>
+    <string>export</string>
+
+    <key>signingStyle</key>
+    <string>manual</string>
+
+    <key>stripSwiftSymbols</key>
+    <true/>
+</dict>
+</plist>
