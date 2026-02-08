@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'dart:io';
+
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/foundation.dart';
@@ -60,37 +61,6 @@ class NotificationsService {
     // Background handler
     FirebaseMessaging.onBackgroundMessage(firebaseMessagingBackgroundHandler);
     await _d('background_handler_registered', ref);
-
-    // --- Oprávnění a autoinit podle platforem ---
-    if (Platform.isAndroid) {
-      final messaging = FirebaseMessaging.instance;
-
-      // Od Android 13 je nutné žádat POST_NOTIFICATIONS
-      final settings = await messaging.requestPermission(
-        alert: true,
-        announcement: false,
-        badge: true,
-        carPlay: false,
-        criticalAlert: false,
-        provisional: false,
-        sound: true,
-      );
-      await _d('android_permission', ref, {
-        'authorizationStatus': settings.authorizationStatus.toString(),
-        'canAlert': settings.alert,
-        'canBadge': settings.badge,
-        'canSound': settings.sound,
-      });
-
-      // U Androidu je dobré si ověřit dostupnost tokenu hned po povolení.
-      final notifSettings = await messaging.getNotificationSettings();
-      await _d('android_getNotificationSettings', ref, {
-        'authorizationStatus': notifSettings.authorizationStatus.toString(),
-        'alert': notifSettings.alert,
-        'badge': notifSettings.badge,
-        'sound': notifSettings.sound,
-      });
-    }
 
     if (Platform.isIOS) {
       // iOS permission

@@ -22,7 +22,7 @@ void main() async {
   if (automation) {
     enableFlutterDriverExtension();
   }
-  if (serverUrl == testUrl) {
+  if (runningUrl != prodUrl) {
     HttpOverrides.global = MyHttpOverrides();
   }
 
@@ -56,7 +56,18 @@ class MyApp extends ConsumerWidget {
             scaffoldBackgroundColor: backgroundColor,
             appBarTheme: const AppBarTheme(
               color: blackColor,
-            )
+            ),
+          checkboxTheme: CheckboxThemeData(
+            fillColor: WidgetStateProperty.resolveWith<Color>(
+                  (states) {
+                if (states.contains(WidgetState.selected)) {
+                  return orangeColor;
+                }
+                return Colors.white;
+              },
+            ),
+            checkColor: MaterialStateProperty.all(Colors.white),
+          ),
         ),
         onGenerateRoute: (settings) => generateRoute(settings),
         home: ref.watch(userDataAuthProvider).when(

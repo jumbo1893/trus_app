@@ -1,11 +1,15 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:trus_app/features/mixin/dropdown_controller_mixin.dart';
+import 'package:trus_app/models/api/interfaces/dropdown_item.dart';
 import 'package:trus_app/models/api/interfaces/model_to_string.dart';
+import 'package:trus_app/models/api/season_api_model.dart';
 
+import '../../../common/utils/season_util.dart';
 import '../../mixin/model_to_string_list_controller_mixin.dart';
 import 'cache_controller.dart';
 import 'i_endpoint_id.dart';
 
-abstract class CacheProcessor with ModelToStringListControllerMixin {
+abstract class CacheProcessor with ModelToStringListControllerMixin, DropdownControllerMixin {
   final Ref ref;
 
   CacheProcessor(this.ref);
@@ -76,5 +80,62 @@ abstract class CacheProcessor with ModelToStringListControllerMixin {
   void loadInitListValues(String listId) {
     List<ModelToString> modelToStringList = ref.read(cacheControllerProvider).getCachedLists(listId)?? [];
     initModelToStringListFields(modelToStringList, listId);
+  }
+
+  Future<void> setupSeasonList<T extends List<SeasonApiModel>>(
+      Future<T> Function() fetchFunction, String listId) async {
+    final cache = ref.read(cacheControllerProvider);
+    List<DropdownItem>? list = cache.getCachedDropdownLists(listId);
+    if (list != null) {
+      cache.setCachedDropdownLists(list, listId);
+      cache.setCachedDropdownItem(_getPickedSeason(listId), listId);
+      _refreshSeasonListInBackground(fetchFunction, listId);
+      return;
+    }
+    final result = await fetchFunction();
+    cache.setCachedDropdownLists(result, listId);
+    cache.setCachedDropdownItem(_getPickedSeason(listId), listId);
+  }
+
+  void _refreshSeasonListInBackground<T extends List<SeasonApiModel>>(
+      Future<T> Function() fetchFunction,
+      String listId,
+      ) {
+    Future(() async {
+      try {
+        final updated = await fetchFunction();
+        ref.read(cacheControllerProvider).setCachedDropdownLists(updated, listId);
+        loadInitSeasonListValues(listId);
+      } catch (_) {}
+    });
+  }
+
+  Future<void> initSetupSeasonList<T extends List<SeasonApiModel>>(
+      Future<T> Function() fetchFunction, String listId) async {
+    await setupSeasonList(fetchFunction, listId);
+    loadInitSeasonListValues(listId);
+  }
+
+  void loadInitSeasonListValues(String listId) {
+    List<DropdownItem> dropdownList = ref.read(cacheControllerProvider).getCachedDropdownLists(listId)?? [];
+    DropdownItem? dropdownItem = ref.read(cacheControllerProvider).getCachedDropdownItem(listId);
+    initDropdown(dropdownItem, dropdownList, listId);
+  }
+
+  SeasonApiModel? _getPickedSeason(String listId) {
+    final cache = ref.read(cacheControllerProvider);
+    List<DropdownItem>? list = cache.getCachedDropdownLists(listId);
+    if(list == null || list.isEmpty) {
+      return null;
+    }
+    List<SeasonApiModel> seasonList = list as List<SeasonApiModel>;
+    DropdownItem? pickedSeason = cache.getCachedDropdownItem(listId);
+    if(pickedSeason == null) {
+      return returnCurrentSeason(seasonList);
+    }
+    if(!seasonList.contains(pickedSeason as SeasonApiModel)) {
+      return returnCurrentSeason(seasonList);
+    }
+    return pickedSeason;
   }
 }

@@ -90,9 +90,6 @@ class _CrudButtonState extends ConsumerState<CrudButton> {
           widget.onOperationComplete.call(response.getId());
         }
         break;
-      case Crud.read:
-        // TODO: Handle this case.
-        break;
       case Crud.update:
         String? response = await executeApi<String?>(() async {
           return await widget.crudOperations.editModel(widget.id!);

@@ -1,4 +1,6 @@
-enum SpinnerOption {
+import 'package:trus_app/models/api/interfaces/dropdown_item.dart';
+
+enum SpinnerOption implements DropdownItem {
   goals("Góly"),
   bestPlayers("Hvězdy zápasu"),
   yellowCards("Žluté karty"),
@@ -20,5 +22,10 @@ enum SpinnerOption {
   final String name;
 
   const SpinnerOption(this.name);
+
+  @override
+  String dropdownItem() {
+    return name;
+  }
 
 }

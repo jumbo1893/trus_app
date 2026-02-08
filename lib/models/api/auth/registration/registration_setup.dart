@@ -1,11 +1,6 @@
 import 'package:trus_app/models/api/auth/app_team_api_model.dart';
 import 'package:trus_app/models/api/auth/registration/league_with_teams.dart';
 import 'package:trus_app/models/api/auth/registration/team_with_app_teams.dart';
-import 'package:trus_app/models/api/football/league_api_model.dart';
-import 'package:trus_app/models/api/football/team_api_model.dart';
-
-import '../../../../config.dart';
-import '../../interfaces/json_and_http_converter.dart';
 
 class RegistrationSetup {
   final List<LeagueWithTeams> leagueWithTeamsList;

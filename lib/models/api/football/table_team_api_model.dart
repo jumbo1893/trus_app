@@ -130,6 +130,15 @@ class TableTeamApiModel implements JsonAndHttpConverter, ModelToString {
   @override
   String toStringForListView() {
     return "počet bodů: $points, počet zápasů: $matches, V/R/P: $wins/$draws/$losses, skóre: $goalsScored/$goalsReceived, tresty: $penalty,";
-
   }
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is TableTeamApiModel &&
+          runtimeType == other.runtimeType &&
+          id == other.id;
+
+  @override
+  int get hashCode => id.hashCode;
 }

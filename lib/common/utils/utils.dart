@@ -17,13 +17,14 @@ void showSnackBarWithPostFrame({required BuildContext context, required String c
   });
 }
 
-void showSnackBar({required BuildContext context, required String content}) {
+void showSnackBar({required BuildContext context, required String content, Duration? duration}) {
     ScaffoldMessenger.of(context).showSnackBar(SnackBar(
         content: Text(
           content,
           textAlign: TextAlign.center,
         ),
         behavior: SnackBarBehavior.floating,
+        duration: duration?? const Duration(milliseconds: 600),
         backgroundColor: Colors.black.withOpacity(0.5)));
 }
 
@@ -49,12 +50,41 @@ void hideSnackBar(BuildContext context) {
 void showErrorDialog(AsyncSnapshot<void> snapshot, VoidCallback onDialogCancel, BuildContext context) {
   final error = snapshot.error;
   if (isIgnorableError(error)) {
-    debugPrint("Zachycena ClientTimeoutException, dialog nebude zobrazen.");
+    debugPrint("Zachycena ClientTimeoutException, dialog nebude zobrazen,  $error\nStackTrace: ${snapshot.stackTrace}");
     return;
   }
   debugPrint('Chyba zachycena: $error\nStackTrace: ${snapshot.stackTrace}');
   var dialog = ErrorDialog("Chyba!", snapshot.error.toString(), () => onDialogCancel());
   showDialog(context: context, builder: (BuildContext context) => dialog);
+}
+
+void showErrorDialogFromError(
+    Object error,
+    StackTrace? stackTrace,
+    VoidCallback onDialogCancel,
+    BuildContext context,
+    ) {
+  if (isIgnorableError(error)) {
+    debugPrint(
+      "Ignorovaná chyba: $error",
+    );
+    return;
+  }
+
+  debugPrint(
+    'Chyba zachycena: $error\nStackTrace: $stackTrace',
+  );
+
+  final dialog = ErrorDialog(
+    "Chyba!",
+    error.toString(),
+    onDialogCancel,
+  );
+
+  showDialog(
+    context: context,
+    builder: (context) => dialog,
+  );
 }
 
 bool isIgnorableError(Object? error) {
@@ -71,7 +101,7 @@ void showGlobalErrorDialog(Object error, [StackTrace? stackTrace]) {
     return;
   }
   if (isIgnorableError(error)) {
-    debugPrint("Zachycena ClientTimeoutException, dialog nebude zobrazen.");
+    debugPrint("Zachycena ClientTimeoutException, dialog nebude zobrazen, $error\nStackTrace: $stackTrace");
     return;
   }
   debugPrint('Chyba zachycena: ${error.toString()} \nStackTrace: $stackTrace');
@@ -121,4 +151,25 @@ String getValueFromValueKey(Key key) {
 
 int castDoubleToPercentage(double? number) {
   return ((number?? 0)*100).toInt();
+}
+
+String? doubleInMinutesToMinutesSeconds(double? value) {
+  if(value == null) {
+    return null;
+  }
+  final minutes = value.floor();
+  final seconds = ((value - minutes) * 60).round();
+
+  return "${minutes}m, ${seconds}s";
+}
+
+String? doubleInSecondsToMinutesSeconds(double? value) {
+  if(value == null) {
+    return null;
+  }
+  return doubleInMinutesToMinutesSeconds(value/60);
+}
+
+double msToKmh(double ms) {
+  return double.parse((ms * 3.6).toStringAsFixed(1));
 }

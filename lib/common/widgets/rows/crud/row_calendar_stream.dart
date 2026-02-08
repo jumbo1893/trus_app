@@ -15,7 +15,7 @@ class RowCalendarStream extends StatefulWidget {
   final String hashKey;
 
   const RowCalendarStream({
-    required Key key,
+     required Key key,
     required this.size,
     required this.padding,
     required this.textFieldText,

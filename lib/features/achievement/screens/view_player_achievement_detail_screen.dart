@@ -1,17 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:trus_app/common/widgets/button/change_achievement_button.dart';
-import 'package:trus_app/features/achievement/controller/achievement_controller.dart';
-import 'package:trus_app/features/achievement/widget/achievement_view_widget.dart';
+import 'package:trus_app/features/achievement/controller/achievement_notifier.dart';
 import 'package:trus_app/features/player/screens/view_player_screen.dart';
 import 'package:trus_app/models/api/achievement/player_achievement_api_model.dart';
 
-import '../../../common/utils/utils.dart';
-import '../../../common/widgets/builder/column_future_builder.dart';
-import '../../../common/widgets/loader.dart';
+import '../../../common/widgets/notifier/loader/loading_overlay.dart';
+import '../../../common/widgets/rows/row_text_view_field.dart';
 import '../../../common/widgets/screen/custom_consumer_stateful_widget.dart';
-import '../../home/screens/home_screen.dart';
+import '../../../models/enum/crud.dart';
 import '../../main/screen_controller.dart';
+import '../achievement_view_args.dart';
+import '../controller/achievement_edit_notifier.dart';
 
 class ViewPlayerAchievementDetailScreen extends CustomConsumerStatefulWidget {
   static const String id = "view-player-achievement-detail-screen";
@@ -30,58 +30,90 @@ class _ViewPlayerAchievementDetailScreenState
   @override
   Widget build(BuildContext context) {
     PlayerAchievementApiModel playerAchievementApiModel =
-        ref.watch(screenControllerProvider).playerAchievementApiModel;
-    if (ref
-        .read(screenControllerProvider)
-        .isScreenFocused(ViewPlayerAchievementDetailScreen.id)) {
-      final size = MediaQueryData.fromView(WidgetsBinding.instance.window).size;
-      return Scaffold(
-        body: FutureBuilder<void>(
-            future: ref
-                .watch(achievementControllerProvider)
-                .setupAchievementDetail(playerAchievementApiModel.id),
-            builder: (context, snapshot) {
-              if (snapshot.connectionState == ConnectionState.waiting) {
-                return const Loader();
-              } else if (snapshot.hasError) {
-                Future.delayed(
-                    Duration.zero,
-                    () => showErrorDialog(snapshot, () {
-                          ref
-                              .read(screenControllerProvider)
-                              .changeFragment(HomeScreen.id);
-                        }, context));
-                return const Loader();
-              }
-              return ColumnFutureBuilder(
-                loadModelFuture:
-                    ref.watch(achievementControllerProvider).viewAchievement(),
-                loadingScreen: null,
-                columns: [
-                  AchievementViewWidget(
-                      size: size,
-                      iAchievementHashKey:
-                          ref.read(achievementControllerProvider),
-                      viewMixin: ref.watch(achievementControllerProvider),
-                      iAchievementNeededFields:
-                          ref.read(achievementControllerProvider)),
-                  const SizedBox(height: 10),
-                ],
-              );
-            }),
-        floatingActionButton:
-        ChangeAchievementButton(
-            context: context,
-            crudOperations: ref.read(achievementControllerProvider),
-            onOperationComplete: (id) {
-              ref
-                  .read(screenControllerProvider)
-                  .changeFragment(ViewPlayerScreen.id);
-            },
-            playerAchievementApiModel: playerAchievementApiModel),
-      );
-    } else {
-      return Container();
-    }
+        ref.read(screenControllerProvider).playerAchievementApiModel;
+    final state = ref.watch(achievementViewProvider(
+        AchievementViewArgs.player(playerAchievementApiModel)));
+    final notifier = ref.read(achievementViewProvider(
+            AchievementViewArgs.player(playerAchievementApiModel))
+        .notifier);
+    return Scaffold(
+      body: LoadingOverlay(
+          state: state,
+          onClearError: notifier.clearErrorMessage,
+          child: Padding(
+            padding: const EdgeInsets.all(8.0),
+            child: Column(
+              children: [
+                RowTextViewField(
+                  textFieldText: "Hráč:",
+                  value: state.playerName ?? "",
+                  showIfEmptyText: false,
+                ),
+                const SizedBox(height: 10),
+                RowTextViewField(
+                  textFieldText: "Název:",
+                  value: state.name,
+                ),
+                const SizedBox(height: 10),
+                RowTextViewField(
+                  textFieldText: "Popis:",
+                  value: state.description,
+                  allowWrap: true,
+                ),
+                const SizedBox(height: 10),
+                RowTextViewField(
+                  textFieldText: "Podmínky:",
+                  value: state.secondaryCondition,
+                  showIfEmptyText: false,
+                  allowWrap: true,
+                ),
+                const SizedBox(height: 10),
+                RowTextViewField(
+                  textFieldText: "Splněno:",
+                  value: state.playerAchievementAccomplished ?? "",
+                  showIfEmptyText: false,
+                ),
+                const SizedBox(height: 10),
+                RowTextViewField(
+                  textFieldText: "Splněno v zápase:",
+                  value: state.playerAchievementMatch ?? "",
+                  showIfEmptyText: false,
+                  allowWrap: true,
+                ),
+                const SizedBox(height: 10),
+                RowTextViewField(
+                  textFieldText: "Detail:",
+                  value: state.playerAchievementDetail ?? "",
+                  showIfEmptyText: false,
+                ),
+                const SizedBox(height: 10),
+                RowTextViewField(
+                  textFieldText: "Úspěšnost:",
+                  value: state.successRate,
+                ),
+                const SizedBox(height: 10),
+                RowTextViewField(
+                  textFieldText: "Splnili:",
+                  value: state.accomplishedPlayers,
+                  error: state.errors["accomplishedPlayers"],
+                  showIfEmptyText: false,
+                ),
+              ],
+            ),
+          )),
+      floatingActionButton: ChangeAchievementButton(
+        onPressed: () async => await notifier.submit(
+            "Měním achievement...",
+            "Achievement úspěšně změněn",
+            ViewPlayerScreen.id,
+            Crud.update,
+            achievementNotifierProvider),
+        confirmationText: state.accomplished?? false
+            ? "Chcete změnit achievement na nesplněno?"
+            : "Chcete změnit achievement na splněno?",
+        manually: state.manually?? false,
+        accomplished: state.accomplished?? false,
+      ),
+    );
   }
 }

@@ -1,4 +1,5 @@
 import 'package:trus_app/config.dart';
+
 import '../../interfaces/json_and_http_converter.dart';
 class DeviceTokenApiModel implements JsonAndHttpConverter {
   final String token;

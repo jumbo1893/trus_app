@@ -1,13 +1,13 @@
 import 'package:trus_app/config.dart';
 import 'package:trus_app/models/api/football/football_player_api_model.dart';
 import 'package:trus_app/models/api/interfaces/json_and_http_converter.dart';
+import 'package:trus_app/models/helper/title_and_text.dart';
 
 import '../../../enum/spinner_options.dart';
-import '../../interfaces/pkfl_individual_stats_to_string.dart';
 import 'card_comment.dart';
 
 class FootballAllIndividualStatsApiModel
-    implements FootballIndividualStatsToString, JsonAndHttpConverter {
+    implements JsonAndHttpConverter {
   FootballPlayerApiModel player;
   int matches;
   int goals;
@@ -125,6 +125,10 @@ class FootballAllIndividualStatsApiModel
     }
   }
 
+  TitleAndText getModelToStringBySpinnerOption(SpinnerOption option) {
+    return TitleAndText(title: player.name, text: toStringBySpinnerOption(option));
+  }
+
   String roundNumbers(double number) {
     if (number % 1 == 0) {
       return number.toStringAsFixed(0);
@@ -134,16 +138,6 @@ class FootballAllIndividualStatsApiModel
       return number.toStringAsFixed(2);
     }
     return number.toStringAsFixed(3);
-  }
-
-  @override
-  String listViewTitle() {
-    return player.name;
-  }
-
-  @override
-  String toStringForListView(SpinnerOption option) {
-    return toStringBySpinnerOption(option);
   }
 
   @override

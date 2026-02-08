@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:trus_app/features/achievement/screens/achievement_screen.dart';
 import 'package:trus_app/features/beer/screens/beer_simple_screen.dart';
-import 'package:trus_app/features/fine/match/screens/fine_match_screen.dart';
 import 'package:trus_app/features/fine/screens/fine_screen.dart';
 import 'package:trus_app/features/home/screens/home_screen.dart';
 import 'package:trus_app/features/info/screens/info_screen.dart';
@@ -9,19 +8,15 @@ import 'package:trus_app/features/match/screens/add_match_screen.dart';
 import 'package:trus_app/features/player/screens/add_player_screen.dart';
 import 'package:trus_app/features/player/screens/player_screen.dart';
 import 'package:trus_app/features/season/screens/season_screen.dart';
-import 'package:trus_app/features/statistics/screens/main_goal_statistics_screen.dart';
 import 'package:trus_app/features/strava/screens/strava_football_match_screen.dart';
 import 'package:trus_app/features/user/screens/view_user_screen.dart';
 import 'package:trus_app/models/api/auth/app_team_api_model.dart';
 
 import '../../colors.dart';
+import '../fine/match/screens/fine_match_screen.dart';
 import '../football/screens/football_fixtures_screen.dart';
-import '../football/screens/football_player_stats_screen.dart';
-import '../football/screens/main_football_statistics_screen.dart';
 import '../football/table/screens/football_table_screen.dart';
 import '../match/screens/match_screen.dart';
-import '../statistics/screens/double_dropdown_stats_screen.dart';
-import '../statistics/screens/main_statistics_screen.dart';
 import '../user/screens/user_screen.dart';
 class BottomSheetNavigationManager {
   final BuildContext context;
@@ -34,53 +29,56 @@ class BottomSheetNavigationManager {
     return appTeamApiModel != null && appTeamApiModel!.team.currentTableTeam != null;
   }
 
-  void showBottomSheetNavigation(Function(String) onModalBottomSheetMenuTapped,
-      String userName, VoidCallback signOut) {
+  void showBottomSheetNavigation(
+      Function(String) onModalBottomSheetMenuTapped,
+      String userName,
+      VoidCallback signOut,
+      ) {
     showModalBottomSheet(
-        context: context,
-        isScrollControlled: true,
-        isDismissible: true,
-        builder: (context) => SizedBox(
-              height: MediaQuery.of(context).copyWith().size.height * (3 / 4),
+      context: context,
+      isScrollControlled: true,
+      isDismissible: true,
+      builder: (context) => SizedBox(
+        height: MediaQuery.of(context).size.height * 0.75,
+        child: Column(
+          children: [
+            //Ukotvená horní část
+            InkWell(
+              onTap: () => Navigator.of(context).pop(),
+              onLongPress: () => Navigator.of(context).pop(),
+              child: Container(
+                color: Colors.grey,
+                height: 10,
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(userName,
+                      style: const TextStyle(
+                          fontSize: 16, fontWeight: FontWeight.w600)),
+                  TextButton(
+                    onPressed: signOut,
+                    key: const ValueKey('logout_button'),
+                    child: const Text(
+                      "Odhlásit",
+                      style: TextStyle(color: orangeColor),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const Divider(color: Colors.black, height: 1),
+            //Scrollovací část
+            Expanded(
               child: ListView(
                 key: const ValueKey('bottom_navigation'),
-                children: <Widget>[
-                  InkWell(
-                    onTap: () => Navigator.of(context).pop(),
-                    onLongPress: () => Navigator.of(context).pop(),
-                    child: Container(
-                      color: Colors.grey,
-                      height: 10,
-                    ),
-                  ),
-                  Padding(
-                    padding: const EdgeInsets.only(left: 16.0, right: 16.0),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Text(userName),
-                        TextButton(
-                            onPressed: () => signOut(),
-                            key: const ValueKey('logout_button'),
-                            child: const Text("Odhlásit",
-                                style: TextStyle(
-                                  color: orangeColor,
-                                )))
-                      ],
-                    ),
-                  ),
-                  Container(
-                      decoration: const BoxDecoration(
-                          border: Border(
-                              bottom: BorderSide(
-                    color: Colors.black,
-                  )))),
+                children: [
                   ListTile(
                     key: const ValueKey('menu_home'),
-                    leading: const Icon(
-                      Icons.home,
-                      color: Colors.orange,
-                    ),
+                    leading: const Icon(Icons.home, color: Colors.orange),
                     title: const Text("Přehled"),
                     onTap: () => onModalBottomSheetMenuTapped(HomeScreen.id),
                   ),
@@ -90,8 +88,8 @@ class BottomSheetNavigationManager {
                         padding: EdgeInsets.only(left: 10.0),
                         child: Text(
                           "ZÁPASY",
-                          textAlign: TextAlign.left,
-                          style: TextStyle(color: Colors.black54, fontSize: 14),
+                          style:
+                          TextStyle(color: Colors.black54, fontSize: 14),
                         ),
                       ),
                     ],
@@ -114,14 +112,14 @@ class BottomSheetNavigationManager {
                     title: const Text("Seznam zápasů"),
                     onTap: () => onModalBottomSheetMenuTapped(MatchScreen.id),
                   ),
-                  const Row(
+                  Row(
                     children: [
                       Padding(
-                        padding: EdgeInsets.only(left: 10.0),
+                        padding: const EdgeInsets.only(left: 10.0),
                         child: Text(
-                          "LIGA",
+                          isTableTeamFromAppTeamUsable() ? appTeamApiModel!.team.currentTableTeam!.league.organization : "LIGA",
                           textAlign: TextAlign.left,
-                          style: TextStyle(color: Colors.black54, fontSize: 14),
+                          style: const TextStyle(color: Colors.black54, fontSize: 14),
                         ),
                       ),
                     ],
@@ -132,7 +130,7 @@ class BottomSheetNavigationManager {
                       Icons.sports_soccer,
                       color: Colors.orange,
                     ),
-                    title: const Text("Program zápasů"),
+                    title: isTableTeamFromAppTeamUsable() ? Text("Program ${appTeamApiModel!.team.currentTableTeam!.league.organization} zápasů") : const Text("Program zápasů"),
                     onTap: () => onModalBottomSheetMenuTapped(FootballFixturesScreen.id),
                   ),
                   ListTile(
@@ -141,26 +139,8 @@ class BottomSheetNavigationManager {
                       Icons.scoreboard_rounded,
                       color: Colors.orange,
                     ),
-                    title: const Text("Ligová tabulka"),
+                    title: isTableTeamFromAppTeamUsable() ? Text("${appTeamApiModel!.team.currentTableTeam!.league.organization} tabulka") : const Text("Ligová tabulka"),
                     onTap: () => onModalBottomSheetMenuTapped(FootballTableScreen.id),
-                  ),
-                  ListTile(
-                    key: const ValueKey('menu_football_stats'),
-                    leading: const Icon(
-                      Icons.equalizer,
-                      color: Colors.orange,
-                    ),
-                    title: isTableTeamFromAppTeamUsable() ? Text("Statistiky z ${appTeamApiModel!.team.currentTableTeam!.league.organization}") : const Text("Statistiky z Ligy"),
-                    onTap: () => onModalBottomSheetMenuTapped(MainFootballStatisticsScreen.id),
-                  ),
-                  ListTile(
-                    key: const ValueKey('menu_football_player_stats'),
-                    leading: const Icon(
-                      Icons.stacked_bar_chart,
-                      color: Colors.orange,
-                    ),
-                    title: isTableTeamFromAppTeamUsable() ? Text("Hráčské statistiky z ${appTeamApiModel!.team.currentTableTeam!.league.organization}") : const Text("Hráčské statistiky z ligy"),
-                    onTap: () => onModalBottomSheetMenuTapped(FootballPlayerStatsScreen.id),
                   ),
                   const Row(
                     children: [
@@ -264,34 +244,6 @@ class BottomSheetNavigationManager {
                     title: const Text("Seznam achievementů"),
                     onTap: () => onModalBottomSheetMenuTapped(AchievementScreen.id),
                   ),
-                  ListTile(
-                    key: const ValueKey('menu_stats'),
-                    leading: const Icon(
-                      Icons.equalizer,
-                      color: Colors.orange,
-                    ),
-                    title: const Text("Statistiky piv/pokut"),
-                    onTap: () => onModalBottomSheetMenuTapped(MainStatisticsScreen.id),
-                  ),
-                  ListTile(
-                    key: const ValueKey('beer_detail'),
-                    leading: const Icon(
-                      Icons.query_stats,
-                      color: Colors.orange,
-                    ),
-                    title: const Text("Detail piv"),
-                    onTap: () => onModalBottomSheetMenuTapped(DoubleDropdownStatsScreen.id),
-
-                  ),
-                  ListTile(
-                    key: const ValueKey('menu_goal_stats'),
-                    leading: const Icon(
-                      Icons.query_stats,
-                      color: Colors.orange,
-                    ),
-                    title: const Text("Statistiky gólů/asistencí"),
-                    onTap: () => onModalBottomSheetMenuTapped(MainGoalStatisticsScreen.id),
-                  ),
                   const Row(
                     children: [
                       Padding(
@@ -361,6 +313,10 @@ class BottomSheetNavigationManager {
                   ),
                 ],
               ),
-            ));
+            ),
+          ],
+        ),
+      ),
+    );
   }
 }

@@ -1,168 +1,118 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:trus_app/colors.dart';
-import 'package:trus_app/features/football/table/controller/football_table_team_controller.dart';
-import 'package:trus_app/features/football/table/screens/table_team_detail_matches_screen.dart';
-import 'package:trus_app/features/football/table/screens/table_team_detail_screen.dart';
-import 'package:trus_app/models/api/football/football_match_api_model.dart';
-import 'package:trus_app/models/api/football/table_team_api_model.dart';
+import 'package:trus_app/common/widgets/loader.dart';
+import 'package:trus_app/common/widgets/notifier/loader/loading_overlay.dart';
+import 'package:trus_app/common/widgets/screen/custom_consumer_stateful_widget.dart';
+import 'package:trus_app/features/football/table/screens/table_team_mutual_matches_screen.dart';
+import 'package:trus_app/features/main/screen_controller.dart';
 
-import '../../../../common/utils/utils.dart';
-import '../../../../common/widgets/loader.dart';
-import '../../../../common/widgets/screen/custom_consumer_stateful_widget.dart';
-import '../../../../models/api/football/detail/football_team_detail.dart';
-import '../../../home/screens/home_screen.dart';
-import '../../../main/screen_controller.dart';
-import '../../screens/football_mutual_matches_screen.dart';
+import '../controller/football_table_team_detail_notifier.dart';
+import '../football_team_detail_tab.dart';
+import 'table_team_detail_matches_screen.dart';
+import 'table_team_detail_screen.dart';
+
 class MainTableTeamScreen extends CustomConsumerStatefulWidget {
   static const String id = "main-table-team-screen";
 
-  const MainTableTeamScreen({
-    Key? key,
-  }) : super(key: key, title: "Detail týmu", name: id);
+  const MainTableTeamScreen({Key? key})
+      : super(key: key, title: "Detail týmu", name: id);
 
   @override
-  ConsumerState<MainTableTeamScreen> createState() =>
-      _MainTableTeamScreenState();
+  ConsumerState<MainTableTeamScreen> createState() => _MainTableTeamScreenState();
 }
 
 class _MainTableTeamScreenState extends ConsumerState<MainTableTeamScreen>
     with TickerProviderStateMixin {
-  late TabController tabController;
-  int activeTab = 0;
+  TabController? _tabController;
 
   @override
-  void initState() {
-    /*tabController = TabController(
-      vsync: this,
-      length: 4,
-    );*/
-    super.initState();
+  void dispose() {
+    _tabController?.dispose();
+    super.dispose();
   }
 
-  bool isFocused(int index) {
-    return index == activeTab;
-  }
+  void _syncTabController(List<FootballTeamDetailTab> tabs, FootballTeamDetailTab activeTab) {
+    if (tabs.isEmpty) return;
 
-  List<Widget> getWidgets(List<FootballMatchApiModel> mutualMatches) {
-    List<Widget> widgets = [];
-    widgets.add(
-      const FittedBox(
-        child: Tab(
-          text: 'Detail',
-        ),
-      ),
-    );
-    widgets.add(
-      const FittedBox(
-        child: Tab(
-          text: 'Program',
-        ),
-      ),
-    );
-    widgets.add(
-      const FittedBox(
-        child: Tab(
-          text: 'Výsledky',
-        ),
-      ),
-    );
-    if (mutualMatches.isNotEmpty) {
-      widgets.add(
-        const FittedBox(
-          child: Tab(
-            text: 'H2H',
-          ),
-        ),
+    final idx = tabs.indexOf(activeTab);
+    final safeIndex = idx >= 0 ? idx : 0;
+
+    final needsRecreate = _tabController == null || _tabController!.length != tabs.length;
+    if (needsRecreate) {
+      _tabController?.dispose();
+      _tabController = TabController(
+        vsync: this,
+        length: tabs.length,
+        initialIndex: safeIndex,
       );
+      return;
     }
-    return widgets;
+
+    if (_tabController!.index != safeIndex) {
+      _tabController!.index = safeIndex;
+    }
   }
 
-  List<Widget> getTabs(List<FootballMatchApiModel> mutualMatches) {
-    List<Widget> widgets = [];
-    widgets.add(const TableTeamDetailScreen());
-    widgets.add(const TableTeamDetailMatchesScreen());
-    widgets.add(const TableTeamDetailMatchesScreen());
-    if (mutualMatches.isNotEmpty) {
-      widgets.add(FootballMutualMatchesScreen(
-          getMutualMatches:
-          ref.watch(footballTableTeamControllerProvider).returnMutualMatches()));
+  Tab _tabLabel(FootballTeamDetailTab t) {
+    switch (t) {
+      case FootballTeamDetailTab.detail:
+        return const Tab(text: "Detail");
+      case FootballTeamDetailTab.nextMatches:
+        return const Tab(text: "Program");
+      case FootballTeamDetailTab.pastMatches:
+        return const Tab(text: "Výsledky");
+      case FootballTeamDetailTab.mutualMatches:
+        return const Tab(text: "H2H");
     }
-    return widgets;
+  }
+
+  Widget _screenFor(FootballTeamDetailTab t) {
+    switch (t) {
+      case FootballTeamDetailTab.detail:
+        return const TableTeamDetailScreen();
+      case FootballTeamDetailTab.nextMatches:
+        return const TableTeamDetailMatchesScreen();
+      case FootballTeamDetailTab.pastMatches:
+        return const TableTeamDetailMatchesScreen();
+      case FootballTeamDetailTab.mutualMatches:
+        return const TableTeamMutualMatchesScreen();
+    }
   }
 
   @override
   Widget build(BuildContext context) {
-    TableTeamApiModel tableTeamApiModel =
-        ref.watch(screenControllerProvider).tableTeamApiModel;
-    return Scaffold(
-        body: FutureBuilder<FootballTeamDetail>(
-            future: ref
-                .watch(footballTableTeamControllerProvider)
-                .loadFootballDetail(tableTeamApiModel.id!),
-            builder: (context, snapshot) {
-              if (snapshot.connectionState == ConnectionState.waiting) {
-                return const Loader();
-              } else if (snapshot.hasError) {
-                Future.delayed(
-                    Duration.zero,
-                    () => showErrorDialog(snapshot, () {
-                          ref
-                              .read(screenControllerProvider)
-                              .changeFragment(HomeScreen.id);
-                        }, context));
-                return const Loader();
-              }
-              FootballTeamDetail footballTeamDetail = snapshot.data!;
-              tabController = TabController(
-                vsync: this,
-                length: getWidgets(footballTeamDetail.mutualMatches).length,
-              );
-              return StreamBuilder<int>(
-                  stream:
-                  ref.watch(footballTableTeamControllerProvider).tabControllerScreen(),
-                  builder: (context, streamSnapshot) {
-                    if (snapshot.hasError) {
-                      Future.delayed(
-                          Duration.zero,
-                              () => showErrorDialog(
-                              snapshot,
-                                  () => ref
-                                  .read(screenControllerProvider)
-                                  .changeFragment(HomeScreen.id),
-                              context));
-                      return const Loader();
-                    }
-                    if (streamSnapshot.data != null) {
-                      activeTab = streamSnapshot.data!;
-                      tabController.index = streamSnapshot.data!;
-                    }
-                  return DefaultTabController(
-                    length: getTabs(footballTeamDetail.mutualMatches).length,
-                    initialIndex: 0,
-                    child: Scaffold(
-                      appBar: AppBar(
-                        backgroundColor: Colors.white,
-                        toolbarHeight: 0,
-                        bottom: TabBar(
-                          controller: tabController,
-                          onTap: (index) => ref
-                              .read(footballTableTeamControllerProvider)
-                              .changeDetailTab(index),
-                          labelColor: blackColor,
-                          indicatorColor: orangeColor,
-                          tabs: getWidgets(footballTeamDetail.mutualMatches),
-                        ),
-                      ),
-                      body: TabBarView(
-                        controller: tabController,
-                        children: getTabs(footballTeamDetail.mutualMatches),
-                      ),
-                    ),
-                  );
-                }
-              );
-            }));
+    final teamId = ref.watch(screenControllerProvider).tableTeamApiModel.id!;
+    final state = ref.watch(footballTableTeamDetailNotifierProvider(teamId));
+    final notifier = ref.read(footballTableTeamDetailNotifierProvider(teamId).notifier);
+
+    _syncTabController(state.tabs, state.activeTab);
+
+    final controller = _tabController;
+    if (controller == null || state.tabs.isEmpty) {
+      return const Loader();
+    }
+
+    return LoadingOverlay(
+      state: state,
+      onClearError: () => {},
+      child: Scaffold(
+        appBar: AppBar(
+          backgroundColor: Colors.white,
+          toolbarHeight: 0,
+          bottom: TabBar(
+            controller: controller,
+            labelColor: blackColor,
+            indicatorColor: orangeColor,
+            tabs: state.tabs.map(_tabLabel).toList(),
+            onTap: notifier.changeTabByIndex,
+          ),
+        ),
+        body: TabBarView(
+          controller: controller,
+          children: state.tabs.map(_screenFor).toList(),
+        ),
+      ),
+    );
   }
 }

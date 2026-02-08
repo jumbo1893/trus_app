@@ -2,16 +2,17 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:trus_app/features/player/screens/player_screen.dart';
 
-import '../../../common/utils/utils.dart';
-import '../../../common/widgets/builder/column_future_builder.dart';
-import '../../../common/widgets/button/crud_button.dart';
-import '../../../common/widgets/loader.dart';
+import '../../../common/widgets/button/simple_crud_button.dart';
+import '../../../common/widgets/notifier/loader/loading_overlay.dart';
+import '../../../common/widgets/rows/row_custom_dropdown.dart';
+import '../../../common/widgets/rows/row_date_picker.dart';
+import '../../../common/widgets/rows/row_switch.dart';
+import '../../../common/widgets/rows/row_text_field.dart';
 import '../../../common/widgets/screen/custom_consumer_stateful_widget.dart';
 import '../../../models/enum/crud.dart';
-import '../../home/screens/home_screen.dart';
-import '../../main/screen_controller.dart';
-import '../controller/player_controller.dart';
-import '../widget/player_crud_widget.dart';
+import '../controller/player_edit_notifier.dart';
+import '../controller/player_notifier.dart';
+import '../player_notifier_args.dart';
 
 class AddPlayerScreen extends CustomConsumerStatefulWidget {
   static const String id = "add-player-screen";
@@ -27,54 +28,61 @@ class AddPlayerScreen extends CustomConsumerStatefulWidget {
 class _AddPlayerScreenState extends ConsumerState<AddPlayerScreen> {
   @override
   Widget build(BuildContext context) {
-    if (ref
-        .read(screenControllerProvider)
-        .isScreenFocused(AddPlayerScreen.id)) {
-      final size = MediaQueryData.fromView(WidgetsBinding.instance.window).size;
-      return FutureBuilder<void>(
-          future: ref.watch(playerControllerProvider).setupNewPlayer(),
-          builder: (context, snapshot) {
-            if (snapshot.connectionState == ConnectionState.waiting) {
-              return const Loader();
-            } else if (snapshot.hasError) {
-              Future.delayed(
-                  Duration.zero,
-                  () => showErrorDialog(snapshot, () {
-                        ref
-                            .read(screenControllerProvider)
-                            .changeFragment(HomeScreen.id);
-                      }, context));
-              return const Loader();
-            }
-            return ColumnFutureBuilder(
-              loadModelFuture: ref.watch(playerControllerProvider).newPlayer(),
-              loadingScreen: null,
-              columns: [
-                PlayerCrudWidget(
-                    size: size,
-                    iPlayerHashKey: ref.read(playerControllerProvider),
-                    stringMixin: ref.watch(playerControllerProvider),
-                    dateMixin: ref.watch(playerControllerProvider),
-                    booleanMixin: ref.watch(playerControllerProvider),
-                    dropdownMixin: ref.watch(playerControllerProvider)),
-                const SizedBox(height: 10),
-                CrudButton(
-                  key: const ValueKey('confirm_button'),
-                  text: "Potvrď",
-                  context: context,
-                  crud: Crud.create,
-                  crudOperations: ref.read(playerControllerProvider),
-                  onOperationComplete: (id) {
-                    ref
-                        .read(screenControllerProvider)
-                        .changeFragment(PlayerScreen.id);
-                  },
-                )
-              ],
-            );
-          });
-    } else {
-      return Container();
-    }
+    PlayerNotifierArgs arg = const PlayerNotifierArgs();
+    final notifier = ref.read(playerEditNotifierProvider(arg).notifier);
+    final state = ref.watch(playerEditNotifierProvider(arg));
+    return LoadingOverlay(
+        state: state,
+        onClearError: notifier.clearErrorMessage,
+        child: Padding(
+          padding: const EdgeInsets.all(8.0),
+          child: Column(
+            children: [
+              RowTextField(
+                label: "jméno",
+                textFieldText: "Přezdívka:",
+                value: state.name,
+                onChanged: notifier.setName,
+                error: state.errors["name"],
+              ),
+              const SizedBox(height: 10),
+              RowCustomDropdown(
+                  text: 'Jméno hráče',
+                  hint: 'Vyber hráče',
+                  state: state,
+                  notifier: notifier),
+              const SizedBox(height: 10),
+              RowDatePicker(
+                textFieldText: "Datum narození:",
+                value: state.birthdate,
+                onChanged: notifier.setBirthday,
+                error: state.errors["fromDate"],
+              ),
+              const SizedBox(height: 10),
+              RowSwitch(
+                textFieldText: "fanoušek?",
+                value: state.fan,
+                onChanged: notifier.setFan,
+              ),
+              const SizedBox(height: 10),
+              RowSwitch(
+                textFieldText: "aktivní?",
+                value: state.active,
+                onChanged: notifier.setActive,
+              ),
+              const SizedBox(height: 10),
+              const SizedBox(height: 10),
+              SimpleCrudButton(
+                onPressed: () async => await notifier.submit(
+                    "Ukládám hráče...",
+                    "Hráč byl úspěšně uložen",
+                    PlayerScreen.id,
+                    Crud.create,
+                    playerNotifierProvider),
+                text: "Ulož hráče",
+              ),
+            ],
+          ),
+        ));
   }
 }

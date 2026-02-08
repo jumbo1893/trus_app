@@ -89,9 +89,9 @@ class _AchievementViewStream extends ConsumerState<AchievementViewStream> {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              const SizedBox(height: 4),
-              Icon(Icons.star, size: 40, color: (achievement.accomplished == null || achievement.accomplished == false) ? Colors.grey : orangeColor),
-              const SizedBox(height: 4),
+              const SizedBox(height: 6),
+              Icon(Icons.emoji_events, size: 40, color: (achievement.accomplished == null || achievement.accomplished == false) ? Colors.grey : orangeColor),
+              const SizedBox(height: 6),
               Expanded(
                 child: Container(
                   padding: const EdgeInsets.symmetric(horizontal: 4), // Okraje

@@ -1,3 +1,4 @@
+import 'package:auto_size_text/auto_size_text.dart';
 import 'package:dropdown_button2/dropdown_button2.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -27,36 +28,34 @@ class MatchDropdown extends ConsumerStatefulWidget {
 
 class _MatchDropdownState extends ConsumerState<MatchDropdown> {
 
-  List<DropdownMenuItem<MatchApiModel>> _addDividersAfterItems(List<MatchApiModel> items) {
+  List<DropdownMenuItem<MatchApiModel>> _addDividersAfterItems(
+      List<MatchApiModel> items) {
     List<DropdownMenuItem<MatchApiModel>> menuItems = [];
     for (var item in items) {
-      Widget divider;
-      if (item != items.last) {
-        divider = const Divider();
-      }
-      else {
-        divider = const Divider(color: Colors.white,);
-      }
-      menuItems.addAll(
-        [
-          DropdownMenuItem<MatchApiModel>(
-            value: item,
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 8.0,),
-              child: Column(
-                children: [
-                  Text(
-                    item.listViewTitle(),
-                    style: const TextStyle(
-                      fontSize: 16,
-                    ),
-                  ),
-                  divider,
-                ],
-              ),
+      Widget divider = item != items.last
+          ? const Divider(height: 1)
+          : const Divider(height: 1, color: Colors.white);
+
+      menuItems.add(
+        DropdownMenuItem<MatchApiModel>(
+          value: item,
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 6),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                AutoSizeText(
+                  item.listViewTitle(),
+                  maxLines: 2,
+                  minFontSize: 12,
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(fontSize: 16),
+                ),
+                divider,
+              ],
             ),
           ),
-        ],
+        ),
       );
     }
     return menuItems;
@@ -81,16 +80,24 @@ class _MatchDropdownState extends ConsumerState<MatchDropdown> {
                 List<MatchApiModel> matches = streamSnapshot.data!;
                 return DropdownButtonHideUnderline(
                   child: DropdownButton2(
+
                     selectedItemBuilder: (_) {
                       return matches
                           .map((e) =>
                           Container(
                             key: ValueKey("match_item_${e.name}"),
                             alignment: Alignment.center,
-                            child: Text(
+                            child: AutoSizeText(
                               e.listViewTitle(),
+                              maxLines: 2,
+                              minFontSize: 12,
+                              overflow: TextOverflow.fade,
+                              textAlign: TextAlign.center,
                               style: const TextStyle(
-                                color: Colors.white, fontSize: 20,),
+                                color: Colors.white,
+                                fontSize: 20,
+                                fontWeight: FontWeight.w500,
+                              ),
                             ),
                           ))
                           .toList();

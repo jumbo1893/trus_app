@@ -1,6 +1,9 @@
+import 'package:trus_app/models/api/interfaces/model_to_string.dart';
+
+import '../interfaces/detailed_response_model.dart';
 import 'beer_detailed_model.dart';
 
-class BeerDetailedResponse {
+class BeerDetailedResponse implements DetailedResponseModel {
   final int playersCount;
   final int matchesCount;
   final int totalBeers;
@@ -32,5 +35,15 @@ class BeerDetailedResponse {
   @override
   String toString() {
     return 'BeerDetailedResponse{playersCount: $playersCount, matchesCount: $matchesCount, totalBeers: $totalBeers, totalLiquors: $totalLiquors, beerList: $beerList}';
+  }
+
+  @override
+  List<ModelToString> modelList() {
+    return beerList;
+  }
+
+  @override
+  String overallStats() {
+    return overallStatsToString();
   }
 }

@@ -1,4 +1,5 @@
 import 'package:trus_app/common/utils/calendar.dart';
+
 import '../interfaces/json_and_http_converter.dart';
 
 class StravaActivity implements JsonAndHttpConverter {

@@ -8,7 +8,7 @@ import '../../../models/api/interfaces/dropdown_item.dart';
 class CustomDropdown extends ConsumerStatefulWidget {
   final Function(DropdownItem dropdownItem) onItemSelected;
   final Future<List<DropdownItem>>? dropdownList;
-  final Stream<DropdownItem> pickedItem;
+  final Stream<DropdownItem?> pickedItem;
   final Stream<List<DropdownItem>>? dropDownListStream;
   final VoidCallback? initData;
   final String hint;
@@ -91,7 +91,7 @@ class _CustomDropdownState extends ConsumerState<CustomDropdown> {
                 if (snapshot.hasData) {
                   dropdownItems = snapshot.data!;
                 }
-                return StreamBuilder<DropdownItem>(
+                return StreamBuilder<DropdownItem?>(
                     stream: widget.pickedItem,
                     builder: (context, snapshot) {
                       if (snapshot.connectionState == ConnectionState.waiting) {

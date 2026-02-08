@@ -20,7 +20,7 @@ publish_to: 'none' # Remove this line if you wish to publish to pub.dev
 version: 6.0.1+34
 
 environment:
-  sdk: '>=2.18.2 <3.0.0'
+  sdk: ">=3.0.0 <4.0.0"
 
 # Dependencies specify other packages that your package needs in order to work.
 # To automatically upgrade your package dependencies to the latest versions
@@ -68,6 +68,9 @@ dependencies:
   device_info_plus: ^9.1.2
   cupertino_http: ^2.1.1
   url_launcher: ^6.2.4
+  webview_flutter: ^4.9.0
+  auto_size_text: ^3.0.0
+  stomp_dart_client: ^2.0.0
 
 flutter_icons:
   android: true

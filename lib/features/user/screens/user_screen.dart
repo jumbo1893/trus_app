@@ -37,7 +37,7 @@ class _UserScreenState extends ConsumerState<UserScreen> {
     await executeApi<void>(() async {
       return await ref
           .read(userControllerProvider)
-          .changeWritePermissions(context, user);
+          .changeWritePermissions(user);
     }, () => ref.read(screenControllerProvider).changeFragment(HomeScreen.id),
             context, true)
         .whenComplete(() => setState(() {}));

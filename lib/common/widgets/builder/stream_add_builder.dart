@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:trus_app/models/api/interfaces/add_to_string.dart';
 
 import '../../../features/general/stream_add_controller.dart';
+import '../../../features/main/widget/appbar/appbar_headline.dart';
 import '../../repository/exception/loading_exception.dart';
-import '../appbar_headline.dart';
 import '../listview/listview_add_model.dart';
 import '../listview/listview_add_model_double.dart';
 import '../loader.dart';

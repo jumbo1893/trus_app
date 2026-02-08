@@ -1,11 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:trus_app/features/player/screens/edit_player_screen.dart';
+import 'package:trus_app/common/widgets/button/confirm_button.dart';
 import 'package:trus_app/features/user/controller/user_controller.dart';
 
 import '../../../common/utils/utils.dart';
 import '../../../common/widgets/builder/column_future_builder.dart';
 import '../../../common/widgets/loader.dart';
+import '../../../common/widgets/rows/crud/row_api_model_dropdown_stream.dart';
 import '../../../common/widgets/rows/view/row_text_view_stream.dart';
 import '../../../common/widgets/screen/custom_consumer_stateful_widget.dart';
 import '../../home/screens/home_screen.dart';
@@ -26,10 +27,11 @@ class _ViewUserScreenState extends ConsumerState<ViewUserScreen> {
   Widget build(BuildContext context) {
     final size = MediaQueryData.fromView(WidgetsBinding.instance.window).size;
     const double padding = 8.0;
+    var controller = ref.watch(userControllerProvider);
     return Scaffold(
         body: FutureBuilder<void>(
             future:
-                ref.watch(userControllerProvider).setupUser(),
+            controller.setupUser(),
             builder: (context, snapshot) {
               if (snapshot.connectionState == ConnectionState.waiting) {
                 return const Loader();
@@ -45,7 +47,7 @@ class _ViewUserScreenState extends ConsumerState<ViewUserScreen> {
               }
               return ColumnFutureBuilder(
                 loadModelFuture:
-                    ref.watch(userControllerProvider).viewUser(),
+                controller.viewUser(),
                 loadingScreen: null,
                 columns: [
                   RowTextViewStream(
@@ -53,33 +55,34 @@ class _ViewUserScreenState extends ConsumerState<ViewUserScreen> {
                     size: size,
                     textFieldText: "Přezdívka:",
                     padding: padding,
-                    viewMixin: ref.watch(userControllerProvider),
-                    hashKey: ref.watch(userControllerProvider).nameKey(),
+                    viewMixin: controller,
+                    hashKey: controller.nameKey(),
                   ),
                   RowTextViewStream(
                     key: const ValueKey('user_mail_text'),
                     size: size,
                     textFieldText: "Email:",
                     padding: padding,
-                    viewMixin: ref.watch(userControllerProvider),
-                    hashKey: ref.watch(userControllerProvider).emailKey(),
+                    viewMixin: controller,
+                    hashKey: controller.emailKey(),
                   ),
-                  RowTextViewStream(
+                  RowApiModelDropDownStream(
                     key: const ValueKey('user_player_text'),
                     size: size,
-                    textFieldText: "Spárování s hráčem:",
+                    text: "Spárování s hráčem:",
                     padding: padding,
-                    viewMixin: ref.watch(userControllerProvider),
-                    hashKey: ref.watch(userControllerProvider).playerKey(),
-                    showIfEmptyText: false,
+                    dropdownControllerMixin: controller,
+                    hashKey: controller.playerKey(),
+                    editEnabled: true,
+                    hint: 'Vyber hráče',
                   ),
                   RowTextViewStream(
                     key: const ValueKey('user_role_text'),
                     size: size,
                     textFieldText: "Práva:",
                     padding: padding,
-                    viewMixin: ref.watch(userControllerProvider),
-                    hashKey: ref.watch(userControllerProvider).roleKey(),
+                    viewMixin: controller,
+                    hashKey: controller.roleKey(),
                     showIfEmptyText: false,
                   ),
                   RowTextViewStream(
@@ -87,20 +90,25 @@ class _ViewUserScreenState extends ConsumerState<ViewUserScreen> {
                     size: size,
                     textFieldText: "Jiné týmy:",
                     padding: padding,
-                    viewMixin: ref.watch(userControllerProvider),
-                    hashKey: ref.watch(userControllerProvider).otherRolesKey(),
+                    viewMixin: controller,
+                    hashKey: controller.otherRolesKey(),
                     showIfEmptyText: false,
                   ),
                   const SizedBox(height: 10),
+                  ConfirmButton(
+                    text: "Potvrď změny",
+                    context: context,
+                    confirmOperations: controller,
+                    id: -1,
+                    onOperationComplete: () {
+                      ref
+                          .read(screenControllerProvider)
+                          .changeFragment(HomeScreen.id);
+                    },
+                  ),
                 ],
               );
             }),
-        floatingActionButton: FloatingActionButton(
-          onPressed: () => ref
-              .read(screenControllerProvider)
-              .changeFragment(EditPlayerScreen.id),
-          elevation: 4.0,
-          child: const Icon(Icons.edit),
-        ));
+        );
   }
 }

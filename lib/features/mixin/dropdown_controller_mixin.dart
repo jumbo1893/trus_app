@@ -4,9 +4,9 @@ import '../../models/api/interfaces/dropdown_item.dart';
 
 mixin DropdownControllerMixin {
   final Map<String, List<DropdownItem>> dropdownLists = {};
-  final Map<String, DropdownItem> dropdownValues = {};
+  final Map<String, DropdownItem?> dropdownValues = {};
   final Map<String, bool> createdDropdownChecker = {};
-  final Map<String, StreamController<DropdownItem>> dropdownControllers = {};
+  final Map<String, StreamController<DropdownItem?>> dropdownControllers = {};
   final Map<String, StreamController<List<DropdownItem>>> dropdownListControllers = {};
   final Map<String, StreamController<String>> dropdownErrorTextControllers = {};
 
@@ -24,7 +24,7 @@ mixin DropdownControllerMixin {
     }
   }
 
-  Stream<DropdownItem> dropdownItem(String key) {
+  Stream<DropdownItem?> dropdownItem(String key) {
     _createDropdownCheckedList(key);
     return dropdownControllers[key]?.stream ?? const Stream.empty();
   }
@@ -48,13 +48,13 @@ mixin DropdownControllerMixin {
     dropdownListControllers[key]!.add(items);
   }
 
-  void _setDropdownItem(DropdownItem dropdownItem, String key) {
+  void _setDropdownItem(DropdownItem? dropdownItem, String key) {
     _createDropdownCheckedList(key);
     dropdownControllers[key]!.add(dropdownItem);
     dropdownValues[key] = dropdownItem;
   }
 
-  void initDropdown(DropdownItem item, List<DropdownItem> items, String key) {
+  void initDropdown(DropdownItem? item, List<DropdownItem> items, String key) {
     _createDropdownCheckedList(key);
     _setDropdownItem(item, key);
     dropdownLists[key] = items;

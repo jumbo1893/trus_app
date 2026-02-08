@@ -117,7 +117,7 @@ class _FootballMatchBoxState extends State<FootballMatchBox>
           } else {
             matchId = footballMatchDetail.footballMatch
                 .findMatchIdForCurrentAppTeamInMatchIdAndAppTeamIdList(
-                    widget.appTeamApiModel);
+                    widget.appTeamApiModel) ?? -1;
           }
           double footballBoxButtonWidth = width / 6 - insidePadding / 7;
           return Column(

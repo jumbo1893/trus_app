@@ -7,8 +7,10 @@ import 'package:trus_app/models/api/football/football_match_api_model.dart';
 import 'package:trus_app/models/api/football/football_player_api_model.dart';
 import 'package:trus_app/models/api/football/stats/football_all_individual_stats_api_model.dart';
 import 'package:trus_app/models/api/football/table_team_api_model.dart';
+import 'package:trus_app/models/api/footbar/footbar_account_sessions.dart';
 import 'package:trus_app/models/api/log/log_api_model.dart';
 import 'package:trus_app/models/api/notification/push/device_token_api_model.dart';
+import 'package:trus_app/models/api/notification/push/enabled_push_notification.dart';
 import 'package:trus_app/models/api/strava/athlete_activities.dart';
 
 import '../../../common/repository/exception/json_decode_exception.dart';
@@ -68,6 +70,10 @@ class CrudApiService extends RequestExecutor {
         return DeviceTokenApiModel.fromJson(json);
       case logApi:
         return LogApiModel.fromJson(json);
+      case pushEnabledApi:
+        return EnabledPushNotification.fromJson(json);
+      case footbarApi:
+        return FootbarAccountSessions.fromJson(json);
       default:
         throw JsonDecodeException();
     }

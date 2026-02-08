@@ -41,21 +41,6 @@ class ModelsCacheBuilder<T> extends ConsumerWidget {
                   context));
           return const Loader();
         }
-        /*return FutureBuilder<void>(
-          future: setupView,
-          builder: (context, snapshot) {
-            if (snapshot.hasError) {
-              print("mám error");
-              Future.delayed(
-                  Duration.zero,
-                      () => showErrorDialog(
-                      snapshot,
-                          () => ref
-                          .read(screenControllerProvider)
-                          .changeFragment(HomeScreen.id),
-                      context));
-              return const Loader();
-            }*/
             return StreamBuilder<List<ModelToString>>(
               stream: modelToStringListControllerMixin.modelToStringListValue(hashKey),
               builder: (context, streamSnapshot) {

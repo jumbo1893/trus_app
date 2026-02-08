@@ -11,4 +11,9 @@ class MutualMatches {
     required this.aggregateMatches,
   });
 
+  const MutualMatches.empty()
+      : mutualMatches = const [],
+        aggregateScore = null,
+        aggregateMatches = null;
+
 }

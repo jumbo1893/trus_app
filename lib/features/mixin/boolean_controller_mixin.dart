@@ -24,10 +24,10 @@ mixin BooleanControllerMixin {
   }
 
   void setBoolean(bool boolean, String key) {
-    _setBoolean(boolean, key);
+    setBooleanInternal(boolean, key);
   }
 
-  void _setBoolean(bool boolean, String key) {
+  void setBooleanInternal(bool boolean, String key) {
     createBooleanCheckedList(key);
     boolValues[key] = boolean;
     boolControllers[key]?.add(boolean);
@@ -35,6 +35,6 @@ mixin BooleanControllerMixin {
 
   void initBooleanFields(bool boolean, String key) {
     createBooleanCheckedList(key);
-    _setBoolean(boolean, key);
+    setBooleanInternal(boolean, key);
   }
 }

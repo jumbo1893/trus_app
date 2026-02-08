@@ -16,14 +16,18 @@ const int allSeasonId = -3;
 
 
 //api
-const testUrl = "https://192.168.0.10:8443";
-const prodUrl = "https://trus.up.railway.app";
-const devUrl = "https://192.168.0.150:8080";
-//const serverUrl = testUrl;
-const serverUrl = "https://trus.up.railway.app";
+const testUrl = "192.168.0.10:8443";
+const prodUrl = "trus.up.railway.app";
+const devUrl = "192.168.0.150:8080";
+const anickaTestUrl = "192.168.0.9:8443";
+const workTestUrl = "10.2.224.138:8443";
+const runningUrl = testUrl;
+const serverUrl = "https://$runningUrl";
+//const serverUrl = "https://trus.up.railway.app";
 const automation = false;
 const matchApi = "match";
 const stravaApi = "strava";
+const footbarApi = "footbar";
 const achievementApi = "achievement";
 const playerAchievementApi = "achievement/player";
 const statsApi = "stats";
@@ -33,6 +37,7 @@ const fineApi = "fine";
 const goalApi = "goal";
 const beerApi = "beer";
 const pushApi = "push";
+const pushEnabledApi = "push/enabled";
 const tokenApi = "push/token";
 const logApi = "log";
 const registrationSetupApi = "registration-setup";

@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
-Future<DateTime> showCalendar(BuildContext context, DateTime? initialDate) async {
+Future<DateTime> showCalendar(
+    BuildContext context, DateTime? initialDate) async {
   DateTime? chosenDateTime;
   chosenDateTime = await showDatePicker(
     context: context,
@@ -10,7 +11,8 @@ Future<DateTime> showCalendar(BuildContext context, DateTime? initialDate) async
     lastDate: DateTime(2050),
   );
   if (chosenDateTime != null) {
-    return DateTime.utc(chosenDateTime.year, chosenDateTime.month, chosenDateTime.day, 12);
+    return DateTime.utc(
+        chosenDateTime.year, chosenDateTime.month, chosenDateTime.day, 12);
   }
   return chosenDateTime ?? DateTime.now();
 }
@@ -28,7 +30,6 @@ String dateTimeToTimeString(DateTime dateTime) {
 }
 
 bool isSameDay(DateTime dateTime1, DateTime dateTime2) {
-
   if (dateTime2.compareTo(dateTime1) == 0) {
     return true;
   }
@@ -47,4 +48,17 @@ String formatDateForFrontend(DateTime dateTime) {
   return returnDate;
 }
 
-
+DateTime getDatesForNewSeason(bool from) {
+  int year = DateTime.now().year;
+  int month = DateTime.now().month;
+  DateTime fromDate;
+  DateTime toDate;
+  if (month <= 6) {
+    fromDate = DateTime.utc(year, 1, 1);
+    toDate = DateTime.utc(year, 7, 1);
+  } else {
+    fromDate = DateTime.utc(year, 9, 1);
+    toDate = DateTime.utc(year, 12, 31);
+  }
+  return from ? fromDate : toDate;
+}

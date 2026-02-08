@@ -1,7 +1,9 @@
+import 'package:trus_app/models/api/interfaces/detailed_response_model.dart';
+import 'package:trus_app/models/api/interfaces/model_to_string.dart';
 import 'package:trus_app/models/api/receivedfine/received_fine_detailed_model.dart';
 
 
-class ReceivedFineDetailedResponse {
+class ReceivedFineDetailedResponse implements DetailedResponseModel {
   final int playersCount;
   final int matchesCount;
   final int finesNumber;
@@ -28,5 +30,15 @@ class ReceivedFineDetailedResponse {
 
   String overallStatsToString() {
     return "$finesNumber pokut ve výši $finesAmount Kč v $playersCount hráčích a $matchesCount zápasech";
+  }
+
+  @override
+  List<ModelToString> modelList() {
+    return fineList;
+  }
+
+  @override
+  String overallStats() {
+    return overallStatsToString();
   }
 }

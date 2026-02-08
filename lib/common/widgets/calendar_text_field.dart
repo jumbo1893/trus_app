@@ -1,12 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:trus_app/colors.dart';
 
-import '../utils/utils.dart';
-
 class CalendarTextField extends StatelessWidget {
   final TextEditingController textController;
   final VoidCallback onCalendarIconPressed;
   final String errorText;
+
 
 
   const CalendarTextField({
@@ -45,10 +44,10 @@ class CalendarTextField extends StatelessWidget {
           ),
           contentPadding: const EdgeInsets.only(left: 10, top: 10),
           errorText: errorText.isNotEmpty ? errorText : null,
+          errorMaxLines: 2,
           suffixIcon: IconButton(
               onPressed: onCalendarIconPressed,
-              icon: Icon(Icons.calendar_month, color: orangeColor,
-                key: ValueKey("${getValueFromValueKey(key!)}_button"),
+              icon: const Icon(Icons.calendar_month, color: orangeColor,
               )
           )
       ),

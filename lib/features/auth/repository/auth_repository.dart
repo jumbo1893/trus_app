@@ -10,6 +10,7 @@ import 'package:trus_app/common/utils/utils.dart';
 import 'package:trus_app/config.dart';
 import 'package:trus_app/models/api/auth/registration/app_team_registration.dart';
 import 'package:trus_app/models/api/auth/registration/registration_setup.dart';
+import 'package:trus_app/models/api/auth/user_setup.dart';
 import 'package:trus_app/models/api/player/player_api_model.dart';
 import 'package:trus_app/models/helper/bool_and_string.dart';
 
@@ -52,6 +53,13 @@ class AuthRepository extends CrudApiService {
     final UserApiModel userApiModel = await executeGetRequest(
         url, (dynamic json) => UserApiModel.fromJson(json), null);
     return userApiModel;
+  }
+
+  Future<UserSetup> getUserSetup() async {
+    var url = Uri.parse("$serverUrl/$authApi/setup");
+    final UserSetup userSetup = await executeGetRequest(
+        url, (dynamic json) => UserSetup.fromJson(json), null);
+    return userSetup;
   }
 
   String? getCurrentUserName() {

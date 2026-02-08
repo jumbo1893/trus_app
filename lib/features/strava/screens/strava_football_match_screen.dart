@@ -102,7 +102,7 @@ class StravaFootballMatchScreen extends CustomConsumerWidget {
                     try {
                       final url = await ref.read(provider).getUrlStravaConnection();
                       final uri = Uri.parse(url);
-                      await launchUrl(uri, mode: LaunchMode.externalApplication);
+                      await launchUrl(uri, mode: LaunchMode.externalApplication, );
                     } catch (e) {
                       debugPrint("Chyba při otevírání odkazu: $e");
                     }

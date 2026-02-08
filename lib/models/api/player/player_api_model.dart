@@ -2,10 +2,11 @@ import 'package:age_calculator/age_calculator.dart';
 import 'package:trus_app/common/utils/calendar.dart';
 import 'package:trus_app/config.dart';
 import 'package:trus_app/models/api/football/football_player_api_model.dart';
+import 'package:trus_app/models/api/interfaces/dropdown_item.dart';
 import 'package:trus_app/models/api/interfaces/json_and_http_converter.dart';
 import 'package:trus_app/models/api/interfaces/model_to_string.dart';
 
-class PlayerApiModel implements ModelToString, JsonAndHttpConverter {
+class PlayerApiModel implements ModelToString, JsonAndHttpConverter, DropdownItem {
   int? id;
   final String name;
   final DateTime birthday;
@@ -177,5 +178,10 @@ class PlayerApiModel implements ModelToString, JsonAndHttpConverter {
   @override
   int getId() {
     return id ?? -1;
+  }
+
+  @override
+  String dropdownItem() {
+    return name;
   }
 }

@@ -1,7 +1,10 @@
 
+import 'package:trus_app/models/api/interfaces/model_to_string.dart';
+
+import '../interfaces/detailed_response_model.dart';
 import 'goal_detailed_model.dart';
 
-class GoalDetailedResponse {
+class GoalDetailedResponse implements DetailedResponseModel {
   final int playersCount;
   final int matchesCount;
   final int totalGoals;
@@ -28,5 +31,15 @@ class GoalDetailedResponse {
 
   String overallStatsToString() {
     return "$totalGoals gólů a $totalAssists asistencí v $playersCount hráčích a $matchesCount zápasech";
+  }
+
+  @override
+  List<ModelToString> modelList() {
+    return goalList;
+  }
+
+  @override
+  String overallStats() {
+    return overallStatsToString();
   }
 }

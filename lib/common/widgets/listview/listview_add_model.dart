@@ -1,91 +1,75 @@
 import 'package:flutter/material.dart';
 
-import '../../../colors.dart';
 import '../../../models/api/interfaces/add_to_string.dart';
 
-class ListviewAddModel extends StatefulWidget {
+class ListviewAddModel extends StatelessWidget {
   final AddToString addToString;
   final bool goal;
   final double padding;
   final VoidCallback onNumberAdded;
   final VoidCallback onNumberRemoved;
-  const ListviewAddModel(
-      {Key? key,
-        required this.padding,
-        required this.onNumberAdded,
-        required this.onNumberRemoved,
-      this.goal = false,
-      required this.addToString})
-      : super(key: key);
 
-  @override
-  State<ListviewAddModel> createState() => _ListviewAddModel();
-}
+  const ListviewAddModel({
+    Key? key,
+    required this.padding,
+    required this.onNumberAdded,
+    required this.onNumberRemoved,
+    this.goal = false,
+    required this.addToString,
+  }) : super(key: key);
 
-class _ListviewAddModel extends State<ListviewAddModel> {
-
-  TextEditingController textEditingController = TextEditingController();
-
-  @override
-  void dispose() {
-    textEditingController.dispose();
-    super.dispose();
-  }
-
-  void refreshText() {
-    textEditingController.text = widget.addToString.numberToString(widget.goal);
-  }
-
-  void sendCallback(bool added) {
-    if(added) {
-      widget.onNumberAdded();
-    }
-    else {
-      widget.onNumberRemoved();
-    }
+  Widget _numberBox(String value) {
+    return Container(
+      alignment: Alignment.center,
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+      decoration: BoxDecoration(
+        border: Border.all(color: Colors.grey.shade300),
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: Text(
+        value,
+        style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+      ),
+    );
   }
 
   @override
   Widget build(BuildContext context) {
-    textEditingController.text = widget.addToString.numberToString(widget.goal);
     final size = MediaQueryData.fromView(WidgetsBinding.instance.window).size;
+    final value = addToString.numberToString(goal);
+
     return Row(
       children: [
         SizedBox(
-            width: (size.width / 1.5) - widget.padding,
-            child: Text(widget.addToString.toStringForListView(), style: const TextStyle(fontSize: 16))),
-        const SizedBox(width: 21,),
-
-        SizedBox(
-            width: (size.width / 9) -7,
-            child: IconButton(onPressed: () {
-              sendCallback(false);
-              refreshText();
-              },
-                icon: const Icon(Icons.remove, color: Colors.red,))),
-        SizedBox(
-          width: (size.width / 9) -7,
-          child: TextField(controller: textEditingController,
-            textAlign: TextAlign.center,
-            decoration: const InputDecoration(
-              enabled: false,
-              border: InputBorder.none,
-              floatingLabelStyle: TextStyle(
-                  color: blackColor
-              ),
-              contentPadding: EdgeInsets.only(left: 10),
-
-            ),),
+          width: (size.width / 1.5) - padding,
+          child: Text(
+            addToString.toStringForListView(),
+            style: const TextStyle(fontSize: 16),
+          ),
         ),
-        SizedBox(
-            width: (size.width / 9) -7,
-            child: IconButton(onPressed: () {
-              sendCallback(true);
-              refreshText();
-            },
-                icon: const Icon(Icons.add, color: Colors.green,))),
-      ],
+        const SizedBox(width: 21),
 
+        SizedBox(
+          width: (size.width / 9) - 7,
+          child: IconButton(
+            onPressed: onNumberRemoved,
+            icon: const Icon(Icons.remove, color: Colors.red),
+          ),
+        ),
+
+        SizedBox(
+          width: (size.width / 9) - 7,
+          child: _numberBox(value),
+        ),
+
+        SizedBox(
+          width: (size.width / 9) - 7,
+          child: IconButton(
+            onPressed: onNumberAdded,
+            icon: const Icon(Icons.add, color: Colors.green),
+          ),
+        ),
+      ],
     );
   }
 }

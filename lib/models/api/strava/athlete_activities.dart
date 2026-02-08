@@ -1,5 +1,6 @@
 import 'package:trus_app/models/api/interfaces/json_and_http_converter.dart';
 import 'package:trus_app/models/api/player/player_api_model.dart';
+
 import '../auth/user_api_model.dart';
 import '../interfaces/model_to_string.dart';
 import 'strava_activity.dart';

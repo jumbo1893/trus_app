@@ -106,6 +106,32 @@ class FootballMatchApiModel implements JsonAndHttpConverter, ModelToString {
     };
   }
 
+  String getOpponentName(int userTeamId) {
+    if(homeTeam == null) {
+      return "";
+    }
+    else if(userTeamId == homeTeam!.id) {
+      return awayTeam!.name;
+    }
+    else if(awayTeam == null) {
+      return "";
+    }
+    else if(userTeamId == awayTeam!.id) {
+      return homeTeam!.name;
+    }
+    return "";
+  }
+
+  bool isHomeMatch(int userTeamId) {
+    if(homeTeam != null && userTeamId == homeTeam!.id) {
+      return true;
+    }
+    else if(awayTeam != null && userTeamId == awayTeam!.id) {
+      return false;
+    }
+    return true;
+  }
+
   String toStringNameWithOpponent() {
     return "${homeTeamToString()} - ${awayTeamToString()}";
   }
@@ -352,16 +378,16 @@ class FootballMatchApiModel implements JsonAndHttpConverter, ModelToString {
     return "${toStringForSubtitle()}\n${returnPlayerSummaryText(homeTeam, _returnGoalScorersText)}";
   }
 
-  int findMatchIdForCurrentAppTeamInMatchIdAndAppTeamIdList(AppTeamApiModel? appTeamApiModel) {
+  int? findMatchIdForCurrentAppTeamInMatchIdAndAppTeamIdList(AppTeamApiModel? appTeamApiModel) {
     if(appTeamApiModel == null) {
-      return -1;
+      return null;
     }
     for(LongAndLong matchIdAndAppTeamId in matchIdAndAppTeamIdList) {
       if(matchIdAndAppTeamId.secondId == appTeamApiModel.id) {
         return matchIdAndAppTeamId.firstId;
       }
     }
-    return -1;
+    return null;
   }
 
   @override
@@ -404,7 +430,18 @@ class FootballMatchApiModel implements JsonAndHttpConverter, ModelToString {
     }
     return toStringForSubtitle();
   }
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is FootballMatchApiModel &&
+          runtimeType == other.runtimeType &&
+          id == other.id;
+
+  @override
+  int get hashCode => id.hashCode;
 }
+
 
 
 

@@ -1,129 +1,113 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:trus_app/features/beer/controller/beer_controller.dart';
-import 'package:trus_app/features/beer/screens/beer_paint_screen.dart';
-import 'package:trus_app/features/home/screens/home_screen.dart';
+import 'package:trus_app/common/widgets/custom_button.dart';
+import 'package:trus_app/common/widgets/notifier/loader/loading_overlay.dart';
+import 'package:trus_app/common/widgets/screen/custom_consumer_stateful_widget.dart';
+import 'package:trus_app/features/beer/beer_screen_mode.dart';
+import 'package:trus_app/features/beer/controller/beer_notifier.dart';
 
-import '../../../colors.dart';
-import '../../../common/widgets/builder/error_future_builder.dart';
-import '../../../common/widgets/builder/stream_add_builder.dart';
-import '../../../common/widgets/button/confirm_button.dart';
-import '../../../common/widgets/dropdown/custom_dropdown.dart';
-import '../../../common/widgets/dropdown/match_dropdown.dart';
-import '../../../common/widgets/screen/custom_consumer_stateful_widget.dart';
-import '../../../models/api/season_api_model.dart';
+import '../../../common/widgets/builder/add_list_builder_double.dart';
+import '../../../common/widgets/dropdown/match_dropdown_notifier.dart';
+import '../../../common/widgets/notifier/dropdown/custom_dropdown.dart';
 import '../../main/screen_controller.dart';
+import '../../season/controller/season_dropdown_notifier.dart';
+import '../../season/season_args.dart';
+import 'beer_paint_screen.dart';
 
 class BeerSimpleScreen extends CustomConsumerStatefulWidget {
   static const String id = "beer-simple-screen";
 
-  const BeerSimpleScreen({
-    Key? key,
-  }) : super(key: key, title: "Přidat pivo", name: id);
+  const BeerSimpleScreen({Key? key})
+      : super(key: key, title: "Přidat pivo", name: id);
 
   @override
   ConsumerState<BeerSimpleScreen> createState() => _BeerSimpleScreenState();
 }
 
 class _BeerSimpleScreenState extends ConsumerState<BeerSimpleScreen> {
+  bool _initDone = false;
+
   @override
   Widget build(BuildContext context) {
-    if (ref
-        .read(screenControllerProvider)
-        .isScreenFocused(BeerSimpleScreen.id)) {
-      final size = MediaQuery.of(context).size;
-      const double padding = 0.0;
-      return ErrorFutureBuilder<void>(
-          future: ref
-              .read(beerControllerProvider)
-              .initScreen(ref.read(screenControllerProvider).matchId),
-          context: context,
-          widget: Scaffold(
-            appBar: AppBar(
-              centerTitle: true,
-              automaticallyImplyLeading: false,
-              title: ConstrainedBox(
-                  constraints: BoxConstraints(minWidth: size.width),
-                  child: MatchDropdown(
-                    onMatchSelected: (match) =>
-                        ref.watch(beerControllerProvider).setMatch(match),
-                    matchesStream: ref.watch(beerControllerProvider).matches(),
-                    initMatchListStream: () =>
-                        ref.read(beerControllerProvider).initMatchesStream(),
-                    matchReader: ref.read(beerControllerProvider),
-                  )),
+    final sc = ref.read(screenControllerProvider);
+    final state = ref.watch(beerNotifierProvider);
+    final notifier = ref.read(beerNotifierProvider.notifier);
+
+    if (!_initDone) {
+      _initDone = true;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        notifier.init(matchId: sc.matchId);
+      });
+    }
+
+    return LoadingOverlay(
+      state: state,
+      onClearError: () {},
+      child: Scaffold(
+        appBar: AppBar(
+          centerTitle: true,
+          automaticallyImplyLeading: false,
+          title: state.matches.when(
+            loading: () => const SizedBox(height: 24),
+            error: (_, __) => const SizedBox.shrink(),
+            data: (matches) => ConstrainedBox(
+              constraints: BoxConstraints(minWidth: MediaQuery.of(context).size.width),
+              child: MatchDropdownNotifier(
+                matches: matches,
+                selected: state.selectedMatch,
+                onSelected: notifier.selectMatch,
+              ),
             ),
-            body: Padding(
-              padding: const EdgeInsets.all(padding),
-              child: Column(children: [
-                Row(
-                  children: [
-                    SizedBox(
-                        width: size.width / 2 - padding,
-                        child: CustomDropdown(
-                          onItemSelected: (season) => ref
-                              .watch(beerControllerProvider)
-                              .setSeason(season as SeasonApiModel),
-                          dropdownList:
-                              ref.watch(beerControllerProvider).getSeasons(),
-                          pickedItem:
-                              ref.watch(beerControllerProvider).pickedSeason(),
-                          initData: () =>
-                              ref.watch(beerControllerProvider).setInitSeason(),
-                          hint: 'Vyber sezonu',
-                        )),
-                    SizedBox(width: size.width / 4 - padding),
-                    SizedBox(
-                        width: size.width / 4,
-                        child: IconButton(
-                          icon: const Icon(
-                            Icons.compare_arrows,
-                            color: blackColor,
-                          ),
-                          onPressed: () {
-                            ref.read(beerControllerProvider).switchScreen();
-                          },
-                        )),
-                  ],
-                ),
-                StreamBuilder<bool>(
-                    stream: ref.watch(beerControllerProvider).screen(),
-                    builder: (context, snapshot) {
-                      if (snapshot.data ??
-                          ref.read(beerControllerProvider).isSimpleScreen) {
-                        return Expanded(
-                          child: StreamAddBuilder(
-                            addController: ref.watch(beerControllerProvider),
-                            doubleListview: true,
-                          ),
-                        );
-                      } else {
-                        return const Expanded(
-                          child: BeerPaintScreen(),
-                        );
-                      }
-                    }),
-                Padding(
-                  padding: const EdgeInsets.only(bottom: 16.0),
-                  child: ConfirmButton(
-                    text: "Potvrď změny",
-                    context: context,
-                    confirmOperations: ref.read(beerControllerProvider),
-                    onOperationComplete: () => {
-                      ref.read(screenControllerProvider).setMatchId(
-                          (ref.read(beerControllerProvider).pickedMatch!.id!)),
-                      ref
-                          .read(screenControllerProvider)
-                          .changeFragment(HomeScreen.id)
-                    },
-                    id: -1,
+          ),
+        ),
+        body: Column(
+          children: [
+            Row(
+              children: [
+                SizedBox(
+                  width: MediaQuery.of(context).size.width / 2,
+                  child: CustomDropdown(
+                    hint: "Vyber sezonu",
+                    notifier: ref.read(
+                      seasonDropdownNotifierProvider(const SeasonArgs(false, true, true)).notifier,
+                    ),
+                    state: ref.watch(
+                      seasonDropdownNotifierProvider(const SeasonArgs(false, true, true)),
+                    ),
                   ),
                 ),
-              ]),
+                const Spacer(),
+                TextButton(
+                  
+                  onPressed: notifier.toggleMode, 
+                  child: Text(
+                    style: const TextStyle(color: Colors.black, fontWeight: FontWeight.bold),
+                      state.mode == BeerScreenMode.list? "Přepni na čárky" :  "Přepni na klasiku"),
+                ),
+              ],
             ),
-          ));
-    } else {
-      return Container();
-    }
+            Expanded(
+              child: state.mode == BeerScreenMode.list
+                  ? AddListBuilderDouble(
+                appBarText: null,
+                items: state.beers,
+                onBeerAdd: (i) => notifier.addNumber(i, true, null),
+                onBeerRemove: (i) => notifier.removeNumber(i, true),
+                onLiquorAdd: (i) => notifier.addNumber(i, false, null),
+                onLiquorRemove: (i) => notifier.removeNumber(i, false),
+              )
+                  : const BeerPaintScreen(),
+            ),
+            Padding(
+              padding: const EdgeInsets.only(bottom: 16.0),
+              child: CustomButton(
+                text: "Potvrď změny",
+                onPressed: notifier.changeBeers,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
   }
 }

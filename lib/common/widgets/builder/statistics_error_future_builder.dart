@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:trus_app/models/api/helper/list_models.dart';
 import 'package:trus_app/models/api/interfaces/model_to_string.dart';
 
 import '../../../colors.dart';
@@ -9,8 +10,8 @@ import '../../utils/utils.dart';
 import '../loader.dart';
 
 class StatisticsErrorFutureBuilder<T> extends ConsumerWidget {
-  final Future<List<ModelToString>> future;
-  final Stream<List<ModelToString>> rebuildStream;
+  final Future<ListModels> future;
+  final Stream<ListModels> rebuildStream;
   final Stream<String>? overallStream;
   final Function(ModelToString model) onPressed;
   final BuildContext context;
@@ -30,7 +31,7 @@ class StatisticsErrorFutureBuilder<T> extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    return FutureBuilder<List<ModelToString>>(
+    return FutureBuilder<ListModels>(
       future: future,
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
@@ -46,8 +47,9 @@ class StatisticsErrorFutureBuilder<T> extends ConsumerWidget {
                   context));
           return const Loader();
         }
-        return StreamBuilder<List<ModelToString>>(
+        return StreamBuilder<ListModels>(
             stream: rebuildStream,
+
             builder: (context, streamSnapshot) {
               if (streamSnapshot.hasError) {
                 Future.delayed(
@@ -119,10 +121,10 @@ class StatisticsErrorFutureBuilder<T> extends ConsumerWidget {
                       shrinkWrap: true,
                       physics: null,
                       itemCount:
-                          streamSnapshot.data?.length ?? snapshot.data!.length,
+                          streamSnapshot.data?.modelList.length ?? snapshot.data!.modelList.length,
                       itemBuilder: (context, index) {
                         var data =
-                            streamSnapshot.data?[index] ?? snapshot.data![index];
+                            streamSnapshot.data?.modelList[index] ?? snapshot.data!.modelList[index];
                         return Column(
                           children: [
                             InkWell(

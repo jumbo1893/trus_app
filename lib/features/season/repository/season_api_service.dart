@@ -1,6 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:trus_app/config.dart';
 import 'package:trus_app/features/general/repository/crud_api_service.dart';
+import 'package:trus_app/features/season/season_args.dart';
 
 import '../../../models/api/interfaces/json_and_http_converter.dart';
 import '../../../models/api/season_api_model.dart';
@@ -17,6 +18,16 @@ class SeasonApiService extends CrudApiService {
       'allSeason': allSeason.toString(),
       'otherSeason': otherSeason.toString(),
       'automaticSeason': automaticSeason.toString(),
+    };
+    final decodedBody = await getModels<JsonAndHttpConverter>(seasonApi, queryParameters);
+    return decodedBody.map((model) => model as SeasonApiModel).toList();
+  }
+
+  Future<List<SeasonApiModel>> getSeasons2(SeasonArgs args) async {
+    final queryParameters = {
+      'allSeason': args.allSeason.toString(),
+      'otherSeason': args.otherSeason.toString(),
+      'automaticSeason': args.automaticSeason.toString(),
     };
     final decodedBody = await getModels<JsonAndHttpConverter>(seasonApi, queryParameters);
     return decodedBody.map((model) => model as SeasonApiModel).toList();

@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:trus_app/common/widgets/birthday_text.dart';
+import 'package:trus_app/common/widgets/home/birthday_text.dart';
 import 'package:trus_app/features/general/global_variables_controller.dart';
 
 import '../../../common/utils/utils.dart';
@@ -8,8 +8,8 @@ import '../../../common/widgets/builder/column_future_builder.dart';
 import '../../../common/widgets/chart/home_chart.dart';
 import '../../../common/widgets/chart/pick_chart_player.dart';
 import '../../../common/widgets/football/football_match_box.dart';
+import '../../../common/widgets/home/random_fact_box.dart';
 import '../../../common/widgets/loader.dart';
-import '../../../common/widgets/random_fact_box.dart';
 import '../../../common/widgets/screen/custom_consumer_stateful_widget.dart';
 import '../../general/error/api_executor.dart';
 import '../../main/screen_controller.dart';

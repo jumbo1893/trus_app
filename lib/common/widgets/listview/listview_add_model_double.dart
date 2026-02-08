@@ -3,9 +3,10 @@ import 'package:flutter/material.dart';
 import '../../../colors.dart';
 import '../../../models/api/interfaces/add_to_string.dart';
 
-class ListviewAddModelDouble extends StatefulWidget {
+class ListviewAddModelDouble extends StatelessWidget {
   final AddToString addToString;
   final double padding;
+
   final VoidCallback onFirstNumberAdded;
   final VoidCallback onFirstNumberRemoved;
   final VoidCallback onSecondNumberAdded;
@@ -21,43 +22,7 @@ class ListviewAddModelDouble extends StatefulWidget {
     required this.addToString,
   }) : super(key: key);
 
-  @override
-  State<ListviewAddModelDouble> createState() => _ListviewAddModelDoubleState();
-}
-
-class _ListviewAddModelDoubleState extends State<ListviewAddModelDouble> {
-  TextEditingController firstTextEditingController = TextEditingController();
-  TextEditingController secondTextEditingController = TextEditingController();
-
-  @override
-  void dispose() {
-    firstTextEditingController.dispose();
-    secondTextEditingController.dispose();
-    super.dispose();
-  }
-
-  void refreshText() {
-    firstTextEditingController.text = widget.addToString.numberToString(true);
-    secondTextEditingController.text = widget.addToString.numberToString(false);
-  }
-
-  void sendFirstCallback(bool added) {
-    if (added) {
-      widget.onFirstNumberAdded();
-    } else {
-      widget.onFirstNumberRemoved();
-    }
-  }
-
-  void sendSecondCallback(bool added) {
-    if (added) {
-      widget.onSecondNumberAdded();
-    } else {
-      widget.onSecondNumberRemoved();
-    }
-  }
-
-  Widget buildIconButton(IconData icon, Color color, VoidCallback onPressed) {
+  Widget _icon(IconData icon, Color color, VoidCallback onPressed) {
     return IconButton(
       icon: Icon(icon, color: color),
       onPressed: onPressed,
@@ -66,79 +31,71 @@ class _ListviewAddModelDoubleState extends State<ListviewAddModelDouble> {
     );
   }
 
+  Widget _numberBox(String value) {
+    return Container(
+      alignment: Alignment.center,
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      decoration: BoxDecoration(
+        border: Border.all(color: Colors.grey.shade300),
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: Text(
+        value,
+        textAlign: TextAlign.center,
+        style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
-    firstTextEditingController.text = widget.addToString.numberToString(true);
-    secondTextEditingController.text = widget.addToString.numberToString(false);
-
     final size = MediaQueryData.fromView(WidgetsBinding.instance.window).size;
     final sizeFragment = size / 30;
+
+    final firstValue = addToString.numberToString(true);
+    final secondValue = addToString.numberToString(false);
 
     return Row(
       children: [
         SizedBox(
-          width: (sizeFragment.width * 9) - widget.padding,
+          width: (sizeFragment.width * 9) - padding,
           child: Text(
-            widget.addToString.toStringForListView(),
+            addToString.toStringForListView(),
             style: const TextStyle(fontSize: 16),
           ),
         ),
         SizedBox(width: sizeFragment.width * 1.5),
 
-        // First group
-        SizedBox(width: sizeFragment.width * 2, child: buildIconButton(Icons.sports_bar, blackColor, () {
-          sendFirstCallback(false);
-          refreshText();
+        // FIRST group
+        SizedBox(width: sizeFragment.width * 2, child: _icon(Icons.sports_bar, blackColor, () {
+          onFirstNumberRemoved();
         })),
-        SizedBox(width: sizeFragment.width * 2, child: buildIconButton(Icons.remove, Colors.red, () {
-          sendFirstCallback(false);
-          refreshText();
+        SizedBox(width: sizeFragment.width * 2, child: _icon(Icons.remove, Colors.red, () {
+          onFirstNumberRemoved();
         })),
         SizedBox(
-          width: sizeFragment.width * 2.5,
-          child: TextField(
-            textAlign: TextAlign.center,
-            controller: firstTextEditingController,
-            decoration: const InputDecoration(
-              enabled: false,
-              border: InputBorder.none,
-              floatingLabelStyle: TextStyle(color: blackColor),
-              contentPadding: EdgeInsets.only(left: 10),
-            ),
-          ),
+          width: sizeFragment.width * 3.0,
+          child: _numberBox(firstValue),
         ),
-        SizedBox(width: sizeFragment.width * 2, child: buildIconButton(Icons.add, Colors.green, () {
-          sendFirstCallback(true);
-          refreshText();
+        SizedBox(width: sizeFragment.width * 2, child: _icon(Icons.add, Colors.green, () {
+          onFirstNumberAdded();
         })),
 
         SizedBox(width: sizeFragment.width),
 
-        // Second group
-        SizedBox(width: sizeFragment.width * 2, child: buildIconButton(Icons.liquor, blackColor, () {
-          sendSecondCallback(false);
-          refreshText();
+        // SECOND group
+        SizedBox(width: sizeFragment.width * 2, child: _icon(Icons.liquor, blackColor, () {
+          onSecondNumberRemoved();
         })),
-        SizedBox(width: sizeFragment.width * 2, child: buildIconButton(Icons.remove, Colors.red, () {
-          sendSecondCallback(false);
-          refreshText();
+        SizedBox(width: sizeFragment.width * 2, child: _icon(Icons.remove, Colors.red, () {
+          onSecondNumberRemoved();
         })),
-        SizedBox(width: sizeFragment.width),
         SizedBox(
-          width: sizeFragment.width * 1.5,
-          child: TextField(
-            textAlign: TextAlign.center,
-            controller: secondTextEditingController,
-            decoration: const InputDecoration(
-              enabled: false,
-              border: InputBorder.none,
-              floatingLabelStyle: TextStyle(color: blackColor),
-            ),
-          ),
+          width: sizeFragment.width * 3.0,
+          child: _numberBox(secondValue),
         ),
-        SizedBox(width: sizeFragment.width * 2, child: buildIconButton(Icons.add, Colors.green, () {
-          sendSecondCallback(true);
-          refreshText();
+        SizedBox(width: sizeFragment.width * 2, child: _icon(Icons.add, Colors.green, () {
+          onSecondNumberAdded();
         })),
       ],
     );

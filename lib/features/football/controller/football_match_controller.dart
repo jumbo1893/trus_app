@@ -13,7 +13,7 @@ final footballMatchControllerProvider = Provider((ref) {
   return FootballMatchController(ref: ref, footballApiService: footballApiService);
 });
 
-class FootballMatchController with ViewControllerMixin, IFootballMatchDetailHashKey implements ReadOperations {
+class FootballMatchController with ViewControllerMixin implements ReadOperations, IFootballMatchDetailHashKey {
   final FootballApiService footballApiService;
   final Ref ref;
   final snackBarController = StreamController<String>.broadcast();

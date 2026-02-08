@@ -2,6 +2,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:trus_app/config.dart';
 import 'package:trus_app/models/api/player/player_setup.dart';
+import 'package:trus_app/models/api/player/stats/player_stats.dart';
 
 import '../../../models/api/interfaces/json_and_http_converter.dart';
 import '../../../models/api/player/player_api_model.dart';
@@ -40,5 +41,12 @@ class PlayerApiService extends CrudApiService {
     final PlayerSetup playerSetup = await executeGetRequest(
         Uri.parse(url), (dynamic json) => PlayerSetup.fromJson(json), null);
     return playerSetup;
+  }
+
+  Future<PlayerStats> getPlayerStats(int id) async {
+    final String url = "$serverUrl/player/get-stats?playerId=$id";
+    final PlayerStats playerStats = await executeGetRequest(
+        Uri.parse(url), (dynamic json) => PlayerStats.fromJson(json), null);
+    return playerStats;
   }
 }

@@ -5,11 +5,12 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:trus_app/features/achievement/screens/achievement_screen.dart';
 import 'package:trus_app/features/achievement/screens/view_achievement_detail_screen.dart';
 import 'package:trus_app/features/achievement/screens/view_player_achievement_detail_screen.dart';
-import 'package:trus_app/features/fine/match/screens/fine_match_screen.dart';
 import 'package:trus_app/features/fine/match/screens/fine_player_screen.dart';
 import 'package:trus_app/features/fine/screens/fine_screen.dart';
 import 'package:trus_app/features/football/table/screens/main_table_team_screen.dart';
+import 'package:trus_app/features/footbar/screens/footbar_sync_screen.dart';
 import 'package:trus_app/features/goal/screen/goal_screen.dart';
+import 'package:trus_app/features/match/match_notifier_args.dart';
 import 'package:trus_app/features/match/screens/add_match_screen.dart';
 import 'package:trus_app/features/match/screens/match_screen.dart';
 import 'package:trus_app/features/player/screens/add_player_screen.dart';
@@ -29,23 +30,31 @@ import '../../models/api/player/player_api_model.dart';
 import '../../models/api/season_api_model.dart';
 import '../../models/enum/match_detail_options.dart';
 import '../beer/screens/beer_simple_screen.dart';
+import '../fine/match/screens/fine_match_screen.dart';
 import '../fine/match/screens/multiple_fine_players_screen.dart';
 import '../fine/screens/add_fine_screen.dart';
 import '../fine/screens/edit_fine_screen.dart';
 import '../football/screens/football_fixtures_screen.dart';
 import '../football/screens/football_player_stats_screen.dart';
-import '../football/screens/main_football_statistics_screen.dart';
-import '../football/screens/match_detail_screen.dart';
+import '../football/screens/football_stats_screen.dart';
 import '../football/table/screens/football_table_screen.dart';
+import '../footbar/screens/footbar_compare_screen.dart';
+import '../footbar/screens/footbar_connect_screen.dart';
 import '../general/screen_name.dart';
 import '../home/screens/home_screen.dart';
 import '../info/screens/info_screen.dart';
+import '../match/screens/match_detail_screen.dart';
+import '../notification/push/screen/enabled_notifications_screen.dart';
 import '../notification/screen/notification_screen.dart';
 import '../player/screens/view_player_screen.dart';
 import '../season/screens/add_season_screen.dart';
-import '../statistics/screens/double_dropdown_stats_screen.dart';
-import '../statistics/screens/main_goal_statistics_screen.dart';
-import '../statistics/screens/main_statistics_screen.dart';
+import '../statistics/screens/beer/beer_detail_stats_screen.dart';
+import '../statistics/screens/beer/beer_match_statistic_screen.dart';
+import '../statistics/screens/beer/beer_player_statistic_screen.dart';
+import '../statistics/screens/fine/fine_match_statistic_screen.dart';
+import '../statistics/screens/fine/fine_player_statistic_screen.dart';
+import '../statistics/screens/goal/goal_match_statistic_screen.dart';
+import '../statistics/screens/goal/goal_player_statistic_screen.dart';
 import '../steps/screens/step_screen.dart';
 import '../strava/screens/strava_football_match_screen.dart';
 import '../user/screens/user_screen.dart';
@@ -55,14 +64,25 @@ final screenControllerProvider = Provider((ref) {
       ref: ref);
 });
 
+final matchNotifierArgsProvider =
+StateProvider<MatchNotifierArgs>((ref) => const MatchNotifierArgs.add());
+
 class ScreenController {
   final Ref ref;
   final screenController = StreamController<Widget>.broadcast();
+  final Map<String, double> _scrollOffsets = {};
 
   ScreenController({
     required this.ref,
   });
 
+  void saveScrollOffset(String screenId, double offset) {
+    _scrollOffsets[screenId] = offset;
+  }
+
+  double? getScrollOffset(String screenId) {
+    return _scrollOffsets[screenId];
+  }
 
   int? _matchId;
   int? _footballTeamId;
@@ -79,6 +99,8 @@ class ScreenController {
   bool _changedMatch = false;
   String _currentScreenId = HomeScreen.id;
   bool _commonMatchesOnly = false;
+  String _statsApi = "";
+  MatchNotifierArgs _matchNotifierArgs = const MatchNotifierArgs.add();
 
   Stream<Widget> screen() {
     return screenController.stream;
@@ -162,6 +184,12 @@ class ScreenController {
     _footballMatch = footballMatch;
   }
 
+  String get statsApi => _statsApi;
+
+  void setStatsApi(String statsApi) {
+    _statsApi = statsApi;
+  }
+
   bool isChangedMatch() {
     if (_changedMatch) {
       _changedMatch = false;
@@ -175,6 +203,13 @@ class ScreenController {
   }
 
   bool get isCommonMatchesOnly => _commonMatchesOnly;
+
+  MatchNotifierArgs get matchNotifierArgs => _matchNotifierArgs;
+
+  void setMatchNotifierArgs(MatchNotifierArgs args) {
+    _matchNotifierArgs = args; // klidně nech, pokud ho ještě někde používáš
+    ref.read(matchNotifierArgsProvider.notifier).state = args;
+  }
 
   bool isScreenFocused(String screenId) {
     return _currentScreenId == screenId;
@@ -204,9 +239,6 @@ class ScreenController {
     ),
     const HomeScreen(
       //2
-    ),
-    const MainStatisticsScreen(
-      //3
     ),
     const AddPlayerScreen(
       //4
@@ -250,20 +282,20 @@ class ScreenController {
     const BeerSimpleScreen(
       //17
     ),
+    const BeerSimpleScreen(
+      //17
+    ),
     const PlayerScreen(
       //18
     ),
     const FootballFixturesScreen(
       //19
     ),
-    const MainFootballStatisticsScreen(
+    const FootballStatsScreen(
       //20
     ),
     const FootballTableScreen(
       //21
-    ),
-    const MainGoalStatisticsScreen(
-      //22
     ),
     const NotificationScreen(
       //23
@@ -282,9 +314,6 @@ class ScreenController {
     ),
     const StepScreen(
       //28
-    ),
-    const DoubleDropdownStatsScreen(
-      //29
     ),
     const ViewPlayerScreen(
       //30
@@ -306,6 +335,39 @@ class ScreenController {
     ),
     StravaFootballMatchScreen(
       //36
+    ),
+    const EnabledNotificationsScreen(
+      //37
+    ),
+    const FootbarConnectScreen(
+      //38
+    ),
+    const FootbarSyncScreen(
+      //39
+    ),
+    const FootbarCompareScreen(
+      //40
+    ),
+    const BeerPlayerStatisticScreen(
+      //41
+    ),
+    const BeerMatchStatisticScreen(
+      //42
+    ),
+    const FinePlayerStatisticScreen(
+      //43
+    ),
+    const FineMatchStatisticScreen(
+      //44
+    ),
+    const GoalPlayerStatisticScreen(
+      //45
+    ),
+    const GoalMatchStatisticScreen(
+      //46
+    ),
+    const BeerDetailStatsScreen(
+      //47
     ),
   ];
 

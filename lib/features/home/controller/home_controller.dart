@@ -7,6 +7,7 @@ import 'package:trus_app/features/general/global_variables_controller.dart';
 import 'package:trus_app/features/home/widget/i_chart_picked_player_callback.dart';
 import 'package:trus_app/features/home/widget/i_football_match_box_callback.dart';
 import 'package:trus_app/features/home/widget/i_home_setup.dart';
+import 'package:trus_app/features/match/match_notifier_args.dart';
 import 'package:trus_app/features/mixin/chart_controller_mixin.dart';
 import 'package:trus_app/features/mixin/chart_list_controller_mixin.dart';
 import 'package:trus_app/features/mixin/football_match_detail_controller_mixin.dart';
@@ -16,15 +17,14 @@ import 'package:trus_app/models/api/football/football_match_api_model.dart';
 
 import '../../../models/api/home/home_setup.dart';
 import '../../../models/api/player/player_api_model.dart';
-import '../../../models/enum/match_detail_options.dart';
 import '../../auth/repository/auth_repository.dart';
 import '../../beer/screens/beer_simple_screen.dart';
 import '../../fine/match/screens/fine_match_screen.dart';
-import '../../football/screens/match_detail_screen.dart';
 import '../../general/read_operations.dart';
 import '../../goal/screen/goal_screen.dart';
 import '../../main/screen_controller.dart';
 import '../../match/screens/add_match_screen.dart';
+import '../../match/screens/match_detail_screen.dart';
 import '../../player/repository/player_api_service.dart';
 import '../repository/home_api_service.dart';
 
@@ -131,7 +131,7 @@ class HomeController extends CacheProcessor
   void onButtonAddBeerClick(FootballMatchApiModel footballMatchApiModel) {
     int matchId = footballMatchApiModel
         .findMatchIdForCurrentAppTeamInMatchIdAndAppTeamIdList(
-            ref.read(globalVariablesControllerProvider).appTeam);
+            ref.read(globalVariablesControllerProvider).appTeam)!;
     if (matchId != -1) {
       ref.read(screenControllerProvider).setMatchId(matchId);
       ref.read(screenControllerProvider).changeFragment(BeerSimpleScreen.id);
@@ -142,7 +142,7 @@ class HomeController extends CacheProcessor
   void onButtonAddFineClick(FootballMatchApiModel footballMatchApiModel) {
     int matchId = footballMatchApiModel
         .findMatchIdForCurrentAppTeamInMatchIdAndAppTeamIdList(
-            ref.read(globalVariablesControllerProvider).appTeam);
+            ref.read(globalVariablesControllerProvider).appTeam)!;
     if (matchId != -1) {
       ref.read(screenControllerProvider).setMatchId(matchId);
       ref.read(screenControllerProvider).changeFragment(FineMatchScreen.id);
@@ -153,7 +153,7 @@ class HomeController extends CacheProcessor
   void onButtonAddGoalsClick(FootballMatchApiModel footballMatchApiModel) {
     int matchId = footballMatchApiModel
         .findMatchIdForCurrentAppTeamInMatchIdAndAppTeamIdList(
-            ref.read(globalVariablesControllerProvider).appTeam);
+            ref.read(globalVariablesControllerProvider).appTeam)!;
     if (matchId != -1) {
       ref.read(screenControllerProvider).setMatchId(matchId);
       ref.read(screenControllerProvider).changeFragment(GoalScreen.id);
@@ -162,42 +162,33 @@ class HomeController extends CacheProcessor
 
   @override
   void onButtonAddPlayersClick(FootballMatchApiModel footballMatchApiModel) {
-    int matchId = footballMatchApiModel
+    int? matchId = footballMatchApiModel
         .findMatchIdForCurrentAppTeamInMatchIdAndAppTeamIdList(
-            ref.read(globalVariablesControllerProvider).appTeam);
+        ref.read(globalVariablesControllerProvider).appTeam) ?? -1;
     if (matchId == -1) {
-      ref
-          .read(screenControllerProvider)
-          .setFootballMatch(footballMatchApiModel);
+      ref.read(screenControllerProvider).setMatchNotifierArgs(MatchNotifierArgs.newByFootballMatch(footballMatchApiModel));
       ref.read(screenControllerProvider).changeFragment(AddMatchScreen.id);
     } else {
-      setScreenToEditMatch(matchId);
+      ref.read(screenControllerProvider).setMatchNotifierArgs(MatchNotifierArgs.edit(matchId));
+      ref.read(screenControllerProvider).changeFragment(MatchDetailScreen.id);
+      //setScreenToEditMatch(matchId);
     }
   }
 
   void setScreenToEditMatch(int matchId) {
-    ref
-        .read(screenControllerProvider)
-        .setPreferredScreen(MatchDetailOptions.editMatch);
-    ref.read(screenControllerProvider).setMatchId(matchId);
+    ref.read(screenControllerProvider).setMatchNotifierArgs(MatchNotifierArgs.edit(matchId));
     ref.read(screenControllerProvider).changeFragment(MatchDetailScreen.id);
   }
 
   @override
   void onButtonDetailMatchClick(FootballMatchApiModel footballMatchApiModel) {
-    ref
-        .read(screenControllerProvider)
-        .setPreferredScreen(MatchDetailOptions.footballMatchDetail);
-    ref.read(screenControllerProvider).setFootballMatch(footballMatchApiModel);
+    ref.read(screenControllerProvider).setMatchNotifierArgs(MatchNotifierArgs.footballMatchDetail(footballMatchApiModel));
     ref.read(screenControllerProvider).changeFragment(MatchDetailScreen.id);
   }
 
   @override
   void onCommonMatchesClick(FootballMatchApiModel footballMatchApiModel) {
-    ref
-        .read(screenControllerProvider)
-        .setPreferredScreen(MatchDetailOptions.mutualMatches);
-    ref.read(screenControllerProvider).setFootballMatch(footballMatchApiModel);
+    ref.read(screenControllerProvider).setMatchNotifierArgs(MatchNotifierArgs.mutualMatches(footballMatchApiModel));
     ref.read(screenControllerProvider).changeFragment(MatchDetailScreen.id);
   }
 

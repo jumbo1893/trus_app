@@ -44,8 +44,8 @@ class Stats implements JsonAndHttpConverter, DropdownItem {
       identical(this, other) ||
       other is Stats &&
           runtimeType == other.runtimeType &&
-          dropdownText == other.dropdownText &&
-          playerStats == other.playerStats;
+          dropdownText == other.dropdownText;
+          //playerStats == other.playerStats;
 
   @override
   int get hashCode => dropdownText.hashCode ^ playerStats.hashCode;

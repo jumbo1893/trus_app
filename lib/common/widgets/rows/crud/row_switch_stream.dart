@@ -4,7 +4,6 @@ import 'package:trus_app/features/mixin/boolean_controller_mixin.dart';
 import '../../../../colors.dart';
 import '../../../utils/utils.dart';
 import '../../custom_text.dart';
-import '../../loader.dart';
 
 class RowSwitchStream extends StatefulWidget {
   final Size size;
@@ -34,7 +33,8 @@ class _RowSwitchStream extends State<RowSwitchStream> {
         stream: widget.booleanControllerMixin.boolean(widget.hashKey),
         builder: (context, snapshot) {
           bool isChecked = false;
-          isChecked = snapshot.data?? widget.booleanControllerMixin.boolValues[widget.hashKey]!;
+          isChecked = snapshot.data ??
+              widget.booleanControllerMixin.boolValues[widget.hashKey]!;
           return Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
@@ -51,7 +51,8 @@ class _RowSwitchStream extends State<RowSwitchStream> {
                   activeColor: orangeColor,
                   value: isChecked,
                   onChanged: (bool value) {
-                    widget.booleanControllerMixin.setBoolean(value, widget.hashKey);
+                    widget.booleanControllerMixin
+                        .setBoolean(value, widget.hashKey);
                   },
                 ),
               ),

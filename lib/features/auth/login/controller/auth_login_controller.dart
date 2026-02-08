@@ -9,6 +9,7 @@ import 'package:trus_app/features/general/global_variables_controller.dart';
 import 'package:trus_app/features/helper/shared_prefs_helper.dart';
 import 'package:trus_app/features/mixin/string_controller_mixin.dart';
 import 'package:trus_app/models/api/auth/app_team_api_model.dart';
+import 'package:trus_app/models/api/player/player_api_model.dart';
 import 'package:trus_app/models/helper/bool_and_string.dart';
 
 import '../../../../common/utils/field_validator.dart';
@@ -166,7 +167,6 @@ class AuthLoginController with StringControllerMixin implements IUserLoginKey {
 
   Future<LoginRedirect> fastLogin() async {
     UserApiModel? user = await authRepository.fastLogin();
-    print(user);
     return chooseLoginRedirect(user);
   }
 
@@ -186,6 +186,10 @@ class AuthLoginController with StringControllerMixin implements IUserLoginKey {
     globalVariablesController.setAppTeam(appTeam);
   }
 
+  void saveSelectedPlayerApiModel(PlayerApiModel? playerApiModel) {
+    globalVariablesController.setPlayerApiModel(playerApiModel);
+  }
+
   LoginRedirect chooseLoginRedirect(UserApiModel? user) {
     if(user == null) {
       return LoginRedirect.needToLogin;
@@ -199,8 +203,13 @@ class AuthLoginController with StringControllerMixin implements IUserLoginKey {
     else if (isNeededToChooseAppTeam(user)) {
       return LoginRedirect.chooseAppTeam;
     }
-    saveAppTeam(user.teamRoles![0].appTeam);
+    _savePreferencesBeforeLogin(user);
     return LoginRedirect.ok;
+  }
+
+  void _savePreferencesBeforeLogin(UserApiModel user) {
+    saveAppTeam(user.teamRoles![0].appTeam); //TODO vybrat jaký tým
+    saveSelectedPlayerApiModel(user.teamRoles![0].player);
   }
 
   bool isNeededToSetAppTeam(UserApiModel user) {
