@@ -45,6 +45,7 @@ class PlayerApiService extends CrudApiService {
 
   Future<PlayerStats> getPlayerStats(int id) async {
     final String url = "$serverUrl/player/get-stats?playerId=$id";
+    print(url);
     final PlayerStats playerStats = await executeGetRequest(
         Uri.parse(url), (dynamic json) => PlayerStats.fromJson(json), null);
     return playerStats;

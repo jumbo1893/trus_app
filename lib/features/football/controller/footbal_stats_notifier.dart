@@ -2,6 +2,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:trus_app/features/football/controller/current_season_notifier.dart';
 import 'package:trus_app/features/football/repository/football_api_service.dart';
 import 'package:trus_app/features/football/state/football_stats_state.dart';
+import 'package:trus_app/features/general/notifier/app_notifier.dart';
 import 'package:trus_app/models/api/interfaces/dropdown_item.dart';
 import 'package:trus_app/models/api/season_api_model.dart';
 import 'package:trus_app/models/enum/spinner_options.dart';
@@ -20,18 +21,18 @@ StateNotifierProvider<FootballStatsNotifier, FootballStatsState>((ref) {
   );
 });
 
-class FootballStatsNotifier extends StateNotifier<FootballStatsState> implements IDropdownNotifier {
-  final Ref ref;
+class FootballStatsNotifier extends AppNotifier<FootballStatsState> implements IDropdownNotifier {
+
   final FootballApiService footballApiService;
 
   FootballStatsNotifier({
-    required this.ref,
+    required Ref ref,
     required this.footballApiService,
-  }) : super(FootballStatsState.initial()) {
+  }) : super(ref, FootballStatsState.initial()) {
     ref.listen<DropdownState>(currentSeasonNotifierProvider, (_, next) {
       SeasonApiModel? season = next.selected as SeasonApiModel?;
       if (season != null) {
-        _loadStats(season.id! != allSeasonId);
+        Future.microtask(() =>  _loadStats(season.id! != allSeasonId));
       }
     }, fireImmediately: true);
   }
@@ -41,7 +42,11 @@ class FootballStatsNotifier extends StateNotifier<FootballStatsState> implements
       dropdownTexts: const AsyncValue.loading(),
       stats: const AsyncValue.loading(),
     );
-    final response = await footballApiService.getPlayerStats(currentSeason);
+    final response = await runUiWithResult<List<FootballAllIndividualStatsApiModel>>(
+              () => footballApiService.getPlayerStats(currentSeason),
+          showLoading: false,
+          successSnack: null,
+        );
     final SpinnerOption selected =
         (state.selectedText as SpinnerOption?) ?? SpinnerOption.values.first;
 

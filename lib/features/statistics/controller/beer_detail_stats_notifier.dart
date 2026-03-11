@@ -1,5 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:trus_app/features/beer/repository/beer_api_service.dart';
+import 'package:trus_app/features/general/notifier/app_notifier.dart';
 import 'package:trus_app/features/season/controller/season_dropdown_notifier.dart';
 import 'package:trus_app/models/api/interfaces/dropdown_item.dart';
 import 'package:trus_app/models/api/season_api_model.dart';
@@ -19,18 +20,17 @@ StateNotifierProvider<BeerDetailStatsNotifier, BeerDetailStatsState>((ref) {
   );
 });
 
-class BeerDetailStatsNotifier extends StateNotifier<BeerDetailStatsState> implements IDropdownNotifier {
-  final Ref ref;
+class BeerDetailStatsNotifier extends AppNotifier<BeerDetailStatsState> implements IDropdownNotifier {
   final BeerApiService beerApiService;
 
   BeerDetailStatsNotifier({
-    required this.ref,
+    required Ref ref,
     required this.beerApiService,
-  }) : super(BeerDetailStatsState.initial()) {
+  }) : super(ref, BeerDetailStatsState.initial()) {
     ref.listen<DropdownState>(seasonDropdownNotifierProvider(const SeasonArgs(false, false, true)), (_, next) {
       SeasonApiModel? season = next.selected as SeasonApiModel?;
       if (season != null) {
-        _loadBeerStats(season.id!);
+        Future.microtask(() => _loadBeerStats(season.id!));
       }
     }, fireImmediately: true);
   }
@@ -40,9 +40,12 @@ class BeerDetailStatsNotifier extends StateNotifier<BeerDetailStatsState> implem
       dropdownTexts: const AsyncValue.loading(),
       stats: const AsyncValue.loading(),
     );
-    final response = await beerApiService.getBeerStats(
-      seasonId,
-    );
+    final response = await runUiWithResult<List<Stats>>(
+              () => beerApiService.getBeerStats(
+      seasonId),
+          showLoading: false,
+          successSnack: null,
+        );
     state = state.copyWith(
       dropdownTexts: AsyncValue.data(response),
       selectedText: state.selectedText?? response.first,

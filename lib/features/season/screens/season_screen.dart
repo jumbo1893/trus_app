@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:trus_app/features/main/controller/screen_notifier.dart';
 import 'package:trus_app/features/season/screens/add_season_screen.dart';
 
 import '../../../common/widgets/notifier/listview/model_to_string_listview.dart';
 import '../../../common/widgets/screen/custom_consumer_widget.dart';
-import '../../main/screen_controller.dart';
 import '../controller/season_notifier.dart';
 
 class SeasonScreen extends CustomConsumerWidget {
@@ -26,7 +26,7 @@ class SeasonScreen extends CustomConsumerWidget {
           floatingActionButton: FloatingActionButton(
             key: const ValueKey('add_season_floating_button'),
             onPressed: () => ref
-                .read(screenControllerProvider)
+                .read(screenNotifierProvider.notifier)
                 .changeFragment(AddSeasonScreen.id),
             elevation: 4.0,
             child: const Icon(Icons.add),

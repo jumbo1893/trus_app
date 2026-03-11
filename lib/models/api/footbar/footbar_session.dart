@@ -1,5 +1,7 @@
 import 'package:trus_app/common/utils/calendar.dart';
 import 'package:trus_app/common/utils/utils.dart';
+import 'package:trus_app/models/api/match/match_api_model.dart';
+import 'package:trus_app/models/api/player/player_api_model.dart';
 
 class FootbarSession {
   final int id;
@@ -24,9 +26,11 @@ class FootbarSession {
   final int? sprintCount;
   final double? avgSprintSpeed;
   final double? sprintSpeed;
-  final double? sprintDistance;
+  final double? hsrPlus;
   final double? stopAndGo;
   final double? acceleration;
+  final MatchApiModel? match;
+  final PlayerApiModel? player;
 
   FootbarSession({
     required this.id,
@@ -51,9 +55,11 @@ class FootbarSession {
     this.sprintCount,
     this.avgSprintSpeed,
     this.sprintSpeed,
-    this.sprintDistance,
+    this.hsrPlus,
     this.stopAndGo,
     this.acceleration,
+    this.match,
+    this.player
   });
 
   @override
@@ -81,9 +87,12 @@ class FootbarSession {
       sprintCount: json['sprintCount'] as int?,
       avgSprintSpeed: (json['avgSprintSpeed'] as num?)?.toDouble(),
       sprintSpeed: (json['sprintSpeed'] as num?)?.toDouble(),
-      sprintDistance: (json['sprintDistance'] as num?)?.toDouble(),
+      hsrPlus: (json['hsrPlus'] as num?)?.toDouble(),
       stopAndGo: (json['stopAndGo'] as num?)?.toDouble(),
       acceleration: (json['acceleration'] as num?)?.toDouble(),
+      match: MatchApiModel.fromJson(json["match"]),
+      player: PlayerApiModel.fromJson(json["player"]),
+
     );
   }
 
@@ -111,7 +120,7 @@ class FootbarSession {
   }
 
   String runCountString() {
-    return "Počet běhů";
+    return "Počet popoběhnutí";
   }
 
   String sprintCountString() {
@@ -126,7 +135,7 @@ class FootbarSession {
     return "Max sprint";
   }
 
-  String sprintDistanceString() {
+  String hsrPlusString() {
     return "Usprintovaná vzdálenost";
   }
 
@@ -191,7 +200,7 @@ class FootbarSession {
   }
 
   String? timeWithBallValueString() {
-    return doubleInMinutesToMinutesSeconds(timeWithBall);
+    return doubleInSecondsToMinutesSeconds(timeWithBall);
   }
 
   String? activityValueString() {
@@ -203,7 +212,7 @@ class FootbarSession {
   }
 
   String? runCountValueString() {
-    return runCount?.toString();
+    return runCount?.toInt().toString();
   }
 
   String? sprintCountValueString() {
@@ -218,8 +227,8 @@ class FootbarSession {
     return sprintSpeed != null ? ("${msToKmh(sprintSpeed!)} km/h") : null;
   }
 
-  String? sprintDistanceValueString() {
-    return sprintDistance != null ? ("${sprintDistance!.toInt()} m") : null;
+  String? hsrPlusValueString() {
+    return hsrPlus != null ? ("${hsrPlus!.toInt()} m") : null;
   }
 
   String? stopAndGoValueString() {

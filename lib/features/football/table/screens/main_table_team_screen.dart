@@ -2,10 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:trus_app/colors.dart';
 import 'package:trus_app/common/widgets/loader.dart';
-import 'package:trus_app/common/widgets/notifier/loader/loading_overlay.dart';
 import 'package:trus_app/common/widgets/screen/custom_consumer_stateful_widget.dart';
 import 'package:trus_app/features/football/table/screens/table_team_mutual_matches_screen.dart';
-import 'package:trus_app/features/main/screen_controller.dart';
+import 'package:trus_app/features/main/controller/screen_variables_notifier.dart';
 
 import '../controller/football_table_team_detail_notifier.dart';
 import '../football_team_detail_tab.dart';
@@ -82,7 +81,7 @@ class _MainTableTeamScreenState extends ConsumerState<MainTableTeamScreen>
 
   @override
   Widget build(BuildContext context) {
-    final teamId = ref.watch(screenControllerProvider).tableTeamApiModel.id!;
+    final teamId = ref.watch(screenVariablesNotifierProvider).tableTeam.id!;
     final state = ref.watch(footballTableTeamDetailNotifierProvider(teamId));
     final notifier = ref.read(footballTableTeamDetailNotifierProvider(teamId).notifier);
 
@@ -93,25 +92,21 @@ class _MainTableTeamScreenState extends ConsumerState<MainTableTeamScreen>
       return const Loader();
     }
 
-    return LoadingOverlay(
-      state: state,
-      onClearError: () => {},
-      child: Scaffold(
-        appBar: AppBar(
-          backgroundColor: Colors.white,
-          toolbarHeight: 0,
-          bottom: TabBar(
-            controller: controller,
-            labelColor: blackColor,
-            indicatorColor: orangeColor,
-            tabs: state.tabs.map(_tabLabel).toList(),
-            onTap: notifier.changeTabByIndex,
-          ),
-        ),
-        body: TabBarView(
+    return Scaffold(
+      appBar: AppBar(
+        backgroundColor: Colors.white,
+        toolbarHeight: 0,
+        bottom: TabBar(
           controller: controller,
-          children: state.tabs.map(_screenFor).toList(),
+          labelColor: blackColor,
+          indicatorColor: orangeColor,
+          tabs: state.tabs.map(_tabLabel).toList(),
+          onTap: notifier.changeTabByIndex,
         ),
+      ),
+      body: TabBarView(
+        controller: controller,
+        children: state.tabs.map(_screenFor).toList(),
       ),
     );
   }

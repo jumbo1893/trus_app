@@ -3,17 +3,12 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:trus_app/common/widgets/home/birthday_text.dart';
 import 'package:trus_app/features/general/global_variables_controller.dart';
 
-import '../../../common/utils/utils.dart';
-import '../../../common/widgets/builder/column_future_builder.dart';
 import '../../../common/widgets/chart/home_chart.dart';
 import '../../../common/widgets/chart/pick_chart_player.dart';
 import '../../../common/widgets/football/football_match_box.dart';
 import '../../../common/widgets/home/random_fact_box.dart';
-import '../../../common/widgets/loader.dart';
 import '../../../common/widgets/screen/custom_consumer_stateful_widget.dart';
-import '../../general/error/api_executor.dart';
-import '../../main/screen_controller.dart';
-import '../controller/home_controller.dart';
+import '../controller/home_notifier.dart';
 
 class HomeScreen extends CustomConsumerStatefulWidget {
   static const String id = "home-screen";
@@ -31,105 +26,112 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final state = ref.watch(homeNotifierProvider);
+    final notifier = ref.read(homeNotifierProvider.notifier);
+    final appTeam = ref.read(globalVariablesControllerProvider).appTeam;
     final size = MediaQuery.of(context).size;
-    final isLoading = ref.watch(homeLoadingProvider);
-    return Stack(
-      children: [
-        Scaffold(
-          body: RefreshIndicator(
-            color: Colors.orange,
-            backgroundColor: Colors.white,
-            onRefresh: () async {
-              return executeApi<void>(() async {
-                return await ref.read(homeControllerProvider).reloadSetupHome();
-              }, () => setState(() {}), context, false);
-            },
-            notificationPredicate: (ScrollNotification notification) {
-              return notification.depth == 0;
-            },
-            child: FutureBuilder<void>(
-                future: ref.watch(homeControllerProvider).setupHome(),
-                builder: (context, snapshot) {
-                  if (snapshot.connectionState == ConnectionState.waiting) {
-                    return const Loader();
-                  } else if (snapshot.hasError) {
-                    Future.delayed(
-                        Duration.zero,
-                        () => showErrorDialog(snapshot, () {
-                              ref
-                                  .read(screenControllerProvider)
-                                  .changeFragment(HomeScreen.id);
-                            }, context));
-                    return const Loader();
-                  }
-                  return ColumnFutureBuilder(
-                    loadModelFuture:
-                        ref.watch(homeControllerProvider).loadModel(),
-                    loadingScreen: null,
-                    crossAxisAlignment: CrossAxisAlignment.center,
-                    columns: [
-                      Image.asset(
-                        'images/nazev.png',
-                        height: 76,
-                        width: 331,
-                      ),
-                      const SizedBox(
-                        height: 15,
-                      ),
-                      FootballMatchBox(
-                        footballMatchBoxCallback: ref.watch(homeControllerProvider),
-                        footballMatchDetailControllerMixin:
-                            ref.watch(homeControllerProvider),
-                        padding: padding,
-                        isNextMatch: true,
-                        hashKey: ref.read(homeControllerProvider).nextMatchKey(),
-                        appTeamApiModel: ref.read(globalVariablesControllerProvider).appTeam,
-                      ),
-                      FootballMatchBox(
-                        footballMatchBoxCallback: ref.watch(homeControllerProvider),
-                        footballMatchDetailControllerMixin:
-                            ref.watch(homeControllerProvider),
-                        padding: padding,
-                        isNextMatch: false,
-                        hashKey: ref.read(homeControllerProvider).lastMatchKey(),
-                        appTeamApiModel: ref.read(globalVariablesControllerProvider).appTeam,
-                      ),
-                      const SizedBox(
-                        height: 15,
-                      ),
-                      BirthdayText(
-                          viewControllerMixin: ref.watch(homeControllerProvider),
-                          padding: padding,
-                          hashKey:
-                              ref.read(homeControllerProvider).nextBirthdayKey()),
-                      const SizedBox(
-                        key: ValueKey('player_chart'),
-                        height: 15,
-                      ),
-                      PickChartPlayer(
-                          size: size,
-                          padding: padding,
-                          iChartPickedPlayerCallback:
-                              ref.watch(homeControllerProvider),
-                          chartControllerMixin: ref.watch(homeControllerProvider),
-                          hashKey: ref.read(homeControllerProvider).chartKey()),
-                      HomeChart(
-                          chartListControllerMixin:
-                              ref.watch(homeControllerProvider),
-                          hashKey: ref.read(homeControllerProvider).chartsKey()),
-                      RandomFactBox(
-                          stringListControllerMixin:
-                              ref.watch(homeControllerProvider),
-                          hashKey: ref.read(homeControllerProvider).randomFactKey(),
-                          padding: padding)
-                    ],
-                  );
-                }),
-          ),
+
+    return Scaffold(
+      body: RefreshIndicator(
+        color: Colors.orange,
+        backgroundColor: Colors.white,
+        onRefresh: notifier.load,
+        notificationPredicate: (n) => n.depth == 0,
+        child: ListView(
+          physics: const AlwaysScrollableScrollPhysics(),
+          padding: EdgeInsets.zero,
+          children: [
+            state.setup.when(
+              data: (setup) {
+                return Column(
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    const SizedBox(height: 8),
+
+                    Image.asset(
+                      'images/nazev.png',
+                      height: 76,
+                      width: 331,
+                    ),
+                    const SizedBox(height: 15),
+
+                    // NEXT MATCH
+                    FootballMatchBox(
+                      padding: padding,
+                      isNextMatch: true,
+                      detail: setup.nextAndLastFootballMatch[0],
+                      appTeamApiModel: appTeam,
+
+                      onAddPlayers: notifier.onButtonAddPlayersClick,
+                      onAddGoals: notifier.onButtonAddGoalsClick,
+                      onAddBeer: notifier.onButtonAddBeerClick,
+                      onAddFine: notifier.onButtonAddFineClick,
+                      onDetailMatch: notifier.onButtonDetailMatchClick,
+                      onCommonMatches: notifier.onCommonMatchesClick,
+                    ),
+
+                    // LAST MATCH
+                    FootballMatchBox(
+                      padding: padding,
+                      isNextMatch: true,
+                      detail: setup.nextAndLastFootballMatch[1],
+                      appTeamApiModel: appTeam,
+                      onAddPlayers: notifier.onButtonAddPlayersClick,
+                      onAddGoals: notifier.onButtonAddGoalsClick,
+                      onAddBeer: notifier.onButtonAddBeerClick,
+                      onAddFine: notifier.onButtonAddFineClick,
+                      onDetailMatch: notifier.onButtonDetailMatchClick,
+                      onCommonMatches: notifier.onCommonMatchesClick,
+                    ),
+                    const SizedBox(height: 15),
+                    BirthdayText(
+                      padding: padding,
+                      nextBirthdayText: setup.nextBirthday,
+                    ),
+                    const SizedBox(key: ValueKey('player_chart'), height: 15),
+
+                    PickChartPlayer(
+                      size: size,
+                      padding: padding,
+                      chart: setup.chart,
+                    ),
+
+                    HomeChart(
+                      charts: setup.charts,
+                    ),
+
+                    RandomFactBox(
+                      facts: setup.randomFacts,
+                      padding: padding,
+                    ),
+
+                    const SizedBox(height: 24),
+                  ],
+                );
+              },
+
+              // ✅ žádný Loader
+              loading: () => const _HomePlaceholder(),
+
+              // ✅ žádný Loader; error dialog ti ukáže globální uiFeedback,
+              // tady jen placeholder aby šel pull-to-refresh
+              error: (_, __) => const _HomePlaceholder(),
+            ),
+          ],
         ),
-        if (isLoading)
-          const Center(child: CircularProgressIndicator(color: Colors.orange)),
-      ],
+      ),
+    );
+  }
+}
+
+class _HomePlaceholder extends StatelessWidget {
+  const _HomePlaceholder();
+
+  @override
+  Widget build(BuildContext context) {
+    return const SizedBox(
+      height: 600,
+      child: Center(child: Text("")),
     );
   }
 }

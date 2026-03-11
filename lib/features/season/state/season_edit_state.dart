@@ -1,4 +1,3 @@
-import '../../../common/widgets/notifier/loader/loading_state.dart';
 import '../../../models/api/season_api_model.dart';
 import '../../general/state/base_crud_state.dart';
 
@@ -12,9 +11,7 @@ class SeasonEditState extends BaseCrudState<SeasonApiModel> {
     required this.from,
     required this.to,
     SeasonApiModel? model,
-    super.loading,
     super.errors,
-    super.successMessage,
   }) : super(model: model);
 
   @override
@@ -23,18 +20,14 @@ class SeasonEditState extends BaseCrudState<SeasonApiModel> {
     DateTime? from,
     DateTime? to,
     SeasonApiModel? model,
-    LoadingState? loading,
     Map<String, String>? errors,
-    String? successMessage,
   }) {
     return SeasonEditState(
       name: name ?? this.name,
       from: from ?? this.from,
       to: to ?? this.to,
       model: model ?? this.model,
-      loading: loading ?? this.loading,
       errors: errors ?? this.errors,
-      successMessage: successMessage,
     );
   }
 }

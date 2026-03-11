@@ -28,7 +28,6 @@ import 'package:trus_app/models/api/football/table_team_api_model.dart';
 import '../../models/api/match/match_api_model.dart';
 import '../../models/api/player/player_api_model.dart';
 import '../../models/api/season_api_model.dart';
-import '../../models/enum/match_detail_options.dart';
 import '../beer/screens/beer_simple_screen.dart';
 import '../fine/match/screens/fine_match_screen.dart';
 import '../fine/match/screens/multiple_fine_players_screen.dart';
@@ -64,8 +63,8 @@ final screenControllerProvider = Provider((ref) {
       ref: ref);
 });
 
-final matchNotifierArgsProvider =
-StateProvider<MatchNotifierArgs>((ref) => const MatchNotifierArgs.add());
+/*final matchNotifierArgsProvider =
+StateProvider<MatchNotifierArgs>((ref) => const MatchNotifierArgs.add());*/
 
 class ScreenController {
   final Ref ref;
@@ -95,9 +94,11 @@ class ScreenController {
   SeasonApiModel _seasonModel = SeasonApiModel.dummy();
   FineApiModel _fineModel = FineApiModel.dummy();
   List<int> _playerIdList = [];
-  MatchDetailOptions _preferredScreen = MatchDetailOptions.editMatch;
   bool _changedMatch = false;
   String _currentScreenId = HomeScreen.id;
+
+  String get currentScreenId => _currentScreenId;
+
   bool _commonMatchesOnly = false;
   String _statsApi = "";
   MatchNotifierArgs _matchNotifierArgs = const MatchNotifierArgs.add();
@@ -171,12 +172,6 @@ class ScreenController {
     _playerIdList = playerIdList;
   }
 
-  MatchDetailOptions get preferredScreen => _preferredScreen;
-
-  void setPreferredScreen(MatchDetailOptions preferredScreen) {
-    _preferredScreen = preferredScreen;
-  }
-
   FootballMatchApiModel? get footballMatch => _footballMatch;
 
   void setFootballMatch(FootballMatchApiModel footballMatch) {
@@ -208,7 +203,7 @@ class ScreenController {
 
   void setMatchNotifierArgs(MatchNotifierArgs args) {
     _matchNotifierArgs = args; // klidně nech, pokud ho ještě někde používáš
-    ref.read(matchNotifierArgsProvider.notifier).state = args;
+    //ref.read(matchNotifierArgsProvider.notifier).state = args;
   }
 
   bool isScreenFocused(String screenId) {

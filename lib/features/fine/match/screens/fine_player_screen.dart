@@ -1,15 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:trus_app/features/fine/match/controller/fine_player_controller.dart';
-import 'package:trus_app/models/api/match/match_api_model.dart';
+import 'package:trus_app/features/fine/match/controller/fine_player_notifier.dart';
+import 'package:trus_app/features/fine/match/fine_player_args.dart';
+import 'package:trus_app/features/main/controller/screen_variables_notifier.dart';
 
-import '../../../../common/widgets/builder/add_builder.dart';
-import '../../../../common/widgets/builder/error_future_builder.dart';
-import '../../../../common/widgets/button/confirm_button.dart';
+import '../../../../common/widgets/builder/add_list_builder.dart';
+import '../../../../common/widgets/custom_button.dart';
 import '../../../../common/widgets/screen/custom_consumer_stateful_widget.dart';
-import '../../../../models/api/player/player_api_model.dart';
-import '../../../main/screen_controller.dart';
-import 'fine_match_screen.dart';
 
 class FinePlayerScreen extends CustomConsumerStatefulWidget {
   static const String id = "fine-player-screen";
@@ -25,43 +22,36 @@ class FinePlayerScreen extends CustomConsumerStatefulWidget {
 class _FinePlayerScreenState extends ConsumerState<FinePlayerScreen> {
   @override
   Widget build(BuildContext context) {
-    if (ref
-        .read(screenControllerProvider)
-        .isScreenFocused(FinePlayerScreen.id)) {
-      PlayerApiModel player = ref.watch(screenControllerProvider).playerModel;
-      MatchApiModel matchModel = ref.read(screenControllerProvider).matchModel;
-      return ErrorFutureBuilder<void>(
-          future: ref
-              .read(finePlayerController)
-              .setupPlayer(player.id!, matchModel.id!),
-          context: context,
-          widget: Column(
-            children: [
-              Expanded(
-                child: AddBuilder(
-                  addController: ref.read(finePlayerController),
-                  appBarText: player.name,
-                  goal: false,
-                ),
-              ),
-              Padding(
-                padding: const EdgeInsets.only(bottom: 16.0),
-                child: ConfirmButton(
-                  text: "Potvrď změny",
-                  context: context,
-                  confirmOperations: ref.read(finePlayerController),
-                  onOperationComplete: () {
-                    ref
-                        .read(screenControllerProvider)
-                        .changeFragment(FineMatchScreen.id);
-                  },
-                  id: -1,
-                ),
-              )
-            ],
-          ));
-    } else {
-      return Container();
-    }
+    final sc = ref.read(screenVariablesNotifierProvider);
+    final match = sc.matchModel;
+    final player = sc.playerModel;
+    final args = FinePlayerArgs(match.id!, player.id!);
+    final state = ref.watch(finePlayerNotifier(args));
+    final notifier = ref.read(finePlayerNotifier(args).notifier);
+    return Column(
+      children: [
+        Expanded(
+          child: AddListBuilder(
+            appBarText: player.name,
+            goal: true,
+            items: state.receivedFines,
+            onAdd: (index) => notifier.addNumber(
+              index,
+            ),
+            onRemove: (index) => notifier.removeNumber(
+              index,
+            ),
+          ),
+        ),
+
+          Padding(
+            padding: const EdgeInsets.only(bottom: 16.0),
+            child: CustomButton(
+              text: "Potvrď změny",
+              onPressed: notifier.changeFines,
+            ),
+          ),
+      ],
+    );
   }
 }

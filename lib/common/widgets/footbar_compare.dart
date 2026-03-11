@@ -1,142 +1,71 @@
 import 'package:flutter/material.dart';
-import 'package:trus_app/features/mixin/footbar_compare_controller_mixin.dart';
-import 'package:trus_app/models/api/footbar/footbar_account_sessions.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:trus_app/common/widgets/notifier/dropdown/i_dropdown_state.dart';
+import 'package:trus_app/features/footbar/controller/footbar_compare_notifier.dart';
+import 'package:trus_app/features/footbar/state/footbar_compare_state.dart';
 import 'package:trus_app/models/api/footbar/footbar_session.dart';
+import 'package:trus_app/models/api/player/player_api_model.dart';
 
-class FootbarCompare extends StatefulWidget {
-  final FootbarCompareControllerMixin footbarCompareControllerMixin;
-  final String hashKey;
+import '../../models/api/interfaces/dropdown_item.dart';
+import 'notifier/dropdown/custom_dropdown.dart';
+import 'notifier/dropdown/i_dropdown_notifier.dart';
+
+class FootbarCompare extends ConsumerStatefulWidget {
 
   const FootbarCompare({
     Key? key,
-    required this.footbarCompareControllerMixin,
-    required this.hashKey,
   }) : super(key: key);
 
   @override
-  State<FootbarCompare> createState() => _FootbarCompareState();
+  ConsumerState<FootbarCompare> createState() => _FootbarCompareState();
 }
 
-class _FootbarCompareState extends State<FootbarCompare> {
-  int? _selectedLeftId;
-  int? _selectedRightId;
-
-  FootbarAccountSessions? _findById(
-      List<FootbarAccountSessions> list,
-      int? id,
-      ) {
-    if (id == null) return null;
-    for (final item in list) {
-      if (item.id == id) return item;
-    }
-    return null;
-  }
+class _FootbarCompareState extends ConsumerState<FootbarCompare> {
 
   @override
   Widget build(BuildContext context) {
-    return StreamBuilder<List<FootbarAccountSessions>>(
-      stream: widget.footbarCompareControllerMixin.viewValue(widget.hashKey),
-      initialData:
-      widget.footbarCompareControllerMixin.viewValues[widget.hashKey],
-      builder: (context, snapshot) {
-        if (!snapshot.hasData || snapshot.data == null) {
-          return const Center(
-              child: Text("K tomuto zápasu neexistují záznamy"));
-        }
-
-        final accountSessionList = snapshot.data!;
-
-        if (accountSessionList.isEmpty) {
-          return const Center(
-              child: Text("K tomuto zápasu neexistují záznamy"));
-        }
-
-        // --- vybrané položky (inicializace / korekce) ---
-        // levý – primaryUser, jinak první
-        FootbarAccountSessions? left =
-        _findById(accountSessionList, _selectedLeftId);
-
-        if (left == null) {
-          left = accountSessionList.firstWhere(
-                (a) => a.primaryUser,
-            orElse: () => accountSessionList.first,
-          );
-          _selectedLeftId = left.id;
-        }
-
-        // pravý – někdo jiný, jinak klidně stejný
-        FootbarAccountSessions? right =
-        _findById(accountSessionList, _selectedRightId);
-
-        if (right == null) {
-          right = accountSessionList.firstWhere(
-                (a) => a.id != left!.id,
-            orElse: () => left!,
-          );
-          _selectedRightId = right.id;
-        }
-
-        // sessions pro porovnání – beru první session z listu
-        FootbarSession? leftSession =
-        left.sessions.isNotEmpty ? left.sessions.first : null;
-        FootbarSession? rightSession =
-        right.sessions.isNotEmpty ? right.sessions.first : null;
-
-        return Column(
-          children: [
-            // dropdowny nahoře
-            Padding(
-              padding: const EdgeInsets.all(8.0),
-              child: Row(
-                children: [
-                  Expanded(
-                    child: DropdownButton<int>(
-                      isExpanded: true,
-                      value: _selectedLeftId,
-                      items: accountSessionList
-                          .map(
-                            (acc) => DropdownMenuItem<int>(
-                          value: acc.id,
-                          child: Text(acc.listViewTitle()),
-                        ),
-                      )
-                          .toList(),
-                      onChanged: (value) =>
-                          setState(() => _selectedLeftId = value),
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: DropdownButton<int>(
-                      isExpanded: true,
-                      value: _selectedRightId,
-                      items: accountSessionList
-                          .map(
-                            (acc) => DropdownMenuItem<int>(
-                          value: acc.id,
-                          child: Align(
-                            alignment: Alignment.centerRight,
-                            child: Text(acc.listViewTitle()),
-                          ),
-                        ),
-                      )
-                          .toList(),
-                      onChanged: (value) =>
-                          setState(() => _selectedRightId = value),
-                    ),
-                  ),
-                ],
+    var notifier = ref.watch(footbarCompareNotifierProvider.notifier);
+    var state = ref.watch(footbarCompareNotifierProvider);
+    final leftPlayerState = PlayerDropdownState(state, isLeft: true);
+    final rightPlayerState = PlayerDropdownState(state, isLeft: false);
+    final leftPlayerNotifier = PlayerDropdownNotifier(notifier, isLeft: true);
+    final rightPlayerNotifier = PlayerDropdownNotifier(notifier, isLeft: false);
+    print(state.leftSession);
+    if (state.leftSession == null) {
+      return const Center(
+          child: Text("K této sezoně neexistují záznamy"));
+    }
+    return Column(
+      children: [
+        // dropdowny nahoře
+        Padding(
+          padding: const EdgeInsets.all(8.0),
+          child: Row(
+            children: [
+              Expanded(
+                child:  CustomDropdown(
+                  hint: "Vyber hráče",
+                  notifier: leftPlayerNotifier,
+                  state: leftPlayerState,
+                ),
               ),
-            ),
-            const SizedBox(height: 8),
-            // porovnání statistik
-            Expanded(
-              child: _buildStatsComparison(context, leftSession, rightSession),
-            ),
-            const SizedBox(height: 30),
-          ],
-        );
-      },
+              const SizedBox(width: 12),
+              Expanded(
+                child:  CustomDropdown(
+                  hint: "Vyber hráče",
+                  notifier: rightPlayerNotifier,
+                  state: rightPlayerState,
+                ),
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(height: 8),
+        Expanded(
+          child: _buildStatsComparison(context, state.leftSession, state.rightSession),
+        ),
+        const SizedBox(height: 30),
+      ],
     );
   }
 
@@ -276,7 +205,7 @@ class _FootbarCompareState extends State<FootbarCompare> {
       // runCount
       _buildNumericStatRow(
         label:
-        _label(left, right, (s) => s.runCountString(), "Počet běhů"),
+        _label(left, right, (s) => s.runCountString(), "Počet popoběhnutí"),
         leftNum: left?.runCount,
         rightNum: right?.runCount,
         leftText: left?.runCountValueString() ?? "N/A",
@@ -314,12 +243,12 @@ class _FootbarCompareState extends State<FootbarCompare> {
 
       // sprintDistance
       _buildNumericStatRow(
-        label: _label(left, right, (s) => s.sprintDistanceString(),
+        label: _label(left, right, (s) => s.hsrPlusString(),
             "Usprintovaná vzdálenost"),
-        leftNum: left?.sprintDistance,
-        rightNum: right?.sprintDistance,
-        leftText: left?.sprintDistanceValueString() ?? "N/A",
-        rightText: right?.sprintDistanceValueString() ?? "N/A",
+        leftNum: left?.hsrPlus,
+        rightNum: right?.hsrPlus,
+        leftText: left?.hsrPlusValueString() ?? "N/A",
+        rightText: right?.hsrPlusValueString() ?? "N/A",
       ),
 
       // stopAndGo
@@ -458,5 +387,35 @@ class _FootbarCompareState extends State<FootbarCompare> {
       ],
     );
   }
+}
 
+class PlayerDropdownState implements IDropdownState {
+  final FootbarCompareState state;
+  final bool isLeft;
+
+  PlayerDropdownState(this.state, {required this.isLeft});
+
+  @override
+  DropdownItem? getSelected() =>
+      isLeft ? state.leftSelectedPlayer : state.rightSelectedPlayer;
+
+  @override
+  AsyncValue<List<DropdownItem>> getDropdownItems() => state.players;
+}
+
+class PlayerDropdownNotifier implements IDropdownNotifier {
+  final FootbarCompareNotifier notifier;
+  final bool isLeft;
+
+  PlayerDropdownNotifier(this.notifier, {required this.isLeft});
+
+  @override
+  void selectDropdown(DropdownItem item) {
+    final player = item as PlayerApiModel;
+    if (isLeft) {
+      notifier.setLeftPlayer(player);
+    } else {
+      notifier.setRightPlayer(player);
+    }
+  }
 }

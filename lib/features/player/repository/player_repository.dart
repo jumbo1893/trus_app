@@ -2,6 +2,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:trus_app/features/player/repository/player_api_service.dart';
 import 'package:trus_app/models/api/player/player_api_model.dart';
 import 'package:trus_app/models/api/player/player_setup.dart';
+import 'package:trus_app/models/api/player/stats/player_stats.dart';
 
 import '../../general/cache/cached_repository.dart';
 import '../../general/cache/memory_cache.dart';
@@ -24,6 +25,7 @@ class PlayerRepository extends CachedRepository {
 
   static const _listKey = 'player_list';
   static const _setupKey = 'player_setup';
+  static const _statsKey = 'player_stats';
 
 
   /// LIST
@@ -48,8 +50,22 @@ class PlayerRepository extends CachedRepository {
     return data;
   }
 
+  PlayerStats? getCachedPlayerStats(int id) {
+    return getCached<PlayerStats>(key(_statsKey, id));
+  }
+
+  Future<PlayerStats> fetchPlayerStats(int id) async {
+    final data = await api.getPlayerStats(id);
+    setCached(key(_statsKey, id), data);
+    return data;
+  }
+
   void invalidatePlayerSetup(int? id) {
     invalidate(key(_setupKey, id));
+  }
+
+  void invalidatePlayerStats(int id) {
+    invalidate(key(_statsKey, id));
   }
 
   void invalidateList() {

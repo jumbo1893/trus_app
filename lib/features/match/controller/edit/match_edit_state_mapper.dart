@@ -68,7 +68,6 @@ class MatchEditStateMapper {
       FootballMatchDetailState prev,
       ) {
     return prev.copyWith(
-      loading: prev.loading.idle(),
       nameAndResult: d.footballMatch.toStringWithTeamsAndResult(),
       dateAndLeague: d.footballMatch.returnRoundLeagueDate(),
       stadium: d.footballMatch.stadiumToSimpleString(),

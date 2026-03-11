@@ -1,26 +1,26 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:trus_app/features/player/controller/player_notifier.dart';
 import 'package:trus_app/features/player/repository/player_repository.dart';
+import 'package:trus_app/features/player/screens/player_screen.dart';
 import 'package:trus_app/features/player/state/player_edit_state.dart';
 import 'package:trus_app/models/api/player/player_api_model.dart';
 import 'package:trus_app/models/api/player/player_setup.dart';
 
 import '../../../common/utils/field_validator.dart';
 import '../../../common/widgets/notifier/dropdown/i_dropdown_notifier.dart';
-import '../../../common/widgets/notifier/loader/loading_state.dart';
 import '../../../models/api/football/football_player_api_model.dart';
 import '../../../models/api/interfaces/dropdown_item.dart';
+import '../../../models/enum/crud.dart';
 import '../../general/notifier/base_crud_notifier.dart';
-import '../../general/repository/api_result.dart';
-import '../../main/screen_controller.dart';
 import '../player_mode.dart';
 import '../player_notifier_args.dart';
 
 final playerEditNotifierProvider = StateNotifierProvider.autoDispose
     .family<PlayerEditNotifier, PlayerEditState, PlayerNotifierArgs>((ref, args) {
   return PlayerEditNotifier(
+    ref: ref,
     repository: ref.read(playerRepositoryProvider),
     playerNotifierArgs: args,
-    screenController: ref.read(screenControllerProvider),
   );
 });
 
@@ -30,17 +30,21 @@ class PlayerEditNotifier
   final PlayerNotifierArgs playerNotifierArgs;
 
   PlayerEditNotifier({
+    required Ref ref,
     required this.repository,
     required this.playerNotifierArgs,
-    required ScreenController screenController,
   }) : super(
+    ref,
     PlayerEditState(
       footballPlayers: const AsyncValue.loading(),
-      playerStats: const [], name: "", birthdate: DateTime(2000, 1, 1), fan: false, active: true,
+      playerStats: const [],
+      name: "",
+      birthdate: DateTime(2000, 1, 1),
+      fan: false,
+      active: true,
     ),
-    screenController,
   ) {
-    _load(args: playerNotifierArgs);
+    Future.microtask(() => _load(args: playerNotifierArgs));
   }
 
   /// =========================
@@ -52,16 +56,16 @@ class PlayerEditNotifier
 
     if (cached != null) {
       _applySetup(cached);
-    } else {
-      state = copyWithState(
-        loading: state.loading.loading("Načítám hráče…"),
-      );
     }
     if (args.playerMode == PlayerMode.edit) {
       //není potřeba volat playerSetup znovu, je již v cache po view
       return;
     }
-    final setup = await repository.fetchPlayerSetup(playerId);
+    final setup = await runUiWithResult<PlayerSetup>(
+          () => repository.fetchPlayerSetup(playerId),
+      showLoading: (cached == null),
+      successSnack: null,
+    );
     if (!mounted) return;
 
     _applySetup(setup);
@@ -81,13 +85,62 @@ class PlayerEditNotifier
       achievementPlayerDetail: setup.achievementPlayerDetail,
       playerStats: setup.playerStats,
       model: setup.player,
-      loading: state.loading.idle(),
     );
   }
+
+  // ========= form setters =========
+
+  void setName(String value) => state = state.copyWith(name: value);
+  void setFan(bool fan) => state = state.copyWith(fan: fan);
+  void setActive(bool active) => state = state.copyWith(active: active);
+  void setBirthday(DateTime birthdate) => state = state.copyWith(birthdate: birthdate);
+
 
   /// =========================
   /// CRUD
   /// =========================
+
+  void submitCrud(Crud crud) {
+    submit(
+      crud: crud,
+      loadingText: switch (crud) {
+        Crud.create => "Přidávám hráče…",
+        Crud.update => "Upravuji hráče…",
+        Crud.delete => "Mažu hráče…",
+      },
+      successSnack: switch (crud) {
+        Crud.create => "Hráč přidán",
+        Crud.update => "Hráč upraven",
+        Crud.delete => "Hráč smazán",
+      },
+      onSuccessRedirect: PlayerScreen.id,
+      invalidateProvider: playerNotifierProvider,
+    );
+  }
+
+  @override
+  selectDropdown(DropdownItem item) {
+    state = state.copyWith(selectedFootballPlayer: item);
+  }
+
+  @override
+  Future<void> create(PlayerApiModel model) async {
+    await repository.api.addPlayer(model);
+    repository.invalidatePlayerSetup(null);
+  }
+
+  @override
+  Future<void> update(PlayerApiModel model) async {
+    await repository.api.editPlayer(model, model.id!);
+    repository.invalidatePlayerSetup(model.id);
+  }
+
+  @override
+  Future<void> delete(PlayerApiModel model) async {
+    await repository.api.deletePlayer(model.id!);
+    repository.invalidatePlayerSetup(model.id);
+  }
+
   @override
   PlayerApiModel buildModel() {
     return PlayerApiModel(
@@ -100,22 +153,6 @@ class PlayerEditNotifier
     );
   }
 
-  void setName(String value) {
-    state = state.copyWith(name: value);
-  }
-
-  void setFan(bool fan) {
-    state = state.copyWith(fan: fan);
-  }
-
-  void setActive(bool active) {
-    state = state.copyWith(active: active);
-  }
-
-  void setBirthday(DateTime birthdate) {
-    state = state.copyWith(birthdate: birthdate);
-  }
-
   FootballPlayerApiModel? _getPickedFootballer(DropdownItem? dropdownItem) {
     FootballPlayerApiModel? footballer = dropdownItem as FootballPlayerApiModel?;
     if(footballer == null || footballer.id! == 0) {
@@ -124,33 +161,8 @@ class PlayerEditNotifier
     return footballer;
   }
 
-  @override
-  selectDropdown(DropdownItem item) {
-    state = state.copyWith(selectedFootballPlayer: item);
-  }
+  // ========= validation + BaseCrud glue =========
 
-  @override
-  Future<ApiResult<void>> create(PlayerApiModel model) async {
-    final result = await executeApi(() => repository.api.addPlayer(model));
-    repository.invalidatePlayerSetup(null);
-    return result;
-  }
-
-  @override
-  Future<ApiResult<void>> update(PlayerApiModel model) async {
-    final result =
-        await executeApi(() => repository.api.editPlayer(model, model.id!));
-    repository.invalidatePlayerSetup(model.id);
-    return result;
-  }
-
-  @override
-  Future<ApiResult<void>> delete(PlayerApiModel model) async {
-    final result =
-        await executeApi(() => repository.api.deletePlayer(model.id!));
-    repository.invalidatePlayerSetup(model.id);
-    return result;
-  }
 
   @override
   bool validate() {
@@ -165,14 +177,10 @@ class PlayerEditNotifier
 
   @override
   PlayerEditState copyWithState({
-    LoadingState? loading,
     Map<String, String>? errors,
-    String? successMessage,
   }) {
     return state.copyWith(
-      loading: loading,
       errors: errors,
-      successMessage: successMessage,
     );
   }
 }

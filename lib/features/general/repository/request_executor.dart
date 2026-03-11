@@ -29,7 +29,7 @@ class RequestExecutor extends ResponseValidator {
 
   HeaderProvider get _headerProvider => HeaderProvider(ref);
 
-  final Duration timeoutDuration = const Duration(seconds: 30);
+  final Duration timeoutDuration = const Duration(seconds: 120);
 
   //final List<Future<void> Function()> _requestQueue = [];
 

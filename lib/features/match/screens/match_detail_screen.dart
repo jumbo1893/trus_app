@@ -2,12 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:trus_app/colors.dart';
 import 'package:trus_app/common/widgets/loader.dart';
-import 'package:trus_app/common/widgets/notifier/loader/loading_overlay.dart';
 import 'package:trus_app/common/widgets/screen/custom_consumer_stateful_widget.dart';
 import 'package:trus_app/features/match/controller/edit/match_edit_notifier.dart';
 import 'package:trus_app/models/enum/match_detail_options.dart';
 
-import '../../main/screen_controller.dart';
+import '../../main/controller/screen_variables_notifier.dart';
 import 'edit_match_screen.dart';
 import 'football_match_detail_away_screen.dart';
 import 'football_match_detail_home_screen.dart';
@@ -141,25 +140,21 @@ class _MatchDetailScreenState extends ConsumerState<MatchDetailScreen>
       return const Loader();
     }
 
-    return LoadingOverlay(
-      state: state,
-      onClearError: () => {},
-      child: Scaffold(
-        appBar: AppBar(
-          backgroundColor: Colors.white,
-          toolbarHeight: 0,
-          bottom: TabBar(
+    return Scaffold(
+      appBar: AppBar(
+        backgroundColor: Colors.white,
+        toolbarHeight: 0,
+        bottom: TabBar(
 
-            controller: controller,
-            labelColor: blackColor,
-            indicatorColor: orangeColor,
-            tabs: options.map(_tabLabel).toList(),
-          ),
-        ),
-        body: TabBarView(
           controller: controller,
-          children: options.map(_screenFor).toList(),
+          labelColor: blackColor,
+          indicatorColor: orangeColor,
+          tabs: options.map(_tabLabel).toList(),
         ),
+      ),
+      body: TabBarView(
+        controller: controller,
+        children: options.map(_screenFor).toList(),
       ),
     );
   }

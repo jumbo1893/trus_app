@@ -3,10 +3,7 @@ import 'package:trus_app/common/widgets/notifier/listview/i_listview_state.dart'
 import 'package:trus_app/models/api/football/football_match_api_model.dart';
 import 'package:trus_app/models/api/interfaces/model_to_string.dart';
 
-import '../../../common/widgets/notifier/loader/loading_state.dart';
-
 class FootballMatchDetailState implements IListviewState {
-  final LoadingState loading;
   final String nameAndResult;
   final String dateAndLeague;
   final String stadium;
@@ -28,7 +25,6 @@ class FootballMatchDetailState implements IListviewState {
 
 
   const FootballMatchDetailState({
-    required this.loading,
     required this.nameAndResult,
     required this.dateAndLeague,
     required this.stadium,
@@ -50,7 +46,6 @@ class FootballMatchDetailState implements IListviewState {
   });
 
   FootballMatchDetailState copyWith({
-    LoadingState? loading,
     String? nameAndResult,
     String? dateAndLeague,
     String? stadium,
@@ -71,7 +66,6 @@ class FootballMatchDetailState implements IListviewState {
     String? aggregateMatches,
   }) {
     return FootballMatchDetailState(
-      loading: loading ?? this.loading,
       nameAndResult: nameAndResult ?? this.nameAndResult,
       dateAndLeague: dateAndLeague ?? this.dateAndLeague,
       stadium: stadium ?? this.stadium,
@@ -94,7 +88,6 @@ class FootballMatchDetailState implements IListviewState {
   }
 
   FootballMatchDetailState.init({
-    this.loading = const LoadingState(),
     this.nameAndResult = "",
     this.dateAndLeague = "",
     this.stadium = "",

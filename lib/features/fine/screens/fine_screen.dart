@@ -2,10 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:trus_app/features/fine/controller/fine_notifier.dart';
 import 'package:trus_app/features/fine/screens/add_fine_screen.dart';
+import 'package:trus_app/features/main/controller/screen_notifier.dart';
 
 import '../../../common/widgets/notifier/listview/model_to_string_listview.dart';
 import '../../../common/widgets/screen/custom_consumer_widget.dart';
-import '../../main/screen_controller.dart';
 
 class FineScreen extends CustomConsumerWidget {
   static const String id = "fine-screen";
@@ -26,7 +26,7 @@ class FineScreen extends CustomConsumerWidget {
         floatingActionButton: FloatingActionButton(
           key: const ValueKey('add_fine_floating_button'),
           onPressed: () => ref
-              .read(screenControllerProvider)
+              .read(screenNotifierProvider.notifier)
               .changeFragment(AddFineScreen.id),
           elevation: 4.0,
           child: const Icon(Icons.add),

@@ -45,13 +45,13 @@ class _FineMatchListviewState extends State<FineMatchListview> {
                     },
                     child: Padding(
                       padding:
-                          const EdgeInsets.only(bottom: 8.0, left: 8, right: 8),
+                      const EdgeInsets.only(bottom: 8.0, left: 8, right: 8),
                       child: Container(
                         decoration: const BoxDecoration(
                             border: Border(
                                 bottom: BorderSide(
-                          color: Colors.grey,
-                        ))),
+                                  color: Colors.grey,
+                                ))),
                         child: ListTile(
                           title: Padding(
                             padding: const EdgeInsets.only(bottom: 16),
@@ -64,7 +64,7 @@ class _FineMatchListviewState extends State<FineMatchListview> {
                           subtitle: Text(
                             player.toStringForListView(),
                             style:
-                                const TextStyle(color: listviewSubtitleColor),
+                            const TextStyle(color: listviewSubtitleColor),
                           ),
                         ),
                       ),
@@ -79,8 +79,8 @@ class _FineMatchListviewState extends State<FineMatchListview> {
                     decoration: const BoxDecoration(
                         border: Border(
                             bottom: BorderSide(
-                      color: Colors.grey,
-                    ))),
+                              color: Colors.grey,
+                            ))),
                     child: CustomCheckboxListTile(
                       initValue: widget.checkedPlayers.contains(player),
                       player: player,

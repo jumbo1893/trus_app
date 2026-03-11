@@ -1,7 +1,6 @@
 // lib/features/football/table/state/football_table_team_state.dart
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:trus_app/common/widgets/notifier/listview/i_listview_state.dart';
-import 'package:trus_app/common/widgets/notifier/loader/loading_state.dart';
 import 'package:trus_app/models/api/football/detail/football_team_detail.dart';
 import 'package:trus_app/models/api/football/football_match_api_model.dart';
 import 'package:trus_app/models/api/interfaces/model_to_string.dart';
@@ -20,7 +19,6 @@ class FootballTableTeamState extends BaseCrudState<FootballTeamDetail> implement
     required this.detail,
     required this.tabs,
     required this.activeTab,
-    super.loading,
   });
 
   factory FootballTableTeamState.initial() => const FootballTableTeamState(
@@ -35,15 +33,12 @@ class FootballTableTeamState extends BaseCrudState<FootballTeamDetail> implement
     List<FootballTeamDetailTab>? tabs,
     FootballTeamDetailTab? activeTab,
     FootballTeamDetail? model,
-    LoadingState? loading,
     Map<String, String>? errors,
-    String? successMessage,
   }) {
     return FootballTableTeamState(
       detail: detail ?? this.detail,
       tabs: tabs ?? this.tabs,
       activeTab: activeTab ?? this.activeTab,
-      loading: loading ?? this.loading,
     );
   }
 

@@ -3,9 +3,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:trus_app/colors.dart';
 import 'package:trus_app/common/widgets/text_field_with_underline.dart';
 import 'package:trus_app/features/achievement/screens/view_player_achievement_detail_screen.dart';
+import 'package:trus_app/features/main/controller/screen_notifier.dart';
+import 'package:trus_app/features/main/controller/screen_variables_notifier.dart';
 import 'package:trus_app/models/api/achievement/achievement_player_detail.dart';
 
-import '../../../../features/main/screen_controller.dart';
 import '../../../../models/api/achievement/player_achievement_api_model.dart';
 import '../../utils/utils.dart';
 
@@ -63,10 +64,10 @@ class _AchievementView extends ConsumerState<AchievementView> {
         return GestureDetector(
           onTap: () {
             ref
-                .read(screenControllerProvider)
+                .read(screenVariablesNotifierProvider.notifier)
                 .setPlayerAchievement(achievement);
             ref
-                .read(screenControllerProvider)
+                .read(screenNotifierProvider.notifier)
                 .changeFragment(ViewPlayerAchievementDetailScreen.id);
           },
           child: Column(

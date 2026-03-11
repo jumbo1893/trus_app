@@ -46,9 +46,13 @@ class _MultiSelectBottomSheetState<T extends ModelToString>
         return Column(
           children: [
             Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8),
-              child: Text(widget.title,
-                  style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
+              padding: const EdgeInsets.symmetric(
+                  horizontal: 16.0, vertical: 8),
+              child: Text(
+                widget.title,
+                style: const TextStyle(
+                    fontSize: 16, fontWeight: FontWeight.w600),
+              ),
             ),
             const Divider(color: Colors.black, height: 1),
             Expanded(
@@ -61,15 +65,16 @@ class _MultiSelectBottomSheetState<T extends ModelToString>
                 ),
                 itemBuilder: (context, index) {
                   final item = widget.models[index];
-                  final selected = _tempSelected
-                      .any((e) => e.getId() == item.getId());
+                  final selected =
+                  _tempSelected.any((e) => e.getId() == item.getId());
 
                   return InkWell(
                     onTap: () {
                       setState(() {
                         selected
                             ? _tempSelected.removeWhere(
-                                (e) => e.getId() == item.getId())
+                              (e) => e.getId() == item.getId(),
+                        )
                             : _tempSelected.add(item);
                       });
                     },
@@ -81,7 +86,8 @@ class _MultiSelectBottomSheetState<T extends ModelToString>
                             setState(() {
                               selected
                                   ? _tempSelected.removeWhere(
-                                      (e) => e.getId() == item.getId())
+                                    (e) => e.getId() == item.getId(),
+                              )
                                   : _tempSelected.add(item);
                             });
                           },
@@ -95,23 +101,35 @@ class _MultiSelectBottomSheetState<T extends ModelToString>
                 },
               ),
             ),
-            ElevatedButton(
-              style: ButtonStyle(
-                backgroundColor: WidgetStateProperty.all<Color>(Colors.orange),
-                shape: WidgetStateProperty.all<RoundedRectangleBorder>(
-                  RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(18.0),
-                    side: const BorderSide(color: Colors.orange),
+            SafeArea(
+              top: false,
+              child: Padding(
+                padding: const EdgeInsets.all(16.0),
+                child: SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton(
+                    style: ButtonStyle(
+                      backgroundColor:
+                      WidgetStateProperty.all<Color>(Colors.orange),
+                      shape: WidgetStateProperty.all<RoundedRectangleBorder>(
+                        RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(18.0),
+                          side: const BorderSide(color: Colors.orange),
+                        ),
+                      ),
+                    ),
+                    onPressed: () {
+                      widget.onChanged(_tempSelected);
+                      Navigator.pop(context);
+                    },
+                    child: const Text(
+                      "Potvrdit",
+                      style: TextStyle(color: Colors.black),
+                    ),
                   ),
                 ),
               ),
-              onPressed: () {
-                widget.onChanged(_tempSelected);
-                Navigator.pop(context);
-              },
-              child: const Text("Potvrdit", style: TextStyle(color: Colors.black)),
-
-            )
+            ),
           ],
         );
       },

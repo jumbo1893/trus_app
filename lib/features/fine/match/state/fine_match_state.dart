@@ -3,9 +3,7 @@ import 'package:trus_app/features/general/state/loading_error_state.dart';
 import 'package:trus_app/models/api/match/match_api_model.dart';
 import 'package:trus_app/models/api/player/player_api_model.dart';
 
-import '../../../../common/widgets/notifier/loader/loading_state.dart';
-
-class FineMatchState extends LoadingErrorState {
+class FineMatchState extends ErrorState {
   final AsyncValue<List<MatchApiModel>> matches;
   final MatchApiModel? selectedMatch;
   final List<PlayerApiModel> playersInMatch;
@@ -22,9 +20,7 @@ class FineMatchState extends LoadingErrorState {
     required this.checkedPlayers,
     required this.allPlayers,
     required this.multiCheck,
-    super.loading,
     super.errors,
-    super.successMessage,
   });
 
   factory FineMatchState.initial() => const FineMatchState(
@@ -46,9 +42,7 @@ class FineMatchState extends LoadingErrorState {
     List<PlayerApiModel>? checkedPlayers,
     List<PlayerApiModel>? allPlayers,
     bool? multiCheck,
-    LoadingState? loading,
     Map<String, String>? errors,
-    String? successMessage,
   }) {
     return FineMatchState(
       matches: matches ?? this.matches,
@@ -59,9 +53,7 @@ class FineMatchState extends LoadingErrorState {
       checkedPlayers: checkedPlayers ?? this.checkedPlayers,
       allPlayers: allPlayers ?? this.allPlayers,
       multiCheck: multiCheck ?? this.multiCheck,
-      loading: loading ?? this.loading,
       errors: errors ?? this.errors,
-      successMessage: successMessage ?? this.successMessage,
     );
   }
 }

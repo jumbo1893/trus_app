@@ -8,7 +8,6 @@ import 'package:url_launcher/url_launcher.dart';
 import '../../../common/widgets/builder/models_error_future_builder.dart';
 import '../../../common/widgets/dropdown/custom_dropdown.dart';
 import '../../../common/widgets/screen/custom_consumer_widget.dart';
-import '../../main/screen_controller.dart';
 
 class StravaFootballMatchScreen extends CustomConsumerWidget {
   static const String id = "strava-football-match-screen";
@@ -24,7 +23,7 @@ class StravaFootballMatchScreen extends CustomConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final provider = stravaControllerProvider;
     final isLoading = ref.watch(matchLoadingProvider);
-    if (ref.read(screenControllerProvider).isScreenFocused(StravaFootballMatchScreen.id)) {
+    if (false) {
       final size = MediaQuery.of(context).size;
       const double padding = 8.0;
       return Scaffold(

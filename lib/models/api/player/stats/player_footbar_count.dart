@@ -1,5 +1,5 @@
 class PlayerFootbarCount {
-  final int totalDistance;
+  final double totalDistance;
 
   PlayerFootbarCount({
     required this.totalDistance,
@@ -9,5 +9,10 @@ class PlayerFootbarCount {
     return PlayerFootbarCount(
       totalDistance: json["totalDistance"],
     );
+  }
+
+  String totalDistanceInKmToString() {
+    double km = totalDistance/1000;
+    return km.toStringAsFixed(2);
   }
 }

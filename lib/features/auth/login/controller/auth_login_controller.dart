@@ -6,6 +6,7 @@ import 'package:trus_app/common/repository/exception/field_validation_exception.
 import 'package:trus_app/common/repository/exception/model/field_model.dart';
 import 'package:trus_app/features/auth/app_team/screens/app_team_registration_screen.dart';
 import 'package:trus_app/features/general/global_variables_controller.dart';
+import 'package:trus_app/features/general/notifier/global_variables_notifier.dart';
 import 'package:trus_app/features/helper/shared_prefs_helper.dart';
 import 'package:trus_app/features/mixin/string_controller_mixin.dart';
 import 'package:trus_app/models/api/auth/app_team_api_model.dart';
@@ -25,7 +26,7 @@ import '../widget/i_user_login_key.dart';
 final authLoginControllerProvider = Provider((ref) {
   final authRepository = ref.watch(authRepositoryProvider);
   final globalVariablesController = ref.watch(globalVariablesControllerProvider);
-  return AuthLoginController(authRepository: authRepository, globalVariablesController: globalVariablesController);
+  return AuthLoginController(authRepository: authRepository, globalVariablesController: globalVariablesController, globalVariablesNotifier: ref.read(globalVariablesProvider.notifier));
   });
 
 final userDataAuthProvider = FutureProvider((ref) {
@@ -36,6 +37,7 @@ final userDataAuthProvider = FutureProvider((ref) {
 class AuthLoginController with StringControllerMixin implements IUserLoginKey {
   final AuthRepository authRepository;
   final GlobalVariablesController globalVariablesController;
+  final GlobalVariablesNotifier globalVariablesNotifier;
   late UserApiModel savedPrefUser;
   late UserApiModel loadedUser;
   final SharedPrefsHelper sharedPrefsHelper = SharedPrefsHelper();
@@ -45,6 +47,7 @@ class AuthLoginController with StringControllerMixin implements IUserLoginKey {
   AuthLoginController({
     required this.authRepository,
     required this.globalVariablesController,
+    required this.globalVariablesNotifier,
   });
 
   void loadUser() {
@@ -184,10 +187,12 @@ class AuthLoginController with StringControllerMixin implements IUserLoginKey {
 
   void saveAppTeam(AppTeamApiModel appTeam) {
     globalVariablesController.setAppTeam(appTeam);
+    globalVariablesNotifier.setAppTeam(appTeam);
   }
 
   void saveSelectedPlayerApiModel(PlayerApiModel? playerApiModel) {
     globalVariablesController.setPlayerApiModel(playerApiModel);
+    globalVariablesNotifier.setPlayer(playerApiModel);
   }
 
   LoginRedirect chooseLoginRedirect(UserApiModel? user) {

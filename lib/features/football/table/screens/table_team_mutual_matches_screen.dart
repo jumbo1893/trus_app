@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:trus_app/features/main/controller/screen_variables_notifier.dart';
 
 import '../../../../colors.dart';
 import '../../../../common/widgets/notifier/listview/model_to_string_listview.dart';
-import '../../../main/screen_controller.dart';
 import '../controller/football_table_team_detail_notifier.dart';
 
 class TableTeamMutualMatchesScreen extends ConsumerStatefulWidget {
@@ -21,7 +21,7 @@ class _TableTeamMutualMatchesScreenState
     extends ConsumerState<TableTeamMutualMatchesScreen> {
   @override
   Widget build(BuildContext context) {
-    final teamId = ref.watch(screenControllerProvider).tableTeamApiModel.id!;
+    final teamId = ref.watch(screenVariablesNotifierProvider).tableTeam.id!;
     final state = ref.watch(footballTableTeamDetailNotifierProvider(teamId));
     final notifier = ref.read(footballTableTeamDetailNotifierProvider(teamId).notifier);
     return Padding(

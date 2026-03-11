@@ -1,6 +1,5 @@
 import 'package:trus_app/models/api/achievement/achievement_detail.dart';
 
-import '../../../common/widgets/notifier/loader/loading_state.dart';
 import '../../general/state/base_crud_state.dart';
 
 class AchievementViewState extends BaseCrudState<AchievementDetail> {
@@ -29,9 +28,7 @@ class AchievementViewState extends BaseCrudState<AchievementDetail> {
     this.manually,
     this.accomplished,
     AchievementDetail? model,
-    super.loading,
     super.errors,
-    super.successMessage,
   }) : super(model: model);
 
   factory AchievementViewState.initial() {
@@ -53,9 +50,7 @@ class AchievementViewState extends BaseCrudState<AchievementDetail> {
     String? successRate,
     String? accomplishedPlayers,
     AchievementDetail? model,
-    LoadingState? loading,
     Map<String, String>? errors,
-    String? successMessage,
   }) {
     return AchievementViewState(
       name: name ?? this.name,
@@ -64,9 +59,7 @@ class AchievementViewState extends BaseCrudState<AchievementDetail> {
       successRate: successRate ?? this.successRate,
       accomplishedPlayers: accomplishedPlayers ?? this.accomplishedPlayers,
       model: model ?? this.model,
-      loading: loading ?? this.loading,
       errors: errors ?? this.errors,
-      successMessage: successMessage,
     );
   }
 }

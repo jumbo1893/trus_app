@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:trus_app/features/main/controller/screen_notifier.dart';
 
 import '../../../features/home/screens/home_screen.dart';
-import '../../../features/main/screen_controller.dart';
 import '../../utils/utils.dart';
 import '../loader.dart';
 
@@ -42,7 +42,7 @@ class ColumnFutureBuilder<T> extends ConsumerWidget {
                         () => showErrorDialog(
                             snapshot,
                             () => ref
-                                .read(screenControllerProvider)
+                                .read(screenNotifierProvider.notifier)
                                 .changeFragment(HomeScreen.id),
                             context));
                     return const Loader();

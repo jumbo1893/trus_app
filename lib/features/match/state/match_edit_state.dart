@@ -4,7 +4,6 @@ import 'package:trus_app/models/api/match/match_api_model.dart';
 import 'package:trus_app/models/api/player/player_api_model.dart';
 
 import '../../../common/widgets/notifier/dropdown/i_dropdown_state.dart';
-import '../../../common/widgets/notifier/loader/loading_state.dart';
 import '../../../models/api/interfaces/dropdown_item.dart';
 import '../../../models/enum/match_detail_options.dart';
 import '../../general/state/base_crud_state.dart';
@@ -40,9 +39,7 @@ class MatchEditState extends BaseCrudState<MatchApiModel> implements IDropdownSt
     required this.initialTab,
     required this.footballMatchDetailState,
     MatchApiModel? model,
-    super.loading,
     super.errors,
-    super.successMessage,
   }) : super(model: model);
 
   @override
@@ -61,9 +58,7 @@ class MatchEditState extends BaseCrudState<MatchApiModel> implements IDropdownSt
     FootballMatchDetailState? footballMatchDetailState,
     MatchDetailOptions? initialTab,
     MatchApiModel? model,
-    LoadingState? loading,
     Map<String, String>? errors,
-    String? successMessage,
   }) {
     return MatchEditState(
       name: name ?? this.name,
@@ -80,9 +75,7 @@ class MatchEditState extends BaseCrudState<MatchApiModel> implements IDropdownSt
       initialTab: initialTab ?? this.initialTab,
       footballMatchDetailState: footballMatchDetailState ?? this.footballMatchDetailState,
       model: model ?? this.model,
-      loading: loading ?? this.loading,
       errors: errors ?? this.errors,
-      successMessage: successMessage,
     );
   }
 

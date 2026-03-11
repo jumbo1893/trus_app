@@ -3,10 +3,9 @@ import 'dart:convert';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:trus_app/config.dart';
-import 'package:trus_app/models/api/footbar/footbar_account_sessions.dart';
 import 'package:trus_app/models/api/footbar/footbar_profile.dart';
+import 'package:trus_app/models/api/footbar/footbar_session_setup.dart';
 
-import '../../../models/api/interfaces/json_and_http_converter.dart';
 import '../../general/repository/crud_api_service.dart';
 
 final footbarApiServiceProvider =
@@ -15,13 +14,13 @@ final footbarApiServiceProvider =
 class FootbarApiService extends CrudApiService {
   FootbarApiService(super.ref);
 
-  Future<List<FootbarAccountSessions>> getFootballMatchSessions(int footballMatchId) async {
-    final queryParameters = {
-      'footballMatchId': footballMatchId.toString(),
-    };
-    final decodedBody =
-    await getModelsWithVariableEndpoint<JsonAndHttpConverter>(footbarApi, queryParameters, "get-football-match");
-    return decodedBody.map((model) => model as FootbarAccountSessions).toList();
+  Future<FootbarSessionSetup> getSessionSetup(int? seasonId) async {
+    final String url = seasonId == null
+        ? "$serverUrl/$footbarApi/sessions/setup"
+        : "$serverUrl/$footbarApi/sessions/setup?seasonId=$seasonId";
+    final FootbarSessionSetup footbarSessionSetup = await executeGetRequest(
+        Uri.parse(url), (dynamic json) => FootbarSessionSetup.fromJson(json), null);
+    return footbarSessionSetup;
   }
 
   Future<void> syncActivities() async {

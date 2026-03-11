@@ -3,8 +3,9 @@ import 'dart:math';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:trus_app/features/beer/lines/new_player_lines_calculator.dart';
 import 'package:trus_app/features/beer/state/beer_state.dart';
+import 'package:trus_app/features/general/notifier/app_notifier.dart';
 import 'package:trus_app/features/home/screens/home_screen.dart';
-import 'package:trus_app/features/main/screen_controller.dart';
+import 'package:trus_app/features/main/controller/screen_variables_notifier.dart';
 import 'package:trus_app/models/api/beer/beer_list.dart';
 import 'package:trus_app/models/api/beer/beer_no_match.dart';
 import 'package:trus_app/models/api/beer/beer_no_match_with_player.dart';
@@ -13,6 +14,7 @@ import 'package:trus_app/models/api/match/match_api_model.dart';
 import 'package:trus_app/models/api/season_api_model.dart';
 
 import '../../../common/widgets/notifier/dropdown/dropdown_state.dart';
+import '../../../models/api/beer/beer_multi_add_response.dart';
 import '../../season/controller/season_dropdown_notifier.dart';
 import '../../season/season_args.dart';
 import '../beer_screen_mode.dart';
@@ -23,15 +25,12 @@ final beerNotifierProvider =
     StateNotifierProvider.autoDispose<BeerNotifier, BeerState>((ref) {
   return BeerNotifier(
     beerApi: ref.read(beerApiServiceProvider),
-    screenController: ref.read(screenControllerProvider),
     ref: ref,
   );
 });
 
-class BeerNotifier extends StateNotifier<BeerState> {
+class BeerNotifier extends AppNotifier<BeerState> {
   final BeerApiService beerApi;
-  final ScreenController screenController;
-  final Ref ref;
 
   static const _seasonArgs = SeasonArgs(false, true, true);
 
@@ -40,10 +39,9 @@ class BeerNotifier extends StateNotifier<BeerState> {
 
   BeerNotifier({
     required this.beerApi,
-    required this.screenController,
-    required this.ref,
-  }) : super(BeerState.initial()) {
-    // ✅ posloucháme sezonu uvnitř notifieru (stejně jako MatchNotifier)
+    required Ref ref,
+  }) : super(ref, BeerState.initial()) {
+    // ✅ posloucháme sezonu uvnitř notifieru
     ref.listen<DropdownState>(
       seasonDropdownNotifierProvider(_seasonArgs),
       (_, next) {
@@ -55,7 +53,7 @@ class BeerNotifier extends StateNotifier<BeerState> {
         // guard proti loopu: když je stejná sezóna, nic nedělej
         //if (state.selectedSeason?.id == season!.id) return;
 
-        selectSeason(season!);
+        Future.microtask(() =>  selectSeason(season!));
       },
       fireImmediately: false,
     );
@@ -67,31 +65,20 @@ class BeerNotifier extends StateNotifier<BeerState> {
   Future<void> init({int? matchId}) async {
     if (_initialized) return;
     _initialized = true;
+    final dropdown = ref.read(seasonDropdownNotifierProvider(_seasonArgs));
+    final pickedSeason = dropdown.getSelected() as SeasonApiModel?;
 
-    state = state.copyWith(
-      loading: state.loading.loading("Načítám…"),
-      successMessage: null,
-    );
-
-    try {
-      // 2) vyber sezonu z dropdownu (už může být loaded), fallback na "current"
-      final dropdown = ref.read(seasonDropdownNotifierProvider(_seasonArgs));
-      final pickedSeason = dropdown.getSelected() as SeasonApiModel?;
-
-      // 3) první setup: matchId když existuje, jinak seasonId
-      final setup = await beerApi.setupBeers(
+    // 3) první setup: matchId když existuje, jinak seasonId
+    final setup = await runUiWithResult<BeerSetupResponse>(
+          () => beerApi.setupBeers(
         (matchId != null && matchId > 0) ? matchId : null,
         (matchId == null || matchId <= 0) ? pickedSeason?.id : null,
-      );
-
-      _applySetup(setup);
-
-      state = state.copyWith(loading: state.loading.idle());
-    } catch (e, st) {
-      state = state.copyWith(
-        loading: state.loading.errorMessage(e.toString()),
-      );
-    }
+      ),
+      showLoading: true,
+      successSnack: null,
+      loadingMessage: "Načítám pivka…",
+    );
+    _applySetup(setup);
   }
 
   void _applySetup(BeerSetupResponse setup) {
@@ -121,46 +108,29 @@ class BeerNotifier extends StateNotifier<BeerState> {
   // DROPDOWNS
   // ==========================================================
   Future<void> selectSeason(SeasonApiModel season) async {
-    state = state.copyWith(
-      //selectedSeason: season,
-      loading: state.loading.loading("Načítám…"),
-      successMessage: null,
-    );
-
-    try {
-      final setup = await beerApi.setupBeers(
-        null,
-        season.id,
+    final setup = await runUiWithResult<BeerSetupResponse>(
+            () => beerApi.setupBeers(
+          null,
+          season.id,
+        ),
+        showLoading: true,
+        successSnack: null,
+        loadingMessage: "Načítám sezony…",
       );
       _applySetup(setup);
-      state = state.copyWith(loading: state.loading.idle());
-    } catch (e) {
-      state = state.copyWith(
-        loading: state.loading.errorMessage(e.toString()),
-      );
-    }
   }
 
   Future<void> selectMatch(MatchApiModel match) async {
-    state = state.copyWith(
-      selectedMatch: match,
-      loading: state.loading.loading("Načítám…"),
-      successMessage: null,
+    final setup = await runUiWithResult<BeerSetupResponse>(
+          () => beerApi.setupBeers(
+            match.id,
+            null,
+      ),
+      showLoading: true,
+      successSnack: null,
+      loadingMessage: "Načítám zápas…",
     );
-
-    try {
-      // při změně zápasu load přes matchId
-      final setup = await beerApi.setupBeers(
-        match.id,
-        null,
-      );
-      _applySetup(setup);
-      state = state.copyWith(loading: state.loading.idle());
-    } catch (e) {
-      state = state.copyWith(
-        loading: state.loading.errorMessage(e.toString()),
-      );
-    }
+    _applySetup(setup);
   }
 
   // ==========================================================
@@ -220,36 +190,21 @@ class BeerNotifier extends StateNotifier<BeerState> {
   Future<void> changeBeers() async {
     final matchId = state.selectedMatch?.id;
     if (matchId == null) {
-      state = state.copyWith(
-        loading: state.loading.errorMessage("Není vybraný zápas"),
-      );
+      ui.showSnack("Není vybraný zápas");
       return;
     }
-
-    state = state.copyWith(
-      loading: state.loading.loading("Ukládám…"),
-      successMessage: null,
+    final payload = BeerList(
+      matchId: matchId,
+      beerList: _toBeerNoMatchList(state.beers),
     );
-
-    try {
-      final payload = BeerList(
-        matchId: matchId,
-        beerList: _toBeerNoMatchList(state.beers),
-      );
-
-      final result = await beerApi.addBeers(payload);
-
-      state = state.copyWith(
-        loading: state.loading.idle(),
-        successMessage: result.toString(),
-      );
-
-      screenController.changeFragment(HomeScreen.id);
-    } catch (e) {
-      state = state.copyWith(
-        loading: state.loading.errorMessage(e.toString()),
-      );
-    }
+    final result = await runUiWithResult<BeerMultiAddResponse>(
+          () => beerApi.addBeers(payload),
+      showLoading: true,
+      successResultSnack: true,
+      loadingMessage: "Ukládám…",
+    );
+    ref.read(screenVariablesNotifierProvider.notifier).setMatch(state.selectedMatch!);
+    changeFragment(HomeScreen.id);
   }
 
   List<BeerNoMatch> _toBeerNoMatchList(List<BeerNoMatchWithPlayer> list) {

@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:trus_app/features/main/controller/screen_notifier.dart';
+import 'package:trus_app/features/main/controller/screen_variables_notifier.dart';
 import 'package:trus_app/features/match/controller/match_notifier.dart';
 import 'package:trus_app/features/match/match_notifier_args.dart';
 import 'package:trus_app/features/match/screens/add_match_screen.dart';
@@ -7,7 +9,6 @@ import 'package:trus_app/features/match/screens/add_match_screen.dart';
 import '../../../common/widgets/notifier/dropdown/custom_dropdown.dart';
 import '../../../common/widgets/notifier/listview/model_to_string_listview.dart';
 import '../../../common/widgets/screen/custom_consumer_widget.dart';
-import '../../main/screen_controller.dart';
 import '../../season/controller/season_dropdown_notifier.dart';
 import '../../season/season_args.dart';
 
@@ -49,10 +50,10 @@ class MatchScreen extends CustomConsumerWidget {
         floatingActionButton: FloatingActionButton(
           onPressed: () =>
               {ref
-                  .read(screenControllerProvider)
+                  .read(screenVariablesNotifierProvider.notifier)
                   .setMatchNotifierArgs(const MatchNotifierArgs.add()),
               ref
-              .read(screenControllerProvider)
+              .read(screenNotifierProvider.notifier)
               .changeFragment(AddMatchScreen.id)},
           elevation: 4.0,
           child: const Icon(Icons.add),

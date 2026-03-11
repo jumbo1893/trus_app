@@ -1,27 +1,19 @@
 
 
-import '../../../common/widgets/notifier/loader/loading_state.dart';
 
-class LoadingErrorState {
-  final LoadingState loading;
+
+class ErrorState {
   final Map<String, String> errors;
-  final String? successMessage;
 
-  const LoadingErrorState({
-    this.loading = const LoadingState(),
+  const ErrorState({
     this.errors = const {},
-    this.successMessage,
   });
 
-  LoadingErrorState copyWith({
-    LoadingState? loading,
+  ErrorState copyWith({
     Map<String, String>? errors,
-    String? successMessage,
   }) {
-    return LoadingErrorState(
-      loading: loading ?? this.loading,
+    return ErrorState(
       errors: errors ?? this.errors,
-      successMessage: successMessage,
     );
   }
 }

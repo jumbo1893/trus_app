@@ -3,19 +3,20 @@ import 'package:trus_app/features/achievement/state/achievement_view_state.dart'
 import 'package:trus_app/models/api/achievement/achievement_detail.dart';
 
 import '../../../common/widgets/notifier/loader/loading_state.dart';
+import '../../../models/enum/crud.dart';
 import '../../general/notifier/base_crud_notifier.dart';
-import '../../general/repository/api_result.dart';
-import '../../main/screen_controller.dart';
+import '../../player/screens/view_player_screen.dart';
 import '../achievement_view_args.dart';
 import '../repository/achievement_repository.dart';
+import 'achievement_notifier.dart';
 
 final achievementViewProvider = StateNotifierProvider.autoDispose
     .family<AchievementEditNotifier, AchievementViewState, AchievementViewArgs>(
       (ref, args) {
     return AchievementEditNotifier(
+      ref: ref,
       repository: ref.read(achievementRepositoryProvider),
       args: args,
-      screenController: ref.read(screenControllerProvider),
     );
   },
 );
@@ -28,14 +29,13 @@ class AchievementEditNotifier
   final AchievementViewArgs args;
 
   AchievementEditNotifier({
+    required Ref ref,
     required this.repository,
     required this.args,
-    required ScreenController screenController,
-  }) : super(
+  }) : super(ref,
     AchievementViewState.initial(),
-    screenController,
   ) {
-    _init();
+    Future.microtask(_init);
   }
 
   void _init() {
@@ -54,46 +54,22 @@ class AchievementEditNotifier
   /// =========================
   /// STALE-WHILE-REVALIDATE
   /// =========================
+
   Future<void> _loadDetail(int id) async {
-    /// 1️⃣ CACHE → UI
     final cached = repository.getCachedDetail(id);
+
     if (cached != null) {
       _applyDetail(cached);
-    } else {
-      state = copyWithState(
-        loading: state.loading.loading("Načítám detail…"),
-      );
     }
-
-    /// 2️⃣ API NA POZADÍ
-    await _refreshFromServer(id);
-  }
-
-  Future<void> _refreshFromServer(int id) async {
-    final result = await executeApi(
+    final result = await runUiWithResult<AchievementDetail>(
           () => repository.fetchDetail(id),
+      showLoading: (cached == null),
+      successSnack: null,
     );
-
     if (!mounted) return;
-
-    switch (result) {
-      case ApiSuccess<AchievementDetail>():
-        _applyDetail(result.data);
-        break;
-
-      case ApiError():
-      /// ❗ error zobrazujeme jen pokud nebyla cache
-        if (state.model == null) {
-          state = copyWithState(
-            loading: state.loading.errorMessage(result.message),
-          );
-        }
-        break;
-
-      default:
-        break;
-    }
+    _applyDetail(result);
   }
+
 
   /// =========================
   /// APPLY DETAIL → STATE
@@ -113,7 +89,6 @@ class AchievementEditNotifier
       accomplished: model.isPlayerAchievementAccomplished,
       manually: model.achievement.manually,
       model: model,
-      loading: state.loading.idle(),
     );
   }
 
@@ -127,10 +102,51 @@ class AchievementEditNotifier
     String? successMessage,
   }) {
     return state.copyWith(
-      loading: loading,
       errors: errors,
-      successMessage: successMessage,
     );
+  }
+
+  /// =========================
+  /// CRUD
+  /// =========================
+
+  void submitCrud(Crud crud) {
+    submit(
+      crud: crud,
+      loadingText: switch (crud) {
+        Crud.create => "",
+        Crud.update => "Měním achievement...",
+        Crud.delete => "",
+      },
+      successSnack: switch (crud) {
+        Crud.create => "",
+        Crud.update => "Achievement změněn",
+        Crud.delete => "",
+      },
+      onSuccessRedirect: ViewPlayerScreen.id,
+      invalidateProvider: achievementNotifierProvider,
+    );
+  }
+
+  @override
+  Future<void> update(AchievementDetail model) async {
+    final playerAchievement = model.playerAchievement!;
+    playerAchievement.changeAccomplished();
+    repository.invalidateDetail(playerAchievement.id);
+    await repository.api.editPlayerAchievement(
+      playerAchievement,
+      playerAchievement.id,
+    );
+  }
+
+  @override
+  Future<void> create(AchievementDetail model) async {
+    throw UnimplementedError();
+  }
+
+  @override
+  Future<void> delete(AchievementDetail model) async {
+    throw UnimplementedError();
   }
 
   @override
@@ -138,32 +154,6 @@ class AchievementEditNotifier
     return AchievementDetail(
       achievement: state.model!.achievement,
       playerAchievement: state.model!.playerAchievement!,
-    );
-  }
-
-  @override
-  Future<ApiResult<void>> create(AchievementDetail model) {
-    throw UnimplementedError();
-  }
-
-  @override
-  Future<ApiResult<void>> delete(AchievementDetail model) {
-    throw UnimplementedError();
-  }
-
-  @override
-  Future<ApiResult<void>> update(AchievementDetail model) {
-    final playerAchievement = model.playerAchievement!;
-    playerAchievement.changeAccomplished();
-
-    /// ❗ po update můžeš invalidovat cache
-    repository.invalidateDetail(playerAchievement.id);
-
-    return executeApi(
-          () => repository.api.editPlayerAchievement(
-        playerAchievement,
-        playerAchievement.id,
-      ),
     );
   }
 

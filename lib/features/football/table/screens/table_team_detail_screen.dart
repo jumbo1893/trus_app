@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:trus_app/common/widgets/screen/custom_consumer_stateful_widget.dart';
-import 'package:trus_app/features/main/screen_controller.dart';
+import 'package:trus_app/features/main/controller/screen_variables_notifier.dart';
 
 import '../../../../common/widgets/rows/row_text_view_field.dart';
 import '../controller/football_table_team_detail_notifier.dart';
@@ -20,8 +20,8 @@ class _TableTeamDetailScreenState extends ConsumerState<TableTeamDetailScreen> {
   @override
   Widget build(BuildContext context) {
     final teamId = ref
-        .watch(screenControllerProvider)
-        .tableTeamApiModel
+        .watch(screenVariablesNotifierProvider)
+        .tableTeam
         .id!;
     final state = ref.watch(footballTableTeamDetailNotifierProvider(teamId));
 

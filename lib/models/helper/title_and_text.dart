@@ -55,5 +55,4 @@ class TitleAndText implements ModelToString {
   String toStringForListView() {
     return text;
   }
-
 }

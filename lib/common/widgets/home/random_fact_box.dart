@@ -2,19 +2,15 @@ import 'dart:math';
 
 import 'package:flutter/material.dart';
 import 'package:trus_app/colors.dart';
-import 'package:trus_app/common/widgets/loader.dart';
-import 'package:trus_app/features/mixin/string_list_controller_mixin.dart';
 
 class RandomFactBox extends StatefulWidget implements PreferredSizeWidget {
   const RandomFactBox({
     super.key,
-    required this.stringListControllerMixin,
-    required this.hashKey,
+    required this.facts,
     required this.padding,
   });
 
-  final StringListControllerMixin stringListControllerMixin;
-  final String hashKey;
+  final List<String> facts;
   final double padding;
 
   @override
@@ -26,8 +22,7 @@ class RandomFactBox extends StatefulWidget implements PreferredSizeWidget {
 
 class _RandomFactBoxState extends State<RandomFactBox>
     with SingleTickerProviderStateMixin {
-  int randomFactNumber = -1;
-  int listLength = 0;
+  int randomFactNumber = 0;
   late final AnimationController _animationController;
   late Animation<double> _animation;
 
@@ -40,106 +35,99 @@ class _RandomFactBoxState extends State<RandomFactBox>
     );
   }
 
-  void setNewRandomFactNumber(int listLength) {
-    randomFactNumber = Random().nextInt(listLength);
+  @override
+  void dispose() {
+    _animationController.dispose();
+    super.dispose();
+  }
+
+  void setNewRandomFactNumber() {
+    if (widget.facts.isEmpty) return;
+    randomFactNumber = Random().nextInt(widget.facts.length);
   }
 
   void setNextRandomFactNumber(bool next) {
-    if (randomFactNumber != -1) {
-      if (next) {
-        if (randomFactNumber == listLength - 1) {
-          randomFactNumber = 0;
-        } else {
-          randomFactNumber++;
-        }
-      } else {
-        if (randomFactNumber == 0) {
-          randomFactNumber = listLength - 1;
-        } else {
-          randomFactNumber--;
-        }
-      }
+    if (widget.facts.isEmpty) return;
+
+    if (next) {
+      randomFactNumber = (randomFactNumber + 1) % widget.facts.length;
+    } else {
+      randomFactNumber = (randomFactNumber - 1) < 0
+          ? widget.facts.length - 1
+          : randomFactNumber - 1;
     }
   }
 
   @override
   Widget build(BuildContext context) {
     final size = MediaQuery.of(context).size;
+    final facts = widget.facts;
+
+    if (facts.isEmpty) return const SizedBox.shrink();
+    if (randomFactNumber >= facts.length) randomFactNumber = 0;
+
     _animation = Tween<double>(begin: 0, end: 1).animate(_animationController);
+
     return Container(
       margin: const EdgeInsets.all(5.0),
       padding: const EdgeInsets.all(3.0),
       width: size.width - widget.padding * 2,
       decoration: BoxDecoration(border: Border.all(color: Colors.black54)),
       child: Center(
-          child: Padding(
-        padding: const EdgeInsets.all(8.0),
-        child: Row(
-          children: [
-            Expanded(
-              child: StreamBuilder<List<String>>(
-                  stream: widget.stringListControllerMixin.stringListValue(widget.hashKey),
-                  builder: (context, snapshot) {
-                    if (snapshot.connectionState == ConnectionState.waiting) {
-                      return const Loader();
-                    }
-                    List<String> randomFactList = snapshot.data!;
-                    listLength = randomFactList.length;
-                    if (randomFactNumber == -1) {
-                      setNewRandomFactNumber(randomFactList.length);
-                    }
-                    return Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Text('Náhodná zajímavost #${randomFactNumber + 1}',
-                            style: const TextStyle(
-                              fontWeight: FontWeight.bold,
-                              fontSize: 16,
-                            ),
-                            key: const ValueKey('random_text_title')),
-                        Flexible(
-                          child: GestureDetector(
-                            onHorizontalDragEnd: (dragEndDetails) {
-                              if (dragEndDetails.primaryVelocity! < 0) {
-                                setState(() {
-                                  setNextRandomFactNumber(true);
-                                });
-                              } else if (dragEndDetails.primaryVelocity! > 0) {
-                                setState(() {
-                                  setNextRandomFactNumber(false);
-                                });
-                              }
-                            },
-                            child: Text(randomFactList[randomFactNumber],
-                                textAlign: TextAlign.center,
-                                key: const ValueKey('random_text')),
-                          ),
+        child: Padding(
+          padding: const EdgeInsets.all(8.0),
+          child: Row(
+            children: [
+              Expanded(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      'Náhodná zajímavost #${randomFactNumber + 1}',
+                      style: const TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 16,
+                      ),
+                      key: const ValueKey('random_text_title'),
+                    ),
+                    Flexible(
+                      child: GestureDetector(
+                        onHorizontalDragEnd: (dragEndDetails) {
+                          if (dragEndDetails.primaryVelocity == null) return;
+                          setState(() {
+                            if (dragEndDetails.primaryVelocity! < 0) {
+                              setNextRandomFactNumber(true);
+                            } else if (dragEndDetails.primaryVelocity! > 0) {
+                              setNextRandomFactNumber(false);
+                            }
+                          });
+                        },
+                        child: Text(
+                          facts[randomFactNumber],
+                          textAlign: TextAlign.center,
+                          key: const ValueKey('random_text'),
                         ),
-                      ],
-                    );
-                  }),
-            ),
-            RotationTransition(
-              turns: _animation,
-              child: IconButton(
-                  icon: const Icon(
-                    Icons.refresh,
-                    color: orangeColor,
-                    size: 40,
-                  ),
-                  color: orangeColor,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              RotationTransition(
+                turns: _animation,
+                child: IconButton(
+                  icon: const Icon(Icons.refresh, color: orangeColor, size: 40),
                   onPressed: () {
-                    _animationController
-                        .forward(from: 0)
-                        .whenComplete(() => setState(() {
-                              setNewRandomFactNumber(listLength);
-                            }));
+                    _animationController.forward(from: 0).whenComplete(() {
+                      setState(setNewRandomFactNumber);
+                    });
                   },
-                  key: const ValueKey('random_text_refresh')),
-            ),
-          ],
+                  key: const ValueKey('random_text_refresh'),
+                ),
+              ),
+            ],
+          ),
         ),
-      )),
+      ),
     );
   }
 }

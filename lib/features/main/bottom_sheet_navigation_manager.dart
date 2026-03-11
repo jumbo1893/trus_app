@@ -3,13 +3,11 @@ import 'package:trus_app/features/achievement/screens/achievement_screen.dart';
 import 'package:trus_app/features/beer/screens/beer_simple_screen.dart';
 import 'package:trus_app/features/fine/screens/fine_screen.dart';
 import 'package:trus_app/features/home/screens/home_screen.dart';
-import 'package:trus_app/features/info/screens/info_screen.dart';
 import 'package:trus_app/features/match/screens/add_match_screen.dart';
 import 'package:trus_app/features/player/screens/add_player_screen.dart';
 import 'package:trus_app/features/player/screens/player_screen.dart';
 import 'package:trus_app/features/season/screens/season_screen.dart';
 import 'package:trus_app/features/strava/screens/strava_football_match_screen.dart';
-import 'package:trus_app/features/user/screens/view_user_screen.dart';
 import 'package:trus_app/models/api/auth/app_team_api_model.dart';
 
 import '../../colors.dart';
@@ -17,7 +15,6 @@ import '../fine/match/screens/fine_match_screen.dart';
 import '../football/screens/football_fixtures_screen.dart';
 import '../football/table/screens/football_table_screen.dart';
 import '../match/screens/match_screen.dart';
-import '../user/screens/user_screen.dart';
 class BottomSheetNavigationManager {
   final BuildContext context;
   static const String deleteAccount = "DELETE_ACCOUNT";
@@ -255,42 +252,6 @@ class BottomSheetNavigationManager {
                         ),
                       ),
                     ],
-                  ),
-                  ListTile(
-                    key: const ValueKey('menu_app_info'),
-                    leading: const Icon(
-                      Icons.info,
-                      color: Colors.orange,
-                    ),
-                    title: const Text("Informace o appce"),
-                    onTap: () => onModalBottomSheetMenuTapped(InfoScreen.id),
-                  ),
-                  ListTile(
-                    key: const ValueKey('menu_user_settings'),
-                    leading: const Icon(
-                      Icons.manage_accounts,
-                      color: Colors.orange,
-                    ),
-                    title: const Text("Změnit pravomoce uživatelů"),
-                    onTap: () => onModalBottomSheetMenuTapped(UserScreen.id),
-                  ),
-                  ListTile(
-                    key: const ValueKey('menu_user_settings'),
-                    leading: const Icon(
-                      Icons.account_box,
-                      color: Colors.orange,
-                    ),
-                    title: const Text("Nastavení uživatele"),
-                    onTap: () => onModalBottomSheetMenuTapped(ViewUserScreen.id),
-                  ),
-                  ListTile(
-                    key: const ValueKey('menu_delete_account'),
-                    leading: const Icon(
-                      Icons.no_accounts,
-                      color: Colors.orange,
-                    ),
-                    title: const Text("Smazat účet"),
-                    onTap: () => onModalBottomSheetMenuTapped(deleteAccount),
                   ),
                   ListTile(
                     key: const ValueKey('menu_season'),

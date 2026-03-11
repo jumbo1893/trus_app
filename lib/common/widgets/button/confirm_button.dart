@@ -3,11 +3,11 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:trus_app/colors.dart';
 import 'package:trus_app/common/widgets/loader.dart';
 import 'package:trus_app/features/general/confirm_operations.dart';
+import 'package:trus_app/features/main/controller/screen_notifier.dart';
 import 'package:trus_app/models/api/interfaces/confirm_to_string.dart';
 
 import '../../../features/general/error/api_executor.dart';
 import '../../../features/home/screens/home_screen.dart';
-import '../../../features/main/screen_controller.dart';
 import '../../utils/utils.dart';
 
 class ConfirmButton extends ConsumerStatefulWidget {
@@ -68,7 +68,7 @@ class _ConfirmButtonState extends ConsumerState<ConfirmButton> {
     });
     ConfirmToString? response = await executeApi<ConfirmToString>(() async {
       return await widget.confirmOperations.addModel(widget.id);
-    }, () => ref.read(screenControllerProvider).changeFragment(HomeScreen.id),
+    }, () => ref.read(screenNotifierProvider.notifier).changeFragment(HomeScreen.id),
         context, false);
     if (response != null) {
       showSnackBar(

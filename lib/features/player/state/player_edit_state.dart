@@ -2,7 +2,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:trus_app/models/api/player/player_api_model.dart';
 
 import '../../../common/widgets/notifier/dropdown/i_dropdown_state.dart';
-import '../../../common/widgets/notifier/loader/loading_state.dart';
 import '../../../models/api/achievement/achievement_player_detail.dart';
 import '../../../models/api/interfaces/dropdown_item.dart';
 import '../../../models/helper/title_and_text.dart';
@@ -28,9 +27,7 @@ class PlayerEditState extends BaseCrudState<PlayerApiModel> implements IDropdown
     this.achievementPlayerDetail,
     required this.playerStats,
     PlayerApiModel? model,
-    super.loading,
     super.errors,
-    super.successMessage,
   }) : super(model: model);
 
   @override
@@ -44,9 +41,7 @@ class PlayerEditState extends BaseCrudState<PlayerApiModel> implements IDropdown
     AchievementPlayerDetail? achievementPlayerDetail,
     List<TitleAndText>? playerStats,
     PlayerApiModel? model,
-    LoadingState? loading,
     Map<String, String>? errors,
-    String? successMessage,
   }) {
     return PlayerEditState(
       name: name ?? this.name,
@@ -58,9 +53,7 @@ class PlayerEditState extends BaseCrudState<PlayerApiModel> implements IDropdown
       achievementPlayerDetail: achievementPlayerDetail ?? this.achievementPlayerDetail,
       playerStats: playerStats ?? this.playerStats,
       model: model ?? this.model,
-      loading: loading ?? this.loading,
       errors: errors ?? this.errors,
-      successMessage: successMessage,
     );
   }
 

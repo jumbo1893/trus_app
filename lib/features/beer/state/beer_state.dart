@@ -3,10 +3,9 @@ import 'package:trus_app/features/general/state/loading_error_state.dart';
 import 'package:trus_app/models/api/beer/beer_no_match_with_player.dart';
 import 'package:trus_app/models/api/match/match_api_model.dart';
 
-import '../../../common/widgets/notifier/loader/loading_state.dart';
 import '../beer_screen_mode.dart';
 
-class BeerState extends LoadingErrorState {
+class BeerState extends ErrorState {
   final AsyncValue<List<MatchApiModel>> matches;
   final MatchApiModel? selectedMatch;
 
@@ -22,9 +21,7 @@ class BeerState extends LoadingErrorState {
     required this.beers,
     required this.mode,
     required this.playerIndex,
-    super.loading,
     super.errors,
-    super.successMessage,
   });
 
   factory BeerState.initial() => const BeerState(
@@ -45,9 +42,7 @@ class BeerState extends LoadingErrorState {
     BeerScreenMode? mode,
     int? playerIndex,
 
-    LoadingState? loading,
     Map<String, String>? errors,
-    String? successMessage,
   }) {
     return BeerState(
       matches: matches ?? this.matches,
@@ -55,9 +50,7 @@ class BeerState extends LoadingErrorState {
       beers: beers ?? this.beers,
       mode: mode ?? this.mode,
       playerIndex: playerIndex ?? this.playerIndex,
-      loading: loading ?? this.loading,
       errors: errors ?? this.errors,
-      successMessage: successMessage ?? this.successMessage,
     );
   }
 

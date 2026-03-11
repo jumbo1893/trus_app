@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:trus_app/features/main/controller/screen_notifier.dart';
 import 'package:trus_app/features/player/controller/player_notifier.dart';
 import 'package:trus_app/features/player/screens/add_player_screen.dart';
 
 import '../../../common/widgets/notifier/listview/model_to_string_listview.dart';
 import '../../../common/widgets/screen/custom_consumer_widget.dart';
-import '../../main/screen_controller.dart';
 
 class PlayerScreen extends CustomConsumerWidget {
   static const String id = "player-screen";
@@ -25,7 +25,7 @@ class PlayerScreen extends CustomConsumerWidget {
         ),
         floatingActionButton: FloatingActionButton(
           onPressed: () => ref
-              .read(screenControllerProvider)
+              .read(screenNotifierProvider.notifier)
               .changeFragment(AddPlayerScreen.id),
           elevation: 4.0,
           child: const Icon(Icons.add),

@@ -1,6 +1,6 @@
 import 'memory_cache.dart';
 
-abstract class CachedRepository {
+abstract class CachedRepository  {
   final MemoryCache cache;
 
   CachedRepository(this.cache);

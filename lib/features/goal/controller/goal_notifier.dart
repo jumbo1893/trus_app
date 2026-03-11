@@ -1,49 +1,44 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:trus_app/features/general/notifier/app_notifier.dart';
 import 'package:trus_app/features/goal/goal_screens.dart';
 import 'package:trus_app/features/goal/repository/goal_api_service.dart';
 import 'package:trus_app/features/goal/state/goal_state.dart';
 import 'package:trus_app/features/home/screens/home_screen.dart';
-import 'package:trus_app/features/main/screen_controller.dart';
+import 'package:trus_app/features/main/controller/screen_variables_notifier.dart';
 import 'package:trus_app/models/api/goal/goal_api_model.dart';
 import 'package:trus_app/models/api/goal/goal_list_multi_add.dart';
+import 'package:trus_app/models/api/goal/goal_setup.dart';
 
+import '../../../models/api/goal/goal_multi_add_response.dart';
 import '../../main/back_action.dart';
 
 final goalNotifierProvider =
-StateNotifierProvider.autoDispose<GoalNotifier, GoalState>((ref) {
+    StateNotifierProvider.autoDispose<GoalNotifier, GoalState>((ref) {
   return GoalNotifier(
+    ref: ref,
     api: ref.read(goalApiServiceProvider),
-    screenController: ref.read(screenControllerProvider),
+    screenController: ref.read(screenVariablesNotifierProvider.notifier),
   );
 });
 
-class GoalNotifier extends StateNotifier<GoalState>
-    implements BackAction {
+class GoalNotifier extends AppNotifier<GoalState> implements BackAction {
   final GoalApiService api;
-  final ScreenController screenController;
+  final ScreenVariablesNotifier screenController;
 
   GoalNotifier({
+    required Ref ref,
     required this.api,
     required this.screenController,
-  }) : super(GoalState.initial());
+  }) : super(ref, GoalState.initial());
 
   Future<void> setupMatch(int matchId) async {
-    state = state.copyWith(
-      loading: state.loading.loading("Načítám hráče…"),
+    final setups = await runUiWithResult<List<GoalSetup>>(
+      () => api.setupGoal(matchId),
+      showLoading: true,
+      successSnack: null,
     );
-    try {
-      final setups = await api.setupGoal(matchId);
-      state = state.copyWith(
-        setups: setups,
-        screen: GoalScreens.addGoals,
-        loading: state.loading.idle(),
-        matchId: matchId
-      );
-    } catch (e) {
-      state = state.copyWith(
-        loading: state.loading.errorMessage(e.toString()),
-      );
-    }
+    state = state.copyWith(
+        setups: setups, screen: GoalScreens.addGoals, matchId: matchId);
   }
 
   // ==========================================================
@@ -70,7 +65,6 @@ class GoalNotifier extends StateNotifier<GoalState>
   // LISTVIEW / ADD BUILDER
   // ==========================================================
 
-
   void addNumber(int index, bool goal) {
     final list = [...state.setups];
     list[index].addNumber(goal);
@@ -88,10 +82,6 @@ class GoalNotifier extends StateNotifier<GoalState>
   // ==========================================================
 
   void changeGoals() async {
-    state = state.copyWith(
-      loading: state.loading.loading("Ukládám…"),
-    );
-
     final goals = _buildGoalModels();
 
     final payload = GoalListMultiAdd(
@@ -99,34 +89,25 @@ class GoalNotifier extends StateNotifier<GoalState>
       goalList: goals,
       rewriteToFines: state.rewriteToFines,
     );
-
-    try {
-      final result = await api.addMultipleGoals(payload);
-
-      state = state.copyWith(
-        loading: state.loading.idle(),
-        successMessage: result.toString(),
-      );
-      screenController.changeFragment(HomeScreen.id);
-    } catch (e) {
-      state = state.copyWith(
-        loading: state.loading.errorMessage(e.toString()),
-      );
-      rethrow;
-    }
+    final result = await runUiWithResult<GoalMultiAddResponse>(
+      () => api.addMultipleGoals(payload),
+      showLoading: true,
+      successResultSnack: true
+    );
+    changeFragment(HomeScreen.id);
   }
 
   List<GoalApiModel> _buildGoalModels() {
     return state.setups
         .map(
           (s) => GoalApiModel(
-        id: s.id,
-        matchId: state.matchId,
-        playerId: s.player.getId(),
-        goalNumber: s.goalNumber,
-        assistNumber: s.assistNumber,
-      ),
-    )
+            id: s.id,
+            matchId: state.matchId,
+            playerId: s.player.getId(),
+            goalNumber: s.goalNumber,
+            assistNumber: s.assistNumber,
+          ),
+        )
         .toList();
   }
 

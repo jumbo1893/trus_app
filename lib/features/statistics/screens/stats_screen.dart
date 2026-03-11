@@ -1,15 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:trus_app/features/main/controller/screen_notifier.dart';
 import 'package:trus_app/features/season/controller/season_dropdown_notifier.dart';
 import 'package:trus_app/features/statistics/stat_args.dart';
 
 import '../../../common/utils/utils.dart';
 import '../../../common/widgets/back_handler_listener.dart';
-import '../../../common/widgets/button/statistics_buttons.dart';
+import '../../../common/widgets/button/statistic_buttons.dart';
 import '../../../common/widgets/loader.dart';
 import '../../../common/widgets/notifier/dropdown/custom_dropdown.dart';
 import '../../home/screens/home_screen.dart';
-import '../../main/screen_controller.dart';
 import '../../season/season_args.dart';
 import '../controller/stats_notifier.dart';
 import '../state/stats_state.dart';
@@ -34,7 +34,7 @@ class StatsScreen extends ConsumerWidget {
             e,
             st,
                 () => ref
-                .read(screenControllerProvider)
+                .read(screenNotifierProvider.notifier)
                 .changeFragment(HomeScreen.id),
             context,
           ),
