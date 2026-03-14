@@ -29,7 +29,7 @@ if (keystorePropertiesFile.exists()) {
 }
 
 android {
-    compileSdkVersion 35
+    compileSdkVersion 36
     namespace 'com.jumbo.trus_app'
     ndkVersion flutter.ndkVersion
 
@@ -45,7 +45,7 @@ android {
 
     defaultConfig {
         applicationId "com.jumbo.trus_app"
-        minSdkVersion 23
+        minSdkVersion flutter.minSdkVersion
         targetSdkVersion 35
         versionCode flutterVersionCode.toInteger()
         versionName flutterVersionName
