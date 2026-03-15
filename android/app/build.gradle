@@ -31,7 +31,7 @@ if (keystorePropertiesFile.exists()) {
 android {
     compileSdkVersion 36
     namespace 'com.jumbo.trus_app'
-    ndkVersion flutter.ndkVersion
+    ndkVersion "26.1.10909125"
 
     compileOptions {
         coreLibraryDesugaringEnabled true
