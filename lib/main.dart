@@ -4,11 +4,11 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_driver/driver_extension.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:trus_app/colors.dart';
 import 'package:trus_app/common/widgets/loader.dart';
 import 'package:trus_app/firebase_options.dart';
 import 'package:trus_app/router.dart';
 import 'package:trus_app/services/notification_init_provider.dart';
+import 'package:trus_app/theme/app_theme.dart';
 
 import 'config.dart';
 import 'features/auth/login/controller/auth_login_controller.dart';
@@ -52,23 +52,9 @@ class MyApp extends ConsumerWidget {
         debugShowCheckedModeBanner: false,
         navigatorKey: navigatorKey,
         title: "Trusí aplikace",
-        theme: ThemeData.light().copyWith(
-            scaffoldBackgroundColor: backgroundColor,
-            appBarTheme: const AppBarTheme(
-              color: blackColor,
-            ),
-          checkboxTheme: CheckboxThemeData(
-            fillColor: WidgetStateProperty.resolveWith<Color>(
-                  (states) {
-                if (states.contains(WidgetState.selected)) {
-                  return orangeColor;
-                }
-                return Colors.white;
-              },
-            ),
-            checkColor: MaterialStateProperty.all(Colors.white),
-          ),
-        ),
+        theme: AppTheme.light(),
+        darkTheme: AppTheme.dark(),
+        themeMode: ThemeMode.light,
         onGenerateRoute: (settings) => generateRoute(settings),
         home: ref.watch(userDataAuthProvider).when(
             data: (redirect) {

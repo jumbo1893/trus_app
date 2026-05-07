@@ -12,6 +12,7 @@ import 'package:trus_app/features/beer/lines/painter.dart';
 
 import '../../../common/widgets/error.dart';
 import '../../../common/widgets/loader.dart';
+import '../widget/beer_paint_hint.dart';
 
 class BeerPaintScreen extends ConsumerStatefulWidget {
   const BeerPaintScreen({super.key});
@@ -32,7 +33,10 @@ class _BeerPaintScreenState extends ConsumerState<BeerPaintScreen>
   @override
   void initState() {
     super.initState();
-    controller = AnimationController(duration: const Duration(milliseconds: 500), vsync: this);
+    controller = AnimationController(
+      duration: const Duration(milliseconds: 500),
+      vsync: this,
+    );
     animation = Tween(begin: 1.0, end: 0.0).animate(controller)
       ..addListener(() {
         setState(() {
@@ -48,14 +52,10 @@ class _BeerPaintScreenState extends ConsumerState<BeerPaintScreen>
   }
 
   Future<ui.Image> _loadImage() async {
-    final bd = await rootBundle.load("images/tvrdej.jpg");
+    final bd = await rootBundle.load("images/tvrdej_light.jpg");
     final bytes = Uint8List.view(bd.buffer);
     final codec = await ui.instantiateImageCodec(bytes);
     return (await codec.getNextFrame()).image;
-  }
-
-  List<double> _randLine() {
-    return [random.nextDouble(), random.nextDouble(), random.nextDouble(), random.nextDouble()];
   }
 
   @override
@@ -75,38 +75,64 @@ class _BeerPaintScreenState extends ConsumerState<BeerPaintScreen>
 
         final idx = state.playerIndex;
         final lines = notifier.playerLinesList[idx];
+        final player = state.beers[idx].player;
+        final totalPlayers = state.beers.length;
 
-        Painter painter = Painter(lines, newPlayerLinesCalculator, _progress, _image!);
+        final painter = Painter(
+          lines,
+          newPlayerLinesCalculator,
+          _progress,
+          _image!,
+        );
 
         void addBeer() {
           if (controller.isAnimating) return;
-          int playerIndex = state.playerIndex;
+          final playerIndex = state.playerIndex;
+
           newPlayerLinesCalculator = notifier.getPlayerLinesCalculator(true);
-          if(newPlayerLinesCalculator == null) {
-            showSnackBarWithPostFrame(context: context, content: "Víc jak 30 piv nelze načárkovat!");
+          if (newPlayerLinesCalculator == null) {
+            showSnackBarWithPostFrame(
+              context: context,
+              content: "Víc jak 30 piv nelze načárkovat!",
+            );
             return;
           }
-          controller.forward(from: 0).whenComplete(() =>
-              setState(() {
-                notifier.addNumber(playerIndex, true, newPlayerLinesCalculator!.newLineCoordinates);
-                newPlayerLinesCalculator = null;
-              }));
+
+          controller.forward(from: 0).whenComplete(() {
+            setState(() {
+              notifier.addNumber(
+                playerIndex,
+                true,
+                newPlayerLinesCalculator!.newLineCoordinates,
+              );
+              newPlayerLinesCalculator = null;
+            });
+          });
         }
 
         void addLiquor() {
           if (controller.isAnimating) return;
-          int playerIndex = state.playerIndex;
+          final playerIndex = state.playerIndex;
+
           newPlayerLinesCalculator = notifier.getPlayerLinesCalculator(false);
-          if(newPlayerLinesCalculator == null) {
-            //TODO udělat globální snackbar
-            showSnackBar(context: context, content: "Víc jak 20 paňáků nelze načárkovat!");
+          if (newPlayerLinesCalculator == null) {
+            showSnackBar(
+              context: context,
+              content: "Víc jak 20 paňáků nelze načárkovat!",
+            );
             return;
           }
-          controller.forward(from: 0).whenComplete(() =>
-              setState(() {
-                notifier.addNumber(playerIndex, false, newPlayerLinesCalculator!.newLineCoordinates);
-                newPlayerLinesCalculator = null;
-              }));
+
+          controller.forward(from: 0).whenComplete(() {
+            setState(() {
+              notifier.addNumber(
+                playerIndex,
+                false,
+                newPlayerLinesCalculator!.newLineCoordinates,
+              );
+              newPlayerLinesCalculator = null;
+            });
+          });
         }
 
         void removeBeer() {
@@ -120,69 +146,153 @@ class _BeerPaintScreenState extends ConsumerState<BeerPaintScreen>
         }
 
         return Column(
-          mainAxisSize: MainAxisSize.min,
           children: [
-            SizedBox(
-              height: 50,
-              child: Row(
-                children: [
-                  SizedBox(
-                    width: MediaQuery.of(context).size.width / 6,
-                    child: IconButton(
-                      icon: const Icon(Icons.arrow_back),
-                      onPressed: notifier.prevPlayer,
-                      color: orangeColor,
-                    ),
-                  ),
-                  SizedBox(
-                    width: MediaQuery.of(context).size.width / 1.5,
-                    child: Text(
-                      state.beers[idx].player.name,
-                      style: const TextStyle(color: blackColor, fontSize: 18),
-                      textAlign: TextAlign.center,
-                    ),
-                  ),
-                  SizedBox(
-                    width: MediaQuery.of(context).size.width / 6,
-                    child: IconButton(
-                      icon: const Icon(Icons.arrow_forward),
-                      onPressed: notifier.nextPlayer,
-                      color: orangeColor,
-                    ),
-                  ),
-                ],
-              ),
+            _PaintPlayerSwitcher(
+              playerName: player.name,
+              currentIndex: idx + 1,
+              totalCount: totalPlayers,
+              onPrev: notifier.prevPlayer,
+              onNext: notifier.nextPlayer,
             ),
+            const SizedBox(height: 10),
             Expanded(
-              child: GestureDetector(
-                onVerticalDragEnd: (d) {
-                  if (d.primaryVelocity == null) return;
-                  if (d.primaryVelocity! > 0) addBeer();
-                  if (d.primaryVelocity! < 0) removeBeer();
-                },
-                onHorizontalDragEnd: (d) {
-                  if (d.primaryVelocity == null) return;
-                  if (d.primaryVelocity! > 0) addLiquor();
-                  if (d.primaryVelocity! < 0) removeLiquor();
-                },
-                child: CustomPaint(
-                  painter: painter,
-                  child: Container(),
+              child: Container(
+                width: double.infinity,
+                decoration: BoxDecoration(
+                  color: Colors.white.withAlpha(80),
+                  borderRadius: BorderRadius.circular(24),
+                ),
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(24),
+                  child: GestureDetector(
+                    behavior: HitTestBehavior.opaque,
+                    onVerticalDragEnd: (d) {
+                      if (d.primaryVelocity == null) return;
+                      if (d.primaryVelocity! > 0) addBeer();
+                      if (d.primaryVelocity! < 0) removeBeer();
+                    },
+                    onHorizontalDragEnd: (d) {
+                      if (d.primaryVelocity == null) return;
+                      if (d.primaryVelocity! > 0) addLiquor();
+                      if (d.primaryVelocity! < 0) removeLiquor();
+                    },
+                    child: CustomPaint(
+                      painter: painter,
+                      child: const SizedBox.expand(),
+                    ),
+                  ),
                 ),
               ),
             ),
-            const SizedBox(height: 50),
-            const Row(
-              children: [
-                SizedBox(width: 60, child: Icon(Icons.info_outline, color: Colors.black)),
-                Expanded(
-                  child: Text("Vertikálním čárkováním se zapisují piva, horizontálním panáky"),
-                ),
-              ],
-            ),
+            const SizedBox(height: 8),
+            const BeerPaintHint(),
+            const SizedBox(height: 6),
           ],
         );
       },
+    );
+  }
+}
+
+class _PaintPlayerSwitcher extends StatelessWidget {
+  final String playerName;
+  final int currentIndex;
+  final int totalCount;
+  final VoidCallback onPrev;
+  final VoidCallback onNext;
+
+  const _PaintPlayerSwitcher({
+    required this.playerName,
+    required this.currentIndex,
+    required this.totalCount,
+    required this.onPrev,
+    required this.onNext,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(22),
+        boxShadow: const [
+          BoxShadow(
+            blurRadius: 10,
+            offset: Offset(0, 5),
+            color: Colors.black12,
+          ),
+        ],
+      ),
+      child: Row(
+        children: [
+          _ArrowCircleButton(
+            icon: Icons.arrow_back_rounded,
+            onTap: onPrev,
+          ),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Column(
+              children: [
+                Text(
+                  playerName,
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.w700,
+                    color: Color(0xFF111827),
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  '$currentIndex / $totalCount',
+                  style: const TextStyle(
+                    fontSize: 13,
+                    color: Colors.black54,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(width: 10),
+          _ArrowCircleButton(
+            icon: Icons.arrow_forward_rounded,
+            onTap: onNext,
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _ArrowCircleButton extends StatelessWidget {
+  final IconData icon;
+  final VoidCallback onTap;
+
+  const _ArrowCircleButton({
+    required this.icon,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: Colors.orange.withAlpha(18),
+      borderRadius: BorderRadius.circular(14),
+      child: InkWell(
+        borderRadius: BorderRadius.circular(14),
+        onTap: onTap,
+        child: SizedBox(
+          width: 42,
+          height: 42,
+          child: Icon(
+            icon,
+            color: orangeColor,
+            size: 24,
+          ),
+        ),
+      ),
     );
   }
 }

@@ -16,6 +16,7 @@ class PlayerEditState extends BaseCrudState<PlayerApiModel> implements IDropdown
   final DropdownItem? selectedFootballPlayer;
   final AchievementPlayerDetail? achievementPlayerDetail;
   final List<TitleAndText> playerStats;
+  final List<List<TitleAndText>> pairedPlayerStats;
 
   const PlayerEditState({
     required this.name,
@@ -26,6 +27,7 @@ class PlayerEditState extends BaseCrudState<PlayerApiModel> implements IDropdown
     this.selectedFootballPlayer,
     this.achievementPlayerDetail,
     required this.playerStats,
+    required this.pairedPlayerStats,
     PlayerApiModel? model,
     super.errors,
   }) : super(model: model);
@@ -40,6 +42,7 @@ class PlayerEditState extends BaseCrudState<PlayerApiModel> implements IDropdown
     DropdownItem? selectedFootballPlayer,
     AchievementPlayerDetail? achievementPlayerDetail,
     List<TitleAndText>? playerStats,
+    List<List<TitleAndText>>? pairedPlayerStats,
     PlayerApiModel? model,
     Map<String, String>? errors,
   }) {
@@ -52,6 +55,7 @@ class PlayerEditState extends BaseCrudState<PlayerApiModel> implements IDropdown
       selectedFootballPlayer: selectedFootballPlayer ?? this.selectedFootballPlayer,
       achievementPlayerDetail: achievementPlayerDetail ?? this.achievementPlayerDetail,
       playerStats: playerStats ?? this.playerStats,
+      pairedPlayerStats: pairedPlayerStats ?? this.pairedPlayerStats,
       model: model ?? this.model,
       errors: errors ?? this.errors,
     );

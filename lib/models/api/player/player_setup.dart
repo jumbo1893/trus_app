@@ -9,6 +9,7 @@ class PlayerSetup implements JsonAndHttpConverter {
   PlayerApiModel? player;
   final List<FootballPlayerApiModel> footballPlayerList;
   List<TitleAndText> playerStats;
+  List<List<TitleAndText>> pairedPlayerStats;
   final FootballPlayerApiModel primaryFootballPlayer;
   AchievementPlayerDetail? achievementPlayerDetail;
 
@@ -17,6 +18,7 @@ class PlayerSetup implements JsonAndHttpConverter {
     required this.footballPlayerList,
     required this.primaryFootballPlayer,
     required this.playerStats,
+    required this.pairedPlayerStats,
     this.achievementPlayerDetail,
   });
 
@@ -31,12 +33,19 @@ class PlayerSetup implements JsonAndHttpConverter {
     };
   }
 
-  @override
   factory PlayerSetup.fromJson(Map<String, dynamic> json) {
     return PlayerSetup(
       player: json["player"] != null ? PlayerApiModel.fromJson(json["player"]) : null,
       playerStats: List<TitleAndText>.from((json['playerStats'] as List<dynamic>).map((titleAndText) => TitleAndText.fromJson(titleAndText))),
-      footballPlayerList: List<FootballPlayerApiModel>.from((json['footballPlayerList'] as List<dynamic>).map((footballPlayer) => FootballPlayerApiModel.fromJson(footballPlayer))),
+      pairedPlayerStats: List<List<TitleAndText>>.from(
+        (json['pairedPlayerStats'] as List<dynamic>).map(
+              (innerList) => List<TitleAndText>.from(
+            (innerList as List<dynamic>).map(
+                  (item) => TitleAndText.fromJson(item),
+            ),
+          ),
+        ),
+      ),      footballPlayerList: List<FootballPlayerApiModel>.from((json['footballPlayerList'] as List<dynamic>).map((footballPlayer) => FootballPlayerApiModel.fromJson(footballPlayer))),
       primaryFootballPlayer: FootballPlayerApiModel.fromJson(json["primaryFootballPlayer"]),
       achievementPlayerDetail: json["achievementPlayerDetail"] != null ? AchievementPlayerDetail.fromJson(json["achievementPlayerDetail"]) : null,
     );

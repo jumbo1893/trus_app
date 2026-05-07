@@ -1,7 +1,7 @@
-// lib/features/match/controller/match_edit_notifier.dart
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:trus_app/features/football/repository/football_repository.dart';
 import 'package:trus_app/features/general/global_variables_controller.dart';
+import 'package:trus_app/features/goal/screen/goal_screen.dart';
 import 'package:trus_app/features/home/screens/home_screen.dart';
 import 'package:trus_app/features/main/controller/screen_variables_notifier.dart';
 import 'package:trus_app/features/match/match_notifier_args.dart';
@@ -19,6 +19,7 @@ import '../../../../common/widgets/notifier/dropdown/i_dropdown_notifier.dart';
 import '../../../../common/widgets/notifier/listview/i_listview_notifier.dart';
 import '../../../../models/api/football/detail/football_match_detail.dart';
 import '../../../../models/api/interfaces/dropdown_item.dart';
+import '../../../../models/api/player/player_api_model.dart';
 import '../../../../models/enum/crud.dart';
 import '../../../general/notifier/base_crud_notifier.dart';
 import '../../state/footbal_match_detail_state.dart';
@@ -87,7 +88,6 @@ class MatchEditNotifier extends BaseCrudNotifier<MatchApiModel, MatchEditState>
 
   Future<void> _bootstrap() async {
     final flow = resolver.resolve(args);
-    print(flow.toString());
     switch (flow) {
       case MatchFlow.createEmpty:
         await _handleCreateEmpty();
@@ -171,6 +171,7 @@ class MatchEditNotifier extends BaseCrudNotifier<MatchApiModel, MatchEditState>
       userTeamId: userTeamId,
       setup: fresh,
     );
+
   }
 
   Future<void> _handleEditByMatchId(int matchId) async {
@@ -322,7 +323,7 @@ class MatchEditNotifier extends BaseCrudNotifier<MatchApiModel, MatchEditState>
         : state.copyWith(selectedPlayers: selected);
   }
 
-  void setSelectedPlayers(players, bool fan) {
+  void setSelectedPlayers(List<PlayerApiModel> players, bool fan) {
     state = fan
         ? state.copyWith(selectedFans: List.of(players))
         : state.copyWith(selectedPlayers: List.of(players));
@@ -368,9 +369,12 @@ class MatchEditNotifier extends BaseCrudNotifier<MatchApiModel, MatchEditState>
       invalidateProvider: matchNotifierProvider,
       onSuccessAction: (model) {
         if (crud != Crud.delete && goal) {
-          screenVariablesNotifier.setMatchId(model.id!);
-          screenVariablesNotifier.setMatch(model);
-
+          screenVariablesNotifier.setMatchId(model!.id!);
+          screenVariablesNotifier.setMatch(model!);
+          changeFragment(GoalScreen.id);
+        }
+        else {
+          changeFragment(HomeScreen.id);
         }
       },
     );
@@ -378,7 +382,8 @@ class MatchEditNotifier extends BaseCrudNotifier<MatchApiModel, MatchEditState>
 
   @override
   Future<void> create(MatchApiModel model) async {
-    await loader.matchRepository.api.addMatch(model);
+    MatchApiModel matchApiModel = await loader.matchRepository.api.addMatch(model);
+    state = state.copyWith(model: matchApiModel);
     loader.matchRepository.invalidateMatchSetup(null);
   }
 

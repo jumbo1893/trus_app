@@ -47,13 +47,13 @@ class _GoalScreenState extends ConsumerState<GoalScreen> {
         children: [
           Expanded(
             child: AddListBuilder(
-              appBarText: state.screen == GoalScreens.addGoals
+              /*appBarText: state.screen == GoalScreens.addGoals
                   ? "Přidej góly"
-                  : "Přidej asistence",
+                  : "Přidej asistence",*/
               goal: state.screen == GoalScreens.addGoals,
-              onBackButtonPressed: state.screen == GoalScreens.addAssists
+              /*onBackButtonPressed: state.screen == GoalScreens.addAssists
                   ? notifier.navigateToGoalScreen
-                  : null,
+                  : null,*/
               items: state.setups,
               onAdd: (index) => notifier.addNumber(
                 index,

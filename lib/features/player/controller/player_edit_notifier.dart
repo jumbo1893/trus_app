@@ -38,6 +38,7 @@ class PlayerEditNotifier
     PlayerEditState(
       footballPlayers: const AsyncValue.loading(),
       playerStats: const [],
+      pairedPlayerStats: const [],
       name: "",
       birthdate: DateTime(2000, 1, 1),
       fan: false,
@@ -84,6 +85,7 @@ class PlayerEditNotifier
       selectedFootballPlayer: setup.primaryFootballPlayer,
       achievementPlayerDetail: setup.achievementPlayerDetail,
       playerStats: setup.playerStats,
+      pairedPlayerStats: setup.pairedPlayerStats,
       model: setup.player,
     );
   }

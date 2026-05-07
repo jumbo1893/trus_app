@@ -226,7 +226,7 @@ class StatsNotifier extends AppNotifier<StatsState>
     );
   }
 
-  /// 🔼🔽 pouze lokální změna
+  ///pouze lokální změna
   void toggleOrder() {
     state.stats.whenData((modelList) {
       final reversed = modelList.reversed.toList();
@@ -257,7 +257,7 @@ class StatsNotifier extends AppNotifier<StatsState>
     }
   }
 
-  /// 🔍 nové API volání
+  /// API volání
   Future<void> search(String text) async {
     SeasonApiModel? season = ref
         .read(seasonDropdownNotifierProvider(

@@ -1,12 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:trus_app/common/widgets/rows/row_switch.dart';
-import 'package:trus_app/common/widgets/rows/row_warning_text.dart';
 import 'package:trus_app/features/fine/controller/fine_edit_notifier.dart';
 import 'package:trus_app/features/fine/controller/fine_notifier.dart';
 
-import '../../../common/widgets/button/simple_crud_button.dart';
-import '../../../common/widgets/rows/row_text_field.dart';
+import '../../../common/widgets/bar/action_button_item.dart';
+import '../../../common/widgets/bottomsheet/confirm_action_bottom_sheet.dart';
+import '../../../common/widgets/box/app_warning_box.dart';
+import '../../../common/widgets/rows/app_switch_field.dart';
+import '../../../common/widgets/rows/app_text_input_field.dart';
+import '../../../common/widgets/rows/form/form_field_wrapper.dart';
+import '../../../common/widgets/screen/base_form_screen.dart';
 import '../../../common/widgets/screen/custom_consumer_stateful_widget.dart';
 import '../../../models/enum/crud.dart';
 
@@ -27,53 +30,68 @@ class _EditFineScreenState extends ConsumerState<EditFineScreen> {
     final fine = ref.watch(fineNotifierProvider).selectedFine;
     final state = ref.watch(fineEditProvider(fine));
     final notifier = ref.read(fineEditProvider(fine).notifier);
-    return Padding(
-      padding: const EdgeInsets.all(8.0),
-      child: Column(
-        children: [
-          RowTextField(
-            label: "Název",
-            textFieldText: "Název pokuty:",
+
+    return BaseFormScreen(
+      headerTitle: "Upravit pokutu",
+      headerText: state.name,
+      fields: [
+        FormFieldWrapper(
+          label: "Název pokuty",
+          error: state.errors["name"],
+          child: AppTextInputField(
             value: state.name,
             onChanged: notifier.setName,
-            error: state.errors["name"],
           ),
-          const SizedBox(height: 10),
-          RowTextField(
-            label: "v Kč",
-            textFieldText: "Výše pokuty:",
+        ),
+        FormFieldWrapper(
+          label: "Výše pokuty (Kč)",
+          error: state.errors["amount"],
+          child: AppTextInputField(
             value: state.amount,
-            number: true,
+            hintText: "Kč",
+            keyboardType: TextInputType.number,
             onChanged: notifier.setAmount,
-            error: state.errors["amount"],
           ),
-          RowSwitch(
-            textFieldText: "Pouze pro nově udělené pokuty?",
+        ),
+        FormFieldWrapper(
+          label: "Pouze pro nové pokuty",
+          child: AppSwitchField(
+            text: "Pouze nové pokuty?",
             value: state.inactive,
             onChanged: notifier.setInactive,
           ),
-          const SizedBox(
-            height: 20,
-          ),
-          const RowWarningText(
-              text:
-                  "Dbejte na to, že pokud je tento přepínač vypnutý, tak se změní všechny pokuty i retrospektivně - tedy částka či jméno se změní i pro již udělené pokuty z předchozích zápasů.\n"
-                  "Pokud si přejete udělat změny pouze pro nové pokuty, přepněte do přepínač do true"),
-          const SizedBox(height: 10),
-          const SizedBox(height: 10),
-          SimpleCrudButton(
-            onPressed: () async => notifier.submitCrud(Crud.update,),
-            text: "Potvrď změny",
-          ),
-          const SizedBox(height: 10),
-          SimpleCrudButton(
-            onPressed: () async => notifier.submitCrud(Crud.delete,),
-            text: "Smaž pokutu",
-            deleteConfirmationText:
-                "Opravdu chcete smazat pokutu ${state.model?.name}?",
-          ),
-        ],
-      ),
+        ),
+        const AppWarningBox(
+          text:
+          "Pokud je přepínač vypnutý, změny se projeví i zpětně "
+              "(u všech již udělených pokut).\n\n"
+              "Pokud chceš změny jen pro nové pokuty, zapni přepínač.",
+        ),
+      ],
+      actions: [
+        ActionButtonItem(
+          label: "Uložit",
+          onPressed: () => notifier.submitCrud(Crud.update),
+          type: ActionButtonType.primary,
+        ),
+        ActionButtonItem(
+          label: "Smazat",
+          onPressed: () {
+            ConfirmActionBottomSheet.show(
+              context,
+              title: "Smazat pokutu",
+              message:
+              "Opravdu chcete smazat pokutu ${state.model?.name ?? state.name}?",
+              confirmText: "Smazat",
+              cancelText: "Zrušit",
+              icon: Icons.delete_outline_rounded,
+              isDanger: true,
+              onConfirm: () async => notifier.submitCrud(Crud.delete),
+            );
+          },
+          type: ActionButtonType.danger,
+        ),
+      ],
     );
   }
 }

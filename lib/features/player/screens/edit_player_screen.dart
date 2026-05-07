@@ -1,12 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:trus_app/common/widgets/rows/row_custom_dropdown.dart';
-import 'package:trus_app/common/widgets/rows/row_switch.dart';
 import 'package:trus_app/features/main/controller/screen_variables_notifier.dart';
 
-import '../../../common/widgets/button/simple_crud_button.dart';
-import '../../../common/widgets/rows/row_date_picker.dart';
-import '../../../common/widgets/rows/row_text_field.dart';
+import '../../../common/widgets/bar/action_button_item.dart';
+import '../../../common/widgets/bottomsheet/confirm_action_bottom_sheet.dart';
+import '../../../common/widgets/dropdown/custom_dropdown_sheet.dart';
+import '../../../common/widgets/rows/app_date_field.dart';
+import '../../../common/widgets/rows/app_switch_field.dart';
+import '../../../common/widgets/rows/app_text_input_field.dart';
+import '../../../common/widgets/rows/form/form_field_wrapper.dart';
+import '../../../common/widgets/screen/base_form_screen.dart';
 import '../../../common/widgets/screen/custom_consumer_stateful_widget.dart';
 import '../../../models/api/player/player_api_model.dart';
 import '../../../models/enum/crud.dart';
@@ -27,61 +30,83 @@ class EditPlayerScreen extends CustomConsumerStatefulWidget {
 class _EditPlayerScreenState extends ConsumerState<EditPlayerScreen> {
   @override
   Widget build(BuildContext context) {
-    PlayerApiModel player = ref.watch(screenVariablesNotifierProvider).playerModel;
-    PlayerNotifierArgs arg = PlayerNotifierArgs.edit(player.id);
+    final PlayerApiModel player =
+        ref.watch(screenVariablesNotifierProvider).playerModel;
+
+    final PlayerNotifierArgs arg = PlayerNotifierArgs.edit(player.id);
     final notifier = ref.read(playerEditNotifierProvider(arg).notifier);
     final state = ref.watch(playerEditNotifierProvider(arg));
-    return Padding(
-      padding: const EdgeInsets.all(8.0),
-      child: Column(
-        children: [
-          RowTextField(
-            label: "jméno",
-            textFieldText: "Přezdívka:",
+
+    return BaseFormScreen(
+      headerTitle: "Upravit hráče",
+      headerText: state.name,
+      fields: [
+        FormFieldWrapper(
+          label: "Přezdívka",
+          error: state.errors["name"],
+          child: AppTextInputField(
             value: state.name,
             onChanged: notifier.setName,
-            error: state.errors["name"],
           ),
-          const SizedBox(height: 10),
-          RowCustomDropdown(
-              text: 'Jméno hráče',
-              hint: 'Vyber hráče',
-              state: state,
-              notifier: notifier),
-          const SizedBox(height: 10),
-          RowDatePicker(
-            textFieldText: "Datum narození:",
+        ),
+        FormFieldWrapper(
+          label: "Jméno hráče",
+          child: CustomDropdownSheet(
+            state: state,
+            notifier: notifier,
+            hint: "Vyber hráče",
+          ),
+        ),
+        FormFieldWrapper(
+          label: "Datum narození",
+          error: state.errors["fromDate"],
+          child: AppDateField(
+            label: "Datum narození",
             value: state.birthdate,
             onChanged: notifier.setBirthday,
-            error: state.errors["fromDate"],
           ),
-          const SizedBox(height: 10),
-          RowSwitch(
-            textFieldText: "fanoušek?",
+        ),
+        FormFieldWrapper(
+          label: "Fanoušek",
+          child: AppSwitchField(
+            text: "fanoušek?",
             value: state.fan,
             onChanged: notifier.setFan,
           ),
-          const SizedBox(height: 10),
-          RowSwitch(
-            textFieldText: "aktivní?",
+        ),
+        FormFieldWrapper(
+          label: "Aktivní",
+          child: AppSwitchField(
+            text: "aktivní?",
             value: state.active,
             onChanged: notifier.setActive,
           ),
-          const SizedBox(height: 10),
-          const SizedBox(height: 10),
-          SimpleCrudButton(
-            onPressed: () async => notifier.submitCrud(Crud.update,),
-            text: "Potvrď změny",
-          ),
-          const SizedBox(height: 10),
-          SimpleCrudButton(
-            onPressed: () async => notifier.submitCrud(Crud.delete,),
-            text: "Smaž hráče",
-            deleteConfirmationText:
-            "Opravdu chcete smazat hráče ${state.model?.name}?",
-          ),
-        ],
-      ),
+        ),
+      ],
+      actions: [
+        ActionButtonItem(
+          label: "Uložit",
+          onPressed: () => notifier.submitCrud(Crud.update),
+          type: ActionButtonType.primary,
+        ),
+        ActionButtonItem(
+          label: "Smazat",
+          onPressed: () {
+            ConfirmActionBottomSheet.show(
+              context,
+              title: "Smazat hráče",
+              message:
+              "Opravdu chcete smazat hráče ${state.model?.name ?? state.name}?",
+              confirmText: "Smazat",
+              cancelText: "Zrušit",
+              icon: Icons.delete_outline_rounded,
+              isDanger: true,
+              onConfirm: () async => notifier.submitCrud(Crud.delete),
+            );
+          },
+          type: ActionButtonType.danger,
+        ),
+      ],
     );
   }
 }

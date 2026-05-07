@@ -1,12 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:trus_app/common/widgets/dropdown/custom_dropdown_sheet.dart';
 import 'package:trus_app/features/main/controller/screen_notifier.dart';
 import 'package:trus_app/features/main/controller/screen_variables_notifier.dart';
 import 'package:trus_app/features/match/controller/match_notifier.dart';
 import 'package:trus_app/features/match/match_notifier_args.dart';
 import 'package:trus_app/features/match/screens/add_match_screen.dart';
 
-import '../../../common/widgets/notifier/dropdown/custom_dropdown.dart';
+import '../../../common/widgets/filter_card.dart';
 import '../../../common/widgets/notifier/listview/model_to_string_listview.dart';
 import '../../../common/widgets/screen/custom_consumer_widget.dart';
 import '../../season/controller/season_dropdown_notifier.dart';
@@ -21,42 +22,52 @@ class MatchScreen extends CustomConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final size = MediaQuery.of(context).size;
-    const double padding = 8.0;
+    const horizontalPadding = 16.0;
+    const sectionSpacing = 16.0;
+
+    final seasonProvider =
+    seasonDropdownNotifierProvider(const SeasonArgs(false, true, true));
+
     return Scaffold(
-        body: Padding(
-          padding: const EdgeInsets.only(top: 8.0),
-          child: Column(
-            children: [
-              Row(
-                children: [
-                  SizedBox(
-                    width: size.width / 2 - padding,
-                    child: CustomDropdown(
-                      hint: "Vyber sezonu",
-                      notifier: ref.read(seasonDropdownNotifierProvider(const SeasonArgs(false, true, true)).notifier),
-                      state: ref.watch(seasonDropdownNotifierProvider(const SeasonArgs(false, true, true))),
-                    ),),
-                ],
+      backgroundColor: const Color(0xFFF6F7F9),
+      body: SafeArea(
+        child: Column(
+          children: [
+            const SizedBox(height: 8),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: horizontalPadding),
+              child: FilterCard(
+                child: CustomDropdownSheet(
+                  hint: "Vyber sezonu",
+                  notifier: ref.read(seasonProvider.notifier),
+                  state: ref.watch(seasonProvider),
+                ),
               ),
-              Expanded(
+            ),
+            const SizedBox(height: sectionSpacing),
+            Expanded(
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: horizontalPadding),
                 child: ModelToStringListview(
-                    state: ref.watch(matchNotifierProvider),
-                    notifier: ref.read(matchNotifierProvider.notifier)),
+                  state: ref.watch(matchNotifierProvider),
+                  notifier: ref.read(matchNotifierProvider.notifier),
+                ),
               ),
-            ],
-          ),
+            ),
+            const SizedBox(height: 8),
+          ],
         ),
-        floatingActionButton: FloatingActionButton(
-          onPressed: () =>
-              {ref
-                  .read(screenVariablesNotifierProvider.notifier)
-                  .setMatchNotifierArgs(const MatchNotifierArgs.add()),
-              ref
-              .read(screenNotifierProvider.notifier)
-              .changeFragment(AddMatchScreen.id)},
-          elevation: 4.0,
-          child: const Icon(Icons.add),
-        ));
+      ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: () {
+          ref
+              .read(screenVariablesNotifierProvider.notifier)
+              .setMatchNotifierArgs(const MatchNotifierArgs.add());
+          ref.read(screenNotifierProvider.notifier).changeFragment(AddMatchScreen.id);
+        },
+        elevation: 4.0,
+        child: const Icon(Icons.add),
+      ),
+    );
   }
 }

@@ -10,8 +10,9 @@ import '../../../models/api/player/stats/player_stats.dart';
 import '../../../services/ws/player_update_service.dart';
 import '../../fine/match/screens/fine_match_screen.dart';
 import '../../general/notifier/global_variables_notifier.dart';
-import '../bottom_sheet_navigation_manager.dart';
 import '../main_ui_event_type.dart';
+import '../widget/main_ui_event.dart';
+import '../menu/bottom_sheet_navigation_manager.dart';
 
 final mainNotifierProvider =
 StateNotifierProvider<MainNotifier, MainState>((ref) {
@@ -27,18 +28,21 @@ class MainNotifier extends SafeStateNotifier<MainState> {
   final AuthRepository authRepository;
   final PlayerUpdatesService _ws = PlayerUpdatesService();
 
+  int _uiEventId = 0;
+
   MainNotifier({
     ref,
     required this.repository,
     required this.authRepository,
   }) : super(ref, MainState.initial()) {
     _init();
-    // ✅ posloucháme sezonu uvnitř notifieru
+
     ref.listen<int?>(
       globalVariablesProvider.select((s) => s.player?.id),
           (prev, next) => Future.microtask(() => _setupForPlayer(next)),
       fireImmediately: true,
     );
+
     ref.onDispose(() {
       _ws.disconnect();
     });
@@ -53,7 +57,18 @@ class MainNotifier extends SafeStateNotifier<MainState> {
     }
   }
 
+  void _emitUiEvent(MainUiEventType type) {
+    _uiEventId++;
 
+    safeSetState(
+      state.copyWith(
+        uiEvent: MainUiEvent(
+          type: type,
+          id: _uiEventId,
+        ),
+      ),
+    );
+  }
 
   Future<void> _setupForPlayer(int? playerId) async {
     if (playerId == null) {
@@ -65,31 +80,35 @@ class MainNotifier extends SafeStateNotifier<MainState> {
       _ws.disconnect();
       return;
     }
+
     if (state.currentPlayerId == playerId) return;
+
     _ws.disconnect();
+
     safeSetState(state.copyWith(
       currentPlayerId: playerId,
       wsConnected: false,
     ));
+
     await loadPlayerStats(playerId);
     _subscribePlayerStatsUpdates(playerId);
   }
 
   Future<void> loadPlayerStats(int playerId) async {
-    // 1) cache (rychlé)
     final cached = repository.getCachedPlayerStats(playerId);
     if (cached != null) {
       safeSetState(state.copyWith(playerStats: AsyncValue.data(cached)));
     } else {
       safeSetState(state.copyWith(playerStats: const AsyncValue.loading()));
     }
+
     final result = await AsyncValue.guard(
-            () => runUiWithResult<PlayerStats>(
-              () => repository.fetchPlayerStats(playerId),
-          showLoading: cached == null,
-          successSnack: null,
-        ));
-    // 2) API (čerstvé)
+          () => runUiWithResult<PlayerStats>(
+            () => repository.fetchPlayerStats(playerId),
+        showLoading: cached == null,
+        successSnack: null,
+      ),
+    );
 
     if (!mounted) return;
 
@@ -102,7 +121,6 @@ class MainNotifier extends SafeStateNotifier<MainState> {
       onUpdate: (PlayerStats stats) {
         if (!mounted) return;
 
-        // pokud mezitím user přepnul hráče, ignoruj staré eventy
         if (state.currentPlayerId != playerId) return;
 
         safeSetState(
@@ -114,12 +132,12 @@ class MainNotifier extends SafeStateNotifier<MainState> {
       },
     );
 
-    // označím, že se zkouším připojit, ale ještě není jisté, jestli to půjde (může se stát, že WS server je nedostupný)
     safeSetState(state.copyWith(wsConnected: true));
   }
 
   void onModalBottomSheetMenuTapped(String id) {
     clearUi();
+
     if (id == BottomSheetNavigationManager.deleteAccount) {
       onDeleteAccountTapped();
     } else {
@@ -128,31 +146,31 @@ class MainNotifier extends SafeStateNotifier<MainState> {
   }
 
   void clearUi() {
-    safeSetState(state.copyWith(uiEvent: MainUiEventType.pop));
+    _emitUiEvent(MainUiEventType.pop);
   }
 
   void onMenuTapped() {
-    safeSetState(state.copyWith(uiEvent: MainUiEventType.openBottomMenu));
+    _emitUiEvent(MainUiEventType.openBottomMenu);
   }
 
   void onStatsTapped() {
-    safeSetState(state.copyWith(uiEvent: MainUiEventType.openStatsMenu));
+    _emitUiEvent(MainUiEventType.openStatsMenu);
   }
 
   void onDeleteAccountTapped() {
-    safeSetState(state.copyWith(uiEvent: MainUiEventType.confirmDelete));
+    _emitUiEvent(MainUiEventType.confirmDelete);
   }
 
   void onUpperMenuTapped() {
-    safeSetState(state.copyWith(uiEvent: MainUiEventType.openUpperMenu));
+    _emitUiEvent(MainUiEventType.openUpperMenu);
   }
 
   void showSnackBar() {
-    safeSetState(state.copyWith(uiEvent: MainUiEventType.showSnackBar));
+    _emitUiEvent(MainUiEventType.showSnackBar);
   }
 
   void showErrorMessage() {
-    safeSetState(state.copyWith(uiEvent: MainUiEventType.showErrorDialog));
+    _emitUiEvent(MainUiEventType.showErrorDialog);
   }
 
   void clearUiEvent() {
@@ -161,6 +179,7 @@ class MainNotifier extends SafeStateNotifier<MainState> {
 
   void onBottomMenuTapped(int index) {
     final screenNotifier = ref.read(screenNotifierProvider.notifier);
+
     switch (index) {
       case 0:
         screenNotifier.changeByFragmentId(HomeScreen.id);

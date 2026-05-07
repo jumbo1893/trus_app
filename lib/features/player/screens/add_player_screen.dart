@@ -1,11 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../../common/widgets/button/simple_crud_button.dart';
-import '../../../common/widgets/rows/row_custom_dropdown.dart';
-import '../../../common/widgets/rows/row_date_picker.dart';
-import '../../../common/widgets/rows/row_switch.dart';
-import '../../../common/widgets/rows/row_text_field.dart';
+import '../../../common/widgets/bar/action_button_item.dart';
+import '../../../common/widgets/dropdown/custom_dropdown_sheet.dart';
+import '../../../common/widgets/rows/app_date_field.dart';
+import '../../../common/widgets/rows/app_switch_field.dart';
+import '../../../common/widgets/rows/app_text_input_field.dart';
+import '../../../common/widgets/rows/form/form_field_wrapper.dart';
+import '../../../common/widgets/screen/base_form_screen.dart';
 import '../../../common/widgets/screen/custom_consumer_stateful_widget.dart';
 import '../../../models/enum/crud.dart';
 import '../controller/player_edit_notifier.dart';
@@ -25,53 +27,64 @@ class AddPlayerScreen extends CustomConsumerStatefulWidget {
 class _AddPlayerScreenState extends ConsumerState<AddPlayerScreen> {
   @override
   Widget build(BuildContext context) {
-    PlayerNotifierArgs arg = const PlayerNotifierArgs();
+    const PlayerNotifierArgs arg = PlayerNotifierArgs();
+
     final notifier = ref.read(playerEditNotifierProvider(arg).notifier);
     final state = ref.watch(playerEditNotifierProvider(arg));
-    return Padding(
-      padding: const EdgeInsets.all(8.0),
-      child: Column(
-        children: [
-          RowTextField(
-            label: "jméno",
-            textFieldText: "Přezdívka:",
+
+    return BaseFormScreen(
+      headerTitle: "Nový hráč",
+      headerText: "Vyplň základní údaje hráče",
+      fields: [
+        FormFieldWrapper(
+          label: "Přezdívka",
+          error: state.errors["name"],
+          child: AppTextInputField(
             value: state.name,
             onChanged: notifier.setName,
-            error: state.errors["name"],
           ),
-          const SizedBox(height: 10),
-          RowCustomDropdown(
-              text: 'Jméno hráče',
-              hint: 'Vyber hráče',
-              state: state,
-              notifier: notifier),
-          const SizedBox(height: 10),
-          RowDatePicker(
-            textFieldText: "Datum narození:",
+        ),
+        FormFieldWrapper(
+          label: "Jméno hráče",
+          child: CustomDropdownSheet(
+            state: state,
+            notifier: notifier,
+            hint: "Vyber hráče",
+          ),
+        ),
+        FormFieldWrapper(
+          label: "Datum narození",
+          error: state.errors["fromDate"],
+          child: AppDateField(
+            label: "Datum narození",
             value: state.birthdate,
             onChanged: notifier.setBirthday,
-            error: state.errors["fromDate"],
           ),
-          const SizedBox(height: 10),
-          RowSwitch(
-            textFieldText: "fanoušek?",
+        ),
+        FormFieldWrapper(
+          label: "Fanoušek",
+          child: AppSwitchField(
+            text: "fanoušek?",
             value: state.fan,
             onChanged: notifier.setFan,
           ),
-          const SizedBox(height: 10),
-          RowSwitch(
-            textFieldText: "aktivní?",
+        ),
+        FormFieldWrapper(
+          label: "Aktivní",
+          child: AppSwitchField(
+            text: "aktivní?",
             value: state.active,
             onChanged: notifier.setActive,
           ),
-          const SizedBox(height: 10),
-          const SizedBox(height: 10),
-          SimpleCrudButton(
-            onPressed: () async => notifier.submitCrud(Crud.create,),
-            text: "Ulož hráče",
-          ),
-        ],
-      ),
+        ),
+      ],
+      actions: [
+        ActionButtonItem(
+          label: "Uložit hráče",
+          onPressed: () => notifier.submitCrud(Crud.create),
+          type: ActionButtonType.primary,
+        ),
+      ],
     );
   }
 }

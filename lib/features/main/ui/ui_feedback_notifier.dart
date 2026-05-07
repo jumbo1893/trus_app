@@ -1,4 +1,5 @@
 import 'package:flutter/cupertino.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'ui_effect.dart';
@@ -12,6 +13,7 @@ StateNotifierProvider<UiFeedbackNotifier, UiFeedbackState>((ref) {
 class UiFeedbackNotifier extends StateNotifier<UiFeedbackState> {
   UiFeedbackNotifier() : super(UiFeedbackState.initial());
 
+  bool _sessionLoadingSheetVisible = false;
   int _seq = 0;
   final Map<int, String?> _active = {};
 
@@ -62,4 +64,23 @@ class UiFeedbackNotifier extends StateNotifier<UiFeedbackState> {
   void showConfirmationDialog(String message, VoidCallback callback) {
     emit(UiConfirmationDialog(message, callback));
   }
+
+  void showConfirmationSheet(String message, VoidCallback callback) {
+    emit(UiConfirmationSheet(message, callback));
+  }
+
+  void showSessionLoadingSheet([String? message]) {
+    if (_sessionLoadingSheetVisible) return;
+
+    _sessionLoadingSheetVisible = true;
+    emit(UiLoadingSheet(message));
+  }
+
+  void hideSessionLoadingSheet() {
+    if (!_sessionLoadingSheetVisible) return;
+
+    _sessionLoadingSheetVisible = false;
+    emit(const UiHideLoadingSheet());
+  }
+
 }

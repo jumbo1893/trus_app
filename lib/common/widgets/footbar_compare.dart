@@ -5,71 +5,143 @@ import 'package:trus_app/features/footbar/controller/footbar_compare_notifier.da
 import 'package:trus_app/features/footbar/state/footbar_compare_state.dart';
 import 'package:trus_app/models/api/footbar/footbar_session.dart';
 import 'package:trus_app/models/api/player/player_api_model.dart';
+import 'package:trus_app/theme/app_colors.dart';
+import 'package:trus_app/theme/app_widget_values.dart';
 
 import '../../models/api/interfaces/dropdown_item.dart';
 import 'notifier/dropdown/custom_dropdown.dart';
 import 'notifier/dropdown/i_dropdown_notifier.dart';
 
-class FootbarCompare extends ConsumerStatefulWidget {
-
+class FootbarCompare extends ConsumerWidget {
   const FootbarCompare({
     Key? key,
   }) : super(key: key);
 
   @override
-  ConsumerState<FootbarCompare> createState() => _FootbarCompareState();
-}
+  Widget build(BuildContext context, WidgetRef ref) {
+    final notifier = ref.watch(footbarCompareNotifierProvider.notifier);
+    final state = ref.watch(footbarCompareNotifierProvider);
 
-class _FootbarCompareState extends ConsumerState<FootbarCompare> {
-
-  @override
-  Widget build(BuildContext context) {
-    var notifier = ref.watch(footbarCompareNotifierProvider.notifier);
-    var state = ref.watch(footbarCompareNotifierProvider);
     final leftPlayerState = PlayerDropdownState(state, isLeft: true);
     final rightPlayerState = PlayerDropdownState(state, isLeft: false);
+
     final leftPlayerNotifier = PlayerDropdownNotifier(notifier, isLeft: true);
     final rightPlayerNotifier = PlayerDropdownNotifier(notifier, isLeft: false);
-    print(state.leftSession);
+
     if (state.leftSession == null) {
-      return const Center(
-          child: Text("K této sezoně neexistují záznamy"));
+      return const _FootbarEmptyState();
     }
+
     return Column(
       children: [
-        // dropdowny nahoře
         Padding(
-          padding: const EdgeInsets.all(8.0),
-          child: Row(
-            children: [
-              Expanded(
-                child:  CustomDropdown(
-                  hint: "Vyber hráče",
-                  notifier: leftPlayerNotifier,
-                  state: leftPlayerState,
-                ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child:  CustomDropdown(
-                  hint: "Vyber hráče",
-                  notifier: rightPlayerNotifier,
-                  state: rightPlayerState,
-                ),
-              ),
-            ],
+          padding: const EdgeInsets.symmetric(horizontal: 16),
+          child: _PlayerSelectCard(
+            leftPlayerState: leftPlayerState,
+            rightPlayerState: rightPlayerState,
+            leftPlayerNotifier: leftPlayerNotifier,
+            rightPlayerNotifier: rightPlayerNotifier,
           ),
         ),
-        const SizedBox(height: 8),
+        AppWidgetValues.field,
         Expanded(
-          child: _buildStatsComparison(context, state.leftSession, state.rightSession),
+          child: _StatsComparisonCard(
+            left: state.leftSession,
+            right: state.rightSession,
+          ),
         ),
-        const SizedBox(height: 30),
       ],
     );
   }
+}
 
-  // pomocný getter na label – vezme z left, když není, z right
+class _FootbarEmptyState extends StatelessWidget {
+  const _FootbarEmptyState();
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = context.appColors;
+    final textTheme = Theme.of(context).textTheme;
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16),
+      child: Container(
+        width: double.infinity,
+        padding: const EdgeInsets.all(18),
+        decoration: BoxDecoration(
+          color: colors.cardBackground,
+          borderRadius: AppWidgetValues.borderRadiusXl,
+          boxShadow: AppWidgetValues.cardShadow,
+        ),
+        child: Text(
+          "K této sezoně neexistují záznamy",
+          textAlign: TextAlign.center,
+          style: textTheme.bodyLarge?.copyWith(
+            color: colors.textSecondary,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _PlayerSelectCard extends StatelessWidget {
+  final PlayerDropdownState leftPlayerState;
+  final PlayerDropdownState rightPlayerState;
+  final PlayerDropdownNotifier leftPlayerNotifier;
+  final PlayerDropdownNotifier rightPlayerNotifier;
+
+  const _PlayerSelectCard({
+    required this.leftPlayerState,
+    required this.rightPlayerState,
+    required this.leftPlayerNotifier,
+    required this.rightPlayerNotifier,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = context.appColors;
+
+    return Container(
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: colors.cardBackground,
+        borderRadius: AppWidgetValues.borderRadiusXl,
+        boxShadow: AppWidgetValues.cardShadow,
+      ),
+      child: Row(
+        children: [
+          Expanded(
+            child: CustomDropdown(
+              hint: "Levý hráč",
+              notifier: leftPlayerNotifier,
+              state: leftPlayerState,
+            ),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: CustomDropdown(
+              hint: "Pravý hráč",
+              notifier: rightPlayerNotifier,
+              state: rightPlayerState,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _StatsComparisonCard extends StatelessWidget {
+  final FootbarSession? left;
+  final FootbarSession? right;
+
+  const _StatsComparisonCard({
+    required this.left,
+    required this.right,
+  });
+
   String _label(
       FootbarSession? left,
       FootbarSession? right,
@@ -81,20 +153,14 @@ class _FootbarCompareState extends ConsumerState<FootbarCompare> {
     return fallback;
   }
 
-  Widget _buildStatsComparison(
-      BuildContext context,
-      FootbarSession? left,
-      FootbarSession? right,
-      ) {
+  @override
+  Widget build(BuildContext context) {
     final rows = <Widget>[
-      // position (text)
       _buildTextStatRow(
         label: _label(left, right, (s) => s.positionString(), "Pozice"),
         leftText: left?.positionValueString() ?? "N/A",
         rightText: right?.positionValueString() ?? "N/A",
       ),
-
-      // playingTime
       _buildNumericStatRow(
         label: _label(left, right, (s) => s.playingTimeString(), "Hrací doba"),
         leftNum: left?.playingTime,
@@ -102,88 +168,62 @@ class _FootbarCompareState extends ConsumerState<FootbarCompare> {
         leftText: left?.playingTimeValueString() ?? "N/A",
         rightText: right?.playingTimeValueString() ?? "N/A",
       ),
-
-      // scoreStars
       _buildNumericStatRow(
-        label: _label(left, right, (s) => s.scoreStarsString(),
-            "Footbar hodnocení"),
+        label: _label(left, right, (s) => s.scoreStarsString(), "Footbar hodnocení"),
         leftNum: left?.scoreStars,
         rightNum: right?.scoreStars,
         leftText: left?.scoreStarsValueString() ?? "N/A",
         rightText: right?.scoreStarsValueString() ?? "N/A",
       ),
-
-      // distance
       _buildNumericStatRow(
-        label:
-        _label(left, right, (s) => s.distanceString(), "Vzdálenost"),
+        label: _label(left, right, (s) => s.distanceString(), "Vzdálenost"),
         leftNum: left?.distance,
         rightNum: right?.distance,
         leftText: left?.distanceValueString() ?? "N/A",
         rightText: right?.distanceValueString() ?? "N/A",
       ),
-
-      // passCount
       _buildNumericStatRow(
-        label: _label(
-            left, right, (s) => s.passCountString(), "Počet přihrávek"),
+        label: _label(left, right, (s) => s.passCountString(), "Počet přihrávek"),
         leftNum: left?.passCount,
         rightNum: right?.passCount,
         leftText: left?.passCountValueString() ?? "N/A",
         rightText: right?.passCountValueString() ?? "N/A",
       ),
-
-      // shotCount
       _buildNumericStatRow(
-        label:
-        _label(left, right, (s) => s.shotCountString(), "Počet střel"),
+        label: _label(left, right, (s) => s.shotCountString(), "Počet střel"),
         leftNum: left?.shotCount,
         rightNum: right?.shotCount,
         leftText: left?.shotCountValueString() ?? "N/A",
         rightText: right?.shotCountValueString() ?? "N/A",
       ),
-
-      // shotSpeed
       _buildNumericStatRow(
-        label: _label(left, right, (s) => s.shotSpeedString(),
-            "Rychlost střely"),
+        label: _label(left, right, (s) => s.shotSpeedString(), "Rychlost střely"),
         leftNum: left?.shotSpeed,
         rightNum: right?.shotSpeed,
         leftText: left?.shotSpeedValueString() ?? "N/A",
         rightText: right?.shotSpeedValueString() ?? "N/A",
       ),
-
-      // avgShotSpeed
       _buildNumericStatRow(
-        label: _label(left, right, (s) => s.avgShotSpeedString(),
-            "Průměrná rychlost střely"),
+        label: _label(left, right, (s) => s.avgShotSpeedString(), "Průměrná rychlost střely"),
         leftNum: left?.avgShotSpeed,
         rightNum: right?.avgShotSpeed,
         leftText: left?.avgShotSpeedValueString() ?? "N/A",
         rightText: right?.avgShotSpeedValueString() ?? "N/A",
       ),
-
-      // dribbleCount
       _buildNumericStatRow(
-        label: _label(left, right, (s) => s.dribbleCountString(),
-            "Počet driblinků"),
+        label: _label(left, right, (s) => s.dribbleCountString(), "Počet driblinků"),
         leftNum: left?.dribbleCount,
         rightNum: right?.dribbleCount,
         leftText: left?.dribbleCountValueString() ?? "N/A",
         rightText: right?.dribbleCountValueString() ?? "N/A",
       ),
-
-      // timeWithBall
       _buildNumericStatRow(
-        label: _label(left, right, (s) => s.timeWithBallString(),
-            "Čas s míčem"),
+        label: _label(left, right, (s) => s.timeWithBallString(), "Čas s míčem"),
         leftNum: left?.timeWithBall,
         rightNum: right?.timeWithBall,
         leftText: left?.timeWithBallValueString() ?? "N/A",
         rightText: right?.timeWithBallValueString() ?? "N/A",
       ),
-
-      // activity
       _buildNumericStatRow(
         label: _label(left, right, (s) => s.activityString(), "Aktivní čas"),
         leftNum: left?.activity,
@@ -191,48 +231,34 @@ class _FootbarCompareState extends ConsumerState<FootbarCompare> {
         leftText: left?.activityValueString() ?? "N/A",
         rightText: right?.activityValueString() ?? "N/A",
       ),
-
-      // timeRunning
       _buildNumericStatRow(
-        label:
-        _label(left, right, (s) => s.timeRunningString(), "Čas v běhu"),
+        label: _label(left, right, (s) => s.timeRunningString(), "Čas v běhu"),
         leftNum: left?.timeRunning,
         rightNum: right?.timeRunning,
         leftText: left?.timeRunningValueString() ?? "N/A",
         rightText: right?.timeRunningValueString() ?? "N/A",
       ),
-
-      // runCount
       _buildNumericStatRow(
-        label:
-        _label(left, right, (s) => s.runCountString(), "Počet popoběhnutí"),
+        label: _label(left, right, (s) => s.runCountString(), "Počet popoběhnutí"),
         leftNum: left?.runCount,
         rightNum: right?.runCount,
         leftText: left?.runCountValueString() ?? "N/A",
         rightText: right?.runCountValueString() ?? "N/A",
       ),
-
-      // sprintCount
       _buildNumericStatRow(
-        label: _label(
-            left, right, (s) => s.sprintCountString(), "Počet sprintů"),
+        label: _label(left, right, (s) => s.sprintCountString(), "Počet sprintů"),
         leftNum: left?.sprintCount,
         rightNum: right?.sprintCount,
         leftText: left?.sprintCountValueString() ?? "N/A",
         rightText: right?.sprintCountValueString() ?? "N/A",
       ),
-
-      // avgSprintSpeed
       _buildNumericStatRow(
-        label: _label(left, right, (s) => s.avgSprintSpeedString(),
-            "Průměrná rychlost sprintu"),
+        label: _label(left, right, (s) => s.avgSprintSpeedString(), "Průměrná rychlost sprintu"),
         leftNum: left?.avgSprintSpeed,
         rightNum: right?.avgSprintSpeed,
         leftText: left?.avgSprintSpeedValueString() ?? "N/A",
         rightText: right?.avgSprintSpeedValueString() ?? "N/A",
       ),
-
-      // sprintSpeed
       _buildNumericStatRow(
         label: _label(left, right, (s) => s.sprintSpeedString(), "Max sprint"),
         leftNum: left?.sprintSpeed,
@@ -240,31 +266,22 @@ class _FootbarCompareState extends ConsumerState<FootbarCompare> {
         leftText: left?.sprintSpeedValueString() ?? "N/A",
         rightText: right?.sprintSpeedValueString() ?? "N/A",
       ),
-
-      // sprintDistance
       _buildNumericStatRow(
-        label: _label(left, right, (s) => s.hsrPlusString(),
-            "Usprintovaná vzdálenost"),
+        label: _label(left, right, (s) => s.hsrPlusString(), "Usprintovaná vzdálenost"),
         leftNum: left?.hsrPlus,
         rightNum: right?.hsrPlus,
         leftText: left?.hsrPlusValueString() ?? "N/A",
         rightText: right?.hsrPlusValueString() ?? "N/A",
       ),
-
-      // stopAndGo
       _buildNumericStatRow(
-        label: _label(left, right, (s) => s.stopAndGoString(),
-            "Index intenzity"),
+        label: _label(left, right, (s) => s.stopAndGoString(), "Index intenzity"),
         leftNum: left?.stopAndGo,
         rightNum: right?.stopAndGo,
         leftText: left?.stopAndGoValueString() ?? "N/A",
         rightText: right?.stopAndGoValueString() ?? "N/A",
       ),
-
-      // acceleration
       _buildNumericStatRow(
-        label: _label(left, right, (s) => s.accelerationString(),
-            "Index zrychlení"),
+        label: _label(left, right, (s) => s.accelerationString(), "Index zrychlení"),
         leftNum: left?.acceleration,
         rightNum: right?.acceleration,
         leftText: left?.accelerationValueString() ?? "N/A",
@@ -272,25 +289,38 @@ class _FootbarCompareState extends ConsumerState<FootbarCompare> {
       ),
     ];
 
-    return SingleChildScrollView(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-      child: Column(children: rows),
+    final colors = context.appColors;
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16),
+      child: Container(
+        decoration: BoxDecoration(
+          color: colors.cardBackground,
+          borderRadius: AppWidgetValues.borderRadiusXl,
+          boxShadow: AppWidgetValues.cardShadow,
+        ),
+        child: ListView.separated(
+          padding: const EdgeInsets.all(14),
+          itemCount: rows.length,
+          separatorBuilder: (_, __) => Divider(
+            height: 18,
+            color: colors.disabled.withAlpha(45),
+          ),
+          itemBuilder: (_, index) => rows[index],
+        ),
+      ),
     );
   }
-
-  // ----- řádky -----
 
   Widget _buildTextStatRow({
     required String label,
     required String leftText,
     required String rightText,
   }) {
-    return _buildCenterRow(
+    return _FootbarCompareRow(
       label: label,
       leftText: leftText,
       rightText: rightText,
-      leftStyle: const TextStyle(),
-      rightStyle: const TextStyle(),
     );
   }
 
@@ -301,90 +331,111 @@ class _FootbarCompareState extends ConsumerState<FootbarCompare> {
     required String leftText,
     required String rightText,
   }) {
-    bool leftBold = false;
-    bool rightBold = false;
+    var leftBetter = false;
+    var rightBetter = false;
 
     if (leftNum != null && rightNum != null) {
-      if (leftNum > rightNum) leftBold = true;
-      if (rightNum > leftNum) rightBold = true;
+      leftBetter = leftNum > rightNum;
+      rightBetter = rightNum > leftNum;
     } else if (leftNum != null) {
-      leftBold = true;
+      leftBetter = true;
     } else if (rightNum != null) {
-      rightBold = true;
+      rightBetter = true;
     }
 
-    return _buildCenterRow(
+    return _FootbarCompareRow(
       label: label,
       leftText: leftText,
       rightText: rightText,
-      leftStyle:
-      TextStyle(fontWeight: leftBold ? FontWeight.bold : FontWeight.normal),
-      rightStyle: TextStyle(
-          fontWeight: rightBold ? FontWeight.bold : FontWeight.normal),
+      leftHighlighted: leftBetter,
+      rightHighlighted: rightBetter,
     );
   }
+}
 
-  // společné vykreslení: hodnota vlevo / label / hodnota vpravo
-  Widget _buildCenterRow({
-    required String label,
-    required String leftText,
-    required String rightText,
-    required TextStyle leftStyle,
-    required TextStyle rightStyle,
-  }) {
-    return Column(
+class _FootbarCompareRow extends StatelessWidget {
+  final String label;
+  final String leftText;
+  final String rightText;
+  final bool leftHighlighted;
+  final bool rightHighlighted;
+
+  const _FootbarCompareRow({
+    required this.label,
+    required this.leftText,
+    required this.rightText,
+    this.leftHighlighted = false,
+    this.rightHighlighted = false,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = context.appColors;
+    final textTheme = Theme.of(context).textTheme;
+
+    return Row(
       children: [
-        Padding(
-          padding: const EdgeInsets.symmetric(vertical: 6.0),
-          child: Row(
-            children: [
-              // LEFT value
-              Expanded(
-                child: Padding(
-                  padding: const EdgeInsets.only(right: 16.0),
-                  child: Align(
-                    alignment: Alignment.centerRight,
-                    child: Text(leftText, style: leftStyle),
-                  ),
-                ),
-              ),
-
-              // CENTER LABEL – pevná šířka pro perfektní centrování
-              SizedBox(
-                width: 150,
-                child: Center(
-                  child: Text(
-                    label,
-                    textAlign: TextAlign.center,
-                    style: const TextStyle(fontWeight: FontWeight.w600),
-                  ),
-                ),
-              ),
-
-              // RIGHT value
-              Expanded(
-                child: Padding(
-                  padding: const EdgeInsets.only(left: 16.0),
-                  child: Align(
-                    alignment: Alignment.centerLeft,
-                    child: Text(rightText, style: rightStyle),
-                  ),
-                ),
-              ),
-            ],
+        Expanded(
+          child: _CompareValue(
+            text: leftText,
+            align: TextAlign.right,
+            highlighted: leftHighlighted,
           ),
         ),
-
-        // Divider přes celou šířku
-        Padding(
-          padding: const EdgeInsets.symmetric(vertical: 4.0),
-          child: Divider(
-            height: 1,
-            thickness: 1,
-            color: Colors.grey.withOpacity(0.3),
+        const SizedBox(width: 10),
+        SizedBox(
+          width: 132,
+          child: Text(
+            label,
+            textAlign: TextAlign.center,
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
+            style: textTheme.bodySmall?.copyWith(
+              color: colors.textSecondary,
+              fontWeight: FontWeight.w700,
+              height: 1.2,
+            ),
+          ),
+        ),
+        const SizedBox(width: 10),
+        Expanded(
+          child: _CompareValue(
+            text: rightText,
+            align: TextAlign.left,
+            highlighted: rightHighlighted,
           ),
         ),
       ],
+    );
+  }
+}
+
+class _CompareValue extends StatelessWidget {
+  final String text;
+  final TextAlign align;
+  final bool highlighted;
+
+  const _CompareValue({
+    required this.text,
+    required this.align,
+    required this.highlighted,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = context.appColors;
+    final textTheme = Theme.of(context).textTheme;
+
+    return Text(
+      text,
+      textAlign: align,
+      maxLines: 2,
+      overflow: TextOverflow.ellipsis,
+      style: textTheme.bodyMedium?.copyWith(
+        color: highlighted ? colors.accent : colors.textPrimary,
+        fontWeight: highlighted ? FontWeight.w800 : FontWeight.w600,
+        height: 1.2,
+      ),
     );
   }
 }

@@ -2,7 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:trus_app/features/achievement/controller/achievement_notifier.dart';
 
-import '../../../common/widgets/rows/row_text_view_field.dart';
+import '../../../common/widgets/rows/app_read_only_field.dart';
+import '../../../common/widgets/rows/form/form_field_wrapper.dart';
+import '../../../common/widgets/screen/base_form_screen.dart';
 import '../../../common/widgets/screen/custom_consumer_stateful_widget.dart';
 import '../achievement_view_args.dart';
 import '../controller/achievement_edit_notifier.dart';
@@ -15,53 +17,64 @@ class ViewAchievementDetailScreen extends CustomConsumerStatefulWidget {
   }) : super(key: key, title: "Detail achievementu", name: id);
 
   @override
-  ConsumerState<ViewAchievementDetailScreen> createState() => _ViewAchievementDetailScreenState();
+  ConsumerState<ViewAchievementDetailScreen> createState() =>
+      _ViewAchievementDetailScreenState();
 }
 
-class _ViewAchievementDetailScreenState extends ConsumerState<ViewAchievementDetailScreen> {
+class _ViewAchievementDetailScreenState
+    extends ConsumerState<ViewAchievementDetailScreen> {
   @override
   Widget build(BuildContext context) {
-    final achievement = ref
-        .watch(achievementNotifierProvider)
-        .selectedAchievement!;
-    AchievementViewArgs arg = AchievementViewArgs.detail(achievement);
+    final achievement =
+    ref.watch(achievementNotifierProvider).selectedAchievement!;
+
+    final arg = AchievementViewArgs.detail(achievement);
     final state = ref.watch(achievementViewProvider(arg));
-    final notifier = ref.read(achievementViewProvider(arg).notifier);
-    return Padding(
-      padding: const EdgeInsets.all(8.0),
-      child: Column(
-        children: [
-          RowTextViewField(
-            textFieldText: "Název:",
+
+    return BaseFormScreen(
+      headerTitle: state.name,
+      headerText: "Úspěšnost: ${state.successRate}",
+      fields: [
+        FormFieldWrapper(
+          label: "Název",
+          child: AppReadOnlyField(
             value: state.name,
+            allowWrap: true,
           ),
-          const SizedBox(height: 10),
-          RowTextViewField(
-            textFieldText: "Popis:",
+        ),
+        FormFieldWrapper(
+          label: "Popis",
+          child: AppReadOnlyField(
             value: state.description,
             allowWrap: true,
           ),
-          const SizedBox(height: 10),
-          RowTextViewField(
-            textFieldText: "Podmínky:",
-            value: state.secondaryCondition,
-            showIfEmptyText: false,
+        ),
+        if (state.secondaryCondition.trim().isNotEmpty)
+          FormFieldWrapper(
+            label: "Podmínky",
+            child: AppReadOnlyField(
+              value: state.secondaryCondition,
+              allowWrap: true,
+            ),
+          ),
+        FormFieldWrapper(
+          label: "Úspěšnost",
+          child: AppReadOnlyField(
+            value: state.successRate,
             allowWrap: true,
           ),
-          const SizedBox(height: 10),
-          RowTextViewField(
-            textFieldText: "Úspěšnost:",
-            value: state.successRate,
-          ),
-          const SizedBox(height: 10),
-          RowTextViewField(
-            textFieldText: "Splnili:",
-            value: state.accomplishedPlayers,
+        ),
+        if (state.accomplishedPlayers.trim().isNotEmpty)
+          FormFieldWrapper(
+            label: "Splnili",
             error: state.errors["accomplishedPlayers"],
-            showIfEmptyText: false,
+            child: AppReadOnlyField(
+              value: state.accomplishedPlayers,
+              allowWrap: true,
+            ),
           ),
-        ],
-      ),
+      ],
+      actions: const [],
     );
   }
 }

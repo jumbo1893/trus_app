@@ -52,7 +52,7 @@ class UserNotifier extends SafeStateNotifier<UserState>
   @override
   Future<void> selectListviewItem(ModelToString model) async {
     UserApiModel user = model as UserApiModel;
-    ui.showConfirmationDialog(
+    ui.showConfirmationSheet(
         user.admin!
             ? "Opravdu chcete odebrat práva uživateli ${user.name}?"
             : "Opravdu chcete zpřístupnit práva uživateli ${user.name}?",

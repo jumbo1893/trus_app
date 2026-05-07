@@ -2,11 +2,19 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:trus_app/features/general/notifier/safe_state_notifier.dart';
 import 'package:trus_app/features/home/screens/home_screen.dart';
+import 'package:trus_app/features/main/controller/screen_variables_notifier.dart';
+import 'package:trus_app/models/api/helper/redirect/redirect.dart';
 
+import '../../../models/api/helper/redirect/redirect_api_model.dart';
+import '../../beer/screens/beer_simple_screen.dart';
 import '../../fine/match/screens/fine_match_screen.dart';
 import '../../general/app_bar_title.dart';
+import '../../general/global_variables_controller.dart';
 import '../../general/screen_name.dart';
 import '../../goal/screen/goal_screen.dart';
+import '../../match/match_notifier_args.dart';
+import '../../match/screens/add_match_screen.dart';
+import '../../match/screens/match_detail_screen.dart';
 import '../screens.dart';
 import '../state/screen_state.dart';
 
@@ -92,7 +100,7 @@ class ScreenNotifier extends SafeStateNotifier<ScreenState> {
   }
 
   void _changeFragment(String screenId) {
-    final idx = getFragmentNumberByFragmentId(screenId); // z tvého widgetList
+    final idx = getFragmentNumberByFragmentId(screenId);
     final bottomIndex = _bottomIndexFor(screenId);
 
     final isHome = screenId == HomeScreen.id;
@@ -126,6 +134,56 @@ class ScreenNotifier extends SafeStateNotifier<ScreenState> {
   int getFragmentNumberByFragmentId(String fragmentId) {
     final screen = getFragmentByFragmentId(fragmentId);
     return widgetList.indexOf(screen);
+  }
+
+  void redirect(RedirectApiModel redirect) {
+    if(redirect.match != null) {
+      ref.read(screenVariablesNotifierProvider.notifier).setMatch(redirect.match!);
+      ref.read(screenVariablesNotifierProvider.notifier).setMatchId(redirect.match!.id!);
+    }
+    if(redirect.player != null) {
+      ref.read(screenVariablesNotifierProvider.notifier).setPlayer(
+          redirect.player!);
+    }
+    if(redirect.footballMatch != null) {
+      ref.read(screenVariablesNotifierProvider.notifier).setFootballMatch(
+          redirect.footballMatch!);
+    }
+    if(redirect.season != null) {
+      ref.read(screenVariablesNotifierProvider.notifier).setSeason(
+          redirect.season!);
+    }
+    chooseRedirect(redirect.redirect);
+  }
+  
+  void chooseRedirect(Redirect? redirect) {
+    switch(redirect) {
+      case Redirect.playerBeerStats:
+        changeByFragmentId(BeerSimpleScreen.id);
+      case Redirect.matchWithPlayerBottomsheet:
+        final appTeam = ref.read(globalVariablesControllerProvider).appTeam;
+        final footballMatch = ref.read(screenVariablesNotifierProvider).footballMatch;
+        if (footballMatch == null) return;
+        final matchId = footballMatch
+            .findMatchIdForCurrentAppTeamInMatchIdAndAppTeamIdList(appTeam) ??
+            -1;
+
+        if (matchId == -1) {
+          ref.read(screenVariablesNotifierProvider.notifier).setMatchNotifierArgs(
+              MatchNotifierArgs.newByFootballMatchWithBottomSheet(footballMatch));
+          changeFragment(AddMatchScreen.id);
+        } else {
+          ref
+              .read(screenVariablesNotifierProvider.notifier)
+              .setMatchNotifierArgs(MatchNotifierArgs.editWithBottomSheet(matchId));
+          changeFragment(MatchDetailScreen.id);
+        }
+      case Redirect.playerFineStats:
+        // TODO: Handle this case.
+        throw UnimplementedError();
+      case null:
+        return;
+    }
   }
 
   Widget get currentWidget => getFragmentByFragmentId(state.currentScreenId);

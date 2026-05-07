@@ -1,49 +1,54 @@
 import 'package:flutter/material.dart';
 
 import '../../../colors.dart';
+import '../../../features/home/widget/home_section_card.dart';
+import '../../../theme/app_colors.dart';
 
-class BirthdayText extends StatelessWidget implements PreferredSizeWidget {
+class BirthdayText extends StatelessWidget {
   const BirthdayText({
     super.key,
-    required this.padding,
     required this.nextBirthdayText,
   });
 
-  final double padding;
   final String? nextBirthdayText;
 
   @override
-  Size get preferredSize => const Size.fromHeight(kMinInteractiveDimension);
-
-  @override
   Widget build(BuildContext context) {
-    final size = MediaQuery.of(context).size;
-
-    // Pokud není text, nerenderuj nic
-    if (nextBirthdayText == null || nextBirthdayText!.isEmpty) {
+    if (nextBirthdayText == null || nextBirthdayText!.trim().isEmpty) {
       return const SizedBox.shrink();
     }
-
-    return Container(
-      padding: const EdgeInsets.all(3.0),
-      width: size.width - padding * 2,
-      child: Center(
-        child: Row(
-          children: [
-            const Icon(
-              Icons.cake,
-              color: orangeColor,
-              size: 40,
+    final appColors = context.appColors;
+    return HomeSectionCard(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          Container(
+            width: 46,
+            height: 46,
+            decoration: BoxDecoration(
+              color: orangeColor.withAlpha(25),
+              borderRadius: BorderRadius.circular(14),
             ),
-            Flexible(
-              child: Text(
-                nextBirthdayText!,
-                textAlign: TextAlign.center,
-                key: const ValueKey('birthday_text'),
+            child: Icon(
+              Icons.cake_rounded,
+              color: appColors.accent,
+              size: 26,
+            ),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Text(
+              nextBirthdayText!,
+              key: const ValueKey('birthday_text'),
+              style: TextStyle(
+                fontSize: 13,
+                fontWeight: FontWeight.w500,
+                color: appColors.textPrimary,
               ),
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }

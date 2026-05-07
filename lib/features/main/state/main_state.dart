@@ -1,16 +1,16 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:trus_app/features/main/main_ui_event_type.dart';
 
 import '../../../models/api/achievement/achievement_detail.dart';
 import '../../../models/api/player/stats/player_stats.dart';
 import '../../home/screens/home_screen.dart';
+import '../widget/main_ui_event.dart';
 
 class MainState {
   final AsyncValue<PlayerStats> playerStats;
   final int? currentPlayerId;
   final bool wsConnected;
   final String userName;
-  final MainUiEventType? uiEvent;
+  final MainUiEvent? uiEvent;
   final int selectedBottomSheetIndex;
   final bool backButtonVisible;
   final List<String> backButtonFragmentList;
@@ -71,7 +71,7 @@ class MainState {
     int? currentPlayerId,
     bool? wsConnected,
     String? userName,
-    MainUiEventType? uiEvent,
+    MainUiEvent? uiEvent,
     int? selectedBottomSheetIndex,
     bool? backButtonVisible,
     List<String>? backButtonFragmentList,

@@ -1,37 +1,60 @@
-
 import 'package:trus_app/features/general/cache/i_endpoint_id.dart';
-import 'package:trus_app/models/api/football/detail/football_match_detail.dart';
 
 import 'chart.dart';
+import 'dashboard_match.dart';
+import 'stats_board_data.dart';
 
 class HomeSetup implements IEndpointId {
   String nextBirthday;
   List<String> randomFacts;
   Chart? chart;
-  List<FootballMatchDetail?> nextAndLastFootballMatch;
   final List<Chart> charts;
-  static const endpointId = "home_setup";
+  final DashboardMatch? nextMatch;
+  final DashboardMatch? lastMatch;
 
+  final List<StatsBoardData> statsBoards;
+
+  static const endpointId = "home_setup";
 
   HomeSetup({
     required this.nextBirthday,
     required this.randomFacts,
     required this.chart,
-    required this.nextAndLastFootballMatch,
-    required this.charts
+    required this.charts,
+    required this.nextMatch,
+    required this.lastMatch,
+    required this.statsBoards,
   });
 
-
-  @override
   factory HomeSetup.fromJson(Map<String, dynamic> json) {
     return HomeSetup(
       nextBirthday: json["nextBirthday"] ?? "",
-      randomFacts: (json['randomFacts'] as List).cast<String>(),
-      chart: json["chart"] != null ? Chart.fromJson(json["chart"]) : null,
-      nextAndLastFootballMatch: (json['nextAndLastFootballMatch'] as List<dynamic>)
-          .map((item) => item != null ? FootballMatchDetail.fromJson(item) : null)
-          .toList(),
-      charts: List<Chart>.from((json['charts'] as List<dynamic>).map((fine) => Chart.fromJson(fine))),
+
+      randomFacts: List<String>.from(
+        json['randomFacts'] ?? [],
+      ),
+
+      chart: json["chart"] != null
+          ? Chart.fromJson(json["chart"])
+          : null,
+
+      charts: List<Chart>.from(
+        (json['charts'] as List<dynamic>? ?? [])
+            .map((e) => Chart.fromJson(e)),
+      ),
+
+      nextMatch: json["nextMatch"] != null
+          ? DashboardMatch.fromJson(json["nextMatch"])
+          : null,
+
+      lastMatch: json["lastMatch"] != null
+          ? DashboardMatch.fromJson(json["lastMatch"])
+          : null,
+
+      statsBoards: List<StatsBoardData>.from(
+        (json['statsBoards'] as List<dynamic>? ?? [])
+            .map((e) => StatsBoardData.fromJson(e)),
+      ),
     );
   }
 
@@ -39,5 +62,4 @@ class HomeSetup implements IEndpointId {
   String getEndpointId() {
     return endpointId;
   }
-
 }

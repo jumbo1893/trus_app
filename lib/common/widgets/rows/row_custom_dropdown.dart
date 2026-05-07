@@ -44,7 +44,7 @@ class _RowCustomDropdown extends State<RowCustomDropdown> {
           child: CustomDropdown(
            state: widget.state,
            error: widget.error,
-           enableBorder: true,
+           //enableBorder: true,
            notifier: widget.notifier,
             hint: widget.hint,
           )),

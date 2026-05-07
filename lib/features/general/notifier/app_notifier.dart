@@ -1,5 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:trus_app/features/main/controller/screen_notifier.dart';
+import 'package:trus_app/models/api/helper/redirect/redirect_api_model.dart';
 
 import '../../main/ui/ui_feedback_notifier.dart';
 import '../repository/api_executor_mixin.dart';
@@ -48,6 +49,8 @@ abstract class AppNotifier<S> extends StateNotifier<S> with ApiExecutorMixin {
             ui.showSnack(result.message);
           }
           return result;
+        case LoginExpired<T>():
+          throw Exception(result.message);
       }
     } finally {
       if (showLoading) {
@@ -82,10 +85,16 @@ abstract class AppNotifier<S> extends StateNotifier<S> with ApiExecutorMixin {
 
       case ApiError():
         throw Exception(result.message);
+      case LoginExpired<T>():
+        throw Exception(result.message);
     }
   }
 
   void changeFragment(String id) {
     screenNotifier.changeByFragmentId(id);
+  }
+
+  void onRedirect(RedirectApiModel redirect) {
+    screenNotifier.redirect(redirect);
   }
 }

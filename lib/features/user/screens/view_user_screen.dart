@@ -2,10 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:trus_app/features/user/controller/view_user_notifier.dart';
 
-import '../../../common/widgets/button/simple_crud_button.dart';
-import '../../../common/widgets/rows/row_custom_dropdown.dart';
-import '../../../common/widgets/rows/row_text_view_field.dart';
+import '../../../common/widgets/bar/action_button_item.dart';
+import '../../../common/widgets/dropdown/custom_dropdown_sheet.dart';
+import '../../../common/widgets/rows/app_read_only_field.dart';
+import '../../../common/widgets/rows/form/form_field_wrapper.dart';
+import '../../../common/widgets/screen/base_form_screen.dart';
 import '../../../common/widgets/screen/custom_consumer_stateful_widget.dart';
+
 class ViewUserScreen extends CustomConsumerStatefulWidget {
   static const String id = "view-user-screen";
 
@@ -20,42 +23,58 @@ class ViewUserScreen extends CustomConsumerStatefulWidget {
 class _ViewUserScreenState extends ConsumerState<ViewUserScreen> {
   @override
   Widget build(BuildContext context) {
-    final notifier = ref.read(viewUserNotifierProvider.notifier);
     final state = ref.watch(viewUserNotifierProvider);
-    return Padding(
-      padding: const EdgeInsets.all(8.0),
-      child: Column(
-        children: [
-          RowTextViewField(
-            textFieldText: "Přezdívka",
-            value: state.name,),
-          const SizedBox(height: 10),
-          RowTextViewField(
-            textFieldText: "Email",
-            value: state.email,),
-          const SizedBox(height: 10),
-          RowCustomDropdown(
-              text: 'Spárování s hráčem',
-              hint: 'Vyber hráče',
-              state: state,
-              notifier: notifier),
-          const SizedBox(height: 10),
-          RowTextViewField(
-            textFieldText: "Práva",
-            value: state.userTeamRole?.roleToString() ?? "Bez práv"),
-          const SizedBox(height: 10),
-          RowTextViewField(
-              textFieldText: "Jiné týmy",
+    final notifier = ref.read(viewUserNotifierProvider.notifier);
+
+    return BaseFormScreen(
+      headerTitle: "Nastavení uživatele",
+      headerText: state.name,
+      fields: [
+        FormFieldWrapper(
+          label: "Přezdívka",
+          child: AppReadOnlyField(
+            value: state.name,
+            allowWrap: true,
+          ),
+        ),
+        FormFieldWrapper(
+          label: "Email",
+          child: AppReadOnlyField(
+            value: state.email,
+            allowWrap: true,
+          ),
+        ),
+        FormFieldWrapper(
+          label: "Spárování s hráčem",
+          child: CustomDropdownSheet(
+            state: state,
+            notifier: notifier,
+            hint: "Vyber hráče",
+          ),
+        ),
+        FormFieldWrapper(
+          label: "Práva",
+          child: AppReadOnlyField(
+            value: state.userTeamRole?.roleToString() ?? "Bez práv",
+            allowWrap: true,
+          ),
+        ),
+        if (state.otherRoles.trim().isNotEmpty)
+          FormFieldWrapper(
+            label: "Jiné týmy",
+            child: AppReadOnlyField(
               value: state.otherRoles,
+              allowWrap: true,
+            ),
           ),
-          const SizedBox(height: 10),
-          const SizedBox(height: 10),
-          SimpleCrudButton(
-            onPressed: () async => notifier.commit(),
-            text: "Potvrď změny",
-          ),
-        ],
-      ),
+      ],
+      actions: [
+        ActionButtonItem(
+          label: "Potvrdit změny",
+          onPressed: () => notifier.commit(),
+          type: ActionButtonType.primary,
+        ),
+      ],
     );
   }
 }

@@ -5,7 +5,6 @@ import '../../../models/api/interfaces/add_to_string.dart';
 
 class ListviewAddModelDouble extends StatelessWidget {
   final AddToString addToString;
-  final double padding;
 
   final VoidCallback onFirstNumberAdded;
   final VoidCallback onFirstNumberRemoved;
@@ -13,91 +12,176 @@ class ListviewAddModelDouble extends StatelessWidget {
   final VoidCallback onSecondNumberRemoved;
 
   const ListviewAddModelDouble({
-    Key? key,
-    required this.padding,
+    super.key,
     required this.onFirstNumberAdded,
     required this.onFirstNumberRemoved,
     required this.onSecondNumberAdded,
     required this.onSecondNumberRemoved,
     required this.addToString,
-  }) : super(key: key);
-
-  Widget _icon(IconData icon, Color color, VoidCallback onPressed) {
-    return IconButton(
-      icon: Icon(icon, color: color),
-      onPressed: onPressed,
-      padding: EdgeInsets.zero,
-      constraints: const BoxConstraints.tightFor(width: 36, height: 36),
-    );
-  }
-
-  Widget _numberBox(String value) {
-    return Container(
-      alignment: Alignment.center,
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-      decoration: BoxDecoration(
-        border: Border.all(color: Colors.grey.shade300),
-        borderRadius: BorderRadius.circular(8),
-      ),
-      child: Text(
-        value,
-        textAlign: TextAlign.center,
-        style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
-      ),
-    );
-  }
+  });
 
   @override
   Widget build(BuildContext context) {
-    final size = MediaQueryData.fromView(WidgetsBinding.instance.window).size;
-    final sizeFragment = size / 30;
-
     final firstValue = addToString.numberToString(true);
     final secondValue = addToString.numberToString(false);
 
-    return Row(
-      children: [
-        SizedBox(
-          width: (sizeFragment.width * 9) - padding,
-          child: Text(
+    return Container(
+      padding: const EdgeInsets.fromLTRB(16, 16, 16, 16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: const [
+          BoxShadow(
+            blurRadius: 12,
+            offset: Offset(0, 6),
+            color: Colors.black12,
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
             addToString.toStringForListView(),
-            style: const TextStyle(fontSize: 16),
+            style: const TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.w600,
+              height: 1.35,
+              color: Color(0xFF111827),
+            ),
+          ),
+          const SizedBox(height: 14),
+          _DoubleCounterRow(
+            label: 'Piva',
+            icon: Icons.sports_bar,
+            iconColor: blackColor,
+            value: firstValue,
+            onMinus: onFirstNumberRemoved,
+            onPlus: onFirstNumberAdded,
+          ),
+          const SizedBox(height: 10),
+          _DoubleCounterRow(
+            label: 'Tvrdej',
+            icon: Icons.liquor,
+            iconColor: blackColor,
+            value: secondValue,
+            onMinus: onSecondNumberRemoved,
+            onPlus: onSecondNumberAdded,
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _DoubleCounterRow extends StatelessWidget {
+  final String label;
+  final IconData icon;
+  final Color iconColor;
+  final String value;
+  final VoidCallback onMinus;
+  final VoidCallback onPlus;
+
+  const _DoubleCounterRow({
+    required this.label,
+    required this.icon,
+    required this.iconColor,
+    required this.value,
+    required this.onMinus,
+    required this.onPlus,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
+      decoration: BoxDecoration(
+        color: Colors.black.withAlpha(6),
+        borderRadius: BorderRadius.circular(16),
+      ),
+      child: Row(
+        children: [
+          Container(
+            width: 34,
+            height: 34,
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Icon(
+              icon,
+              color: iconColor,
+              size: 18,
+            ),
+          ),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Text(
+              label,
+              style: const TextStyle(
+                fontSize: 15,
+                fontWeight: FontWeight.w600,
+                color: Color(0xFF111827),
+              ),
+            ),
+          ),
+          _MiniStepperButton(
+            icon: Icons.remove,
+            color: Colors.redAccent,
+            onTap: onMinus,
+          ),
+          Container(
+            width: 40,
+            alignment: Alignment.center,
+            child: Text(
+              value,
+              style: const TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.w700,
+                color: Color(0xFF111827),
+              ),
+            ),
+          ),
+          _MiniStepperButton(
+            icon: Icons.add,
+            color: Colors.green,
+            onTap: onPlus,
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _MiniStepperButton extends StatelessWidget {
+  final IconData icon;
+  final Color color;
+  final VoidCallback onTap;
+
+  const _MiniStepperButton({
+    required this.icon,
+    required this.color,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: Colors.white,
+      borderRadius: BorderRadius.circular(10),
+      child: InkWell(
+        borderRadius: BorderRadius.circular(10),
+        onTap: onTap,
+        child: SizedBox(
+          width: 34,
+          height: 34,
+          child: Icon(
+            icon,
+            color: color,
+            size: 20,
           ),
         ),
-        SizedBox(width: sizeFragment.width * 1.5),
-
-        // FIRST group
-        SizedBox(width: sizeFragment.width * 2, child: _icon(Icons.sports_bar, blackColor, () {
-          onFirstNumberRemoved();
-        })),
-        SizedBox(width: sizeFragment.width * 2, child: _icon(Icons.remove, Colors.red, () {
-          onFirstNumberRemoved();
-        })),
-        SizedBox(
-          width: sizeFragment.width * 3.0,
-          child: _numberBox(firstValue),
-        ),
-        SizedBox(width: sizeFragment.width * 2, child: _icon(Icons.add, Colors.green, () {
-          onFirstNumberAdded();
-        })),
-
-        SizedBox(width: sizeFragment.width),
-
-        // SECOND group
-        SizedBox(width: sizeFragment.width * 2, child: _icon(Icons.liquor, blackColor, () {
-          onSecondNumberRemoved();
-        })),
-        SizedBox(width: sizeFragment.width * 2, child: _icon(Icons.remove, Colors.red, () {
-          onSecondNumberRemoved();
-        })),
-        SizedBox(
-          width: sizeFragment.width * 3.0,
-          child: _numberBox(secondValue),
-        ),
-        SizedBox(width: sizeFragment.width * 2, child: _icon(Icons.add, Colors.green, () {
-          onSecondNumberAdded();
-        })),
-      ],
+      ),
     );
   }
 }

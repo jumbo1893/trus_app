@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../../common/widgets/rows/row_text_view_field.dart';
+import '../../../common/widgets/rows/app_read_only_field.dart';
+import '../../../common/widgets/rows/form/form_field_wrapper.dart';
+import '../../../common/widgets/screen/base_form_screen.dart';
 import '../../main/controller/screen_variables_notifier.dart';
 import '../controller/edit/match_edit_notifier.dart';
 
@@ -20,45 +22,53 @@ class _FootballMatchDetailHomeScreenState
   @override
   Widget build(BuildContext context) {
     final arg = ref.watch(matchNotifierArgsProvider);
-    final notifier = ref.read(matchEditNotifierProvider(arg).notifier);
     final state = ref.watch(matchEditNotifierProvider(arg));
     final footballState = state.footballMatchDetailState;
-    return Padding(
-      padding: const EdgeInsets.all(8.0),
-      child: SingleChildScrollView(
-        child: Column(
-          children: [
-            RowTextViewField(
-              textFieldText: "Hvězda zápasu:",
-              value: footballState.homeBestPlayer,
-            allowWrap: true,),
-            const SizedBox(height: 10),
-            RowTextViewField(
-              textFieldText: "Střelci:",
-              value: footballState.homeGoalScorers,
-              allowWrap: true,
-            showIfEmptyText: false,),
-            const SizedBox(height: 10),
-            RowTextViewField(
-              textFieldText: "Vlastňáky:",
+    return BaseFormScreen(
+      headerTitle: "Statistiky hráčů",
+      headerText: "Domácích",
+      fields: [
+        FormFieldWrapper(
+          label: "Hvězda zápasu",
+          child: AppReadOnlyField(
+            value: footballState.homeBestPlayer,
+            allowWrap: true,
+          ),
+        ),
+        FormFieldWrapper(
+          label: "Střelci",
+          child: AppReadOnlyField(
+            value: footballState.homeGoalScorers,
+            allowWrap: true,
+          ),
+        ),
+        if (footballState.homeOwnGoals.trim().isNotEmpty)
+          FormFieldWrapper(
+            label: "Vlastňáky",
+            child: AppReadOnlyField(
               value: footballState.homeOwnGoals,
               allowWrap: true,
-              showIfEmptyText: false,),
-            const SizedBox(height: 10),
-            RowTextViewField(
-              textFieldText: "Žluté:",
+            ),
+          ),
+        if (footballState.homeYellowCards.trim().isNotEmpty)
+          FormFieldWrapper(
+            label: "Žluté",
+            child: AppReadOnlyField(
               value: footballState.homeYellowCards,
               allowWrap: true,
-              showIfEmptyText: false,),
-            const SizedBox(height: 10),
-            RowTextViewField(
-              textFieldText: "Červené:",
+            ),
+          ),
+        if (footballState.homeRedCards.trim().isNotEmpty)
+          FormFieldWrapper(
+            label: "Červené",
+            child: AppReadOnlyField(
               value: footballState.homeRedCards,
               allowWrap: true,
-              showIfEmptyText: false,),
-          ],
-        ),
-      ),
+            ),
+          ),
+      ],
+      actions: const [],
+      padding: const EdgeInsets.only(bottom: 24),
     );
   }
 }

@@ -1,16 +1,20 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:trus_app/common/widgets/rows/achievement_view.dart';
+import 'package:trus_app/common/widgets/rows/app_read_only_field.dart';
+import 'package:trus_app/common/widgets/rows/form/form_field_wrapper.dart';
+import 'package:trus_app/common/widgets/screen/custom_consumer_stateful_widget.dart';
 import 'package:trus_app/features/main/controller/screen_notifier.dart';
 import 'package:trus_app/features/main/controller/screen_variables_notifier.dart';
 import 'package:trus_app/features/player/player_notifier_args.dart';
 import 'package:trus_app/features/player/screens/edit_player_screen.dart';
+import 'package:trus_app/models/api/player/player_api_model.dart';
 import 'package:trus_app/models/helper/title_and_text.dart';
+import 'package:trus_app/theme/app_widget_values.dart';
 
 import '../../../common/utils/calendar.dart';
-import '../../../common/widgets/rows/row_text_view_field.dart';
-import '../../../common/widgets/screen/custom_consumer_stateful_widget.dart';
-import '../../../models/api/player/player_api_model.dart';
+import '../../../common/widgets/rows/form/form_row.dart';
+import '../../../common/widgets/screen/base_form_screen.dart';
 import '../controller/player_edit_notifier.dart';
 
 class ViewPlayerScreen extends CustomConsumerStatefulWidget {
@@ -33,9 +37,7 @@ class _ViewPlayerScreenState extends ConsumerState<ViewPlayerScreen> {
     super.initState();
 
     _scrollController.addListener(() {
-      ref
-          .read(screenNotifierProvider.notifier)
-          .saveScrollOffset(
+      ref.read(screenNotifierProvider.notifier).saveScrollOffset(
         ViewPlayerScreen.id,
         _scrollController.offset,
       );
@@ -60,61 +62,106 @@ class _ViewPlayerScreenState extends ConsumerState<ViewPlayerScreen> {
     });
   }
 
-  List<Widget> getTitleAndTextWidgets(List<TitleAndText> titleAndTexts) {
-    List<Widget> widgets = [];
-    for (var titleAndTexts in titleAndTexts) {
-      widgets.add(RowTextViewField(
-          textFieldText: titleAndTexts.title,
-          value: titleAndTexts.text,
-        allowWrap: true,
-      showIfEmptyText: false,),);
-    }
-    widgets.add(const SizedBox(height: 10));
-    return widgets;
+  List<Widget> _buildStatFields(List<TitleAndText> titleAndTexts) {
+    return titleAndTexts
+        .where((e) => e.text.trim().isNotEmpty)
+        .map(
+          (e) => FormFieldWrapper(
+        label: e.title,
+        child: AppReadOnlyField(
+          value: e.text,
+          allowWrap: true,
+        ),
+      ),
+    )
+        .toList();
+  }
+
+  List<Widget> _buildPairedStatFields(List<List<TitleAndText>> pairedStats) {
+    return pairedStats
+        .where((row) => row.length >= 2)
+        .map((row) {
+      final first = row[0];
+      final second = row[1];
+
+      return FormRow(
+        children: [
+          FormFieldWrapper(
+            label: first.title,
+            child: AppReadOnlyField(
+              value: first.text,
+              allowWrap: true,
+            ),
+          ),
+          FormFieldWrapper(
+            label: second.title,
+            child: AppReadOnlyField(
+              value: second.text,
+              allowWrap: true,
+            ),
+          ),
+        ],
+      );
+    })
+        .toList();
   }
 
   @override
   Widget build(BuildContext context) {
-    PlayerApiModel player = ref.watch(screenVariablesNotifierProvider).playerModel;
-    PlayerNotifierArgs arg = PlayerNotifierArgs.view(player.id);
+    final PlayerApiModel player =
+        ref.watch(screenVariablesNotifierProvider).playerModel;
+    final PlayerNotifierArgs arg = PlayerNotifierArgs.view(player.id);
     final state = ref.watch(playerEditNotifierProvider(arg));
-    return Scaffold(
-      body: Padding(
-        padding: const EdgeInsets.all(8.0),
-        child: SingleChildScrollView(
-          controller: _scrollController,
-          child: Column(
-            children: [
-              RowTextViewField(
-                  textFieldText: state.fan ? "Fanoušek:" : "Hráč:",
-                  value: state.name,),
-              const SizedBox(height: 10),
-              RowTextViewField(
-                textFieldText: "Jméno hráče",
-                value: state.selectedFootballPlayer?.dropdownItem() ?? "",
-                showIfEmptyText: false,
-              ),
-              const SizedBox(height: 10),
-              RowTextViewField(
-                textFieldText: "Datum narození:",
-                value: dateTimeToString(state.birthdate,),
-              ),
-              const SizedBox(height: 10),
-              ...getTitleAndTextWidgets(state.playerStats),
-              AchievementView(
-                achievementPlayerDetail: state.achievementPlayerDetail,
-              ),
-            ],
+
+    return BaseFormScreen(
+      scrollController: _scrollController,
+      headerTitle: state.fan ? "Detail fanouška" : "Detail hráče",
+      headerText: state.name,
+      fields: [
+        FormFieldWrapper(
+          label: state.fan ? "Fanoušek" : "Hráč",
+          child: AppReadOnlyField(
+            value: state.name,
+            allowWrap: true,
           ),
         ),
+        if ((state.selectedFootballPlayer?.dropdownItem() ?? "")
+            .trim()
+            .isNotEmpty)
+          FormFieldWrapper(
+            label: "Jméno hráče",
+            child: AppReadOnlyField(
+              value: state.selectedFootballPlayer?.dropdownItem() ?? "",
+              allowWrap: true,
+            ),
+          ),
+        FormFieldWrapper(
+          label: "Datum narození",
+          child: AppReadOnlyField(
+            value: dateTimeToString(state.birthdate),
+          ),
+        ),
+        ..._buildPairedStatFields(state.pairedPlayerStats),
+        ..._buildStatFields(state.playerStats),
+      ],
+      extraSections: [
+        if (state.achievementPlayerDetail != null) ...[
+          AppWidgetValues.field,
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            child: AchievementView(
+              achievementPlayerDetail: state.achievementPlayerDetail,
+            ),
+          ),
+        ],
+      ],
+      actions: const [],
+      floatingActionButton: FloatingActionButton(
+        onPressed: () => ref
+            .read(screenNotifierProvider.notifier)
+            .changeFragment(EditPlayerScreen.id),
+        child: const Icon(Icons.edit),
       ),
-        floatingActionButton: FloatingActionButton(
-          onPressed: () => ref
-              .read(screenNotifierProvider.notifier)
-              .changeFragment(EditPlayerScreen.id),
-          elevation: 4.0,
-          child: const Icon(Icons.edit),
-        )
     );
   }
 }

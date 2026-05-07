@@ -44,10 +44,14 @@ class FinePlayerNotifier extends AppNotifier<FinePlayerState> {
       successSnack: null,
       loadingMessage: "Načítám pokuty…",
     );
+
+    final initialValues = setups.map((e) => e.numberToString(true)).toList();
+
     state = state.copyWith(
-        receivedFines: setups,
-        matchId: args.matchId,
-        playerId: args.playerId
+      receivedFines: setups,
+      initialFineValues: initialValues,
+      matchId: args.matchId,
+      playerId: args.playerId,
     );
   }
 
@@ -73,18 +77,22 @@ class FinePlayerNotifier extends AppNotifier<FinePlayerState> {
   // ==========================================================
 
   void changeFines() async {
+    if (!state.hasChanges) return;
+
     final payload = ReceivedFineList(
       matchId: state.matchId,
       playerId: state.playerId,
       fineList: state.receivedFines,
       playerIdList: null,
     );
+
     final result = await runUiWithResult<ReceivedFineResponse>(
           () => api.addFines(payload, false),
       showLoading: true,
       successResultSnack: true,
       loadingMessage: "Ukládám nové pokuty…",
     );
+
     changeFragment(HomeScreen.id);
   }
 }

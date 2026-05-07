@@ -1,26 +1,28 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:trus_app/colors.dart';
+import 'package:trus_app/common/widgets/bottomsheet/loading_bottom_sheet.dart';
+import 'package:trus_app/theme/app_colors.dart';
 import 'package:trus_app/features/auth/login/screens/login_screen.dart';
 import 'package:trus_app/features/general/global_variables_controller.dart';
 import 'package:trus_app/features/main/controller/screen_variables_notifier.dart';
 import 'package:trus_app/features/main/screens.dart';
 import 'package:trus_app/features/main/state/main_state.dart';
-import 'package:trus_app/features/main/statistics_sheet_navigation_manager.dart';
+import 'package:trus_app/features/main/menu/statistics_sheet_navigation_manager.dart';
 import 'package:trus_app/features/main/ui/ui_effect.dart';
 import 'package:trus_app/features/main/ui/ui_feedback_notifier.dart';
 import 'package:trus_app/features/main/ui/ui_feedback_state.dart';
-import 'package:trus_app/features/main/upper_sheet_navigation_manager.dart';
+import 'package:trus_app/features/main/menu/upper_sheet_navigation_manager.dart';
 import 'package:trus_app/features/main/widget/appbar/player_stats_app_bar_text.dart';
 
 import '../../common/utils/utils.dart';
+import '../../common/widgets/bottomsheet/confirm_action_bottom_sheet.dart';
 import '../../common/widgets/confirmation_dialog.dart';
 import '../../models/api/player/player_api_model.dart';
 import '../auth/controller/auth_controller.dart';
 import '../beer/screens/beer_simple_screen.dart';
 import '../general/error/api_executor.dart';
 import '../notification/screen/notification_screen.dart';
-import 'bottom_sheet_navigation_manager.dart';
+import 'menu/bottom_sheet_navigation_manager.dart';
 import 'controller/back_handler.dart';
 import 'controller/main_notifier.dart';
 import 'controller/screen_notifier.dart';
@@ -44,6 +46,7 @@ class _MainScreenState extends ConsumerState<MainScreen> {
   late final ProviderSubscription<MainState> _mainSub;
   late final ProviderSubscription<int> _pageSub;
   late final ProviderSubscription<UiFeedbackState> _uiSub;
+  bool _loadingSheetVisible = false;
 
   @override
   void initState() {
@@ -59,7 +62,7 @@ class _MainScreenState extends ConsumerState<MainScreen> {
         final ev = next.uiEvent;
         if (ev == null) return;
 
-        if (prev?.uiEvent == ev) return;
+        if (prev?.uiEvent?.id == ev.id) return;
 
         // ✅ UI věci až po vykreslení frame
         WidgetsBinding.instance.addPostFrameCallback((_) async {
@@ -68,7 +71,7 @@ class _MainScreenState extends ConsumerState<MainScreen> {
           // 1) clear hned, aby se to neopakovalo
           ref.read(mainNotifierProvider.notifier).clearUiEvent();
 
-          switch (ev) {
+          switch (ev.type) {
             case MainUiEventType.openBottomMenu:
               showBottomSheetNavigation(next.userName);
               break;
@@ -157,6 +160,36 @@ class _MainScreenState extends ConsumerState<MainScreen> {
                   effect.message, effect.continueCallBack
                 ),
               );
+              break;
+            case UiConfirmationSheet():
+              ConfirmActionBottomSheet.show(
+                context,
+                title: "Potvrdit akci",
+                message: effect.message,
+                confirmText: "Potvrdit",
+                cancelText: "Zrušit",
+                icon: Icons.done,
+                isDanger: true,
+                onConfirm: () async => effect.continueCallBack,
+              );
+            case UiLoadingSheet():
+              if (_loadingSheetVisible) return;
+
+              _loadingSheetVisible = true;
+
+              LoadingBottomSheet.show(
+                context,
+                title: effect.message,
+              ).whenComplete(() {
+                _loadingSheetVisible = false;
+              });
+
+              break;
+
+            case UiHideLoadingSheet():
+              if (_loadingSheetVisible && mounted) {
+                Navigator.of(context, rootNavigator: true).pop();
+              }
               break;
           }
         });
@@ -249,6 +282,9 @@ class _MainScreenState extends ConsumerState<MainScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final appColors = context.appColors;
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
     final screenState = ref.watch(screenNotifierProvider);
     final state = ref.watch(mainNotifierProvider);
     final notifier = ref.read(mainNotifierProvider.notifier);
@@ -265,10 +301,8 @@ class _MainScreenState extends ConsumerState<MainScreen> {
             Scaffold(
               resizeToAvoidBottomInset: false,
               appBar: AppBar(
-
                 leading: screenState.backButtonVisible
                     ? BackButton(
-                  color: Colors.white,
                   onPressed: () {
                     final handler = ref.read(backHandlerProvider);
                     if (handler != null && handler.onBack()) {
@@ -286,15 +320,11 @@ class _MainScreenState extends ConsumerState<MainScreen> {
                 )
                     : FittedBox(
                   fit: BoxFit.scaleDown,
-                  child: Text(
-                    screenState.appBarTitleText,
-                    style: const TextStyle(color: Colors.white),
-                  ),
+                  child: Text(screenState.appBarTitleText),
                 ),
                 actions: [
                   IconButton(
                     key: const ValueKey('account_button'),
-                    color: Colors.white,
                     onPressed: notifier.onUpperMenuTapped,
                     icon: const Icon(Icons.manage_accounts),
                   ),
@@ -312,18 +342,11 @@ class _MainScreenState extends ConsumerState<MainScreen> {
               ),
               floatingActionButton: FloatingActionButton(
                 onPressed: () => screenNotifier.changeByFragmentId(BeerSimpleScreen.id),
-                elevation: 4.0,
-                backgroundColor: Colors.orange,
                 key: const ValueKey('beer_button'),
-                child: const Icon(
-                  Icons.sports_bar_outlined,
-                  color: Colors.black87,
-                ),
+                child: const Icon(Icons.sports_bar_outlined),
               ),
               floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
               bottomNavigationBar: BottomNavigationBar(
-                showUnselectedLabels: true,
-                type: BottomNavigationBarType.shifting,
                 items: [
                   const BottomNavigationBarItem(
                     icon: Icon(Icons.home, key: ValueKey('home_button')),
@@ -344,8 +367,6 @@ class _MainScreenState extends ConsumerState<MainScreen> {
                   ),
                 ],
                 currentIndex: screenState.selectedBottomSheetIndex,
-                selectedItemColor: selectedItemColor,
-                unselectedItemColor: unselectedItemColor,
                 onTap: notifier.onBottomMenuTapped,
               ),
             ),
@@ -353,7 +374,7 @@ class _MainScreenState extends ConsumerState<MainScreen> {
         ),
         if (uiState.isLoading)
           Container(
-            color: Colors.black.withOpacity(0.4),
+            color: appColors.overlayBackground,
             child: Center(
               child: Container(
                 padding: const EdgeInsets.all(24),
@@ -364,7 +385,7 @@ class _MainScreenState extends ConsumerState<MainScreen> {
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    const CircularProgressIndicator(color: Colors.white),
+                    CircularProgressIndicator(color: colorScheme.onPrimary),
                     if (uiState.loadingMessage != null) ...[
                       const SizedBox(height: 16),
                       ConstrainedBox(

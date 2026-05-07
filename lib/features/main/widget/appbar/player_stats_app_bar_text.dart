@@ -2,16 +2,11 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:trus_app/models/api/player/stats/player_stats.dart';
+import 'package:trus_app/theme/app_colors.dart';
 
 class PlayerStatsAppBarText extends StatefulWidget {
-  /// Aktuální statistiky hráče.
-  /// Když je null, widget se schová.
   final PlayerStats? stats;
-
-  /// Jak často se mají statistiky rotovat (default 5s)
   final Duration rotateEvery;
-
-  /// Jak dlouho má být highlight po změně (default 1s)
   final Duration highlightFor;
 
   const PlayerStatsAppBarText({
@@ -34,15 +29,19 @@ class _PlayerStatsAppBarTextState extends State<PlayerStatsAppBarText>
   bool _highlight = false;
   Timer? _highlightTimer;
 
-  late AnimationController _shakeController;
-  late Animation<Offset> _shakeAnimation;
+  late final AnimationController _shakeController;
+  late final Animation<Offset> _shakeAnimation;
 
   @override
   void initState() {
     super.initState();
 
+    _lastStats = widget.stats;
+
     _timer = Timer.periodic(widget.rotateEvery, (_) {
-      if (mounted) setState(() => _currentIndex++);
+      if (mounted) {
+        setState(() => _currentIndex++);
+      }
     });
 
     _shakeController = AnimationController(
@@ -83,22 +82,31 @@ class _PlayerStatsAppBarTextState extends State<PlayerStatsAppBarText>
             newStats.playerAchievementCount.accomplishedAchievements) {
       return 0;
     }
+
+    if (oldStats.playerFootbarCount?.totalDistanceInKmToString() !=
+        newStats.playerFootbarCount?.totalDistanceInKmToString()) {
+      return 1;
+    }
+
     if (oldStats.playerGoalCount.totalGoals !=
         newStats.playerGoalCount.totalGoals ||
         oldStats.playerGoalCount.totalAssists !=
             newStats.playerGoalCount.totalAssists) {
-      return 1;
-    }
-    if (oldStats.playerFineCount.totalFines !=
-        newStats.playerFineCount.totalFines) {
       return 2;
     }
+
+    if (oldStats.playerFineCount.totalFines !=
+        newStats.playerFineCount.totalFines) {
+      return 3;
+    }
+
     if (oldStats.playerBeerCount.totalBeers !=
         newStats.playerBeerCount.totalBeers ||
         oldStats.playerBeerCount.totalLiquors !=
             newStats.playerBeerCount.totalLiquors) {
-      return 3;
+      return 4;
     }
+
     return null;
   }
 
@@ -115,7 +123,9 @@ class _PlayerStatsAppBarTextState extends State<PlayerStatsAppBarText>
     _shakeController.forward(from: 0.0);
 
     _highlightTimer = Timer(widget.highlightFor, () {
-      if (mounted) setState(() => _highlight = false);
+      if (mounted) {
+        setState(() => _highlight = false);
+      }
     });
   }
 
@@ -133,7 +143,9 @@ class _PlayerStatsAppBarTextState extends State<PlayerStatsAppBarText>
       final changedIndex = _computeChangedIndex(_lastStats!, newStats);
       if (changedIndex != null) {
         WidgetsBinding.instance.addPostFrameCallback((_) {
-          _triggerHighlight(changedIndex);
+          if (mounted) {
+            _triggerHighlight(changedIndex);
+          }
         });
       }
     }
@@ -141,10 +153,23 @@ class _PlayerStatsAppBarTextState extends State<PlayerStatsAppBarText>
     _lastStats = newStats;
   }
 
+  TextStyle _valueStyle(Color color) {
+    return TextStyle(
+      color: color,
+      fontSize: 17,
+      fontWeight: FontWeight.w600,
+      height: 1.1,
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final playerStats = widget.stats;
     if (playerStats == null) return const SizedBox.shrink();
+
+    final appColors = context.appColors;
+    final normalColor = appColors.textPrimary;
+    final valueColor = _highlight ? appColors.appBarHighlight : normalColor;
 
     final totalAchievements = playerStats.playerAchievementCount.totalAchievements;
     final accomplishedAchievements =
@@ -158,11 +183,10 @@ class _PlayerStatsAppBarTextState extends State<PlayerStatsAppBarText>
     final totalBeers = playerStats.playerBeerCount.totalBeers;
     final totalLiquors = playerStats.playerBeerCount.totalLiquors;
 
-    final totalDistance = playerStats.playerFootbarCount?.totalDistanceInKmToString();
+    final totalDistance =
+        playerStats.playerFootbarCount?.totalDistanceInKmToString() ?? "0";
 
     final seasonName = playerStats.season.name;
-
-    final Color valueColor = _highlight ? Colors.red : Colors.white;
 
     final items = [
       Row(
@@ -171,10 +195,10 @@ class _PlayerStatsAppBarTextState extends State<PlayerStatsAppBarText>
         children: [
           Text(
             "$accomplishedAchievements / $totalAchievements",
-            style: TextStyle(color: valueColor, fontSize: 18),
+            style: _valueStyle(valueColor),
           ),
           const SizedBox(width: 4),
-          Icon(Icons.emoji_events, color: valueColor, size: 18),
+          Icon(Icons.emoji_events, color: valueColor, size: 17),
         ],
       ),
       Row(
@@ -183,10 +207,10 @@ class _PlayerStatsAppBarTextState extends State<PlayerStatsAppBarText>
         children: [
           Text(
             "$totalDistance km",
-            style: TextStyle(color: valueColor, fontSize: 18),
+            style: _valueStyle(valueColor),
           ),
           const SizedBox(width: 4),
-          Icon(Icons.directions_run, color: valueColor, size: 18),
+          Icon(Icons.directions_run, color: valueColor, size: 17),
         ],
       ),
       Row(
@@ -195,14 +219,14 @@ class _PlayerStatsAppBarTextState extends State<PlayerStatsAppBarText>
         children: [
           Text(
             "$totalGoals ",
-            style: TextStyle(color: valueColor, fontSize: 18),
+            style: _valueStyle(valueColor),
           ),
-          Icon(Icons.sports_soccer, color: valueColor, size: 18),
+          Icon(Icons.sports_soccer, color: valueColor, size: 17),
           Text(
             " / $totalAssists ",
-            style: TextStyle(color: valueColor, fontSize: 18),
+            style: _valueStyle(valueColor),
           ),
-          Icon(Icons.handshake_outlined, color: valueColor, size: 18),
+          Icon(Icons.handshake_outlined, color: valueColor, size: 17),
         ],
       ),
       Row(
@@ -211,7 +235,7 @@ class _PlayerStatsAppBarTextState extends State<PlayerStatsAppBarText>
         children: [
           Text(
             "Pokuty: $totalFines Kč",
-            style: TextStyle(color: valueColor, fontSize: 18),
+            style: _valueStyle(valueColor),
           ),
         ],
       ),
@@ -221,14 +245,14 @@ class _PlayerStatsAppBarTextState extends State<PlayerStatsAppBarText>
         children: [
           Text(
             "$totalBeers ",
-            style: TextStyle(color: valueColor, fontSize: 18),
+            style: _valueStyle(valueColor),
           ),
-          Icon(Icons.sports_bar, color: valueColor, size: 18),
+          Icon(Icons.sports_bar, color: valueColor, size: 17),
           Text(
             " / $totalLiquors ",
-            style: TextStyle(color: valueColor, fontSize: 18),
+            style: _valueStyle(valueColor),
           ),
-          Icon(Icons.liquor, color: valueColor, size: 18),
+          Icon(Icons.liquor, color: valueColor, size: 17),
         ],
       ),
     ];
@@ -240,26 +264,41 @@ class _PlayerStatsAppBarTextState extends State<PlayerStatsAppBarText>
       builder: (context, constraints) {
         return SizedBox(
           width: constraints.maxWidth,
-          child: FittedBox(
-            fit: BoxFit.scaleDown,
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Text(
-                  "$seasonName | ",
-                  style: TextStyle(color: valueColor, fontSize: 18),
-                ),
-                SlideTransition(
-                  position: _shakeAnimation,
-                  child: AnimatedSwitcher(
-                    duration: const Duration(milliseconds: 350),
-                    child: KeyedSubtree(
-                      key: ValueKey(index),
-                      child: currentWidget,
+          child: Align(
+            alignment: Alignment.centerLeft,
+            child: FittedBox(
+              fit: BoxFit.scaleDown,
+              alignment: Alignment.centerLeft,
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    "$seasonName | ",
+                    style: TextStyle(
+                      color: appColors.textPrimary,
+                      fontSize: 15,
+                      fontWeight: FontWeight.w600,
+                      height: 1.1,
                     ),
                   ),
-                ),
-              ],
+                  SlideTransition(
+                    position: _shakeAnimation,
+                    child: AnimatedSwitcher(
+                      duration: const Duration(milliseconds: 350),
+                      transitionBuilder: (child, animation) {
+                        return FadeTransition(
+                          opacity: animation,
+                          child: child,
+                        );
+                      },
+                      child: KeyedSubtree(
+                        key: ValueKey(index),
+                        child: currentWidget,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
             ),
           ),
         );

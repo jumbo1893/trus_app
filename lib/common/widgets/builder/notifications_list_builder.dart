@@ -9,45 +9,35 @@ class NotificationListBuilder<T> extends ConsumerWidget {
   final AsyncValue<List<NotificationApiModel>> notificationsList;
 
   const NotificationListBuilder({
-    Key? key,
+    super.key,
     required this.notificationsList,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-
     return notificationsList.when(
-      loading: () => const Loader(),
-      error: (_, __) => const SizedBox(),
-      data: (modelList) => ListView.builder(
-        shrinkWrap: true,
-        itemCount: modelList.length,
-        itemBuilder: (context, index) {
-          var notification =
-             modelList[index];
-          return Column(
-            children: [
-              InkWell(
-                onTap: () => {},
-                child: Padding(
-                  padding: const EdgeInsets.only(
-                      bottom: 8.0, left: 8, right: 8),
-                  child: Container(
-                      decoration: const BoxDecoration(
-                          border: Border(
-                              bottom: BorderSide(
-                                color: Colors.grey,
-                              ))),
-                      child: NotificationListTile(
-                        notificationModel: notification,
-                        padding: 16,
-                      )),
-                ),
-              )
-            ],
-          );
-        },
-      )
+      loading: () => const Center(child: Loader()),
+      error: (_, __) => const SizedBox.shrink(),
+      data: (modelList) {
+        if (modelList.isEmpty) {
+          return const SizedBox.shrink();
+        }
+
+        return ListView.separated(
+          shrinkWrap: true,
+          padding: const EdgeInsets.fromLTRB(16, 8, 16, 100),
+          itemCount: modelList.length,
+          separatorBuilder: (_, __) => const SizedBox(height: 12),
+          itemBuilder: (context, index) {
+            final notification = modelList[index];
+
+            return NotificationListTile(
+              notificationModel: notification,
+              onTap: () {},
+            );
+          },
+        );
+      },
     );
   }
 }

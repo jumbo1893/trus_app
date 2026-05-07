@@ -14,3 +14,8 @@ class ApiFieldError<T> extends ApiResult<T> {
   final Map<String, String> fieldErrors;
   ApiFieldError(this.fieldErrors);
 }
+
+class LoginExpired<T> extends ApiResult<T> {
+  final String message;
+  LoginExpired(this.message);
+}

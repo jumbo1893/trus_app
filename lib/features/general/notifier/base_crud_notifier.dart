@@ -5,23 +5,20 @@ import '../repository/api_result.dart';
 import '../state/base_crud_state.dart';
 import 'app_notifier.dart';
 
-
 abstract class BaseCrudNotifier<T, S extends BaseCrudState<T>>
     extends AppNotifier<S> {
+  BaseCrudNotifier(Ref ref, S state) : super(ref, state);
 
-  BaseCrudNotifier(
-      Ref ref,
-      S state,
-      ) : super(ref, state);
-
-  S copyWithState({
-    Map<String, String>? errors,
-  });
+  S copyWithState({Map<String, String>? errors});
 
   bool validate();
+
   T buildModel();
+
   Future<void> create(T model);
+
   Future<void> update(T model);
+
   Future<void> delete(T model);
 
   Future<void> submit({
@@ -56,27 +53,29 @@ abstract class BaseCrudNotifier<T, S extends BaseCrudState<T>>
       successSnack: successSnack,
       showLoading: showLoading,
       successResultSnack: successResultSnack,
-
     );
     switch (result) {
       case ApiSuccess():
-      // invalidace listu/detailu apod.
+        // invalidace listu/detailu apod.
         //screenController.ref.invalidate(invalidateProvider);
-        if (onSuccessAction != null) onSuccessAction(model);
-        changeFragment(onSuccessRedirect);
-
+        if (onSuccessAction != null) {
+          onSuccessAction(state.model);
+        } else {
+          changeFragment(onSuccessRedirect);
+        }
         break;
 
       case ApiFieldError():
-      // vrátit field errors do form state
+        // vrátit field errors do form state
         state = copyWithState(errors: result.fieldErrors);
         break;
 
       case ApiError():
+        // UI už ukázal snack/dialog, tady není nutné nic
+        break;
+      case LoginExpired<void>():
       // UI už ukázal snack/dialog, tady není nutné nic
         break;
     }
-
   }
 }
-

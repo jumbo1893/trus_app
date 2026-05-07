@@ -8,7 +8,6 @@ import 'package:trus_app/features/achievement/screens/view_player_achievement_de
 import 'package:trus_app/features/fine/match/screens/fine_player_screen.dart';
 import 'package:trus_app/features/fine/screens/fine_screen.dart';
 import 'package:trus_app/features/football/table/screens/main_table_team_screen.dart';
-import 'package:trus_app/features/footbar/screens/footbar_sync_screen.dart';
 import 'package:trus_app/features/goal/screen/goal_screen.dart';
 import 'package:trus_app/features/match/match_notifier_args.dart';
 import 'package:trus_app/features/match/screens/add_match_screen.dart';
@@ -336,9 +335,6 @@ class ScreenController {
     ),
     const FootbarConnectScreen(
       //38
-    ),
-    const FootbarSyncScreen(
-      //39
     ),
     const FootbarCompareScreen(
       //40

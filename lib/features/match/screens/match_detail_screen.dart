@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:trus_app/colors.dart';
 import 'package:trus_app/common/widgets/loader.dart';
 import 'package:trus_app/common/widgets/screen/custom_consumer_stateful_widget.dart';
 import 'package:trus_app/features/match/controller/edit/match_edit_notifier.dart';
 import 'package:trus_app/models/enum/match_detail_options.dart';
+import 'package:trus_app/theme/app_colors.dart';
 
 import '../../main/controller/screen_variables_notifier.dart';
 import 'edit_match_screen.dart';
@@ -27,7 +27,6 @@ class _MatchDetailScreenState extends ConsumerState<MatchDetailScreen>
     with TickerProviderStateMixin {
   TabController? _tabController;
 
-  // pevné pořadí tabů
   static const List<MatchDetailOptions> _order = [
     MatchDetailOptions.editMatch,
     MatchDetailOptions.footballMatchDetail,
@@ -52,7 +51,8 @@ class _MatchDetailScreenState extends ConsumerState<MatchDetailScreen>
     final initialIndex = orderedOptions.indexOf(preferredInitial);
     final safeInitial = initialIndex >= 0 ? initialIndex : 0;
 
-    final needsRecreate = _tabController == null || _tabController!.length != length;
+    final needsRecreate =
+        _tabController == null || _tabController!.length != length;
 
     if (needsRecreate) {
       _tabController?.dispose();
@@ -64,14 +64,12 @@ class _MatchDetailScreenState extends ConsumerState<MatchDetailScreen>
       return;
     }
 
-    // length sedí, jen případně přepni index (bez recreate)
     if (_tabController!.index != safeInitial) {
       _tabController!.index = safeInitial;
     }
   }
 
   List<MatchDetailOptions> _orderedOptions(List<MatchDetailOptions> raw) {
-    // raw může být v libovolném pořadí → přeuspořádej do _order
     final set = raw.toSet();
     return _order.where(set.contains).toList();
   }
@@ -85,24 +83,13 @@ class _MatchDetailScreenState extends ConsumerState<MatchDetailScreen>
       case MatchDetailOptions.homeMatchDetail:
         return _fittedTab("Domácí");
       case MatchDetailOptions.awayMatchDetail:
-        return  _fittedTab("Hosté");
+        return _fittedTab("Hosté");
       case MatchDetailOptions.mutualMatches:
         return _fittedTab("H2H");
     }
   }
 
-  Tab _fittedTab(String text) {
-    return Tab(
-      child: FittedBox(
-        fit: BoxFit.scaleDown,
-        child: Text(
-          text,
-          maxLines: 2,
-          textAlign: TextAlign.center,
-        ),
-      ),
-    );
-  }
+  Tab _fittedTab(String text) => Tab(text: text);
 
   Widget _screenFor(MatchDetailOptions o) {
     switch (o) {
@@ -121,15 +108,12 @@ class _MatchDetailScreenState extends ConsumerState<MatchDetailScreen>
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.appColors;
     final args = ref.watch(matchNotifierArgsProvider);
     final state = ref.watch(matchEditNotifierProvider(args));
 
-    // když se načítá a ještě nemáš taby → loader
-    /*if (state.loading.isLoading && state.matchOptions.isEmpty) {
-      return const Loader();
-    }*/
-
     final options = _orderedOptions(state.matchOptions);
+
     _syncTabController(
       orderedOptions: options,
       preferredInitial: state.initialTab,
@@ -141,15 +125,43 @@ class _MatchDetailScreenState extends ConsumerState<MatchDetailScreen>
     }
 
     return Scaffold(
+      backgroundColor: colors.backgroundPrimary,
       appBar: AppBar(
-        backgroundColor: Colors.white,
         toolbarHeight: 0,
-        bottom: TabBar(
-
-          controller: controller,
-          labelColor: blackColor,
-          indicatorColor: orangeColor,
-          tabs: options.map(_tabLabel).toList(),
+        backgroundColor: colors.backgroundPrimary,
+        surfaceTintColor: Colors.transparent,
+        elevation: 0,
+        bottom: PreferredSize(
+          preferredSize: const Size.fromHeight(60),
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(16),
+              child: Container(
+                height: 44,
+                padding: const EdgeInsets.all(3),
+                decoration: BoxDecoration(
+                  color: colors.backgroundSecondary,
+                  borderRadius: BorderRadius.circular(16),
+                ),
+                child: TabBar(
+                  controller: controller,
+                  isScrollable: false,
+                  dividerColor: Colors.transparent,
+                  indicatorSize: TabBarIndicatorSize.tab,
+                  labelPadding: EdgeInsets.zero,
+                  indicatorPadding: EdgeInsets.zero,
+                  indicator: BoxDecoration(
+                    color: colors.cardBackground,
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  labelColor: colors.textPrimary,
+                  unselectedLabelColor: colors.textMuted,
+                  tabs: options.map(_tabLabel).toList(),
+                ),
+              ),
+            ),
+          ),
         ),
       ),
       body: TabBarView(

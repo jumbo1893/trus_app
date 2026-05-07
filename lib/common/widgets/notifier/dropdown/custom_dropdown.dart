@@ -5,13 +5,11 @@ import 'package:trus_app/common/widgets/notifier/dropdown/i_dropdown_notifier.da
 import 'package:trus_app/common/widgets/notifier/dropdown/i_dropdown_state.dart';
 import 'package:trus_app/models/api/interfaces/dropdown_item.dart';
 
-import '../../../../colors.dart';
 import '../../loader.dart';
 
 class CustomDropdown extends ConsumerWidget {
   final String hint;
   final String? error;
-  final bool enableBorder;
   final IDropdownState state;
   final IDropdownNotifier notifier;
 
@@ -19,124 +17,121 @@ class CustomDropdown extends ConsumerWidget {
     Key? key,
     required this.hint,
     this.error,
-    this.enableBorder = false,
     required this.state,
     required this.notifier,
   }) : super(key: key);
 
   List<DropdownMenuItem<DropdownItem>> _buildItems(
-    List<DropdownItem> dropdownItems,
-  ) {
-    final List<DropdownMenuItem<DropdownItem>> items = [];
-
-    for (final item in dropdownItems) {
-      items.add(
-        DropdownMenuItem<DropdownItem>(
-          value: item,
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 8.0),
-            child: Text(
-              item.dropdownItem(),
-              style: const TextStyle(fontSize: 14),
-            ),
+      List<DropdownItem> dropdownItems,
+      ) {
+    return dropdownItems.map((item) {
+      return DropdownMenuItem<DropdownItem>(
+        value: item,
+        child: Text(
+          item.dropdownItem(),
+          style: const TextStyle(
+            fontSize: 12,
+            color: Colors.black87,
+            fontWeight: FontWeight.w500,
           ),
+          softWrap: true,
+          maxLines: 3,
+          overflow: TextOverflow.visible,
         ),
       );
-
-      // Divider mezi položkami (ne za poslední)
-      if (item != dropdownItems.last) {
-        items.add(
-          const DropdownMenuItem<DropdownItem>(
-            enabled: false,
-            child: Divider(),
-          ),
-        );
-      }
-    }
-    return items;
-  }
-
-  List<double> _getCustomItemsHeights(int length) {
-    final List<double> heights = [];
-    for (int i = 0; i < (length * 2) - 1; i++) {
-      heights.add(i.isEven ? 40 : 4);
-    }
-    return heights;
-  }
-
-  InputDecoration _decoration() {
-    if (!enableBorder) {
-      return InputDecoration(
-        labelText: hint,
-        errorText: (error != null && error!.isNotEmpty) ? error : null,
-        border: InputBorder.none,
-        contentPadding: const EdgeInsets.only(left: 10, top: 10),
-      );
-    }
-
-    return InputDecoration(
-      labelText: hint,
-      errorText: (error != null && error!.isNotEmpty) ? error : null,
-      enabledBorder: const UnderlineInputBorder(
-        borderSide: BorderSide(color: orangeColor),
-      ),
-      focusedBorder: const UnderlineInputBorder(
-        borderSide: BorderSide(color: orangeColor),
-      ),
-      errorBorder: const UnderlineInputBorder(
-        borderSide: BorderSide(color: Colors.red),
-      ),
-      focusedErrorBorder: const UnderlineInputBorder(
-        borderSide: BorderSide(color: Colors.red),
-      ),
-      contentPadding: const EdgeInsets.only(left: 10, top: 10),
-    );
+    }).toList();
   }
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     return state.getDropdownItems().when(
-          loading: () => const Loader(),
-          error: (_, __) => const SizedBox(),
-          data: (dropdownItems) {
-            if (dropdownItems.isEmpty) {
-              return const SizedBox();
-            }
+      loading: () => const SizedBox(
+        height: 42,
+        child: Center(child: Loader()),
+      ),
+      error: (_, __) => const SizedBox.shrink(),
+      data: (dropdownItems) {
+        if (dropdownItems.isEmpty) {
+          return const SizedBox.shrink();
+        }
 
-            return InputDecorator(
-              decoration: _decoration(),
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              hint,
+              style: const TextStyle(
+                fontSize: 13,
+                fontWeight: FontWeight.w600,
+                color: Colors.black54,
+              ),
+            ),
+            const SizedBox(height: 5),
+            Container(
+              height: 42,
+              padding: const EdgeInsets.symmetric(horizontal: 12),
+              decoration: BoxDecoration(
+                color: Colors.black.withAlpha(8),
+                borderRadius: BorderRadius.circular(16),
+              ),
               child: DropdownButtonHideUnderline(
                 child: DropdownButton2<DropdownItem>(
                   isExpanded: true,
+                  value: state.getSelected(),
                   hint: Text(
                     hint,
-                    style: TextStyle(
+                    style: const TextStyle(
                       fontSize: 14,
-                      color: Theme.of(context).hintColor,
+                      color: Colors.black45,
                     ),
                   ),
-                  value: state.getSelected(),
                   items: _buildItems(dropdownItems),
                   onChanged: (item) {
                     if (item != null) {
                       notifier.selectDropdown(item);
                     }
                   },
+                  iconStyleData: const IconStyleData(
+                    icon: Icon(
+                      Icons.keyboard_arrow_down_rounded,
+                      size: 20,
+                      color: Colors.black54,
+                    ),
+                  ),
                   buttonStyleData: const ButtonStyleData(
-                    height: 40,
+                    height: 42,
                     width: double.infinity,
+                    padding: EdgeInsets.zero,
                   ),
-                  dropdownStyleData: const DropdownStyleData(
-                    maxHeight: 200,
+                  dropdownStyleData: DropdownStyleData(
+                    maxHeight: 260,
+                    elevation: 6,
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(18),
+                    ),
+                    offset: const Offset(0, 6),
                   ),
-                  menuItemStyleData: MenuItemStyleData(
-                    padding: const EdgeInsets.symmetric(horizontal: 8.0),
-                    customHeights: _getCustomItemsHeights(dropdownItems.length),
+                  menuItemStyleData: const MenuItemStyleData(
+                    height: 40,
+                    padding: EdgeInsets.symmetric(horizontal: 12),
                   ),
                 ),
               ),
-            );
-          },
+            ),
+            if (error != null && error!.isNotEmpty) ...[
+              const SizedBox(height: 6),
+              Text(
+                error!,
+                style: const TextStyle(
+                  color: Colors.red,
+                  fontSize: 12,
+                ),
+              ),
+            ],
+          ],
         );
+      },
+    );
   }
 }

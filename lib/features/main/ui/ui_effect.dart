@@ -21,3 +21,18 @@ class UiConfirmationDialog extends UiEffect {
   final VoidCallback continueCallBack;
   const UiConfirmationDialog(this.message, this.continueCallBack);
 }
+
+class UiConfirmationSheet extends UiEffect {
+  final String message;
+  final VoidCallback continueCallBack;
+  const UiConfirmationSheet(this.message, this.continueCallBack);
+}
+
+class UiLoadingSheet extends UiEffect {
+  final String? message;
+  const UiLoadingSheet(this.message);
+}
+
+class UiHideLoadingSheet extends UiEffect {
+  const UiHideLoadingSheet();
+}

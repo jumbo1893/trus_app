@@ -156,31 +156,26 @@ class FineMatchNotifier extends AppNotifier<FineMatchState> {
     return playerIds;
   }
 
-  void onIconClick(int index) {
-    switch (index) {
-      case 0:
-        if(state.checkedPlayers.isEmpty) {
-          ui.showSnack("Musí být označen aspoň jeden hráč!");
-        }
-        else {
-          screenController.setMatch(state.selectedMatch!);
-          screenController.setPlayerIdList(getCheckedPlayerIdList());
-          changeFragment(MultipleFinePlayersScreen.id);
-        }
-        break;
-    //všichni hráči
-      case 1:
-        state = state.copyWith(checkedPlayers: state.allPlayers);
-          break;
+  void selectAllPlayers() {
+    state = state.copyWith(checkedPlayers: state.allPlayers);
+  }
 
-    //nehrající
-      case 2:
-        state = state.copyWith(checkedPlayers: state.otherPlayers);
-        break;
-    //hrající
-      case 3:
-        state = state.copyWith(checkedPlayers: state.playersInMatch);
-        break;
+  void selectNotPlayingPlayers() {
+    state = state.copyWith(checkedPlayers: state.otherPlayers);
+  }
+
+  void selectPlayingPlayers() {
+    state = state.copyWith(checkedPlayers: state.playersInMatch);
+  }
+
+  void confirmSelection() {
+    if(state.checkedPlayers.isEmpty) {
+      ui.showSnack("Musí být označen aspoň jeden hráč!");
+    }
+    else {
+      screenController.setMatch(state.selectedMatch!);
+      screenController.setPlayerIdList(getCheckedPlayerIdList());
+      changeFragment(MultipleFinePlayersScreen.id);
     }
   }
 

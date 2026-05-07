@@ -2,9 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:trus_app/common/widgets/home/birthday_text.dart';
 import 'package:trus_app/features/general/global_variables_controller.dart';
+import 'package:trus_app/features/home/screens/rotating_stats_widget.dart';
 
-import '../../../common/widgets/chart/home_chart.dart';
-import '../../../common/widgets/chart/pick_chart_player.dart';
 import '../../../common/widgets/football/football_match_box.dart';
 import '../../../common/widgets/home/random_fact_box.dart';
 import '../../../common/widgets/screen/custom_consumer_stateful_widget.dart';
@@ -22,16 +21,16 @@ class HomeScreen extends CustomConsumerStatefulWidget {
 }
 
 class _HomeScreenState extends ConsumerState<HomeScreen> {
-  static const double padding = 20;
+  static const double sectionSpacing = 16;
 
   @override
   Widget build(BuildContext context) {
     final state = ref.watch(homeNotifierProvider);
     final notifier = ref.read(homeNotifierProvider.notifier);
     final appTeam = ref.read(globalVariablesControllerProvider).appTeam;
-    final size = MediaQuery.of(context).size;
 
     return Scaffold(
+      backgroundColor: const Color(0xFFF6F7F9),
       body: RefreshIndicator(
         color: Colors.orange,
         backgroundColor: Colors.white,
@@ -39,42 +38,23 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         notificationPredicate: (n) => n.depth == 0,
         child: ListView(
           physics: const AlwaysScrollableScrollPhysics(),
-          padding: EdgeInsets.zero,
+          padding: const EdgeInsets.fromLTRB(0, 8, 0, 24),
           children: [
             state.setup.when(
               data: (setup) {
                 return Column(
                   crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
-                    const SizedBox(height: 8),
-
                     Image.asset(
-                      'images/nazev.png',
+                      'images/nazev_background.png',
                       height: 76,
                       width: 331,
                     ),
-                    const SizedBox(height: 15),
+                    const SizedBox(height: sectionSpacing),
 
-                    // NEXT MATCH
                     FootballMatchBox(
-                      padding: padding,
                       isNextMatch: true,
-                      detail: setup.nextAndLastFootballMatch[0],
-                      appTeamApiModel: appTeam,
-
-                      onAddPlayers: notifier.onButtonAddPlayersClick,
-                      onAddGoals: notifier.onButtonAddGoalsClick,
-                      onAddBeer: notifier.onButtonAddBeerClick,
-                      onAddFine: notifier.onButtonAddFineClick,
-                      onDetailMatch: notifier.onButtonDetailMatchClick,
-                      onCommonMatches: notifier.onCommonMatchesClick,
-                    ),
-
-                    // LAST MATCH
-                    FootballMatchBox(
-                      padding: padding,
-                      isNextMatch: true,
-                      detail: setup.nextAndLastFootballMatch[1],
+                      dashboardMatch: setup.nextMatch,
                       appTeamApiModel: appTeam,
                       onAddPlayers: notifier.onButtonAddPlayersClick,
                       onAddGoals: notifier.onButtonAddGoalsClick,
@@ -82,39 +62,41 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                       onAddFine: notifier.onButtonAddFineClick,
                       onDetailMatch: notifier.onButtonDetailMatchClick,
                       onCommonMatches: notifier.onCommonMatchesClick,
+                      onRedirect: notifier.onRedirect,
                     ),
-                    const SizedBox(height: 15),
+                    const SizedBox(height: sectionSpacing),
+
+                    FootballMatchBox(
+                      isNextMatch: false,
+                      dashboardMatch: setup.lastMatch,
+                      appTeamApiModel: appTeam,
+                      onAddPlayers: notifier.onButtonAddPlayersClick,
+                      onAddGoals: notifier.onButtonAddGoalsClick,
+                      onAddBeer: notifier.onButtonAddBeerClick,
+                      onAddFine: notifier.onButtonAddFineClick,
+                      onDetailMatch: notifier.onButtonDetailMatchClick,
+                      onCommonMatches: notifier.onCommonMatchesClick,
+                      onRedirect: notifier.onRedirect,
+                    ),
+                    const SizedBox(height: sectionSpacing),
+
                     BirthdayText(
-                      padding: padding,
                       nextBirthdayText: setup.nextBirthday,
                     ),
-                    const SizedBox(key: ValueKey('player_chart'), height: 15),
+                    const SizedBox(height: sectionSpacing),
 
-                    PickChartPlayer(
-                      size: size,
-                      padding: padding,
-                      chart: setup.chart,
-                    ),
-
-                    HomeChart(
-                      charts: setup.charts,
-                    ),
+                    RotatingStatsWidget(statsBoards: setup.statsBoards,),
+                    const SizedBox(height: sectionSpacing),
 
                     RandomFactBox(
                       facts: setup.randomFacts,
-                      padding: padding,
                     ),
 
                     const SizedBox(height: 24),
                   ],
                 );
               },
-
-              // ✅ žádný Loader
               loading: () => const _HomePlaceholder(),
-
-              // ✅ žádný Loader; error dialog ti ukáže globální uiFeedback,
-              // tady jen placeholder aby šel pull-to-refresh
               error: (_, __) => const _HomePlaceholder(),
             ),
           ],

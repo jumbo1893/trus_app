@@ -1,75 +1,141 @@
 import 'package:flutter/material.dart';
 
 import '../../../models/api/interfaces/add_to_string.dart';
+import '../../../theme/app_colors.dart';
+import '../../../theme/app_widget_values.dart';
 
 class ListviewAddModel extends StatelessWidget {
   final AddToString addToString;
   final bool goal;
-  final double padding;
   final VoidCallback onNumberAdded;
   final VoidCallback onNumberRemoved;
 
   const ListviewAddModel({
-    Key? key,
-    required this.padding,
+    super.key,
     required this.onNumberAdded,
     required this.onNumberRemoved,
     this.goal = false,
     required this.addToString,
-  }) : super(key: key);
-
-  Widget _numberBox(String value) {
-    return Container(
-      alignment: Alignment.center,
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-      decoration: BoxDecoration(
-        border: Border.all(color: Colors.grey.shade300),
-        borderRadius: BorderRadius.circular(8),
-      ),
-      child: Text(
-        value,
-        style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
-      ),
-    );
-  }
+  });
 
   @override
   Widget build(BuildContext context) {
-    final size = MediaQueryData.fromView(WidgetsBinding.instance.window).size;
     final value = addToString.numberToString(goal);
 
-    return Row(
-      children: [
-        SizedBox(
-          width: (size.width / 1.5) - padding,
-          child: Text(
-            addToString.toStringForListView(),
-            style: const TextStyle(fontSize: 16),
+    return Container(
+      padding: const EdgeInsets.fromLTRB(14, 14, 14, 14),
+      decoration: BoxDecoration(
+        color: context.appColors.cardBackground,
+        borderRadius: AppWidgetValues.borderRadiusXl,
+        boxShadow: AppWidgetValues.cardShadow,
+
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          Expanded(
+            child: Text(
+              addToString.toStringForListView(),
+              style: const TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.w600,
+                height: 1.3,
+                color: Color(0xFF111827),
+              ),
+            ),
+          ),
+          const SizedBox(width: 10),
+          _SingleStepperControl(
+            value: value,
+            onMinus: onNumberRemoved,
+            onPlus: onNumberAdded,
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _SingleStepperControl extends StatelessWidget {
+  final String value;
+  final VoidCallback onMinus;
+  final VoidCallback onPlus;
+
+  const _SingleStepperControl({
+    required this.value,
+    required this.onMinus,
+    required this.onPlus,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
+      decoration: BoxDecoration(
+        color: context.appColors.cardBackground,
+        borderRadius: AppWidgetValues.borderRadiusXl,
+        boxShadow: AppWidgetValues.cardShadow,
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          _StepperButton(
+            icon: Icons.remove,
+            color: Colors.redAccent,
+            onTap: onMinus,
+          ),
+          Container(
+            width: 36,
+            alignment: Alignment.center,
+            child: Text(
+              value,
+              style: const TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.w700,
+                color: Color(0xFF111827),
+              ),
+            ),
+          ),
+          _StepperButton(
+            icon: Icons.add,
+            color: Colors.green,
+            onTap: onPlus,
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _StepperButton extends StatelessWidget {
+  final IconData icon;
+  final Color color;
+  final VoidCallback onTap;
+
+  const _StepperButton({
+    required this.icon,
+    required this.color,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: Colors.white,
+      borderRadius: BorderRadius.circular(10),
+      child: InkWell(
+        borderRadius: BorderRadius.circular(10),
+        onTap: onTap,
+        child: SizedBox(
+          width: 32,
+          height: 32,
+          child: Icon(
+            icon,
+            color: color,
+            size: 20,
           ),
         ),
-        const SizedBox(width: 21),
-
-        SizedBox(
-          width: (size.width / 9) - 7,
-          child: IconButton(
-            onPressed: onNumberRemoved,
-            icon: const Icon(Icons.remove, color: Colors.red),
-          ),
-        ),
-
-        SizedBox(
-          width: (size.width / 9) - 7,
-          child: _numberBox(value),
-        ),
-
-        SizedBox(
-          width: (size.width / 9) - 7,
-          child: IconButton(
-            onPressed: onNumberAdded,
-            icon: const Icon(Icons.add, color: Colors.green),
-          ),
-        ),
-      ],
+      ),
     );
   }
 }

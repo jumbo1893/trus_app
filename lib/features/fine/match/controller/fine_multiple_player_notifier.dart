@@ -45,8 +45,12 @@ class FineMultiplePlayerNotifier extends AppNotifier<FineMultiplePlayerState> {
       successSnack: null,
       loadingMessage: "Načítám pokuty…",
     );
+
+    final initialValues = convertFinesToReceivedFines(fines, args.matchId).map((e) => e.numberToString(true)).toList();
+
     state = state.copyWith(
         receivedFines: convertFinesToReceivedFines(fines, args.matchId),
+        initialFineValues: initialValues,
         matchId: args.matchId,
         playerIdList: args.playerIdList
     );
@@ -82,6 +86,7 @@ class FineMultiplePlayerNotifier extends AppNotifier<FineMultiplePlayerState> {
   // ==========================================================
 
   void changeFines() async {
+    if (!state.hasChanges) return;
     final payload = ReceivedFineList(
       matchId: state.matchId,
       playerId: null,

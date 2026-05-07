@@ -17,7 +17,6 @@ import '../../../common/widgets/notifier/dropdown/dropdown_state.dart';
 import '../../../models/api/beer/beer_multi_add_response.dart';
 import '../../season/controller/season_dropdown_notifier.dart';
 import '../../season/season_args.dart';
-import '../beer_screen_mode.dart';
 import '../lines/player_lines.dart';
 import '../repository/beer_api_service.dart';
 
@@ -82,7 +81,6 @@ class BeerNotifier extends AppNotifier<BeerState> {
   }
 
   void _applySetup(BeerSetupResponse setup) {
-    // Sync sezonního dropdownu na setup.season bez vyvolání reload smyčky
     _suppressSeasonListen = true;
     try {
       ref
@@ -92,15 +90,18 @@ class BeerNotifier extends AppNotifier<BeerState> {
       _suppressSeasonListen = false;
     }
 
+    final initialValues = setup.beerList
+        .map((b) => '${b.beerNumber}|${b.liquorNumber}')
+        .toList();
+
     state = state.copyWith(
       selectedMatch: setup.match,
-      //selectedSeason: setup.season,
       matches: AsyncValue.data(setup.matchList),
       beers: setup.beerList,
+      initialBeerValues: initialValues,
       playerIndex: 0,
     );
 
-    //_rebuildPlayerLines();
     _initPlayerLinesFromBeers();
   }
 
@@ -136,12 +137,8 @@ class BeerNotifier extends AppNotifier<BeerState> {
   // ==========================================================
   // MODE (LIST/PAINT)
   // ==========================================================
-  void toggleMode() {
-    state = state.copyWith(
-      mode: state.mode == BeerScreenMode.list
-          ? BeerScreenMode.paint
-          : BeerScreenMode.list,
-    );
+  void toggleMode(bool draw) {
+    state = state.copyWith(drawMode: draw);
   }
 
   // ==========================================================
@@ -188,21 +185,26 @@ class BeerNotifier extends AppNotifier<BeerState> {
   // CONFIRM
   // ==========================================================
   Future<void> changeBeers() async {
+    if (!state.hasChanges) return;
+
     final matchId = state.selectedMatch?.id;
     if (matchId == null) {
       ui.showSnack("Není vybraný zápas");
       return;
     }
+
     final payload = BeerList(
       matchId: matchId,
       beerList: _toBeerNoMatchList(state.beers),
     );
+
     final result = await runUiWithResult<BeerMultiAddResponse>(
           () => beerApi.addBeers(payload),
       showLoading: true,
       successResultSnack: true,
       loadingMessage: "Ukládám…",
     );
+
     ref.read(screenVariablesNotifierProvider.notifier).setMatch(state.selectedMatch!);
     changeFragment(HomeScreen.id);
   }

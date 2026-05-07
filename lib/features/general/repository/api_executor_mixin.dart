@@ -1,4 +1,5 @@
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:trus_app/common/repository/exception/model/login_expired_exception.dart';
 
 import '../../../common/repository/exception/field_validation_exception.dart';
 import '../../../common/repository/exception/internal_snackbar_exception.dart';
@@ -34,6 +35,8 @@ mixin ApiExecutorMixin {
       return ApiError(e.cause);
     } on InternalSnackBarException catch (e) {
       return ApiError(e.cause);
+    } on LoginExpiredException catch (e) {
+      return LoginExpired(e.toString());
     } catch (_) {
       return ApiError("Neočekávaná chyba");
     }

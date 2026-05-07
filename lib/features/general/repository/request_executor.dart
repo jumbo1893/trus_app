@@ -16,6 +16,7 @@ import '../../../common/repository/exception/login_exception.dart';
 import '../../../common/repository/exception/model/login_expired_exception.dart';
 import '../../../common/repository/header/cookies/header_provider.dart';
 import '../../../models/api/auth/user_api_model.dart';
+import '../../main/ui/ui_feedback_notifier.dart';
 
 final requestExecutorProvider = Provider<RequestExecutor>((ref) {
   return RequestExecutor(ref);
@@ -31,7 +32,7 @@ class RequestExecutor extends ResponseValidator {
 
   final Duration timeoutDuration = const Duration(seconds: 120);
 
-  //final List<Future<void> Function()> _requestQueue = [];
+  Future<void>? _reLoginFuture;
 
   http.Client getClient() {
     if (isTestEnvironment()) {
@@ -75,12 +76,16 @@ class RequestExecutor extends ResponseValidator {
     }
     catch (e, stack) {
       if (e is LoginExpiredException && !secondTry) {
-        if (auth.currentUser == null) {
-          throw LoginException(
-              "Byl jste automaticky odhlášen, nelze pokračovat");
+        final ui = ref.read(uiFeedbackProvider.notifier);
+
+        ui.showSessionLoadingSheet();
+
+        try {
+          await _ensureReLogin();
+          return await _executeRequest(request, mapFunction, true);
+        } finally {
+          ui.hideSessionLoadingSheet();
         }
-        await reLoginToServer(auth.currentUser!.email!, auth.currentUser!.uid);
-        return await _executeRequest(request, mapFunction, true);
       }
       if (e is TimeoutException || e is http.ClientException) {
         _enqueueRequest(request, mapFunction);
@@ -96,65 +101,85 @@ class RequestExecutor extends ResponseValidator {
   }
 
 
-  Future<T> executeGetRequest<T extends dynamic>(Uri uri,
+  Future<T> executeGetRequest<T>(
+      Uri uri,
       T Function(dynamic) mapFunction,
-      Map<String, String?>? queryParameters) async {
-    final headers = await _headerProvider.getHeaders();
+      Map<String, String?>? queryParameters,
+      ) async {
     return await _executeRequest(
-            (client) =>
-            client.get(
-              uri.replace(queryParameters: queryParameters),
-              headers: headers,
-            ),
-        mapFunction, false
+          (client) async {
+        final headers = await _headerProvider.getHeaders();
+
+        return client.get(
+          uri.replace(queryParameters: queryParameters),
+          headers: headers,
+        );
+      },
+      mapFunction,
+      false,
     );
   }
 
 
-  Future<T> executePostRequest<T extends dynamic>(Uri uri,
+  Future<T> executePostRequest<T>(
+      Uri uri,
       T Function(dynamic) mapFunction,
-      Object body) async {
-    final headers = await _headerProvider.getHeaders();
+      Object body,
+      ) async {
     return await _executeRequest(
-            (client) =>
-            client.post(
-              uri,
-              headers: headers,
-              body: body,
-            ),
-        mapFunction, false
+          (client) async {
+        final headers = await _headerProvider.getHeaders();
+
+        return client.post(
+          uri,
+          headers: headers,
+          body: body,
+        );
+      },
+      mapFunction,
+      false,
     );
   }
 
 
-  Future<T> executePutRequest<T extends dynamic>(Uri uri,
+  Future<T> executePutRequest<T>(
+      Uri uri,
       T Function(dynamic) mapFunction,
-      Object body) async {
-    final headers = await _headerProvider.getHeaders();
+      Object body,
+      ) async {
     return await _executeRequest(
-            (client) =>
-            client.put(
-              uri,
-              headers: headers,
-              body: body,
-            ),
-        mapFunction, false
+          (client) async {
+        final headers = await _headerProvider.getHeaders();
+
+        return client.put(
+          uri,
+          headers: headers,
+          body: body,
+        );
+      },
+      mapFunction,
+      false,
     );
   }
 
 
-  Future<T> executeDeleteRequest<T extends dynamic>(Uri uri,
+  Future<T> executeDeleteRequest<T>(
+      Uri uri,
       T Function(dynamic) mapFunction,
-      Object? body) async {
-    final headers = await _headerProvider.getHeaders();
+      Object? body,
+      ) async {
     return await _executeRequest(
-            (client) =>
-            client.delete(
-              uri,
-              headers: headers,
-              body: body,
-            ),
-        mapFunction, false
+          (client) async {
+        final headers = await _headerProvider.getHeaders();
+
+        return client.delete(
+          uri,
+          headers: headers,
+          body: body,
+        );
+      },
+      mapFunction,
+      false,
     );
   }
 
@@ -185,5 +210,22 @@ class RequestExecutor extends ResponseValidator {
         print("Retry request failed: $e");
       }
     }
+  }
+
+  Future<void> _ensureReLogin() {
+    final current = auth.currentUser;
+
+    if (current == null) {
+      throw LoginException("Byl jste automaticky odhlášen, nelze pokračovat");
+    }
+
+    _reLoginFuture ??= reLoginToServer(
+      current.email!,
+      current.uid,
+    ).whenComplete(() {
+      _reLoginFuture = null;
+    });
+
+    return _reLoginFuture!;
   }
 }

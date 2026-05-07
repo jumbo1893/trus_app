@@ -156,6 +156,18 @@ class FootballMatchApiModel implements JsonAndHttpConverter, ModelToString {
     return toStringForLastMatch();
   }
 
+  String toStringForTitle() {
+    return "${toStringNameWithOpponent()} ${_isScoreUnknown() ? "" : "$homeGoalNumber:$awayGoalNumber"}";
+  }
+
+  String toStringForDateSubtitle() {
+    return "v čase ${formatDateForFrontend(date)}";
+  }
+
+  String toStringForMeta() {
+    return "Jedná se o souboj ${opponentsTeamRanking()} v $round. kole • Stadion: $stadium • Rozhodčí: ${refereeToString()}";
+  }
+
   String toStringForNextMatch() {
     return "${toStringNameWithOpponent()}, v čase ${formatDateForFrontend(date)}. Jedná se o souboj ${opponentsTeamRanking()} v $round. kole a bude se hrát ${stadiumToString()}. Pískat bude ${refereeToString()}";
   }
@@ -195,7 +207,7 @@ class FootballMatchApiModel implements JsonAndHttpConverter, ModelToString {
 
   String simpleResultToString() {
     if (_isScoreUnknown()) {
-      return "neznámý";
+      return "";
     }
     return "$homeGoalNumber:$awayGoalNumber";
   }
@@ -371,7 +383,8 @@ class FootballMatchApiModel implements JsonAndHttpConverter, ModelToString {
   }
 
   String toStringForSubtitle() {
-    return "Datum: ${formatDateForFrontend(date)}, výsledek: ${simpleResultToString()}";
+    String secondText = _isScoreUnknown() ? "stadion: $stadium" : "výsledek: ${simpleResultToString()}";
+    return "Datum: ${formatDateForFrontend(date)}, $secondText";
   }
 
   String toStringForMutualMatchesSubtitle(bool homeTeam) {
