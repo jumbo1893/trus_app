@@ -12,12 +12,7 @@
           "package_name": "com.jumbo.trus_app"
         }
       },
-      "oauth_client": [
-        {
-          "client_id": "636205690539-sh2ev9ba8p6dlc9mu6nj4269q1kfui9g.apps.googleusercontent.com",
-          "client_type": 3
-        }
-      ],
+      "oauth_client": [],
       "api_key": [
         {
           "current_key": "AIzaSyCOm6lge37xxE5Bw7uesoUg8CJzxE3UFo4"
@@ -25,12 +20,7 @@
       ],
       "services": {
         "appinvite_service": {
-          "other_platform_oauth_client": [
-            {
-              "client_id": "636205690539-sh2ev9ba8p6dlc9mu6nj4269q1kfui9g.apps.googleusercontent.com",
-              "client_type": 3
-            }
-          ]
+          "other_platform_oauth_client": []
         }
       }
     }

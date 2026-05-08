@@ -17,10 +17,7 @@ import 'package:flutter/foundation.dart'
 class DefaultFirebaseOptions {
   static FirebaseOptions get currentPlatform {
     if (kIsWeb) {
-      throw UnsupportedError(
-        'DefaultFirebaseOptions have not been configured for web - '
-        'you can reconfigure this by running the FlutterFire CLI again.',
-      );
+      return web;
     }
     switch (defaultTargetPlatform) {
       case TargetPlatform.android:
@@ -28,15 +25,9 @@ class DefaultFirebaseOptions {
       case TargetPlatform.iOS:
         return ios;
       case TargetPlatform.macOS:
-        throw UnsupportedError(
-          'DefaultFirebaseOptions have not been configured for macos - '
-          'you can reconfigure this by running the FlutterFire CLI again.',
-        );
+        return macos;
       case TargetPlatform.windows:
-        throw UnsupportedError(
-          'DefaultFirebaseOptions have not been configured for windows - '
-          'you can reconfigure this by running the FlutterFire CLI again.',
-        );
+        return windows;
       case TargetPlatform.linux:
         throw UnsupportedError(
           'DefaultFirebaseOptions have not been configured for linux - '
@@ -59,11 +50,40 @@ class DefaultFirebaseOptions {
 
   static const FirebaseOptions ios = FirebaseOptions(
     apiKey: 'AIzaSyCjLXiqtcBeeN7Ui3sZGeTsgWzaho1wSwk',
-    appId: '1:636205690539:ios:59a11eb850231750c491ee',
+    appId: '1:636205690539:ios:0a51d3745929fcb7c491ee',
     messagingSenderId: '636205690539',
     projectId: 'trus-flutter',
     storageBucket: 'trus-flutter.appspot.com',
-    iosClientId: '636205690539-p53in3s031qjec4mcopnnotl4gqft0cm.apps.googleusercontent.com',
-    iosBundleId: 'com.jumbo.trusApp',
+    iosBundleId: 'com.jumbo.trus',
   );
+
+  static const FirebaseOptions web = FirebaseOptions(
+    apiKey: 'AIzaSyBD7JBBwqFbt13YpEP3Mdr3W1SbbCDPMNc',
+    appId: '1:636205690539:web:2505fb0c47d9ebd1c491ee',
+    messagingSenderId: '636205690539',
+    projectId: 'trus-flutter',
+    authDomain: 'trus-flutter.firebaseapp.com',
+    storageBucket: 'trus-flutter.appspot.com',
+    measurementId: 'G-LQXR64W80B',
+  );
+
+  static const FirebaseOptions macos = FirebaseOptions(
+    apiKey: 'AIzaSyCjLXiqtcBeeN7Ui3sZGeTsgWzaho1wSwk',
+    appId: '1:636205690539:ios:0a51d3745929fcb7c491ee',
+    messagingSenderId: '636205690539',
+    projectId: 'trus-flutter',
+    storageBucket: 'trus-flutter.appspot.com',
+    iosBundleId: 'com.jumbo.trus',
+  );
+
+  static const FirebaseOptions windows = FirebaseOptions(
+    apiKey: 'AIzaSyBD7JBBwqFbt13YpEP3Mdr3W1SbbCDPMNc',
+    appId: '1:636205690539:web:253d5e9299c87012c491ee',
+    messagingSenderId: '636205690539',
+    projectId: 'trus-flutter',
+    authDomain: 'trus-flutter.firebaseapp.com',
+    storageBucket: 'trus-flutter.appspot.com',
+    measurementId: 'G-1LRLK0D7JC',
+  );
+
 }

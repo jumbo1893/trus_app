@@ -224,17 +224,37 @@ class NotificationsService {
 
   static Future<String?> syncCurrentTokenWithBackend(Ref ref) async {
     final tokenStart = DateTime.now();
-    final token = await FirebaseMessaging.instance.getToken();
+
+    if (Platform.isIOS) {
+      final apnsToken = await _waitForApnsToken(ref);
+
+      if (apnsToken == null || apnsToken.isEmpty) {
+        await _d('ios_apns_token_still_null_skip_fcm_token', ref, {
+          'hint': 'APNs token není dostupný, proto nevolám FirebaseMessaging.getToken().',
+        });
+
+        return null;
+      }
+    }
+
+    String? token;
+
+    try {
+      token = await FirebaseMessaging.instance.getToken();
+    } catch (e, st) {
+      await _d('fcm_token_error', ref, {
+        'error': e.toString(),
+        'stack': st.toString(),
+      });
+
+      return null;
+    }
+
     final tokenDuration = DateTime.now().difference(tokenStart).inMilliseconds;
 
-    if (token == null) {
+    if (token == null || token.isEmpty) {
       await _d('fcm_token_null', ref, {
         'fetchMs': tokenDuration,
-        'hints': [
-          'Zkus znovu povolit oprávnění k oznámením.',
-          'Ověř připojení k internetu.',
-          'Na iOS zkontroluj APNs a Firebase konfiguraci.',
-        ],
       });
 
       return null;
@@ -248,6 +268,26 @@ class NotificationsService {
     await _sendTokenToBackend(token, ref);
 
     return token;
+  }
+
+  static Future<String?> _waitForApnsToken(Ref ref) async {
+    for (var attempt = 1; attempt <= 10; attempt++) {
+      final apnsToken = await FirebaseMessaging.instance.getAPNSToken();
+
+      await _d('ios_apns_token_check', ref, {
+        'attempt': attempt,
+        'hasApnsToken': apnsToken != null && apnsToken.isNotEmpty,
+        'apnsToken': apnsToken,
+      });
+
+      if (apnsToken != null && apnsToken.isNotEmpty) {
+        return apnsToken;
+      }
+
+      await Future<void>.delayed(const Duration(seconds: 1));
+    }
+
+    return null;
   }
 
   static Future<void> sendTestPushToThisDevice(Ref ref) async {

@@ -1,5 +1,3 @@
-// lib/features/notification/push/controller/enabled_notifications_notifier.dart
-
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:trus_app/features/notification/repository/notification_api_service.dart';
@@ -78,7 +76,7 @@ class EnabledNotificationsNotifier
         token = await NotificationsService.syncCurrentTokenWithBackend(ref);
         backendSynced = token != null && token.isNotEmpty;
       } else {
-        token = await FirebaseMessaging.instance.getToken();
+        token = null;
       }
 
       state = state.copyWith(
