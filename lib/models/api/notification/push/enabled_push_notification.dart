@@ -8,7 +8,7 @@ import 'notification_type.dart';
 class EnabledPushNotification implements JsonAndHttpConverter, ModelToString {
   final int id;
   final NotificationType type;
-  bool enabled;
+  final bool enabled;
   final int userId;
   final DateTime modificationTime;
 
@@ -31,8 +31,6 @@ class EnabledPushNotification implements JsonAndHttpConverter, ModelToString {
     };
   }
 
-  @override
-  @override
   factory EnabledPushNotification.fromJson(Map<String, dynamic> json) {
     return EnabledPushNotification(
       id: (json['id'] as num?)?.toInt() ?? -1,
@@ -40,6 +38,22 @@ class EnabledPushNotification implements JsonAndHttpConverter, ModelToString {
       enabled: json['enabled'] as bool? ?? true,
       userId: (json['userId'] as num?)?.toInt() ?? -1,
       modificationTime: DateTime.parse(json['modificationTime']),
+    );
+  }
+
+  EnabledPushNotification copyWith({
+    int? id,
+    NotificationType? type,
+    bool? enabled,
+    int? userId,
+    DateTime? modificationTime,
+  }) {
+    return EnabledPushNotification(
+      id: id ?? this.id,
+      type: type ?? this.type,
+      enabled: enabled ?? this.enabled,
+      userId: userId ?? this.userId,
+      modificationTime: modificationTime ?? this.modificationTime,
     );
   }
 
@@ -70,6 +84,10 @@ class EnabledPushNotification implements JsonAndHttpConverter, ModelToString {
           return 'Když mi připíšou pivko';
         case NotificationType.fine:
           return 'Když dostanu pokutu';
+        case NotificationType.playerAchievement:
+          return 'Když dostanu achievement';
+        case NotificationType.appTeamAchievement:
+          return 'Když kdokoliv dostane achievement';
         case NotificationType.unknown:
           return 'Neznámá';
       }

@@ -54,9 +54,9 @@ class EnabledNotificationsListBuilder<T> extends ConsumerWidget {
                                   Switch(
                                     activeColor: orangeColor,
                                     value: notification.enabled,
-                                    onChanged: (bool value) {
-                                      notifier.setNotification(value, notification.type);
-                                    },
+                                      onChanged: (bool value) {
+                                        notifier.changeEnabledNotification(notification, value);
+                                      }
                                   ),
                                 ],
                               ),

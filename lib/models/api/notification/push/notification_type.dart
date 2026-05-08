@@ -6,6 +6,8 @@ enum NotificationType {
   refereeComment,
   beer,
   fine,
+  appTeamAchievement,
+  playerAchievement,
   unknown
 }
 
@@ -32,6 +34,10 @@ NotificationType notificationTypeFromServer(Object? raw) {
       return NotificationType.beer;
     case 'FINE':
       return NotificationType.fine;
+    case 'APP_TEAM_ACHIEVEMENT':
+      return NotificationType.appTeamAchievement;
+    case 'PLAYER_ACHIEVEMENT':
+      return NotificationType.playerAchievement;
     default:
       return NotificationType.unknown;
   }
@@ -53,6 +59,10 @@ String notificationTypeToServer(NotificationType t) {
       return 'BEER';
     case NotificationType.fine:
       return 'FINE';
+    case NotificationType.appTeamAchievement:
+      return 'APP_TEAM_ACHIEVEMENT';
+    case NotificationType.playerAchievement:
+      return 'PLAYER_ACHIEVEMENT';
     case NotificationType.unknown:
       return 'UNKNOWN';
   }

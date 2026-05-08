@@ -1,4 +1,6 @@
 
+import 'dart:math';
+
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:trus_app/models/api/auth/user_api_model.dart';
 
@@ -28,6 +30,22 @@ class SharedPrefsHelper {
     userApiModel.mail = email;
     userApiModel.password = password;
     return userApiModel;
+  }
+
+  Future<String> getOrCreateClientDeviceId() async {
+    final pref = await SharedPreferences.getInstance();
+
+    final existing = pref.getString("clientDeviceId");
+    if (existing != null && existing.isNotEmpty) {
+      return existing;
+    }
+
+    final random = Random.secure();
+    final bytes = List<int>.generate(16, (_) => random.nextInt(256));
+    final id = bytes.map((b) => b.toRadixString(16).padLeft(2, '0')).join();
+
+    await pref.setString("clientDeviceId", id);
+    return id;
   }
 
 }

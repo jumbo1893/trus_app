@@ -1,80 +1,184 @@
+// lib/features/notification/push/controller/enabled_notifications_notifier.dart
+
+import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:trus_app/features/general/notifier/safe_state_notifier.dart';
-import 'package:trus_app/features/main/controller/screen_variables_notifier.dart';
-import 'package:trus_app/features/notification/push/state/enabled_notifications_state.dart';
 import 'package:trus_app/features/notification/repository/notification_api_service.dart';
-import 'package:trus_app/models/api/notification/push/enabled_push_notification.dart';
-import 'package:trus_app/models/helper/title_and_text.dart';
 
-import '../../../../models/api/notification/push/notification_type.dart';
-import '../../../home/screens/home_screen.dart';
+import '../../../../models/api/notification/push/enabled_push_notification.dart';
+import '../../../../services/notifications_service.dart';
+import '../../../general/notifier/safe_state_notifier.dart';
+import '../../../main/controller/screen_notifier.dart';
+import '../state/enabled_notifications_state.dart';
 
-
-final enabledNotificationsNotifierProvider = StateNotifierProvider.autoDispose<
+final enabledNotificationsNotifierProvider = StateNotifierProvider<
     EnabledNotificationsNotifier, EnabledNotificationsState>((ref) {
   return EnabledNotificationsNotifier(
-    ref,
-    ref.read(notificationApiServiceProvider),
-    ref.read(screenVariablesNotifierProvider.notifier),
+    ref: ref,
+    repository: ref.read(notificationApiServiceProvider),
+    screenController: ref.read(screenNotifierProvider.notifier),
   );
 });
 
-class EnabledNotificationsNotifier extends SafeStateNotifier<EnabledNotificationsState> {
+class EnabledNotificationsNotifier
+    extends SafeStateNotifier<EnabledNotificationsState> {
   final NotificationApiService repository;
-  final ScreenVariablesNotifier screenController;
+  final ScreenNotifier screenController;
 
-  EnabledNotificationsNotifier(
-    Ref ref,
-    this.repository,
-    this.screenController,
-  ) : super(ref, EnabledNotificationsState.initial()) {
-    Future.microtask(_loadNotifications);
+  EnabledNotificationsNotifier({
+    required Ref ref,
+    required this.repository,
+    required this.screenController,
+  }) : super(ref, EnabledNotificationsState.initial()) {
+    Future.microtask(() async {
+      await load();
+    });
   }
 
-  Future<void> _loadNotifications() async {
-    await guardSet<List<EnabledPushNotification>>(
-      action: () => runUiWithResult<List<EnabledPushNotification>>(
-        () => repository.getEnabledNotifications(),
-        showLoading: false,
-        successSnack: null,
-      ),
-      reduce: (result) => state.copyWith(
-          enabledNotifications: result,
-    ));
+  Future<void> load() async {
+    await Future.wait([
+      loadEnabledNotifications(),
+      refreshPushPermissionInfo(),
+    ]);
   }
 
-  void setNotification(bool boolean, NotificationType type) {
-    if(type == NotificationType.global) {
-      for(EnabledPushNotification enabledPushNotification in state.enabledNotifications.value ?? []) {
-        if(enabledPushNotification.type != NotificationType.global) {
-          _setNotification(boolean, enabledPushNotification.type);
-        }
-      }
-    }
-    else {
-      if(boolean) {
-        _setNotification(boolean, NotificationType.global);
-      }
-    }
-    _setNotification(boolean, type);
-  }
-
-  void _setNotification(bool boolean, NotificationType type) {
-    List<EnabledPushNotification> enabledNotifications = state
-        .enabledNotifications.value ?? [];
-    enabledNotifications
-        .firstWhere((element) => element.type == type)
-        .enabled = boolean;
+  Future<void> loadEnabledNotifications() async {
     state = state.copyWith(
-        enabledNotifications: AsyncValue.data(enabledNotifications));
+      enabledNotifications: const AsyncValue.loading(),
+    );
+
+    try {
+      final notifications = await repository.getEnabledNotifications();
+
+      state = state.copyWith(
+        enabledNotifications: AsyncValue.data(notifications),
+      );
+    } catch (e, st) {
+      state = state.copyWith(
+        enabledNotifications: AsyncValue.error(e, st),
+      );
+    }
+  }
+
+  Future<void> refreshPushPermissionInfo() async {
+    state = state.copyWith(
+      refreshingPushStatus: true,
+    );
+
+    try {
+      final settings = await FirebaseMessaging.instance.getNotificationSettings();
+
+      String? token;
+      bool backendSynced = false;
+
+      final notificationsAllowed =
+          settings.authorizationStatus == AuthorizationStatus.authorized ||
+              settings.authorizationStatus == AuthorizationStatus.provisional;
+
+      if (notificationsAllowed) {
+        token = await NotificationsService.syncCurrentTokenWithBackend(ref);
+        backendSynced = token != null && token.isNotEmpty;
+      } else {
+        token = await FirebaseMessaging.instance.getToken();
+      }
+
+      state = state.copyWith(
+        pushPermissionInfo: AsyncValue.data(
+          PushPermissionInfo(
+            authorizationStatus: settings.authorizationStatus,
+            token: token,
+            backendSynced: backendSynced,
+          ),
+        ),
+      );
+    } catch (e, st) {
+      state = state.copyWith(
+        pushPermissionInfo: AsyncValue.error(e, st),
+      );
+    } finally {
+      state = state.copyWith(
+        refreshingPushStatus: false,
+      );
+    }
+  }
+
+  Future<void> requestPermissionAndRefresh() async {
+    try {
+      await FirebaseMessaging.instance.requestPermission(
+        alert: true,
+        badge: true,
+        sound: true,
+        provisional: false,
+      );
+
+      await refreshPushPermissionInfo();
+    } catch (e, st) {
+      state = state.copyWith(
+        pushPermissionInfo: AsyncValue.error(e, st),
+      );
+    }
+  }
+
+  Future<void> sendTestPushToThisDevice() async {
+    state = state.copyWith(
+      sendingTestPush: true,
+    );
+
+    try {
+      await runUiWithResult<void>(
+            () => NotificationsService.sendTestPushToThisDevice(ref),
+        showLoading: false,
+        successSnack: "Testovací pushka odeslána",
+      );
+
+      await refreshPushPermissionInfo();
+    } finally {
+      state = state.copyWith(
+        sendingTestPush: false,
+      );
+    }
+  }
+
+  void changeEnabledNotification(
+      EnabledPushNotification notification,
+      bool value,
+      ) {
+    final currentValue = state.enabledNotifications.valueOrNull;
+
+    if (currentValue == null) {
+      return;
+    }
+
+    final updatedList = currentValue.map((item) {
+      if (item.id == notification.id) {
+        return item.copyWith(enabled: value);
+      }
+
+      return item;
+    }).toList();
+
+    state = state.copyWith(
+      enabledNotifications: AsyncValue.data(updatedList),
+    );
   }
 
   Future<void> commit() async {
-    runUiWithResult<TitleAndText>(
-          () => repository.editNotificationsPermit(state.enabledNotifications.value ?? []),
-      showLoading: true,
-      successSnack: "Povolení na pushky úspěšně upraveny",
+    final currentValue = state.enabledNotifications.valueOrNull;
+
+    if (currentValue == null) {
+      return;
+    }
+
+    await runUiWithResult<void>(
+          () async {
+        await repository.editNotificationsPermit(currentValue);
+      },
+      successSnack: "Nastavení oznámení uloženo",
     );
-    changeFragment(HomeScreen.id);
+
+    await loadEnabledNotifications();
+  }
+
+  Future<void> reload() async {
+    await load();
   }
 }
