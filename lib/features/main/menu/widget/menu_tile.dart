@@ -44,8 +44,8 @@ class MenuTile extends StatelessWidget {
                 ),
                 const SizedBox(width: 12),
                 Expanded(child: title),
-                const Icon(Icons.chevron_right,
-                    color: Colors.black38),
+                 Icon(Icons.chevron_right,
+                    color: appColors.textSecondary,)
               ],
             ),
           ),

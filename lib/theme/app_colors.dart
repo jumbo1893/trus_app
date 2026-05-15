@@ -11,6 +11,7 @@ class AppColors extends ThemeExtension<AppColors> {
 
   final Color textPrimary;
   final Color textSecondary;
+  final Color textTertiary;
   final Color textMuted;
   final Color disabled;
 
@@ -42,6 +43,7 @@ class AppColors extends ThemeExtension<AppColors> {
     required this.cardBackground,
     required this.textPrimary,
     required this.textSecondary,
+    required this.textTertiary,
     required this.textMuted,
     required this.disabled,
     required this.infoBackground,
@@ -68,6 +70,7 @@ class AppColors extends ThemeExtension<AppColors> {
     Color? backgroundSecondary,
     Color? cardBackground,
     Color? textPrimary,
+    Color? textTertiary,
     Color? textSecondary,
     Color? textMuted,
     Color? disabled,
@@ -94,6 +97,7 @@ class AppColors extends ThemeExtension<AppColors> {
       cardBackground: cardBackground ?? this.cardBackground,
       textPrimary: textPrimary ?? this.textPrimary,
       textSecondary: textSecondary ?? this.textSecondary,
+      textTertiary: textTertiary ?? this.textTertiary,
       textMuted: textMuted ?? this.textMuted,
       disabled: disabled ?? this.disabled,
       infoBackground: infoBackground ?? this.infoBackground,
@@ -126,6 +130,7 @@ class AppColors extends ThemeExtension<AppColors> {
       cardBackground: Color.lerp(cardBackground, other.cardBackground, t)!,
       textPrimary: Color.lerp(textPrimary, other.textPrimary, t)!,
       textSecondary: Color.lerp(textSecondary, other.textSecondary, t)!,
+      textTertiary: Color.lerp(textTertiary, other.textTertiary, t)!,
       textMuted: Color.lerp(textMuted, other.textMuted, t)!,
       disabled: Color.lerp(disabled, other.disabled, t)!,
       infoBackground: Color.lerp(infoBackground, other.infoBackground, t)!,
@@ -157,6 +162,7 @@ class AppColors extends ThemeExtension<AppColors> {
     cardBackground: Colors.white,
     textPrimary: Color(0xFF111827),
     textSecondary: Color(0xFF4B5563),
+    textTertiary: Colors.black87,
     textMuted: Color(0xFF6B7280),
     disabled: Color(0xFF9CA3AF),
     infoBackground: Color(0xFFEFF6FF),
@@ -183,6 +189,7 @@ class AppColors extends ThemeExtension<AppColors> {
     cardBackground: Color(0xFF1F2937),
     textPrimary: Color(0xFFF9FAFB),
     textSecondary: Color(0xFFD1D5DB),
+    textTertiary: Colors.white70,
     textMuted: Color(0xFF9CA3AF),
     disabled: Color(0xFF6B7280),
     infoBackground: Color(0xFF1E3A5F),

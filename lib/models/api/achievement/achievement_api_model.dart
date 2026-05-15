@@ -1,4 +1,5 @@
 import 'package:trus_app/config.dart';
+import 'package:trus_app/models/api/achievement/achievement_rarity.dart';
 import 'package:trus_app/models/api/interfaces/json_and_http_converter.dart';
 import 'package:trus_app/models/api/interfaces/model_to_string.dart';
 
@@ -11,6 +12,10 @@ class AchievementApiModel implements ModelToString, JsonAndHttpConverter {
   String? secondaryCondition;
   final bool manually;
 
+  final double teamSuccessRate;
+
+  final AchievementRarity rarity;
+
   AchievementApiModel({
     required this.id,
     required this.name,
@@ -18,7 +23,9 @@ class AchievementApiModel implements ModelToString, JsonAndHttpConverter {
     required this.description,
     required this.onlyForPlayers,
     this.secondaryCondition,
-    required this.manually
+    required this.manually,
+    this.teamSuccessRate = 1.0,
+    this.rarity = AchievementRarity.common,
   });
 
   @override
@@ -31,6 +38,8 @@ class AchievementApiModel implements ModelToString, JsonAndHttpConverter {
       "onlyForPlayers": onlyForPlayers,
       "secondaryCondition": secondaryCondition,
       "manually": manually,
+      "teamSuccessRate": teamSuccessRate,
+      "rarity": rarity.toJson(),
     };
   }
 
@@ -40,27 +49,30 @@ class AchievementApiModel implements ModelToString, JsonAndHttpConverter {
         code = "",
         description = "",
         onlyForPlayers = false,
-        manually = false;
+        manually = false,
+        teamSuccessRate = 1.0,
+        rarity = AchievementRarity.common;
 
-  @override
   factory AchievementApiModel.fromJson(Map<String, dynamic> json) {
     return AchievementApiModel(
-      code: json['code'],
+      code: json['code'] ?? "",
       name: json["name"] ?? "",
       id: json["id"] ?? 0,
-      description: json["description"],
-      onlyForPlayers: json['onlyForPlayers'],
+      description: json["description"] ?? "",
+      onlyForPlayers: json['onlyForPlayers'] ?? false,
       secondaryCondition: json['secondaryCondition'],
-      manually: json["manually"],
+      manually: json["manually"] ?? false,
+      teamSuccessRate: (json["teamSuccessRate"] as num?)?.toDouble() ?? 1.0,
+      rarity: AchievementRarityExtension.fromJson(json["rarity"]),
     );
   }
 
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
-      other is AchievementApiModel &&
-          runtimeType == other.runtimeType &&
-          id == other.id;
+          other is AchievementApiModel &&
+              runtimeType == other.runtimeType &&
+              id == other.id;
 
   @override
   int get hashCode => id.hashCode;

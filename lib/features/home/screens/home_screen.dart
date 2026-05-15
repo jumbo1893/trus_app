@@ -30,7 +30,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     final appTeam = ref.read(globalVariablesControllerProvider).appTeam;
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF6F7F9),
       body: RefreshIndicator(
         color: Colors.orange,
         backgroundColor: Colors.white,

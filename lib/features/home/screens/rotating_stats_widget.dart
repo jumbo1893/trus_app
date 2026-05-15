@@ -1,8 +1,8 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
-
 import '../../../models/api/home/stats_board_data.dart';
+import '../../../theme/app_colors.dart';
 import '../widget/home_section_card.dart';
 
 class RotatingStatsWidget extends StatefulWidget {
@@ -201,7 +201,7 @@ class _RotatingStatsWidgetState extends State<RotatingStatsWidget>
     if (_screens.isEmpty) {
       return const SizedBox.shrink();
     }
-
+    final appColors = context.appColors;
     final safeIndex = _currentIndex.clamp(0, _screens.length - 1);
     final screen = _screens[safeIndex];
     final currentKey = ValueKey(safeIndex);
@@ -322,7 +322,7 @@ class _RotatingStatsWidgetState extends State<RotatingStatsWidget>
                           alignment: Alignment.centerLeft,
                           child: Container(
                             height: 3,
-                            color: Colors.orange,
+                            color: appColors.accent,
                           ),
                         ),
                       );
@@ -349,20 +349,21 @@ class _StatsTableView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    const titleStyle = TextStyle(
-      color: Colors.black,
+    final appColors = context.appColors;
+    final titleStyle = TextStyle(
+      color: appColors.textPrimary,
       fontSize: 18,
       fontWeight: FontWeight.w700,
     );
 
-    const headerStyle = TextStyle(
-      color: Colors.black54,
+    final headerStyle = TextStyle(
+      color: appColors.textPrimary,
       fontSize: 12,
       fontWeight: FontWeight.w600,
     );
 
-    const cellStyle = TextStyle(
-      color: Colors.black87,
+    final cellStyle = TextStyle(
+      color: appColors.textPrimary,
       fontSize: 14,
       fontWeight: FontWeight.w400,
     );
