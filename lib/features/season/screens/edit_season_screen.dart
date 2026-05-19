@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../common/utils/calendar.dart';
 import '../../../common/widgets/bar/action_button_item.dart';
 import '../../../common/widgets/bottomsheet/confirm_action_bottom_sheet.dart';
 import '../../../common/widgets/rows/app_date_field.dart';
@@ -32,8 +33,8 @@ class _EditSeasonScreenState extends ConsumerState<EditSeasonScreen> {
     final notifier = ref.read(seasonEditProvider(season).notifier);
 
     return BaseFormScreen(
-      headerTitle: "Upravit sezonu",
-      headerText: state.name,
+      headerTitle: "sezona ${state.name}",
+      headerText: "${dateTimeToString(state.from)} - ${dateTimeToString(state.to)}",
       fields: [
         FormFieldWrapper(
           label: "Název sezony",

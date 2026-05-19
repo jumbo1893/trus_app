@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:trus_app/features/main/controller/screen_variables_notifier.dart';
 
+import '../../../common/utils/calendar.dart';
 import '../../../common/widgets/bar/action_button_item.dart';
 import '../../../common/widgets/bottomsheet/confirm_action_bottom_sheet.dart';
 import '../../../common/widgets/dropdown/custom_dropdown_sheet.dart';
@@ -38,8 +39,8 @@ class _EditPlayerScreenState extends ConsumerState<EditPlayerScreen> {
     final state = ref.watch(playerEditNotifierProvider(arg));
 
     return BaseFormScreen(
-      headerTitle: "Upravit hráče",
-      headerText: state.name,
+      headerTitle: "${state.fan? "fanoušek": "hráč"}: ${state.name}",
+      headerText: "Datum narození: ${dateTimeToString(state.birthdate)}",
       fields: [
         FormFieldWrapper(
           label: "Přezdívka",

@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:trus_app/features/season/controller/season_edit_notifier.dart';
 import 'package:trus_app/models/enum/crud.dart';
 
+import '../../../common/utils/calendar.dart';
 import '../../../common/widgets/bar/action_button_item.dart';
 import '../../../common/widgets/rows/app_date_field.dart';
 import '../../../common/widgets/rows/app_text_input_field.dart';
@@ -28,8 +29,8 @@ class _AddSeasonScreenState extends ConsumerState<AddSeasonScreen> {
     final notifier = ref.read(seasonEditProvider(null).notifier);
 
     return BaseFormScreen(
-      headerTitle: "Nová sezona",
-      headerText: "Vyplň název a časové období",
+      headerTitle: "Nová sezona: ${state.name}",
+      headerText: "${dateTimeToString(state.from)} - ${dateTimeToString(state.to)}",
       fields: [
         FormFieldWrapper(
           label: "Název sezony",

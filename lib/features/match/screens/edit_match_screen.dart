@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../common/utils/calendar.dart';
 import '../../../common/widgets/bar/action_button_item.dart';
 import '../../../common/widgets/bottomsheet/confirm_action_bottom_sheet.dart';
 import '../../../common/widgets/screen/base_form_screen.dart';
@@ -28,8 +29,8 @@ class _EditMatchScreenState extends ConsumerState<EditMatchScreen> {
     final notifier = ref.read(matchEditNotifierProvider(arg).notifier);
     final state = ref.watch(matchEditNotifierProvider(arg));
     return BaseFormScreen(
-      headerTitle: "Upravit zápas",
-      headerText: "proti ${state.name}",
+      headerTitle: state.name,
+      headerText: dateTimeToString(state.date),
       fields: matchFields(state, notifier),
       actions: [
         ActionButtonItem(

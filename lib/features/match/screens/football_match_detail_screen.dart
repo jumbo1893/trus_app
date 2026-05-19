@@ -28,16 +28,9 @@ class _FootballMatchDetailScreenState
     final footballState = state.footballMatchDetailState;
 
     return BaseFormScreen(
-      headerTitle: "Detail zápasu",
-      headerText: footballState.nameAndResult,
+      headerTitle: footballState.nameAndResult,
+      headerText: footballState.dateAndLeague,
       fields: [
-        FormFieldWrapper(
-          label: "Kolo",
-          child: AppReadOnlyField(
-            value: footballState.dateAndLeague,
-            allowWrap: true,
-          ),
-        ),
         FormFieldWrapper(
           label: "Stadion",
           child: AppReadOnlyField(

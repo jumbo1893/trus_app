@@ -26,10 +26,10 @@ class FootbarConnectScreen extends CustomConsumerWidget {
     final syncNotifier = ref.read(footbarSyncNotifierProvider.notifier);
 
     return BaseFormScreen(
-      headerTitle: "Footbar účet",
+      headerTitle: "Footbar účet: ${connectState.nickname}",
       headerText: connectState.active
-          ? "Účet je propojený"
-          : "Účet zatím není propojený",
+          ? "propojený"
+          : "zatím není propojený",
       fields: [
         FormFieldWrapper(
           label: "Stav propojení",

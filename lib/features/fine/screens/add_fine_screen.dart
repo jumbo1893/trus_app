@@ -27,8 +27,8 @@ class _AddFineScreenState extends ConsumerState<AddFineScreen> {
     final notifier = ref.read(fineAddProvider.notifier);
 
     return BaseFormScreen(
-      headerTitle: "Nová pokuta",
-      headerText: "Vyplň název a částku pokuty",
+      headerTitle: "Nová pokuta: ${state.name}",
+      headerText: "částka: ${state.amount} Kč",
       fields: [
         FormFieldWrapper(
           label: "Název pokuty",

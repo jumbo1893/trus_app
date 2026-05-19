@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:trus_app/features/match/controller/edit/match_edit_notifier.dart';
+import '../../../common/utils/calendar.dart';
 import '../../../common/widgets/bar/action_button_item.dart';
 import '../../../common/widgets/screen/base_form_screen.dart';
 import '../../../common/widgets/screen/custom_consumer_stateful_widget.dart';
@@ -26,8 +27,8 @@ class _AddMatchScreenState extends ConsumerState<AddMatchScreen> {
     final state = ref.watch(matchEditNotifierProvider(arg));
 
     return BaseFormScreen(
-      headerTitle: "Nový zápas",
-      headerText: "Vyplň detaily zápasu",
+      headerTitle: "Nový zápas: ${state.name}",
+      headerText: "datum: ${dateTimeToString(state.date)}",
       fields: matchFields(state, notifier),
       actions: [
         ActionButtonItem(

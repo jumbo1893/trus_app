@@ -32,8 +32,8 @@ class _EditFineScreenState extends ConsumerState<EditFineScreen> {
     final notifier = ref.read(fineEditProvider(fine).notifier);
 
     return BaseFormScreen(
-      headerTitle: "Upravit pokutu",
-      headerText: state.name,
+      headerTitle: state.name,
+      headerText: "${state.amount} Kč",
       fields: [
         FormFieldWrapper(
           label: "Název pokuty",

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:trus_app/common/utils/calendar.dart';
 
 import '../../../common/widgets/bar/action_button_item.dart';
 import '../../../common/widgets/dropdown/custom_dropdown_sheet.dart';
@@ -33,8 +34,8 @@ class _AddPlayerScreenState extends ConsumerState<AddPlayerScreen> {
     final state = ref.watch(playerEditNotifierProvider(arg));
 
     return BaseFormScreen(
-      headerTitle: "Nový hráč",
-      headerText: "Vyplň základní údaje hráče",
+      headerTitle: "Nový ${state.fan? "fanoušek": "hráč"}: ${state.name}",
+      headerText: "Datum narození: ${dateTimeToString(state.birthdate)}",
       fields: [
         FormFieldWrapper(
           label: "Přezdívka",

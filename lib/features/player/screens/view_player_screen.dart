@@ -115,16 +115,9 @@ class _ViewPlayerScreenState extends ConsumerState<ViewPlayerScreen> {
 
     return BaseFormScreen(
       scrollController: _scrollController,
-      headerTitle: state.fan ? "Detail fanouška" : "Detail hráče",
-      headerText: state.name,
+      headerTitle: "${state.fan? "fanoušek": "hráč"}: ${state.name}",
+      headerText: "Datum narození: ${dateTimeToString(state.birthdate)}",
       fields: [
-        FormFieldWrapper(
-          label: state.fan ? "Fanoušek" : "Hráč",
-          child: AppReadOnlyField(
-            value: state.name,
-            allowWrap: true,
-          ),
-        ),
         if ((state.selectedFootballPlayer?.dropdownItem() ?? "")
             .trim()
             .isNotEmpty)
@@ -135,12 +128,6 @@ class _ViewPlayerScreenState extends ConsumerState<ViewPlayerScreen> {
               allowWrap: true,
             ),
           ),
-        FormFieldWrapper(
-          label: "Datum narození",
-          child: AppReadOnlyField(
-            value: dateTimeToString(state.birthdate),
-          ),
-        ),
         ..._buildPairedStatFields(state.pairedPlayerStats),
         ..._buildStatFields(state.playerStats),
       ],

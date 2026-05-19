@@ -27,23 +27,9 @@ class _ViewUserScreenState extends ConsumerState<ViewUserScreen> {
     final notifier = ref.read(viewUserNotifierProvider.notifier);
 
     return BaseFormScreen(
-      headerTitle: "Nastavení uživatele",
-      headerText: state.name,
+      headerTitle: state.name,
+      headerText: state.email,
       fields: [
-        FormFieldWrapper(
-          label: "Přezdívka",
-          child: AppReadOnlyField(
-            value: state.name,
-            allowWrap: true,
-          ),
-        ),
-        FormFieldWrapper(
-          label: "Email",
-          child: AppReadOnlyField(
-            value: state.email,
-            allowWrap: true,
-          ),
-        ),
         FormFieldWrapper(
           label: "Spárování s hráčem",
           child: CustomDropdownSheet(
