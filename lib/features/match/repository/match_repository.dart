@@ -1,6 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:trus_app/models/api/match/match_api_model.dart';
 import 'package:trus_app/models/api/match/match_setup.dart';
+import 'package:trus_app/models/api/match/match_stats.dart';
 
 import '../../general/cache/cached_repository.dart';
 import '../../general/cache/memory_cache.dart';
@@ -24,6 +25,8 @@ class MatchRepository extends CachedRepository {
 
   static const _listKey = 'match_list';
   static const _setupKey = 'match_setup';
+  static const _statsKey = 'match_stats';
+
 
 
   /// LIST
@@ -48,8 +51,28 @@ class MatchRepository extends CachedRepository {
     return data;
   }
 
+  /// STATS
+  MatchStats? getCachedMatchStats(int id) {
+    return getCached<MatchStats>(key(_statsKey, id));
+  }
+
+  Future<MatchStats> fetchMatchStats(int id) async {
+    final data = await api.getMatchStats(id);
+    setCached(key(_statsKey, id), data);
+    return data;
+  }
+
   void invalidateMatchSetup(int? id) {
+    invalidate(key(_statsKey, id));
+  }
+
+  void invalidateMatchStats(int? id) {
     invalidate(key(_setupKey, id));
+  }
+
+  void invalidateMatchDetailData(int? id) {
+    invalidateMatchSetup(id);
+    invalidateMatchStats(id);
   }
 
   void invalidateList() {

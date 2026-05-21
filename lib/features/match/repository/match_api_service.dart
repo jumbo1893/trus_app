@@ -1,6 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:trus_app/config.dart';
 import 'package:trus_app/models/api/match/match_setup.dart';
+import 'package:trus_app/models/api/match/match_stats.dart';
 
 import '../../../models/api/interfaces/json_and_http_converter.dart';
 import '../../../models/api/match/match_api_model.dart';
@@ -42,10 +43,17 @@ class MatchApiService extends CrudApiService {
 
   Future<MatchSetup> setupMatch(int? id) async {
     final String url = id == null
-        ? "$serverUrl/match/setup"
-        : "$serverUrl/match/setup?matchId=$id";
+        ? "$serverUrl/$matchApi/setup"
+        : "$serverUrl/$matchApi/setup?matchId=$id";
     final MatchSetup matchSetup = await executeGetRequest(
         Uri.parse(url), (dynamic json) => MatchSetup.fromJson(json), null);
     return matchSetup;
+  }
+
+  Future<MatchStats> getMatchStats(int id) async {
+    final String url = "$serverUrl/$matchApi/get-stats?matchId=$id";
+    final MatchStats matchStats = await executeGetRequest(
+        Uri.parse(url), (dynamic json) => MatchStats.fromJson(json), null);
+    return matchStats;
   }
 }

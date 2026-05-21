@@ -317,18 +317,15 @@ class FootballMatchApiModel implements JsonAndHttpConverter, ModelToString {
   }
 
   String _returnGoalScorersText(List<FootballMatchPlayerApiModel> playerList) {
-    String text = "";
-    for (FootballMatchPlayerApiModel player in playerList) {
-      if (player.goals > 0) {
-        int goalNumber = player.goals;
-        text +=
-            "${player.player.name}: $goalNumber${(goalNumber == 1) ? " gól" : " góly"}\n";
-      }
-    }
-    if (text.isNotEmpty) {
-      return text;
-    }
-    return text;
+    return playerList
+        .where((player) => player.goals > 0)
+        .map((player) {
+      final goalNumber = player.goals;
+      final goalText = goalNumber == 1 ? "gól" : "góly";
+
+      return "${player.player.name}: $goalNumber $goalText";
+    })
+        .join("\n");
   }
 
   String _returnOwnGoalScorersText(

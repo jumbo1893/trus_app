@@ -8,10 +8,9 @@ import 'package:trus_app/theme/app_colors.dart';
 
 import '../../main/controller/screen_variables_notifier.dart';
 import 'edit_match_screen.dart';
-import 'football_match_detail_away_screen.dart';
-import 'football_match_detail_home_screen.dart';
 import 'football_match_detail_screen.dart';
 import 'football_mutual_matches_screen.dart';
+import 'match_stats_screen.dart';
 
 class MatchDetailScreen extends CustomConsumerStatefulWidget {
   static const String id = "match-detail-screen";
@@ -30,8 +29,7 @@ class _MatchDetailScreenState extends ConsumerState<MatchDetailScreen>
   static const List<MatchDetailOptions> _order = [
     MatchDetailOptions.editMatch,
     MatchDetailOptions.footballMatchDetail,
-    MatchDetailOptions.homeMatchDetail,
-    MatchDetailOptions.awayMatchDetail,
+    MatchDetailOptions.matchStats,
     MatchDetailOptions.mutualMatches,
   ];
 
@@ -80,10 +78,8 @@ class _MatchDetailScreenState extends ConsumerState<MatchDetailScreen>
         return _fittedTab("Upravit");
       case MatchDetailOptions.footballMatchDetail:
         return _fittedTab("Detail");
-      case MatchDetailOptions.homeMatchDetail:
-        return _fittedTab("Domácí");
-      case MatchDetailOptions.awayMatchDetail:
-        return _fittedTab("Hosté");
+      case MatchDetailOptions.matchStats:
+        return _fittedTab("Statistiky");
       case MatchDetailOptions.mutualMatches:
         return _fittedTab("H2H");
     }
@@ -95,12 +91,13 @@ class _MatchDetailScreenState extends ConsumerState<MatchDetailScreen>
     switch (o) {
       case MatchDetailOptions.editMatch:
         return const EditMatchScreen();
+
       case MatchDetailOptions.footballMatchDetail:
         return const FootballMatchDetailScreen();
-      case MatchDetailOptions.homeMatchDetail:
-        return const FootballMatchDetailHomeScreen();
-      case MatchDetailOptions.awayMatchDetail:
-        return const FootballMatchDetailAwayScreen();
+
+      case MatchDetailOptions.matchStats:
+        return const MatchStatsScreen();
+
       case MatchDetailOptions.mutualMatches:
         return const FootballMutualMatchesScreen();
     }

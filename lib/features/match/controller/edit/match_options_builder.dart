@@ -1,17 +1,13 @@
-// lib/features/match/controller/match_options_builder.dart
 import 'package:trus_app/models/api/football/detail/football_match_detail.dart';
-import 'package:trus_app/models/api/football/football_match_api_model.dart';
 import 'package:trus_app/models/enum/match_detail_options.dart';
 
 class MatchOptionsBuilder {
   const MatchOptionsBuilder();
 
-  // Fixní pořadí tabů
   static const List<MatchDetailOptions> order = [
     MatchDetailOptions.editMatch,
     MatchDetailOptions.footballMatchDetail,
-    MatchDetailOptions.homeMatchDetail,
-    MatchDetailOptions.awayMatchDetail,
+    MatchDetailOptions.matchStats,
     MatchDetailOptions.mutualMatches,
   ];
 
@@ -21,30 +17,26 @@ class MatchOptionsBuilder {
   }
 
   List<MatchDetailOptions> fromFootballDetail(
-      FootballMatchDetail? d, {
+      FootballMatchDetail? detail, {
         required bool includeEditTab,
+        required bool includeStatsTab,
       }) {
     final set = <MatchDetailOptions>{};
 
-    if (includeEditTab) set.add(MatchDetailOptions.editMatch);
-    if (d == null) return orderOptions(set);
-
-    set.add(MatchDetailOptions.footballMatchDetail);
-
-    if (d.mutualMatches.isNotEmpty) {
-      set.add(MatchDetailOptions.mutualMatches);
+    if (includeEditTab) {
+      set.add(MatchDetailOptions.editMatch);
     }
 
-    final hasBestHome = d.footballMatch
-        .returnSecondDetailsOfMatch(true, StringReturnDetail.bestPlayer)
-        .isNotEmpty;
-    final hasBestAway = d.footballMatch
-        .returnSecondDetailsOfMatch(false, StringReturnDetail.bestPlayer)
-        .isNotEmpty;
+    if (detail != null) {
+      set.add(MatchDetailOptions.footballMatchDetail);
 
-    if (hasBestHome || hasBestAway) {
-      set.add(MatchDetailOptions.homeMatchDetail);
-      set.add(MatchDetailOptions.awayMatchDetail);
+      if (detail.mutualMatches.isNotEmpty) {
+        set.add(MatchDetailOptions.mutualMatches);
+      }
+    }
+
+    if (includeStatsTab) {
+      set.add(MatchDetailOptions.matchStats);
     }
 
     return orderOptions(set);

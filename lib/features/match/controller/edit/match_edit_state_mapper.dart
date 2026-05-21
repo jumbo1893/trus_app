@@ -2,9 +2,11 @@ import 'package:collection/collection.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:trus_app/features/match/state/footbal_match_detail_state.dart';
 import 'package:trus_app/features/match/state/match_edit_state.dart';
+import 'package:trus_app/features/match/state/match_stats_state.dart';
 import 'package:trus_app/models/api/football/detail/football_match_detail.dart';
 import 'package:trus_app/models/api/football/football_match_api_model.dart';
 import 'package:trus_app/models/api/match/match_setup.dart';
+import 'package:trus_app/models/api/match/match_stats.dart';
 import 'package:trus_app/models/api/player/player_api_model.dart';
 
 class MatchEditStateMapper {
@@ -95,6 +97,19 @@ class MatchEditStateMapper {
       aggregateMatches: d.aggregateMatches,
       aggregateScore: d.aggregateScore,
       mutualMatches: AsyncValue.data(d.mutualMatches),
+    );
+  }
+
+  MatchStatsState mapMatchStats(
+      MatchStats s,
+      MatchStatsState prev,
+      ) {
+    return prev.copyWith(
+      goals: s.returnGoals(),
+      assists: s.returnAssists(),
+      beers: s.returnBeers(),
+      fines: s.returnFines(),
+      overall: s.returnOverall(),
     );
   }
 }

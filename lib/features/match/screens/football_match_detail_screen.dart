@@ -53,6 +53,86 @@ class _FootballMatchDetailScreenState
               allowWrap: true,
             ),
           ),
+        if (footballState.homeBestPlayer.trim().isNotEmpty)
+        FormFieldWrapper(
+          label: "Hvězda zápasu domácích",
+          child: AppReadOnlyField(
+            value: footballState.homeBestPlayer,
+            allowWrap: true,
+          ),
+        ),
+        if (footballState.awayBestPlayer.trim().isNotEmpty)
+          FormFieldWrapper(
+            label: "Hvězda zápasu hostů",
+            child: AppReadOnlyField(
+              value: footballState.awayBestPlayer,
+              allowWrap: true,
+            ),
+          ),
+        if (footballState.homeGoalScorers.trim().isNotEmpty)
+          FormFieldWrapper(
+          label: "Střelci domácích",
+          child: AppReadOnlyField(
+            value: footballState.homeGoalScorers,
+            allowWrap: true,
+          ),
+        ),
+        if (footballState.awayGoalScorers.trim().isNotEmpty)
+          FormFieldWrapper(
+          label: "Střelci hostů",
+          child: AppReadOnlyField(
+            value: footballState.awayGoalScorers,
+            allowWrap: true,
+          ),
+        ),
+        if (footballState.homeOwnGoals.trim().isNotEmpty)
+          FormFieldWrapper(
+            label: "Vlastňáky domácích",
+            child: AppReadOnlyField(
+              value: footballState.homeOwnGoals,
+              allowWrap: true,
+            ),
+          ),
+        if (footballState.awayOwnGoals.trim().isNotEmpty)
+          FormFieldWrapper(
+            label: "Vlastňáky hostů",
+            child: AppReadOnlyField(
+              value: footballState.awayOwnGoals,
+              allowWrap: true,
+            ),
+          ),
+        if (footballState.homeYellowCards.trim().isNotEmpty)
+          FormFieldWrapper(
+            label: "Žluté domácích",
+            child: AppReadOnlyField(
+              value: footballState.homeYellowCards,
+              allowWrap: true,
+            ),
+          ),
+        if (footballState.awayYellowCards.trim().isNotEmpty)
+          FormFieldWrapper(
+            label: "Žluté hostů",
+            child: AppReadOnlyField(
+              value: footballState.awayYellowCards,
+              allowWrap: true,
+            ),
+          ),
+        if (footballState.homeRedCards.trim().isNotEmpty)
+          FormFieldWrapper(
+            label: "Červené domácích",
+            child: AppReadOnlyField(
+              value: footballState.homeRedCards,
+              allowWrap: true,
+            ),
+          ),
+        if (footballState.awayRedCards.trim().isNotEmpty)
+          FormFieldWrapper(
+            label: "Červené hostů",
+            child: AppReadOnlyField(
+              value: footballState.awayRedCards,
+              allowWrap: true,
+            ),
+          ),
       ],
       actions: const [],
       padding: const EdgeInsets.only(bottom: 24),

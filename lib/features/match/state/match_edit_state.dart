@@ -1,4 +1,5 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:trus_app/features/match/state/match_stats_state.dart';
 import 'package:trus_app/models/api/football/football_match_api_model.dart';
 import 'package:trus_app/models/api/match/match_api_model.dart';
 import 'package:trus_app/models/api/player/player_api_model.dart';
@@ -23,6 +24,8 @@ class MatchEditState extends BaseCrudState<MatchApiModel> implements IDropdownSt
   final List<MatchDetailOptions> matchOptions;
   final MatchDetailOptions initialTab;
   final FootballMatchDetailState footballMatchDetailState;
+  final MatchStatsState matchStatsState;
+
 
   const MatchEditState({
     required this.name,
@@ -38,6 +41,7 @@ class MatchEditState extends BaseCrudState<MatchApiModel> implements IDropdownSt
     required this.matchOptions,
     required this.initialTab,
     required this.footballMatchDetailState,
+    required this.matchStatsState,
     MatchApiModel? model,
     super.errors,
   }) : super(model: model);
@@ -56,6 +60,7 @@ class MatchEditState extends BaseCrudState<MatchApiModel> implements IDropdownSt
     FootballMatchApiModel? footballMatch,
     List<MatchDetailOptions>? matchOptions,
     FootballMatchDetailState? footballMatchDetailState,
+    MatchStatsState? matchStatsState,
     MatchDetailOptions? initialTab,
     MatchApiModel? model,
     Map<String, String>? errors,
@@ -74,6 +79,7 @@ class MatchEditState extends BaseCrudState<MatchApiModel> implements IDropdownSt
       matchOptions: matchOptions ?? this.matchOptions,
       initialTab: initialTab ?? this.initialTab,
       footballMatchDetailState: footballMatchDetailState ?? this.footballMatchDetailState,
+      matchStatsState: matchStatsState ?? this.matchStatsState,
       model: model ?? this.model,
       errors: errors ?? this.errors,
     );
