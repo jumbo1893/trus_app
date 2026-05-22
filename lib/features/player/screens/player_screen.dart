@@ -10,25 +10,26 @@ import '../../../common/widgets/screen/custom_consumer_widget.dart';
 class PlayerScreen extends CustomConsumerWidget {
   static const String id = "player-screen";
 
-  const PlayerScreen({
-    Key? key,
-  }) : super(key: key, title: "Hráči", name: id);
+  const PlayerScreen({Key? key}) : super(key: key, title: "Hráči", name: id);
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     return Scaffold(
-        body: Padding(
-          padding: const EdgeInsets.only(top: 8.0),
-          child: ModelToStringListview(
-              state: ref.watch(playerNotifierProvider),
-              notifier: ref.read(playerNotifierProvider.notifier)),
+      body: Padding(
+        padding: const EdgeInsets.only(top: 8.0),
+        child: ModelToStringListview(
+          storageKey: id,
+          state: ref.watch(playerNotifierProvider),
+          notifier: ref.read(playerNotifierProvider.notifier),
         ),
-        floatingActionButton: FloatingActionButton(
-          onPressed: () => ref
-              .read(screenNotifierProvider.notifier)
-              .changeFragment(AddPlayerScreen.id),
-          elevation: 4.0,
-          child: const Icon(Icons.add),
-        ));
+      ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: () => ref
+            .read(screenNotifierProvider.notifier)
+            .changeFragment(AddPlayerScreen.id),
+        elevation: 4.0,
+        child: const Icon(Icons.add),
+      ),
+    );
   }
 }

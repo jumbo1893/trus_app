@@ -9,7 +9,7 @@ import '../../../../common/widgets/screen/custom_consumer_stateful_widget.dart';
 import '../../../season/season_args.dart';
 
 class BeerDetailStatsScreen extends CustomConsumerStatefulWidget {
-  static const String id = "beer-detail-stats-screen";
+   static const String id = "beer-detail-stats-screen";
 
   const BeerDetailStatsScreen({
     Key? key,
@@ -51,6 +51,7 @@ class _BeerDetailStatsScreenState
             ),
           Expanded(
             child: ModelToStringListview(
+                storageKey: BeerDetailStatsScreen.id,
                 state: ref.watch(beerDetailStatsNotifierProvider),
                 notifier: null,),
           )

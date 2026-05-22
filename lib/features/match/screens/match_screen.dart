@@ -49,6 +49,7 @@ class MatchScreen extends CustomConsumerWidget {
               child: Padding(
                 padding: const EdgeInsets.symmetric(horizontal: horizontalPadding),
                 child: ModelToStringListview(
+                  storageKey: id,
                   state: ref.watch(matchNotifierProvider),
                   notifier: ref.read(matchNotifierProvider.notifier),
                 ),

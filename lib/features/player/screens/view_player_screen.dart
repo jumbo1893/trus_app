@@ -15,6 +15,7 @@ import 'package:trus_app/theme/app_widget_values.dart';
 import '../../../common/utils/calendar.dart';
 import '../../../common/widgets/rows/form/form_row.dart';
 import '../../../common/widgets/screen/base_form_screen.dart';
+import '../../mixin/restorable_scroll_mixin.dart';
 import '../controller/player_edit_notifier.dart';
 
 class ViewPlayerScreen extends CustomConsumerStatefulWidget {
@@ -28,39 +29,11 @@ class ViewPlayerScreen extends CustomConsumerStatefulWidget {
   ConsumerState<ViewPlayerScreen> createState() => _ViewPlayerScreenState();
 }
 
-class _ViewPlayerScreenState extends ConsumerState<ViewPlayerScreen> {
-  final ScrollController _scrollController = ScrollController();
-  bool _scrollRestored = false;
+class _ViewPlayerScreenState extends ConsumerState<ViewPlayerScreen>
+    with RestorableScrollMixin<ViewPlayerScreen> {
 
   @override
-  void initState() {
-    super.initState();
-
-    _scrollController.addListener(() {
-      ref.read(screenNotifierProvider.notifier).saveScrollOffset(
-        ViewPlayerScreen.id,
-        _scrollController.offset,
-      );
-    });
-  }
-
-  @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-
-    if (_scrollRestored) return;
-
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      final offset = ref
-          .read(screenNotifierProvider.notifier)
-          .getScrollOffset(ViewPlayerScreen.id);
-
-      if (offset != null && _scrollController.hasClients) {
-        _scrollController.jumpTo(offset);
-        _scrollRestored = true;
-      }
-    });
-  }
+  String get scrollStorageKey => ViewPlayerScreen.id;
 
   List<Widget> _buildStatFields(List<TitleAndText> titleAndTexts) {
     return titleAndTexts
@@ -114,7 +87,7 @@ class _ViewPlayerScreenState extends ConsumerState<ViewPlayerScreen> {
     final state = ref.watch(playerEditNotifierProvider(arg));
 
     return BaseFormScreen(
-      scrollController: _scrollController,
+      scrollController: scrollController,
       headerTitle: "${state.fan? "fanoušek": "hráč"}: ${state.name}",
       headerText: "Datum narození: ${dateTimeToString(state.birthdate)}",
       fields: [
