@@ -82,19 +82,20 @@ class MatchStats implements JsonAndHttpConverter {
     final Map<int, List<ReceivedFineDetailedModel>> finesByPlayer = {};
 
     for (final fine in fines.fineList) {
-      if (fine.fineNumber <= 0) {
+      if (fine.fineNumber <= 0 || fine.player == null) {
         continue;
       }
 
-      final playerId = fine.player?.id ?? -1;
+      final playerId = fine.player!.id!;
 
       finesByPlayer.putIfAbsent(playerId, () => []);
       finesByPlayer[playerId]!.add(fine);
     }
 
-    return finesByPlayer.values.map((playerFines) {
-      final player = playerFines.first.player;
-      final playerName = player?.name ?? "Neznámý hráč";
+    final Map<String, _GroupedPlayerFines> groupedPlayerFines = {};
+
+    for (final playerFines in finesByPlayer.values) {
+      final playerName = playerFines.first.player?.name ?? "Neznámý hráč";
 
       int playerTotalAmount = 0;
       final fineDescriptions = <String>[];
@@ -115,7 +116,32 @@ class MatchStats implements JsonAndHttpConverter {
         }
       }
 
-      return "$playerName: $playerTotalAmount Kč (${fineDescriptions.join(", ")})";
+      // Aby se správně spojili hráči i v případě, že BE vrátí pokuty
+      // v jiném pořadí.
+      fineDescriptions.sort();
+
+      final groupKey = "$playerTotalAmount|${fineDescriptions.join("|")}";
+
+      groupedPlayerFines.putIfAbsent(
+        groupKey,
+            () => _GroupedPlayerFines(
+          totalAmount: playerTotalAmount,
+          fineDescriptions: fineDescriptions,
+        ),
+      );
+
+      groupedPlayerFines[groupKey]!.playerNames.add(playerName);
+    }
+
+    final groups = groupedPlayerFines.values.toList()
+      ..sort((a, b) => b.totalAmount.compareTo(a.totalAmount));
+
+    return groups.map((group) {
+      group.playerNames.sort();
+
+      final players = group.playerNames.join(", ");
+      final descriptions = group.fineDescriptions.join(", ");
+      return "$players: ${group.totalAmount} Kč ($descriptions)";
     }).join("\n");
   }
 
@@ -187,4 +213,15 @@ class MatchStats implements JsonAndHttpConverter {
     return "Celkem: ${goals.totalGoals} gólů, ${goals.totalAssists} asistencí,"
         " ${beers.totalBeers} piv, ${beers.totalLiquors} panáků a ${fines.finesAmount} Kč pokut";
   }
+}
+
+class _GroupedPlayerFines {
+  final int totalAmount;
+  final List<String> fineDescriptions;
+  final List<String> playerNames = [];
+
+  _GroupedPlayerFines({
+    required this.totalAmount,
+    required this.fineDescriptions,
+  });
 }
