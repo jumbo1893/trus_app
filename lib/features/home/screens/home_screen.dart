@@ -84,7 +84,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                     ),
                     const SizedBox(height: sectionSpacing),
 
-                    RotatingStatsWidget(statsBoards: setup.statsBoards,),
+                    RotatingStatsWidget(statsBoards: setup.statsBoards, onRedirect: notifier.onRedirect,),
                     const SizedBox(height: sectionSpacing),
 
                     RandomFactBox(

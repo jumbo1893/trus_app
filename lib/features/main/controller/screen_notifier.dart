@@ -15,6 +15,7 @@ import '../../goal/screen/goal_screen.dart';
 import '../../match/match_notifier_args.dart';
 import '../../match/screens/add_match_screen.dart';
 import '../../match/screens/match_detail_screen.dart';
+import '../../player/screens/view_player_screen.dart';
 import '../screens.dart';
 import '../state/screen_state.dart';
 
@@ -183,6 +184,8 @@ class ScreenNotifier extends SafeStateNotifier<ScreenState> {
         throw UnimplementedError();
       case null:
         return;
+      case Redirect.viewPlayer:
+        changeByFragmentId(ViewPlayerScreen.id);
     }
   }
 

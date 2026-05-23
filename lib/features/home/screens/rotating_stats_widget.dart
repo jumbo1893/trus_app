@@ -1,16 +1,19 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import '../../../models/api/helper/redirect/redirect_api_model.dart';
 import '../../../models/api/home/stats_board_data.dart';
 import '../../../theme/app_colors.dart';
 import '../widget/home_section_card.dart';
 
 class RotatingStatsWidget extends StatefulWidget {
   final List<StatsBoardData> statsBoards;
+  final void Function(RedirectApiModel redirect) onRedirect;
 
   const RotatingStatsWidget({
     super.key,
     required this.statsBoards,
+    required this.onRedirect,
   });
 
   @override
@@ -300,6 +303,7 @@ class _RotatingStatsWidgetState extends State<RotatingStatsWidget>
                       );
                     },
                     child: _StatsTableView(
+                      onRedirect: widget.onRedirect,
                       key: currentKey,
                       data: screen,
                     ),
@@ -341,10 +345,12 @@ class _RotatingStatsWidgetState extends State<RotatingStatsWidget>
 
 class _StatsTableView extends StatelessWidget {
   final StatsBoardData data;
+  final void Function(RedirectApiModel redirect) onRedirect;
 
   const _StatsTableView({
     super.key,
     required this.data,
+    required this.onRedirect,
   });
 
   @override
@@ -396,9 +402,12 @@ class _StatsTableView extends StatelessWidget {
             padding: EdgeInsets.only(
               bottom: index == data.rows.length - 1 ? 0 : 6,
             ),
-            child: _TableRow(
-              values: row.columns,
-              textStyle: cellStyle,
+            child: InkWell(
+              onTap: () => row.redirect!= null ? onRedirect(row.redirect!) : {},
+              child: _TableRow(
+                values: row.columns,
+                textStyle: cellStyle,
+              ),
             ),
           );
         }),

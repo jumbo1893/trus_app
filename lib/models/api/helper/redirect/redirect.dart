@@ -1,7 +1,8 @@
 enum Redirect {
   playerBeerStats,
   matchWithPlayerBottomsheet,
-  playerFineStats
+  playerFineStats,
+  viewPlayer
 }
 
 extension RedirectExtension on Redirect {
@@ -13,6 +14,8 @@ extension RedirectExtension on Redirect {
         return Redirect.matchWithPlayerBottomsheet;
       case "PLAYER_FINE_STATS":
         return Redirect.playerFineStats;
+      case "VIEW_PLAYER":
+        return Redirect.viewPlayer;
       default:
         return null;
     }
@@ -26,6 +29,8 @@ extension RedirectExtension on Redirect {
         return "MATCH_WITH_PLAYER_BOTTOMSHEET";
       case Redirect.playerFineStats:
         return "PLAYER_FINE_STATS";
+      case Redirect.viewPlayer:
+        return "VIEW_PLAYER";
     }
   }
 }
