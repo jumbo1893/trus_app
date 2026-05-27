@@ -52,6 +52,7 @@ class _EditPlayerScreenState extends ConsumerState<EditPlayerScreen> {
         ),
         FormFieldWrapper(
           label: "Jméno hráče",
+          error: state.errors["football_player"],
           child: CustomDropdownSheet(
             state: state,
             notifier: notifier,
