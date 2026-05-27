@@ -54,6 +54,9 @@ List<Widget> matchFields(
         models: state.allPlayers,
         selectedModels: state.selectedPlayers,
         onChanged: (players) => notifier.setSelectedPlayers(players, false),
+        isInitiallyHidden: (player) => !player.active,
+        hiddenItemsButtonText: "Zobrazit neaktivní hráče",
+
       ),
     ),
     FormFieldWrapper(
@@ -64,6 +67,8 @@ List<Widget> matchFields(
         models: state.allFans,
         selectedModels: state.selectedFans,
         onChanged: (fans) => notifier.setSelectedPlayers(fans, true),
+        isInitiallyHidden: (player) => !player.active,
+        hiddenItemsButtonText: "Zobrazit neaktivní fanoušky",
       ),
     ),
   ];

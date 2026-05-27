@@ -11,6 +11,12 @@ class AppMultiSelectField<T extends ModelToString> extends StatelessWidget {
   final List<T> selectedModels;
   final ValueChanged<List<T>> onChanged;
 
+  /// Položky, pro které predikát vrátí true, budou primárně schované.
+  /// Například u hráčů: (player) => !player.active
+  final bool Function(T model)? isInitiallyHidden;
+
+  final String hiddenItemsButtonText;
+
   const AppMultiSelectField({
     super.key,
     required this.label,
@@ -18,6 +24,8 @@ class AppMultiSelectField<T extends ModelToString> extends StatelessWidget {
     required this.models,
     required this.selectedModels,
     required this.onChanged,
+    this.isInitiallyHidden,
+    this.hiddenItemsButtonText = "Zobrazit neaktivní",
   });
 
   Future<void> _openBottomSheet(BuildContext context) {
@@ -31,6 +39,8 @@ class AppMultiSelectField<T extends ModelToString> extends StatelessWidget {
         selectedModels: selectedModels,
         onChanged: onChanged,
         title: title,
+        isInitiallyHidden: isInitiallyHidden,
+        hiddenItemsButtonText: hiddenItemsButtonText,
       ),
     );
   }
