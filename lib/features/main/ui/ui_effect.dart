@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:trus_app/models/api/receivedfine/stats/received_fine_stats_detail_models.dart';
+
+import '../../../models/api/interfaces/model_to_string.dart';
 
 sealed class UiEffect {
   const UiEffect();
@@ -35,4 +38,24 @@ class UiLoadingSheet extends UiEffect {
 
 class UiHideLoadingSheet extends UiEffect {
   const UiHideLoadingSheet();
+}
+
+class UiSimpleSheet extends UiEffect {
+  final String title;
+  final String message;
+  const UiSimpleSheet(this.title, this.message);
+}
+
+class UiStatsBottomSheet extends UiEffect {
+  final String title;
+  final String subtitle;
+  final List<ModelToString> items;
+  const UiStatsBottomSheet(this.title, this.subtitle, this.items);
+}
+
+class UiFineStatsBottomSheet extends UiEffect {
+  final String title;
+  final String subtitle;
+  final ReceivedFineStatsDetailResponse response;
+  const UiFineStatsBottomSheet(this.title, this.subtitle, this.response);
 }

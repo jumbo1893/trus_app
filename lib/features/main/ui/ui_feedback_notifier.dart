@@ -1,7 +1,9 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:trus_app/models/api/receivedfine/stats/received_fine_stats_detail_models.dart';
 
+import '../../../models/api/interfaces/model_to_string.dart';
 import 'ui_effect.dart';
 import 'ui_feedback_state.dart';
 
@@ -67,6 +69,18 @@ class UiFeedbackNotifier extends StateNotifier<UiFeedbackState> {
 
   void showConfirmationSheet(String message, VoidCallback callback) {
     emit(UiConfirmationSheet(message, callback));
+  }
+
+  void showSimpleSheet(String title, String message) {
+    emit(UiSimpleSheet(title, message));
+  }
+
+  void showStatsBottomSheet(String title, String subtitle, List<ModelToString> items) {
+    emit(UiStatsBottomSheet(title, subtitle, items));
+  }
+
+  void showFineStatsBottomSheet(String title, String subtitle, ReceivedFineStatsDetailResponse response) {
+    emit(UiFineStatsBottomSheet(title, subtitle, response));
   }
 
   void showSessionLoadingSheet([String? message]) {

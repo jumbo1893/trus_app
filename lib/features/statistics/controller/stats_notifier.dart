@@ -9,6 +9,7 @@ import 'package:trus_app/features/statistics/stats_level.dart';
 import 'package:trus_app/models/api/goal/goal_detailed_model.dart';
 import 'package:trus_app/models/api/interfaces/detailed_response_model.dart';
 import 'package:trus_app/models/api/receivedfine/received_fine_detailed_model.dart';
+import 'package:trus_app/models/api/receivedfine/stats/received_fine_stats_detail_models.dart';
 import 'package:trus_app/models/api/season_api_model.dart';
 import 'package:trus_app/models/helper/title_and_text.dart';
 
@@ -16,6 +17,7 @@ import '../../../common/widgets/notifier/dropdown/dropdown_state.dart';
 import '../../../config.dart';
 import '../../../models/api/beer/beer_detailed_model.dart';
 import '../../../models/api/interfaces/model_to_string.dart';
+import '../../../models/stats/stats_sheet_data.dart';
 import '../stat_args.dart';
 import '../state/stats_state.dart';
 
@@ -30,10 +32,8 @@ final statsNotifierProvider = StateNotifierProvider.autoDispose
 });
 
 class StatsNotifier extends AppNotifier<StatsState>
-    implements BackAction, IListviewNotifier {
+    implements  IListviewNotifier {
   final StatsApiService statsApiService;
-
-  bool get isDetail => state.isDetail;
 
   StatsNotifier({
     required Ref ref,
@@ -43,13 +43,13 @@ class StatsNotifier extends AppNotifier<StatsState>
   }) : super(ref, StatsState.initial(api, matchOrPlayer)) {
     ref.listen<DropdownState>(
         seasonDropdownNotifierProvider(const SeasonArgs(false, false, true)),
-        (_, next) {
-      SeasonApiModel? season = next.selected as SeasonApiModel?;
-      if (season != null) {
-        clearFilter();
-        Future.microtask(() => _loadRootStats(season.id!));
-      }
-    }, fireImmediately: true);
+            (_, next) {
+          SeasonApiModel? season = next.selected as SeasonApiModel?;
+          if (season != null) {
+            clearFilter();
+            Future.microtask(() => _loadRootStats(season.id!));
+          }
+        }, fireImmediately: true);
   }
 
   Future<void> _loadRootStats(int seasonId) async {
@@ -59,7 +59,7 @@ class StatsNotifier extends AppNotifier<StatsState>
       level: StatsLevel.root,
     );
     final response = await runUiWithResult<DetailedResponseModel>(
-      () => statsApiService.getDetailedStats(
+          () => statsApiService.getDetailedStats(
         null,
         seasonId,
         null,
@@ -75,79 +75,88 @@ class StatsNotifier extends AppNotifier<StatsState>
   }
 
   Future<void> loadDetail(ModelToString modelToString) async {
-    clearFilter();
-    final season = ref
-        .read(seasonDropdownNotifierProvider(
-            const SeasonArgs(false, false, true)))
-        .selected;
-    if (season == null) return;
-    if (state.level == StatsLevel.root) {
-      await loadFirstDetail(modelToString, season as SeasonApiModel);
-    } else if (state.api == receivedFineApi &&
-        state.level == StatsLevel.detail) {
-      await loadSecondDetail(modelToString, season as SeasonApiModel);
+    final selectedSeason = ref
+        .read(
+      seasonDropdownNotifierProvider(
+        const SeasonArgs(false, false, true),
+      ),
+    )
+        .selected as SeasonApiModel?;
+
+    if (selectedSeason == null) {
+      return;
     }
-  }
 
-  Future<void> loadFirstDetail(
-      ModelToString modelToString, SeasonApiModel season) async {
-    int modelId = _getSelectedModelId(state.matchOrPlayer, modelToString);
+    final selectedId = _getSelectedModelId(
+      state.matchOrPlayer,
+      modelToString,
+    );
 
-    state = state.copyWith(
-        stats: const AsyncValue.loading(),
-        overall: const AsyncValue.loading(),
-        selectedModel: modelToString,
-        selectedModelId: modelId,
-        level: StatsLevel.detail);
+    final titleAndText = getOverallDetail(
+      state.matchOrPlayer,
+      modelToString,
+      selectedSeason,
+      null,
+    );
+
+    if (state.api == receivedFineApi) {
+      await _loadReceivedFineDetail(
+        selectedId: selectedId,
+        seasonId: selectedSeason.id!,
+        titleAndText: titleAndText,
+      );
+      return;
+    }
+
     final response = await runUiWithResult<DetailedResponseModel>(
-      () => statsApiService.getDetailedStats(
-        state.matchOrPlayer ? modelId : null,
-        season.id!,
-        state.matchOrPlayer ? null : modelId,
+          () => statsApiService.getDetailedStats(
+        state.matchOrPlayer ? selectedId : null,
+        selectedSeason.id!,
+        state.matchOrPlayer ? null : selectedId,
         !state.matchOrPlayer,
         null,
         null,
         state.api,
       ),
-      showLoading: false,
+      loadingMessage: "Načítám detail statistik…",
+      showLoading: true,
       successSnack: null,
     );
-    var models = response.modelList();
-    state = state.copyWith(
-      stats: AsyncValue.data(models),
-      overall: AsyncValue.data(
-          getOverallDetail(state.matchOrPlayer, modelToString, season, null)),
+
+    ui.showStatsBottomSheet(
+      titleAndText.title,
+      titleAndText.text,
+      response.modelList(),
     );
   }
 
-  Future<void> loadSecondDetail(
-      ModelToString modelToString, SeasonApiModel season) async {
-    int modelId = _getSelectedModelId(!state.matchOrPlayer, modelToString);
+  Future<void> _loadReceivedFineDetail({
+    required int selectedId,
+    required int seasonId,
+    required TitleAndText titleAndText,
+  }) async {
+    final ReceivedFineStatsDetailResponse response;
 
-    state = state.copyWith(
-        stats: const AsyncValue.loading(),
-        overall: const AsyncValue.loading(),
-        selectedDetailedModelId: modelId,
-        level: StatsLevel.detail2);
+    if (state.matchOrPlayer) {
+      response = await runUiWithResult<ReceivedFineMatchDetailResponse>(
+            () => statsApiService.getReceivedFineMatchDetail(selectedId),
+        loadingMessage: "Načítám detail pokut…",
+        showLoading: true,
+        successSnack: null,
+      );
+    } else {
+      response = await runUiWithResult<ReceivedFinePlayerDetailResponse>(
+            () => statsApiService.getReceivedFinePlayerDetail(selectedId, seasonId),
+        loadingMessage: "Načítám detail pokut…",
+        showLoading: true,
+        successSnack: null,
+      );
+    }
 
-    final response = await runUiWithResult<DetailedResponseModel>(
-      () => statsApiService.getDetailedStats(
-        state.matchOrPlayer ? state.selectedModelId : modelId,
-        null,
-        state.matchOrPlayer ? modelId : state.selectedModelId,
-        null,
-        null,
-        true,
-        state.api,
-      ),
-      showLoading: false,
-      successSnack: null,
-    );
-    var models = response.modelList();
-    state = state.copyWith(
-      stats: AsyncValue.data(models),
-      overall: AsyncValue.data(getOverallDetail(
-          !state.matchOrPlayer, modelToString, season, state.selectedModel)),
+    ui.showFineStatsBottomSheet(
+      titleAndText.title,
+      titleAndText.text,
+      response,
     );
   }
 
@@ -160,7 +169,7 @@ class StatsNotifier extends AppNotifier<StatsState>
       return matchOrPlayer ? model.match!.id! : model.player!.id!;
     } else if (state.api == receivedFineApi) {
       ReceivedFineDetailedModel model =
-          modelToString as ReceivedFineDetailedModel;
+      modelToString as ReceivedFineDetailedModel;
       return matchOrPlayer ? model.match!.id! : model.player!.id!;
     }
     return -1;
@@ -188,12 +197,12 @@ class StatsNotifier extends AppNotifier<StatsState>
           text: "v sezoně ${season.listViewTitle()}");
     } else if (state.api == receivedFineApi) {
       ReceivedFineDetailedModel model =
-          modelToString as ReceivedFineDetailedModel;
+      modelToString as ReceivedFineDetailedModel;
       if (matchOrPlayer) {
         if (firstDetailModel != null) {
           return TitleAndText(
               title:
-                  "Pokuty hráče ${(firstDetailModel as ReceivedFineDetailedModel).player!.listViewTitle()}:",
+              "Pokuty hráče ${(firstDetailModel as ReceivedFineDetailedModel).player!.listViewTitle()}:",
               text: "v zápase ${model.match!.listViewTitle()}");
         }
         return TitleAndText(
@@ -203,7 +212,7 @@ class StatsNotifier extends AppNotifier<StatsState>
         return TitleAndText(
             title: "Pokuty hráče ${model.player!.listViewTitle()}:",
             text:
-                "v zápase ${(firstDetailModel as ReceivedFineDetailedModel).match!.listViewTitle()}");
+            "v zápase ${(firstDetailModel as ReceivedFineDetailedModel).match!.listViewTitle()}");
       }
       return TitleAndText(
           title: "Pokuty hráče ${model.player!.listViewTitle()}:",
@@ -219,7 +228,7 @@ class StatsNotifier extends AppNotifier<StatsState>
       models = models.reversed.toList();
     }
     TitleAndText titleAndText =
-        TitleAndText(title: "Celkem:", text: response.overallStats());
+    TitleAndText(title: "Celkem:", text: response.overallStats());
     state = state.copyWith(
       stats: AsyncValue.data(models),
       overall: AsyncValue.data(titleAndText),
@@ -237,31 +246,11 @@ class StatsNotifier extends AppNotifier<StatsState>
     });
   }
 
-  @override
-  Future<void> backToRoot() async {
-    SeasonApiModel? season = ref
-        .read(seasonDropdownNotifierProvider(
-            const SeasonArgs(false, false, true)))
-        .selected as SeasonApiModel?;
-    if (season == null) return;
-    if (state.level == StatsLevel.detail2) {
-      state = state.copyWith(
-        level: StatsLevel.root,
-      );
-      await loadDetail(state.selectedModel!);
-    } else {
-      state = state.copyWith(
-        level: StatsLevel.root,
-      );
-      await _loadRootStats(season.id!);
-    }
-  }
-
   /// API volání
   Future<void> search(String text) async {
     SeasonApiModel? season = ref
         .read(seasonDropdownNotifierProvider(
-            const SeasonArgs(false, false, true)))
+        const SeasonArgs(false, false, true)))
         .selected as SeasonApiModel?;
     if (season == null) return;
 
@@ -273,19 +262,6 @@ class StatsNotifier extends AppNotifier<StatsState>
 
   void clearFilter() {
     state = state.copyWith(filter: "");
-  }
-
-  bool handleBack() {
-    if (state.isDetail) {
-      backToRoot();
-      return false;
-    }
-    return true;
-  }
-
-  @override
-  bool isRootBack() {
-    return state.isDetail;
   }
 
   @override

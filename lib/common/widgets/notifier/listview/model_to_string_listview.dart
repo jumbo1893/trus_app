@@ -13,13 +13,7 @@ class ModelToStringListview extends ConsumerStatefulWidget {
   final IListviewNotifier? notifier;
   final String emptyListText;
   final String emptyListTitle;
-
-  /// Použij pro jednoduché listové screeny, kde má widget sám
-  /// ukládat a obnovovat pozici scrollu.
   final String? storageKey;
-
-  /// Použij pouze tehdy, když controller spravuje parent screen,
-  /// například přes RestorableScrollMixin.
   final ScrollController? scrollController;
 
   const ModelToStringListview({

@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:trus_app/common/widgets/bottomsheet/fine_stats_detail_bottom_sheet.dart';
 import 'package:trus_app/common/widgets/bottomsheet/loading_bottom_sheet.dart';
+import 'package:trus_app/common/widgets/bottomsheet/simple_bottom_sheet.dart';
+import 'package:trus_app/common/widgets/bottomsheet/stats_detail_bottom_sheet.dart';
 import 'package:trus_app/theme/app_colors.dart';
 import 'package:trus_app/features/auth/login/screens/login_screen.dart';
 import 'package:trus_app/features/general/global_variables_controller.dart';
@@ -157,7 +160,7 @@ class _MainScreenState extends ConsumerState<MainScreen> {
               await showDialog(
                 context: context,
                 builder: (_) => ConfirmationDialog(
-                  effect.message, effect.continueCallBack
+                    effect.message, effect.continueCallBack
                 ),
               );
               break;
@@ -191,6 +194,26 @@ class _MainScreenState extends ConsumerState<MainScreen> {
                 Navigator.of(context, rootNavigator: true).pop();
               }
               break;
+            case UiSimpleSheet():
+              SimpleBottomSheet.show(
+                context,
+                title: effect.title,
+                message: effect.message,
+              );
+            case UiStatsBottomSheet():
+              StatsDetailBottomSheet.show(
+                  context,
+                  title: effect.title,
+                  subtitle: effect.subtitle,
+                  items: effect.items
+              );
+            case UiFineStatsBottomSheet():
+              FineStatsDetailBottomSheet.show(
+                  context,
+                  title: effect.title,
+                  subtitle: effect.subtitle,
+                  response: effect.response
+              );
           }
         });
       },

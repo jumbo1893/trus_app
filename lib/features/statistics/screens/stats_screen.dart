@@ -80,46 +80,41 @@ class _StatsScreenState extends ConsumerState<StatsScreen> {
       },
     );
 
-    return BackHandlerListener(
-      provider: statsNotifierProvider(widget.statsArgs),
-      backActionBuilder: (ref) =>
-          ref.read(statsNotifierProvider(widget.statsArgs).notifier),
-      child: Scaffold(
-        backgroundColor: const Color(0xFFF6F7F9),
-        body: SafeArea(
-          child: Column(
-            children: [
-              if (!stats.isDetail)
-                AnimatedFilterPanel(
-                  visible: _showFilters,
-                  child: Padding(
-                    padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
-                    child: StatisticsFilterBar(
-                      seasonDropdown: CustomDropdownSheet(
-                        hint: "Vyber sezonu",
-                        notifier: ref.read(seasonProvider.notifier),
-                        state: ref.watch(seasonProvider),
-                      ),
-                      statsArgs: widget.statsArgs,
+    return Scaffold(
+      backgroundColor: const Color(0xFFF6F7F9),
+      body: SafeArea(
+        child: Column(
+          children: [
+            if (!stats.isDetail)
+              AnimatedFilterPanel(
+                visible: _showFilters,
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
+                  child: StatisticsFilterBar(
+                    seasonDropdown: CustomDropdownSheet(
+                      hint: "Vyber sezonu",
+                      notifier: ref.read(seasonProvider.notifier),
+                      state: ref.watch(seasonProvider),
                     ),
-                  ),
-                ),
-              const SizedBox(height: 16),
-              Expanded(
-                child: stats.stats.when(
-                  loading: () => const Loader(),
-                  error: (_, __) => const SizedBox(),
-                  data: (_) => Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 16),
-                    child: NewStatisticsView(
-                      statsArgs: widget.statsArgs,
-                      scrollController: _scrollController,
-                    ),
+                    statsArgs: widget.statsArgs,
                   ),
                 ),
               ),
-            ],
-          ),
+            const SizedBox(height: 16),
+            Expanded(
+              child: stats.stats.when(
+                loading: () => const Loader(),
+                error: (_, __) => const SizedBox(),
+                data: (_) => Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  child: NewStatisticsView(
+                    statsArgs: widget.statsArgs,
+                    scrollController: _scrollController,
+                  ),
+                ),
+              ),
+            ),
+          ],
         ),
       ),
     );

@@ -6,10 +6,11 @@ import 'package:trus_app/models/api/interfaces/detailed_response_model.dart';
 
 import '../../../models/api/goal/goal_detailed_response.dart';
 import '../../../models/api/receivedfine/received_fine_detailed_response.dart';
+import '../../../models/api/receivedfine/stats/received_fine_stats_detail_models.dart';
 import '../../general/repository/crud_api_service.dart';
 
 final statsApiServiceProvider =
-    Provider<StatsApiService>((ref) => StatsApiService(ref));
+Provider<StatsApiService>((ref) => StatsApiService(ref));
 
 class StatsApiService extends CrudApiService {
   StatsApiService(super.ref);
@@ -31,6 +32,34 @@ class StatsApiService extends CrudApiService {
         getMapFunction(api),
         queryParameters);
     return detailedResponseModel;
+  }
+
+  Future<ReceivedFineMatchDetailResponse> getReceivedFineMatchDetail(int matchId) async {
+    final queryParameters = {
+      'matchId': intToString(matchId),
+    };
+    const url = "$serverUrl/$receivedFineApi/statistics/match-detail";
+    return executeGetRequest(
+      Uri.parse(url),
+          (dynamic json) => ReceivedFineMatchDetailResponse.fromJson(json),
+      queryParameters,
+    );
+  }
+
+  Future<ReceivedFinePlayerDetailResponse> getReceivedFinePlayerDetail(
+      int playerId,
+      int? seasonId,
+      ) async {
+    final queryParameters = {
+      'playerId': intToString(playerId),
+      'seasonId': intToString(seasonId),
+    };
+    const url = "$serverUrl/$receivedFineApi/statistics/player-detail";
+    return executeGetRequest(
+      Uri.parse(url),
+          (dynamic json) => ReceivedFinePlayerDetailResponse.fromJson(json),
+      queryParameters,
+    );
   }
 
   DetailedResponseModel Function(dynamic) getMapFunction(String api) {
