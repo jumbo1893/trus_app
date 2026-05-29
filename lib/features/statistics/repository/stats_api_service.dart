@@ -4,6 +4,7 @@ import 'package:trus_app/config.dart';
 import 'package:trus_app/models/api/beer/beer_detailed_response.dart';
 import 'package:trus_app/models/api/interfaces/detailed_response_model.dart';
 
+import '../../../models/api/attendance/attendance_detailed_response.dart';
 import '../../../models/api/goal/goal_detailed_response.dart';
 import '../../../models/api/receivedfine/received_fine_detailed_response.dart';
 import '../../../models/api/receivedfine/stats/received_fine_stats_detail_models.dart';
@@ -64,10 +65,16 @@ class StatsApiService extends CrudApiService {
 
   DetailedResponseModel Function(dynamic) getMapFunction(String api) {
     switch(api) {
-      case goalApi: return (dynamic json) => GoalDetailedResponse.fromJson(json);
-      case beerApi: return (dynamic json) => BeerDetailedResponse.fromJson(json);
-      case receivedFineApi: return (dynamic json) => ReceivedFineDetailedResponse.fromJson(json);
-      default: return (dynamic json) => GoalDetailedResponse.fromJson(json);
+      case goalApi:
+        return (dynamic json) => GoalDetailedResponse.fromJson(json);
+      case beerApi:
+        return (dynamic json) => BeerDetailedResponse.fromJson(json);
+      case receivedFineApi:
+        return (dynamic json) => ReceivedFineDetailedResponse.fromJson(json);
+      case attendanceApi:
+        return (dynamic json) => AttendanceDetailedResponse.fromJson(json);
+      default:
+        return (dynamic json) => GoalDetailedResponse.fromJson(json);
     }
   }
 }

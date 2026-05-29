@@ -14,6 +14,7 @@ import 'package:trus_app/models/helper/title_and_text.dart';
 
 import '../../../common/widgets/notifier/dropdown/dropdown_state.dart';
 import '../../../config.dart';
+import '../../../models/api/attendance/attendance_detailed_model.dart';
 import '../../../models/api/beer/beer_detailed_model.dart';
 import '../../../models/api/interfaces/model_to_string.dart';
 import '../stat_args.dart';
@@ -170,6 +171,10 @@ class StatsNotifier extends AppNotifier<StatsState>
       modelToString as ReceivedFineDetailedModel;
       return matchOrPlayer ? model.match!.id! : model.player!.id!;
     }
+    else if (state.api == attendanceApi) {
+      AttendanceDetailedModel model = modelToString as AttendanceDetailedModel;
+      return state.matchOrPlayer ? model.match!.id! : model.player!.id!;
+    }
     return -1;
   }
 
@@ -215,6 +220,21 @@ class StatsNotifier extends AppNotifier<StatsState>
       return TitleAndText(
           title: "Pokuty hráče ${model.player!.listViewTitle()}:",
           text: "v sezoně ${season.listViewTitle()}");
+    }
+    else if (state.api == attendanceApi) {
+      AttendanceDetailedModel model = modelToString as AttendanceDetailedModel;
+
+      if (matchOrPlayer) {
+        return TitleAndText(
+          title: "Účast v zápase:",
+          text: model.match!.listViewTitle(),
+        );
+      }
+
+      return TitleAndText(
+        title: "Účast hráče ${model.player!.listViewTitle()}:",
+        text: "v sezoně ${season.listViewTitle()}",
+      );
     }
     return TitleAndText(title: "", text: "");
   }

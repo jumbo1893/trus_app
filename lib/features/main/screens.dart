@@ -34,6 +34,8 @@ import '../notification/push/screen/enabled_notifications_screen.dart';
 import '../notification/screen/notification_screen.dart';
 import '../player/screens/view_player_screen.dart';
 import '../season/screens/add_season_screen.dart';
+import '../statistics/screens/attendance/attendance_match_statistic_screen.dart';
+import '../statistics/screens/attendance/attendance_player_statistic_screen.dart';
 import '../statistics/screens/beer/beer_detail_stats_screen.dart';
 import '../statistics/screens/beer/beer_match_statistic_screen.dart';
 import '../statistics/screens/beer/beer_player_statistic_screen.dart';
@@ -180,6 +182,10 @@ final List<Widget> _widgetList = [
   const AppearanceScreen(
     //48
   ),
+  const AttendancePlayerStatisticScreen(),
+  //49
+  const AttendanceMatchStatisticScreen(),
+  //50
 ];
 
 List<Widget> get widgetList => _widgetList;
@@ -191,6 +197,8 @@ final List<String> _statisticScreens = [
   FineMatchStatisticScreen.id,
   GoalMatchStatisticScreen.id,
   GoalPlayerStatisticScreen.id,
+  AttendancePlayerStatisticScreen.id,
+  AttendanceMatchStatisticScreen.id,
 ];
 
 List<String> get statisticScreenList => _statisticScreens;

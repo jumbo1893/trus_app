@@ -6,6 +6,8 @@ import 'package:trus_app/models/api/receivedfine/received_fine_detailed_model.da
 import 'package:trus_app/theme/app_colors.dart';
 import 'package:trus_app/theme/app_widget_values.dart';
 
+import '../../../models/api/attendance/attendance_detailed_model.dart';
+
 class StatsDetailBottomSheet extends StatelessWidget {
   final String title;
   final String subtitle;
@@ -266,16 +268,18 @@ class _StatsDetailRow extends StatelessWidget {
                     height: 1.32,
                   ),
                 ),
-                const SizedBox(height: 9),
-                Wrap(
-                  spacing: 7,
-                  runSpacing: 7,
-                  children: metrics
-                      .map(
-                        (metric) => _MetricChip(metric: metric),
-                  )
-                      .toList(),
-                ),
+                if (metrics.isNotEmpty) ...[
+                  const SizedBox(height: 9),
+                  Wrap(
+                    spacing: 7,
+                    runSpacing: 7,
+                    children: metrics
+                        .map(
+                          (metric) => _MetricChip(metric: metric),
+                    )
+                        .toList(),
+                  ),
+                ],
               ],
             ),
           ),
@@ -328,6 +332,23 @@ class _StatsDetailRow extends StatelessWidget {
           isZero: item.fineAmount == 0,
         ),
       ];
+    }
+    if (item is AttendanceDetailedModel) {
+      if (item.match != null && item.player == null) {
+        return [];
+      }
+      if (item.player != null && item.match == null) {
+        final isFan = item.player!.fan;
+
+        return [
+          _MetricData(
+            icon: isFan ? Icons.emoji_people_rounded : Icons.person_rounded,
+            text: isFan ? 'Fanoušek' : 'Hráč',
+          ),
+        ];
+      }
+
+      return [];
     }
 
     return [
@@ -525,6 +546,10 @@ enum _StatsDisplayType {
     icon: Icons.receipt_long_rounded,
     label: 'POKUTY',
   ),
+  attendance(
+    icon: Icons.people_rounded,
+    label: 'ÚČAST',
+  ),
   generic(
     icon: Icons.bar_chart_rounded,
     label: 'STATISTIKY',
@@ -557,6 +582,9 @@ enum _StatsDisplayType {
 
     if (item is ReceivedFineDetailedModel) {
       return _StatsDisplayType.fine;
+    }
+    if (item is AttendanceDetailedModel) {
+      return _StatsDisplayType.attendance;
     }
 
     return _StatsDisplayType.generic;

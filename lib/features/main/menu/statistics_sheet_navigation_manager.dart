@@ -12,6 +12,8 @@ import 'package:trus_app/features/statistics/screens/goal/goal_match_statistic_s
 import 'package:trus_app/features/statistics/screens/goal/goal_player_statistic_screen.dart';
 import 'package:trus_app/models/api/auth/app_team_api_model.dart';
 
+import '../../statistics/screens/attendance/attendance_match_statistic_screen.dart';
+import '../../statistics/screens/attendance/attendance_player_statistic_screen.dart';
 import 'app_menu_bottom_sheet.dart';
 
 class StatisticsSheetNavigationManager {
@@ -72,6 +74,20 @@ class StatisticsSheetNavigationManager {
           title: const Text("Statistiky gólů v zápase"),
           onTap: () => onModalBottomSheetMenuTapped(
             GoalMatchStatisticScreen.id,
+          ),
+        ),
+        MenuTile(
+          icon: Icons.groups_rounded,
+          title: const Text("Účast hráčů na zápasech"),
+          onTap: () => onModalBottomSheetMenuTapped(
+            AttendancePlayerStatisticScreen.id,
+          ),
+        ),
+        MenuTile(
+          icon: Icons.event_available_rounded,
+          title: const Text("Počet hráčů v zápasech"),
+          onTap: () => onModalBottomSheetMenuTapped(
+            AttendanceMatchStatisticScreen.id,
           ),
         ),
         const MenuSectionLabel(text: "ZBYTEČNÉ ZAJÍMAVOSTI"),
