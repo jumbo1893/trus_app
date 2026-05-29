@@ -48,7 +48,7 @@ class _RowSwitchStream extends State<RowSwitchStream> {
                 alignment: Alignment.centerRight,
                 child: Switch(
                   key: ValueKey("${getValueFromValueKey(widget.key!)}_switch"),
-                  activeColor: context.appColors.legacyAccent,
+                  activeThumbColor: context.appColors.legacyAccent,
                   value: isChecked,
                   onChanged: (bool value) {
                     widget.booleanControllerMixin

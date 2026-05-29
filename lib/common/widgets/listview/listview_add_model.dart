@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:trus_app/theme/app_colors.dart';
 
 import '../../../models/api/interfaces/add_to_string.dart';
-import '../../../theme/app_colors.dart';
 import '../../../theme/app_widget_values.dart';
 
 class ListviewAddModel extends StatelessWidget {

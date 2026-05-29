@@ -2,8 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:trus_app/theme/app_colors.dart';
 import 'package:trus_app/models/api/player/player_api_model.dart';
 import 'package:trus_app/models/api/receivedfine/stats/received_fine_stats_detail_models.dart';
-
-import '../../../../theme/app_colors.dart';
 import '../../../../theme/app_widget_values.dart';
 
 class FineMatchListview extends StatelessWidget {

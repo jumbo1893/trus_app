@@ -47,9 +47,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
       case LoginRedirect.ok:
         navigateToHomePage(user);
         break;
-      default:
-        navigateToLoginScreen();
-    }
+      }
   }
 
   void navigateToHomePage(UserApiModel user) {
