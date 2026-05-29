@@ -6,7 +6,6 @@ import 'package:trus_app/features/statistics/stat_args.dart';
 
 import '../../../common/utils/utils.dart';
 import '../../../common/widgets/animated_filter_panel.dart';
-import '../../../common/widgets/back_handler_listener.dart';
 import '../../../common/widgets/dropdown/custom_dropdown_sheet.dart';
 import '../../../common/widgets/loader.dart';
 import '../../home/screens/home_screen.dart';

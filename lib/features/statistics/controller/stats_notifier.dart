@@ -1,7 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:trus_app/common/widgets/notifier/listview/i_listview_notifier.dart';
 import 'package:trus_app/features/general/notifier/app_notifier.dart';
-import 'package:trus_app/features/main/back_action.dart';
 import 'package:trus_app/features/season/controller/season_dropdown_notifier.dart';
 import 'package:trus_app/features/season/season_args.dart';
 import 'package:trus_app/features/statistics/repository/stats_api_service.dart';
@@ -17,7 +16,6 @@ import '../../../common/widgets/notifier/dropdown/dropdown_state.dart';
 import '../../../config.dart';
 import '../../../models/api/beer/beer_detailed_model.dart';
 import '../../../models/api/interfaces/model_to_string.dart';
-import '../../../models/stats/stats_sheet_data.dart';
 import '../stat_args.dart';
 import '../state/stats_state.dart';
 
