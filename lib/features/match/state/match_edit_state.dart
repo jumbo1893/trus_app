@@ -25,12 +25,16 @@ class MatchEditState extends BaseCrudState<MatchApiModel> implements IDropdownSt
   final MatchDetailOptions initialTab;
   final FootballMatchDetailState footballMatchDetailState;
   final MatchStatsState matchStatsState;
+  final int? homeGoalNumber;
+  final int? awayGoalNumber;
 
 
   const MatchEditState({
     required this.name,
     required this.date,
     required this.home,
+    required this.homeGoalNumber,
+    required this.awayGoalNumber,
     required this.seasons,
     required this.selectedSeason,
     required this.allPlayers,
@@ -51,6 +55,8 @@ class MatchEditState extends BaseCrudState<MatchApiModel> implements IDropdownSt
     String? name,
     DateTime? date,
     bool? home,
+    int? homeGoalNumber,
+    int? awayGoalNumber,
     AsyncValue<List<DropdownItem>>? seasons,
     DropdownItem? selectedSeason,
     List<PlayerApiModel>? allPlayers,
@@ -69,6 +75,8 @@ class MatchEditState extends BaseCrudState<MatchApiModel> implements IDropdownSt
       name: name ?? this.name,
       date: date ?? this.date,
       home: home ?? this.home,
+      homeGoalNumber: homeGoalNumber ?? this.homeGoalNumber,
+      awayGoalNumber: awayGoalNumber ?? this.awayGoalNumber,
       seasons: seasons ?? this.seasons,
       selectedSeason: selectedSeason ?? this.selectedSeason,
       allPlayers: allPlayers ?? this.allPlayers,

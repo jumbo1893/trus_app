@@ -12,6 +12,9 @@ List<Widget> matchFields(
     dynamic state,
     dynamic notifier,
     ) {
+  final homeTeamName = state.home ? "Liščí Trus" : state.name;
+  final awayTeamName = state.home ? state.name : "Liščí Trus";
+
   return [
     FormFieldWrapper(
       label: "Jméno soupeře",
@@ -39,6 +42,71 @@ List<Widget> matchFields(
       ),
     ),
     FormFieldWrapper(
+      label: "Výsledek",
+      error: state.errors["homeGoalNumber"] ??
+          state.errors["awayGoalNumber"],
+      child: Row(
+        children: [
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  homeTeamName.isEmpty ? "Domácí" : homeTeamName,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(
+                    fontSize: 12,
+                    color: Colors.grey,
+                  ),
+                ),
+                const SizedBox(height: 6),
+                AppTextInputField(
+                  value: state.homeGoalNumber?.toString() ?? "",
+                  keyboardType: TextInputType.number,
+                  hintText: "0",
+                  onChanged: notifier.setHomeGoalNumber,
+                ),
+              ],
+            ),
+          ),
+          const Padding(
+            padding: EdgeInsets.fromLTRB(12, 24, 12, 0),
+            child: Text(
+              ":",
+              style: TextStyle(
+                fontSize: 24,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  awayTeamName.isEmpty ? "Hosté" : awayTeamName,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(
+                    fontSize: 12,
+                    color: Colors.grey,
+                  ),
+                ),
+                const SizedBox(height: 6),
+                AppTextInputField(
+                  value: state.awayGoalNumber?.toString() ?? "",
+                  keyboardType: TextInputType.number,
+                  hintText: "0",
+                  onChanged: notifier.setAwayGoalNumber,
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    ),
+    FormFieldWrapper(
       label: "Sezona",
       child: CustomDropdownSheet(
         state: state,
@@ -56,7 +124,6 @@ List<Widget> matchFields(
         onChanged: (players) => notifier.setSelectedPlayers(players, false),
         isInitiallyHidden: (player) => !player.active,
         hiddenItemsButtonText: "Zobrazit neaktivní hráče",
-
       ),
     ),
     FormFieldWrapper(

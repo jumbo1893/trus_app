@@ -14,6 +14,8 @@ class MatchApiModel implements ModelToString, JsonAndHttpConverter, DropdownItem
   final int seasonId;
   final bool home;
   final List<int> playerIdList;
+  final int? homeGoalNumber;
+  final int? awayGoalNumber;
   FootballMatchApiModel? footballMatch;
 
   MatchApiModel({
@@ -22,8 +24,10 @@ class MatchApiModel implements ModelToString, JsonAndHttpConverter, DropdownItem
     required this.seasonId,
     required this.home,
     required this.playerIdList,
+    this.homeGoalNumber,
+    this.awayGoalNumber,
     this.id,
-    this.footballMatch
+    this.footballMatch,
   });
 
   MatchApiModel.withPlayers({
@@ -31,18 +35,12 @@ class MatchApiModel implements ModelToString, JsonAndHttpConverter, DropdownItem
     required this.date,
     required this.seasonId,
     required this.home,
+    required this.homeGoalNumber,
+    required this.awayGoalNumber,
     List<PlayerApiModel>? players,
     this.id,
-    this.footballMatch
+    this.footballMatch,
   }) : playerIdList = _getIdsFromPlayers(players ?? []);
-
-  static List<int> _getIdsFromPlayers(List<PlayerApiModel> players) {
-    List<int> ids = [];
-    for (PlayerApiModel player in players) {
-      ids.add(player.id!);
-    }
-    return ids;
-  }
 
   MatchApiModel.dummy()
       : id = -100,
@@ -50,8 +48,9 @@ class MatchApiModel implements ModelToString, JsonAndHttpConverter, DropdownItem
         date = DateTime.fromMicrosecondsSinceEpoch(0),
         home = false,
         seasonId = 0,
-        playerIdList = [];
-
+        playerIdList = [],
+        homeGoalNumber = null,
+        awayGoalNumber = null;
 
   @override
   Map<String, dynamic> toJson() {
@@ -62,6 +61,8 @@ class MatchApiModel implements ModelToString, JsonAndHttpConverter, DropdownItem
       "home": home,
       "seasonId": seasonId,
       "playerIdList": playerIdList,
+      "homeGoalNumber": homeGoalNumber,
+      "awayGoalNumber": awayGoalNumber,
       "footballMatch": footballMatch?.toJson(),
     };
   }
@@ -73,8 +74,12 @@ class MatchApiModel implements ModelToString, JsonAndHttpConverter, DropdownItem
       id: json["id"] ?? 0,
       home: json["home"] ?? false,
       seasonId: json['seasonId'] ?? 0,
-      playerIdList: List<int>.from((json['playerIdList'])),
-      footballMatch: json["footballMatch"] != null ? FootballMatchApiModel.fromJson(json["footballMatch"]) : null,
+      playerIdList: List<int>.from(json['playerIdList']),
+      homeGoalNumber: json["homeGoalNumber"],
+      awayGoalNumber: json["awayGoalNumber"],
+      footballMatch: json["footballMatch"] != null
+          ? FootballMatchApiModel.fromJson(json["footballMatch"])
+          : null,
     );
   }
 
@@ -88,6 +93,21 @@ class MatchApiModel implements ModelToString, JsonAndHttpConverter, DropdownItem
   @override
   int get hashCode => id.hashCode;
 
+  static List<int> _getIdsFromPlayers(List<PlayerApiModel> players) {
+    List<int> ids = [];
+    for (PlayerApiModel player in players) {
+      ids.add(player.id!);
+    }
+    return ids;
+  }
+
+  String simpleResultToString() {
+    if (homeGoalNumber == null || awayGoalNumber == null) {
+      return "";
+    }
+    return "$homeGoalNumber:$awayGoalNumber";
+  }
+
   @override
   String toStringForListView() {
     return "Datum zápasu: ${dateTimeToString(date)}";
@@ -98,12 +118,14 @@ class MatchApiModel implements ModelToString, JsonAndHttpConverter, DropdownItem
     final teams = home
         ? "Liščí Trus - $name"
         : "$name - Liščí Trus";
+    String result = simpleResultToString();
+    if (result.isEmpty) {
+      result = footballMatch != null
+          ? footballMatch!.simpleResultToString()
+          : "";
+    }
 
-    final result = footballMatch != null
-        ? " ${footballMatch!.simpleResultToString()}"
-        : "";
-
-    return "$teams$result, ${dateTimeToString(date)}";
+    return "$teams $result, ${dateTimeToString(date)}";
   }
 
   @override

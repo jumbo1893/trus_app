@@ -76,6 +76,8 @@ class MatchEditNotifier extends BaseCrudNotifier<MatchApiModel, MatchEditState>
       name: "",
       date: DateTime.now(),
       home: true,
+      homeGoalNumber: null,
+      awayGoalNumber: null,
       seasons: const AsyncValue.data([]),
       selectedSeason: null,
       allPlayers: const [],
@@ -476,6 +478,18 @@ class MatchEditNotifier extends BaseCrudNotifier<MatchApiModel, MatchEditState>
     state = state.copyWith(date: date);
   }
 
+  void setHomeGoalNumber(String value) {
+    state = state.copyWith(
+      homeGoalNumber: int.tryParse(value),
+    );
+  }
+
+  void setAwayGoalNumber(String value) {
+    state = state.copyWith(
+      awayGoalNumber: int.tryParse(value),
+    );
+  }
+
   void togglePlayer(player, bool fan) {
     final selected = fan ? [...state.selectedFans] : [...state.selectedPlayers];
 
@@ -512,6 +526,8 @@ class MatchEditNotifier extends BaseCrudNotifier<MatchApiModel, MatchEditState>
       name: state.name,
       date: state.date,
       home: state.home,
+      homeGoalNumber: state.homeGoalNumber,
+      awayGoalNumber: state.awayGoalNumber,
       playerIdList: state.selectedPlayers.map((e) => e.getId()).toList() +
           state.selectedFans.map((e) => e.getId()).toList(),
       seasonId: (state.selectedSeason as SeasonApiModel).id!,
