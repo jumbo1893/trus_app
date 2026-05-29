@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:trus_app/colors.dart';
+import 'package:trus_app/theme/app_colors.dart';
 
 class TextFieldWithUnderline extends StatelessWidget {
   final TextEditingController textController;
@@ -20,29 +20,29 @@ class TextFieldWithUnderline extends StatelessWidget {
       readOnly: true,
       maxLines: allowWrap ? null : 1,
       minLines: allowWrap ? 1 : null,
-      decoration: const InputDecoration(
+      decoration: InputDecoration(
         border: UnderlineInputBorder(
           borderSide: BorderSide(
-              color: orangeColor
+              color: context.appColors.legacyAccent
           ),
         ),
         enabledBorder: UnderlineInputBorder(
           borderSide: BorderSide(
-              color: orangeColor
+              color: context.appColors.legacyAccent
           ),
         ),
-          focusedBorder: UnderlineInputBorder(
-            borderSide: BorderSide(
-                color: orangeColor
-            ),
+        focusedBorder: UnderlineInputBorder(
+          borderSide: BorderSide(
+              color: context.appColors.legacyAccent
           ),
-          labelStyle: TextStyle(
-            fontSize: 12,
-          ),
-          floatingLabelStyle: TextStyle(
-              color: textColor
-          ),
-          contentPadding: EdgeInsets.only(left: 10, top: 10),
+        ),
+        labelStyle: const TextStyle(
+          fontSize: 12,
+        ),
+        floatingLabelStyle: TextStyle(
+            color: context.appColors.fieldTextAccent
+        ),
+        contentPadding: EdgeInsets.only(left: 10, top: 10),
 
       ),
       textAlign: align,

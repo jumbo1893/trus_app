@@ -12,7 +12,6 @@ import 'package:trus_app/features/match/screens/match_screen.dart';
 import 'package:trus_app/features/player/screens/add_player_screen.dart';
 import 'package:trus_app/features/player/screens/player_screen.dart';
 import 'package:trus_app/features/season/screens/season_screen.dart';
-import 'package:trus_app/features/strava/screens/strava_football_match_screen.dart';
 import 'package:trus_app/models/api/auth/app_team_api_model.dart';
 
 import '../../fine/match/screens/fine_match_screen.dart';
@@ -121,13 +120,6 @@ class BottomSheetNavigationManager {
           icon: Icons.edit_calendar,
           title: const Text("Nastavení sezon"),
           onTap: () => onModalBottomSheetMenuTapped(SeasonScreen.id),
-        ),
-        MenuTile(
-          icon: Icons.run_circle_outlined,
-          title: const Text("Strava"),
-          onTap: () => onModalBottomSheetMenuTapped(
-            StravaFootballMatchScreen.id,
-          ),
         ),
       ],
     );

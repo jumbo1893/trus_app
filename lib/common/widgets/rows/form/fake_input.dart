@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:trus_app/theme/app_colors.dart';
 
 class FakeInput extends StatelessWidget {
   final String text;
@@ -10,7 +11,7 @@ class FakeInput extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
       decoration: BoxDecoration(
-        color: Colors.grey.shade100,
+        color: context.appColors.backgroundSecondary,
         borderRadius: BorderRadius.circular(14),
       ),
       child: Row(

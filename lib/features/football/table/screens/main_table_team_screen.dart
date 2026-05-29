@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:trus_app/colors.dart';
+import 'package:trus_app/theme/app_colors.dart';
 import 'package:trus_app/common/widgets/loader.dart';
 import 'package:trus_app/common/widgets/screen/custom_consumer_stateful_widget.dart';
 import 'package:trus_app/features/football/table/screens/table_team_mutual_matches_screen.dart';
@@ -94,12 +94,12 @@ class _MainTableTeamScreenState extends ConsumerState<MainTableTeamScreen>
 
     return Scaffold(
       appBar: AppBar(
-        backgroundColor: Colors.white,
+        backgroundColor: context.appColors.cardBackground,
         toolbarHeight: 0,
         bottom: TabBar(
           controller: controller,
-          labelColor: blackColor,
-          indicatorColor: orangeColor,
+          labelColor: context.appColors.buttonForeground,
+          indicatorColor: context.appColors.legacyAccent,
           tabs: state.tabs.map(_tabLabel).toList(),
           onTap: notifier.changeTabByIndex,
         ),

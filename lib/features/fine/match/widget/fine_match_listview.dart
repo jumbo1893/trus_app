@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:trus_app/theme/app_colors.dart';
 import 'package:trus_app/models/api/player/player_api_model.dart';
 import 'package:trus_app/models/api/receivedfine/stats/received_fine_stats_detail_models.dart';
 
@@ -35,7 +36,7 @@ class FineMatchListview extends StatelessWidget {
       controller: scrollController,
       padding: EdgeInsets.only(bottom: bottomPadding),
       itemCount: players.length,
-      separatorBuilder: (_, __) => const SizedBox(height: 12),
+      separatorBuilder: (_, __) => SizedBox(height: 12),
       itemBuilder: (context, index) {
         final player = players[index];
         final playerId = player.id;
@@ -115,12 +116,12 @@ class _FinePlayerTile extends StatelessWidget {
                   padding: const EdgeInsets.only(top: 17),
                   child: _SelectionIndicator(checked: checked),
                 ),
-                const SizedBox(width: 10),
+                SizedBox(width: 10),
               ],
               _AmountBadge(
                 amount: totalAmount,
               ),
-              const SizedBox(width: 13),
+              SizedBox(width: 13),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -140,13 +141,13 @@ class _FinePlayerTile extends StatelessWidget {
                             ),
                           ),
                         ),
-                        const SizedBox(width: 8),
+                        SizedBox(width: 8),
                         _MatchPresenceChip(
                           isPlayerInMatch: isPlayerInMatch,
                         ),
                       ],
                     ),
-                    const SizedBox(height: 11),
+                    SizedBox(height: 11),
                     if (fines.isEmpty)
                       Text(
                         'Bez pokut v tomto zápase',
@@ -172,7 +173,7 @@ class _FinePlayerTile extends StatelessWidget {
                 ),
               ),
               if (!multiselect) ...[
-                const SizedBox(width: 7),
+                SizedBox(width: 7),
                 Padding(
                   padding: const EdgeInsets.only(top: 17),
                   child: Icon(
@@ -343,10 +344,10 @@ class _SelectionIndicator extends StatelessWidget {
         ),
       ),
       child: checked
-          ? const Icon(
+          ? Icon(
         Icons.check_rounded,
         size: 18,
-        color: Colors.white,
+        color: context.appColors.cardBackground,
       )
           : null,
     );

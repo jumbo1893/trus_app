@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:trus_app/theme/app_colors.dart';
 
 class HeaderCard extends StatelessWidget {
   final String title;
@@ -15,13 +16,13 @@ class HeaderCard extends StatelessWidget {
       width: double.infinity,
       padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 16),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: context.appColors.cardBackground,
         borderRadius: BorderRadius.circular(22),
-        boxShadow: const [
+        boxShadow: [
           BoxShadow(
             blurRadius: 12,
-            offset: Offset(0, 6),
-            color: Colors.black12,
+            offset: const Offset(0, 6),
+            color: context.appColors.shadow.withAlpha(31),
           ),
         ],
       ),
@@ -30,19 +31,19 @@ class HeaderCard extends StatelessWidget {
           Text(
             title,
             textAlign: TextAlign.center,
-            style: const TextStyle(
+            style: TextStyle(
               fontSize: 22,
               fontWeight: FontWeight.w700,
-              color: Color(0xFF111827),
+              color: context.appColors.textPrimary,
             ),
           ),
           const SizedBox(height: 6),
           Text(
             text,
             textAlign: TextAlign.center,
-            style: const TextStyle(
+            style: TextStyle(
               fontSize: 14,
-              color: Colors.black54,
+              color: context.appColors.textSecondary,
             ),
           ),
         ],

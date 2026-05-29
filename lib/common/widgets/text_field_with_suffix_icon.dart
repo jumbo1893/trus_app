@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:trus_app/colors.dart';
+import 'package:trus_app/theme/app_colors.dart';
 
 class TextFieldWithSuffixIcon extends StatelessWidget {
   final TextEditingController textController;
@@ -21,32 +21,32 @@ class TextFieldWithSuffixIcon extends StatelessWidget {
       controller: textController,
       readOnly: true,
       decoration: InputDecoration(
-        border: const UnderlineInputBorder(
-          borderSide: BorderSide(
-              color: orangeColor
-          ),
-        ),
-        enabledBorder: const UnderlineInputBorder(
-          borderSide: BorderSide(
-              color: orangeColor
-          ),
-        ),
-          focusedBorder: const UnderlineInputBorder(
+          border: UnderlineInputBorder(
             borderSide: BorderSide(
-                color: orangeColor
+                color: context.appColors.legacyAccent
+            ),
+          ),
+          enabledBorder: UnderlineInputBorder(
+            borderSide: BorderSide(
+                color: context.appColors.legacyAccent
+            ),
+          ),
+          focusedBorder: UnderlineInputBorder(
+            borderSide: BorderSide(
+                color: context.appColors.legacyAccent
             ),
           ),
           labelStyle: const TextStyle(
             fontSize: 12,
           ),
-          floatingLabelStyle: const TextStyle(
-              color: textColor
+          floatingLabelStyle: TextStyle(
+              color: context.appColors.fieldTextAccent
           ),
           contentPadding: const EdgeInsets.only(left: 10, top: 10),
           errorText: errorText.isNotEmpty ? errorText : null,
           suffixIcon: IconButton(
               onPressed: onIconPressed,
-              icon: Icon(iconData, color: orangeColor,
+              icon: Icon(iconData, color: context.appColors.legacyAccent,
               )
           )
       ),

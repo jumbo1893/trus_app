@@ -1,8 +1,7 @@
 import 'package:flutter/material.dart';
 
-import '../../../colors.dart';
+import 'package:trus_app/theme/app_colors.dart';
 import '../../../features/home/widget/home_section_card.dart';
-import '../../../theme/app_colors.dart';
 
 class BirthdayText extends StatelessWidget {
   const BirthdayText({
@@ -27,7 +26,7 @@ class BirthdayText extends StatelessWidget {
             width: 46,
             height: 46,
             decoration: BoxDecoration(
-              color: orangeColor.withAlpha(25),
+              color: context.appColors.legacyAccent.withAlpha(25),
               borderRadius: BorderRadius.circular(14),
             ),
             child: Icon(

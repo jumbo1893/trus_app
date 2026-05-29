@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_driver/driver_extension.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:trus_app/common/widgets/loader.dart';
+import 'package:trus_app/features/appearance/controller/appearance_notifier.dart';
 import 'package:trus_app/firebase_options.dart';
 import 'package:trus_app/router.dart';
 import 'package:trus_app/services/notification_init_provider.dart';
@@ -48,20 +49,21 @@ class MyApp extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     ref.watch(notificationsInitProvider);
+    final themeMode = ref.watch(appearanceNotifierProvider);
     return MaterialApp(
         debugShowCheckedModeBanner: false,
         navigatorKey: navigatorKey,
         title: "Trusí aplikace",
         theme: AppTheme.light(),
         darkTheme: AppTheme.dark(),
-        themeMode: ThemeMode.light,
+        themeMode: themeMode,
         onGenerateRoute: (settings) => generateRoute(settings),
         home: ref.watch(userDataAuthProvider).when(
             data: (redirect) {
               return ref.read(authLoginControllerProvider).chooseScreenByLoginRedirect(redirect);
             }, error: (error, trace) {
           //showSnackBar(context: context, content: error.toString());
-              return const LoginScreen();
+          return const LoginScreen();
         }, loading: () => const Loader())
     );
   }

@@ -4,7 +4,7 @@ import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:trus_app/colors.dart';
+import 'package:trus_app/theme/app_colors.dart';
 import 'package:trus_app/common/utils/utils.dart';
 import 'package:trus_app/features/beer/controller/beer_notifier.dart';
 import 'package:trus_app/features/beer/lines/new_player_lines_calculator.dart';
@@ -29,6 +29,7 @@ class _BeerPaintScreenState extends ConsumerState<BeerPaintScreen>
   final Random random = Random();
   NewPlayerLinesCalculator? newPlayerLinesCalculator;
   ui.Image? _image;
+  String? _loadedAssetPath;
 
   @override
   void initState() {
@@ -51,8 +52,8 @@ class _BeerPaintScreenState extends ConsumerState<BeerPaintScreen>
     super.dispose();
   }
 
-  Future<ui.Image> _loadImage() async {
-    final bd = await rootBundle.load("images/tvrdej_light.jpg");
+  Future<ui.Image> _loadImage(String assetPath) async {
+    final bd = await rootBundle.load(assetPath);
     final bytes = Uint8List.view(bd.buffer);
     final codec = await ui.instantiateImageCodec(bytes);
     return (await codec.getNextFrame()).image;
@@ -67,11 +68,21 @@ class _BeerPaintScreenState extends ConsumerState<BeerPaintScreen>
       return const ErrorScreen(error: 'Není dostatečný počet hráčů!');
     }
 
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final imageAssetPath = isDark
+        ? 'images/tvrdej_dark.png'
+        : 'images/tvrdej_light.jpg';
+
+    if (_loadedAssetPath != imageAssetPath) {
+      _image = null;
+    }
+
     return FutureBuilder<ui.Image>(
-      future: _image != null ? Future.value(_image) : _loadImage(),
+      future: _image != null ? Future.value(_image) : _loadImage(imageAssetPath),
       builder: (context, snapshot) {
         if (!snapshot.hasData) return const Loader();
         _image = snapshot.data!;
+        _loadedAssetPath = imageAssetPath;
 
         final idx = state.playerIndex;
         final lines = notifier.playerLinesList[idx];
@@ -159,7 +170,7 @@ class _BeerPaintScreenState extends ConsumerState<BeerPaintScreen>
               child: Container(
                 width: double.infinity,
                 decoration: BoxDecoration(
-                  color: Colors.white.withAlpha(80),
+                  color: context.appColors.cardBackground.withAlpha(80),
                   borderRadius: BorderRadius.circular(24),
                 ),
                 child: ClipRRect(
@@ -214,13 +225,13 @@ class _PaintPlayerSwitcher extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: context.appColors.cardBackground,
         borderRadius: BorderRadius.circular(22),
-        boxShadow: const [
+        boxShadow: [
           BoxShadow(
             blurRadius: 10,
-            offset: Offset(0, 5),
-            color: Colors.black12,
+            offset: const Offset(0, 5),
+            color: context.appColors.shadow.withAlpha(31),
           ),
         ],
       ),
@@ -237,18 +248,18 @@ class _PaintPlayerSwitcher extends StatelessWidget {
                 Text(
                   playerName,
                   textAlign: TextAlign.center,
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 18,
                     fontWeight: FontWeight.w700,
-                    color: Color(0xFF111827),
+                    color: context.appColors.textPrimary,
                   ),
                 ),
                 const SizedBox(height: 2),
                 Text(
                   '$currentIndex / $totalCount',
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 13,
-                    color: Colors.black54,
+                    color: context.appColors.textSecondary,
                     fontWeight: FontWeight.w500,
                   ),
                 ),
@@ -278,7 +289,7 @@ class _ArrowCircleButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Material(
-      color: Colors.orange.withAlpha(18),
+      color: context.appColors.legacyAccent.withAlpha(18),
       borderRadius: BorderRadius.circular(14),
       child: InkWell(
         borderRadius: BorderRadius.circular(14),
@@ -288,7 +299,7 @@ class _ArrowCircleButton extends StatelessWidget {
           height: 42,
           child: Icon(
             icon,
-            color: orangeColor,
+            color: context.appColors.legacyAccent,
             size: 24,
           ),
         ),

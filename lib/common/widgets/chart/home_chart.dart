@@ -2,7 +2,7 @@ import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:trus_app/models/api/home/coordinate.dart';
 
-import '../../../colors.dart';
+import 'package:trus_app/theme/app_colors.dart';
 import '../../../models/api/home/chart.dart';
 import 'legend.dart';
 
@@ -59,9 +59,9 @@ class _HomeChartState extends State<HomeChart> {
                   height: 34,
                   child: Text(
                     showFines ? "statistika panáků" : "statistika pivek",
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontSize: 12,
-                      color: Colors.black,
+                      color: context.appColors.textPrimary,
                     ),
                   ),
                 ),
@@ -77,9 +77,9 @@ class _HomeChartState extends State<HomeChart> {
                     onPressed: () => setState(() => showFines = !showFines),
                     child: Text(
                       showFines ? "přepni na pivka" : "přepni na panáky",
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontSize: 12,
-                        color: Colors.black,
+                        color: context.appColors.textPrimary,
                       ),
                     ),
                   ),
@@ -105,7 +105,7 @@ class _HomeChartState extends State<HomeChart> {
           gradientColors: getPlayerColors(charts, chart),
         ),
       );
-      legends.add(const SizedBox(width: 4));
+      legends.add(SizedBox(width: 4));
     }
     return legends;
   }
@@ -144,7 +144,7 @@ class _HomeChartState extends State<HomeChart> {
     const style = TextStyle(fontWeight: FontWeight.bold, fontSize: 12);
 
     if (charts.isEmpty) {
-      return SideTitleWidget(axisSide: meta.axisSide, child: const Text(""));
+      return SideTitleWidget(axisSide: meta.axisSide, child: Text(""));
     }
 
     final idx = value.toInt();
@@ -191,12 +191,12 @@ class _HomeChartState extends State<HomeChart> {
                 .map(
                   (e) => LineTooltipItem(
                 "${charts[e.barIndex].player.name} ${e.y.toInt()}",
-                const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+                TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
               ),
             )
                 .toList();
           },
-          tooltipBgColor: Colors.white,
+          tooltipBgColor: context.appColors.cardBackground,
           showOnTopOfTheChartBoxArea: true,
         ),
       ),
@@ -205,8 +205,8 @@ class _HomeChartState extends State<HomeChart> {
         drawVerticalLine: true,
         horizontalInterval: calculateHorizontalInterval(findHorizontalInterval(charts)),
         verticalInterval: 1,
-        getDrawingHorizontalLine: (_) => const FlLine(color: orangeColor, strokeWidth: 1),
-        getDrawingVerticalLine: (_) => const FlLine(color: Colors.orange, strokeWidth: 1),
+        getDrawingHorizontalLine: (_) => FlLine(color: context.appColors.legacyAccent, strokeWidth: 1),
+        getDrawingVerticalLine: (_) => FlLine(color: context.appColors.legacyAccent, strokeWidth: 1),
       ),
       titlesData: FlTitlesData(
         show: true,
@@ -224,7 +224,7 @@ class _HomeChartState extends State<HomeChart> {
           sideTitles: SideTitles(showTitles: true, reservedSize: 42),
         ),
       ),
-      borderData: FlBorderData(show: true, border: Border.all(color: Colors.black)),
+      borderData: FlBorderData(show: true, border: Border.all(color: context.appColors.border)),
       minX: 0,
       maxX: findMaxX(charts),
       minY: 0,
@@ -239,17 +239,17 @@ class _HomeChartState extends State<HomeChart> {
     final gradientColorsList = <List<Color>>[
       [Colors.blue, Colors.blueGrey],
       [Colors.red, Colors.brown],
-      [Colors.black26, Colors.grey],
+      [context.appColors.textMuted, context.appColors.disabled],
       [Colors.green, Colors.greenAccent],
-      [orangeColor, Colors.yellow],
+      [context.appColors.legacyAccent, Colors.yellow],
     ];
 
     if (chart.mainPlayer) {
-      return [orangeColor, Colors.yellow];
+      return [context.appColors.legacyAccent, Colors.yellow];
     }
 
     final idx = others.indexOf(chart);
-    if (idx < 0) return [Colors.black26, Colors.grey];
+    if (idx < 0) return [context.appColors.textMuted, context.appColors.disabled];
 
     return gradientColorsList[idx % gradientColorsList.length];
   }

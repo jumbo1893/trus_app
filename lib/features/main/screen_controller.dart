@@ -54,7 +54,6 @@ import '../statistics/screens/fine/fine_player_statistic_screen.dart';
 import '../statistics/screens/goal/goal_match_statistic_screen.dart';
 import '../statistics/screens/goal/goal_player_statistic_screen.dart';
 import '../steps/screens/step_screen.dart';
-import '../strava/screens/strava_football_match_screen.dart';
 import '../user/screens/user_screen.dart';
 
 final screenControllerProvider = Provider((ref) {
@@ -326,9 +325,6 @@ class ScreenController {
     ),
     const ViewUserScreen(
       //35
-    ),
-    StravaFootballMatchScreen(
-      //36
     ),
     const EnabledNotificationsScreen(
       //37

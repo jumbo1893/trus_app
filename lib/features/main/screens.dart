@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:trus_app/features/achievement/screens/achievement_screen.dart';
+import 'package:trus_app/features/appearance/screens/appearance_screen.dart';
 import 'package:trus_app/features/achievement/screens/view_achievement_detail_screen.dart';
 import 'package:trus_app/features/achievement/screens/view_player_achievement_detail_screen.dart';
 import 'package:trus_app/features/fine/match/screens/fine_player_screen.dart';
@@ -41,7 +42,6 @@ import '../statistics/screens/fine/fine_player_statistic_screen.dart';
 import '../statistics/screens/goal/goal_match_statistic_screen.dart';
 import '../statistics/screens/goal/goal_player_statistic_screen.dart';
 import '../steps/screens/step_screen.dart';
-import '../strava/screens/strava_football_match_screen.dart';
 import '../user/screens/user_screen.dart';
 
 final List<Widget> _widgetList = [
@@ -147,9 +147,6 @@ final List<Widget> _widgetList = [
   const ViewUserScreen(
     //35
   ),
-  StravaFootballMatchScreen(
-    //36
-  ),
   const EnabledNotificationsScreen(
     //37
   ),
@@ -179,6 +176,9 @@ final List<Widget> _widgetList = [
   ),
   const BeerDetailStatsScreen(
     //47
+  ),
+  const AppearanceScreen(
+    //48
   ),
 ];
 

@@ -4,6 +4,17 @@ import 'package:flutter/material.dart';
 class AppColors extends ThemeExtension<AppColors> {
   final Color accent;
   final Color accentSoft;
+  /// Original orange used by older screens; kept separate so light mode does not visually change.
+  final Color legacyAccent;
+  final Color legacyAccentDark;
+  final Color buttonForeground;
+  final Color fieldTextAccent;
+  final Color shadow;
+  final Color border;
+  final Color successSolid;
+  final Color warningSolid;
+  final Color errorSolid;
+  final Color infoSolid;
 
   final Color backgroundPrimary;
   final Color backgroundSecondary;
@@ -38,6 +49,16 @@ class AppColors extends ThemeExtension<AppColors> {
   const AppColors({
     required this.accent,
     required this.accentSoft,
+    required this.legacyAccent,
+    required this.legacyAccentDark,
+    required this.buttonForeground,
+    required this.fieldTextAccent,
+    required this.shadow,
+    required this.border,
+    required this.successSolid,
+    required this.warningSolid,
+    required this.errorSolid,
+    required this.infoSolid,
     required this.backgroundPrimary,
     required this.backgroundSecondary,
     required this.cardBackground,
@@ -66,6 +87,16 @@ class AppColors extends ThemeExtension<AppColors> {
   AppColors copyWith({
     Color? accent,
     Color? accentSoft,
+    Color? legacyAccent,
+    Color? legacyAccentDark,
+    Color? buttonForeground,
+    Color? fieldTextAccent,
+    Color? shadow,
+    Color? border,
+    Color? successSolid,
+    Color? warningSolid,
+    Color? errorSolid,
+    Color? infoSolid,
     Color? backgroundPrimary,
     Color? backgroundSecondary,
     Color? cardBackground,
@@ -92,6 +123,16 @@ class AppColors extends ThemeExtension<AppColors> {
     return AppColors(
       accent: accent ?? this.accent,
       accentSoft: accentSoft ?? this.accentSoft,
+      legacyAccent: legacyAccent ?? this.legacyAccent,
+      legacyAccentDark: legacyAccentDark ?? this.legacyAccentDark,
+      buttonForeground: buttonForeground ?? this.buttonForeground,
+      fieldTextAccent: fieldTextAccent ?? this.fieldTextAccent,
+      shadow: shadow ?? this.shadow,
+      border: border ?? this.border,
+      successSolid: successSolid ?? this.successSolid,
+      warningSolid: warningSolid ?? this.warningSolid,
+      errorSolid: errorSolid ?? this.errorSolid,
+      infoSolid: infoSolid ?? this.infoSolid,
       backgroundPrimary: backgroundPrimary ?? this.backgroundPrimary,
       backgroundSecondary: backgroundSecondary ?? this.backgroundSecondary,
       cardBackground: cardBackground ?? this.cardBackground,
@@ -125,6 +166,16 @@ class AppColors extends ThemeExtension<AppColors> {
     return AppColors(
       accent: Color.lerp(accent, other.accent, t)!,
       accentSoft: Color.lerp(accentSoft, other.accentSoft, t)!,
+      legacyAccent: Color.lerp(legacyAccent, other.legacyAccent, t)!,
+      legacyAccentDark: Color.lerp(legacyAccentDark, other.legacyAccentDark, t)!,
+      buttonForeground: Color.lerp(buttonForeground, other.buttonForeground, t)!,
+      fieldTextAccent: Color.lerp(fieldTextAccent, other.fieldTextAccent, t)!,
+      shadow: Color.lerp(shadow, other.shadow, t)!,
+      border: Color.lerp(border, other.border, t)!,
+      successSolid: Color.lerp(successSolid, other.successSolid, t)!,
+      warningSolid: Color.lerp(warningSolid, other.warningSolid, t)!,
+      errorSolid: Color.lerp(errorSolid, other.errorSolid, t)!,
+      infoSolid: Color.lerp(infoSolid, other.infoSolid, t)!,
       backgroundPrimary: Color.lerp(backgroundPrimary, other.backgroundPrimary, t)!,
       backgroundSecondary: Color.lerp(backgroundSecondary, other.backgroundSecondary, t)!,
       cardBackground: Color.lerp(cardBackground, other.cardBackground, t)!,
@@ -157,6 +208,16 @@ class AppColors extends ThemeExtension<AppColors> {
   static const light = AppColors(
     accent: Color(0xFFF59E0B),
     accentSoft: Color(0xFFFFF7E6),
+    legacyAccent: Color(0xFFFF8303),
+    legacyAccentDark: Color(0xFFEE8303),
+    buttonForeground: Colors.black,
+    fieldTextAccent: Colors.indigo,
+    shadow: Colors.black,
+    border: Color(0xFFE5E7EB),
+    successSolid: Colors.green,
+    warningSolid: Colors.orange,
+    errorSolid: Colors.red,
+    infoSolid: Colors.blue,
     backgroundPrimary: Color(0xFFF5F6F8),
     backgroundSecondary: Color(0xFFF9FAFB),
     cardBackground: Colors.white,
@@ -184,6 +245,16 @@ class AppColors extends ThemeExtension<AppColors> {
   static const dark = AppColors(
     accent: Color(0xFFF59E0B),
     accentSoft: Color(0xFF3B2A08),
+    legacyAccent: Color(0xFFFF8303),
+    legacyAccentDark: Color(0xFFEE8303),
+    buttonForeground: Colors.black,
+    fieldTextAccent: Color(0xFF93C5FD),
+    shadow: Colors.black,
+    border: Color(0xFF334155),
+    successSolid: Color(0xFF4ADE80),
+    warningSolid: Color(0xFFFBBF24),
+    errorSolid: Color(0xFFF87171),
+    infoSolid: Color(0xFF60A5FA),
     backgroundPrimary: Color(0xFF0F172A),
     backgroundSecondary: Color(0xFF111827),
     cardBackground: Color(0xFF1F2937),

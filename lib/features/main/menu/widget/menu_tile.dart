@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:trus_app/theme/app_colors.dart';
 
 import '../../../../theme/app_colors.dart';
 
@@ -23,7 +24,7 @@ class MenuTile extends StatelessWidget {
       padding:
       const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
       child: Material(
-        color: Colors.black.withAlpha(8),
+        color: context.appColors.shadow.withAlpha(8),
         borderRadius: BorderRadius.circular(16),
         child: InkWell(
           borderRadius: BorderRadius.circular(16),
@@ -44,8 +45,8 @@ class MenuTile extends StatelessWidget {
                 ),
                 const SizedBox(width: 12),
                 Expanded(child: title),
-                 Icon(Icons.chevron_right,
-                    color: appColors.textSecondary,)
+                Icon(Icons.chevron_right,
+                  color: appColors.textSecondary,)
               ],
             ),
           ),

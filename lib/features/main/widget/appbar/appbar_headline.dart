@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:trus_app/colors.dart';
+import 'package:trus_app/theme/app_colors.dart';
 
 class AppBarHeadline extends StatelessWidget implements PreferredSizeWidget {
   final String text;
@@ -17,8 +17,8 @@ class AppBarHeadline extends StatelessWidget implements PreferredSizeWidget {
         centerTitle: true,
         leading: onBackButtonPressed != null ? IconButton(
           onPressed: () => onBackButtonPressed!(), icon: const Icon(Icons.arrow_back),): Container(),
-        foregroundColor: blackColor,
-        backgroundColor: Colors.white);
+        foregroundColor: context.appColors.textPrimary,
+        backgroundColor: context.appColors.cardBackground);
   }
 
   @override

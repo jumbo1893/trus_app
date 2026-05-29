@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:trus_app/theme/app_colors.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:trus_app/common/widgets/notifier/dropdown/i_dropdown_notifier.dart';
 import 'package:trus_app/common/widgets/notifier/dropdown/i_dropdown_state.dart';
@@ -28,7 +29,7 @@ class CustomDropdownSheet extends ConsumerWidget {
     showModalBottomSheet<void>(
       context: context,
       isScrollControlled: true,
-      backgroundColor: Colors.white,
+      backgroundColor: context.appColors.cardBackground,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
       ),
@@ -44,7 +45,7 @@ class CustomDropdownSheet extends ConsumerWidget {
                   width: 42,
                   height: 5,
                   decoration: BoxDecoration(
-                    color: Colors.black12,
+                    color: context.appColors.shadow.withAlpha(31),
                     borderRadius: BorderRadius.circular(999),
                   ),
                 ),
@@ -64,15 +65,15 @@ class CustomDropdownSheet extends ConsumerWidget {
                   child: ListView.separated(
                     shrinkWrap: true,
                     itemCount: items.length,
-                    separatorBuilder: (_, __) => const SizedBox(height: 8),
+                    separatorBuilder: (_, __) => SizedBox(height: 8),
                     itemBuilder: (context, index) {
                       final item = items[index];
                       final isSelected = selected == item;
 
                       return Material(
                         color: isSelected
-                            ? Colors.orange.withAlpha(20)
-                            : Colors.black.withAlpha(8),
+                            ? context.appColors.legacyAccent.withAlpha(20)
+                            : context.appColors.shadow.withAlpha(8),
                         borderRadius: BorderRadius.circular(18),
                         child: InkWell(
                           borderRadius: BorderRadius.circular(18),
@@ -96,16 +97,16 @@ class CustomDropdownSheet extends ConsumerWidget {
                                       fontWeight: isSelected
                                           ? FontWeight.w700
                                           : FontWeight.w500,
-                                      color: Colors.black87,
+                                      color: context.appColors.textPrimary,
                                       height: 1.2,
                                     ),
                                   ),
                                 ),
                                 const SizedBox(width: 12),
                                 if (isSelected)
-                                  const Icon(
+                                  Icon(
                                     Icons.check_rounded,
-                                    color: Colors.orange,
+                                    color: context.appColors.legacyAccent,
                                   ),
                               ],
                             ),
@@ -143,15 +144,15 @@ class CustomDropdownSheet extends ConsumerWidget {
           children: [
             Text(
               hint,
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 13,
                 fontWeight: FontWeight.w600,
-                color: Colors.black54,
+                color: context.appColors.textSecondary,
               ),
             ),
             const SizedBox(height: 5),
             Material(
-              color: Colors.black.withAlpha(8),
+              color: context.appColors.shadow.withAlpha(8),
               borderRadius: BorderRadius.circular(16),
               child: InkWell(
                 borderRadius: BorderRadius.circular(16),
@@ -172,17 +173,17 @@ class CustomDropdownSheet extends ConsumerWidget {
                             fontSize: 15,
                             fontWeight: FontWeight.w600,
                             color: selected != null
-                                ? Colors.black87
-                                : Colors.black45,
+                                ? context.appColors.textPrimary
+                                : context.appColors.textMuted,
                             height: 1.35,
                           ),
                         ),
                       ),
                       const SizedBox(width: 12),
-                      const Icon(
+                      Icon(
                         Icons.keyboard_arrow_down_rounded,
                         size: 20,
-                        color: Colors.black54,
+                        color: context.appColors.textSecondary,
                       ),
                     ],
                   ),
@@ -193,8 +194,8 @@ class CustomDropdownSheet extends ConsumerWidget {
               const SizedBox(height: 6),
               Text(
                 error!,
-                style: const TextStyle(
-                  color: Colors.red,
+                style: TextStyle(
+                  color: context.appColors.errorSolid,
                   fontSize: 12,
                 ),
               ),

@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:trus_app/colors.dart';
+import 'package:trus_app/theme/app_colors.dart';
 
 class IconTextField extends StatelessWidget {
   final TextEditingController textController;
@@ -22,26 +22,26 @@ class IconTextField extends StatelessWidget {
       controller: textController,
       decoration: InputDecoration(
           labelText: labelText,
-        border: const UnderlineInputBorder(
-          borderSide: BorderSide(
-              color: blackColor
-          ),
-        ),
-        enabledBorder: const UnderlineInputBorder(
-          borderSide: BorderSide(
-              color: blackColor
-          ),
-        ),
-          focusedBorder: const UnderlineInputBorder(
+          border: UnderlineInputBorder(
             borderSide: BorderSide(
-                color: blackColor
+                color: context.appColors.buttonForeground
+            ),
+          ),
+          enabledBorder: UnderlineInputBorder(
+            borderSide: BorderSide(
+                color: context.appColors.buttonForeground
+            ),
+          ),
+          focusedBorder: UnderlineInputBorder(
+            borderSide: BorderSide(
+                color: context.appColors.buttonForeground
             ),
           ),
           labelStyle: const TextStyle(
             fontSize: 12,
           ),
-          floatingLabelStyle: const TextStyle(
-              color: textColor
+          floatingLabelStyle: TextStyle(
+              color: context.appColors.fieldTextAccent
           ),
           contentPadding: const EdgeInsets.only(left: 10, top: 10),
           suffixIcon: IconButton(

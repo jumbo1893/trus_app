@@ -112,7 +112,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                 columns: [
                   Image.asset(
                     key: const ValueKey('logo_image'),
-                    'images/logo.jpg',
+                    'images/logo.png',
                     height: 240,
                     width: 215,
                   ),

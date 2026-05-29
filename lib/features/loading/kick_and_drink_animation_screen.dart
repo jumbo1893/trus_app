@@ -1,6 +1,7 @@
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
+import 'package:trus_app/theme/app_colors.dart';
 import 'package:trus_app/features/loading/paint/beer_paint.dart';
 import 'package:trus_app/features/loading/paint/goal_paint.dart';
 import 'package:trus_app/features/loading/paint/table_paint.dart';
@@ -51,42 +52,42 @@ class _RunAndKickAnimationScreenState extends State<RunAndKickAnimationScreen>
       duration: const Duration(seconds: 2),
       vsync: this,
     )..addStatusListener((status) {
-        animationStatus = status;
-        if (status == AnimationStatus.forward) {
-          numberOfRepetition++;
-        }
-        if (status == AnimationStatus.reverse) {
-          numberOfRepetition++;
-        }
-        if (numberOfRepetition == 9) {
-          numberOfRepetition = 1;
-        }
-        if (numberOfRepetition % 8 == 0) {
-          loadingStatus = LoadingAnimationStatus.tableLeaving;
-          setRunningPlayerAnimation();
-        } else if (numberOfRepetition % 7 == 0) {
-          loadingStatus = LoadingAnimationStatus.playerDrinking;
-          setDrinkingPlayer();
-        } else if (numberOfRepetition % 6 == 0) {
-          loadingStatus = LoadingAnimationStatus.tableIncoming;
-          setRunningPlayerAnimation();
-        } else if (numberOfRepetition % 5 == 0) {
-          loadingStatus = LoadingAnimationStatus.goalScored;
-          setRunningPlayerAnimation();
-        } else if (numberOfRepetition % 4 == 0) {
-          loadingStatus = LoadingAnimationStatus.ballFlying;
-          setCelebratingPlayerAnimation();
-        } else if (numberOfRepetition % 3 == 0) {
-          loadingStatus = LoadingAnimationStatus.playerShooting;
-          setShootingPlayerAnimation();
-        } else if (numberOfRepetition % 2 == 0) {
-          setRunningPlayerAnimation();
-          loadingStatus = LoadingAnimationStatus.goalIncoming;
-        } else {
-          setRunningPlayerAnimation();
-          loadingStatus = LoadingAnimationStatus.playerRunning;
-        }
-      });
+      animationStatus = status;
+      if (status == AnimationStatus.forward) {
+        numberOfRepetition++;
+      }
+      if (status == AnimationStatus.reverse) {
+        numberOfRepetition++;
+      }
+      if (numberOfRepetition == 9) {
+        numberOfRepetition = 1;
+      }
+      if (numberOfRepetition % 8 == 0) {
+        loadingStatus = LoadingAnimationStatus.tableLeaving;
+        setRunningPlayerAnimation();
+      } else if (numberOfRepetition % 7 == 0) {
+        loadingStatus = LoadingAnimationStatus.playerDrinking;
+        setDrinkingPlayer();
+      } else if (numberOfRepetition % 6 == 0) {
+        loadingStatus = LoadingAnimationStatus.tableIncoming;
+        setRunningPlayerAnimation();
+      } else if (numberOfRepetition % 5 == 0) {
+        loadingStatus = LoadingAnimationStatus.goalScored;
+        setRunningPlayerAnimation();
+      } else if (numberOfRepetition % 4 == 0) {
+        loadingStatus = LoadingAnimationStatus.ballFlying;
+        setCelebratingPlayerAnimation();
+      } else if (numberOfRepetition % 3 == 0) {
+        loadingStatus = LoadingAnimationStatus.playerShooting;
+        setShootingPlayerAnimation();
+      } else if (numberOfRepetition % 2 == 0) {
+        setRunningPlayerAnimation();
+        loadingStatus = LoadingAnimationStatus.goalIncoming;
+      } else {
+        setRunningPlayerAnimation();
+        loadingStatus = LoadingAnimationStatus.playerRunning;
+      }
+    });
     _bodyController = AnimationController(
       duration: const Duration(milliseconds: 500),
       vsync: tickerProvider2,
@@ -118,170 +119,170 @@ class _RunAndKickAnimationScreenState extends State<RunAndKickAnimationScreen>
 
   void setShootingPlayerAnimation() {
     _bodyAngle = TweenSequence(
-            BodyTweenSequenceComponents([-10, -10, -10, -10, -10], -10)
-                .getTweenComponents())
+        BodyTweenSequenceComponents([-10, -10, -10, -10, -10], -10)
+            .getTweenComponents())
         .animate(_controller);
     _leftArmAngle = TweenSequence(
-            BodyTweenSequenceComponents([60, 30, 5, 30, 50], 70)
-                .getTweenComponents())
+        BodyTweenSequenceComponents([60, 30, 5, 30, 50], 70)
+            .getTweenComponents())
         .animate(_controller);
     _rightArmAngle = TweenSequence(
-            BodyTweenSequenceComponents([-75, -30, -5, -25, -45], -65)
-                .getTweenComponents())
+        BodyTweenSequenceComponents([-75, -30, -5, -25, -45], -65)
+            .getTweenComponents())
         .animate(_controller);
     _leftForearmAngle = TweenSequence(
-            BodyTweenSequenceComponents([120, 110, 100, 100, 110], 120)
-                .getTweenComponents())
+        BodyTweenSequenceComponents([120, 110, 100, 100, 110], 120)
+            .getTweenComponents())
         .animate(_controller);
     _rightForearmAngle = TweenSequence(
-            BodyTweenSequenceComponents([120, 90, 60, 30, 0], 0)
-                .getTweenComponents())
+        BodyTweenSequenceComponents([120, 90, 60, 30, 0], 0)
+            .getTweenComponents())
         .animate(_controller);
     _leftThighAngle = TweenSequence(
-            BodyTweenSequenceComponents([50, 20, 5, 5, 5], 5)
-                .getTweenComponents())
+        BodyTweenSequenceComponents([50, 20, 5, 5, 5], 5)
+            .getTweenComponents())
         .animate(_controller);
     _rightThighAngle = TweenSequence(
-            BodyTweenSequenceComponents([-20, -10, 5, 30, 60], 90)
-                .getTweenComponents())
+        BodyTweenSequenceComponents([-20, -10, 5, 30, 60], 90)
+            .getTweenComponents())
         .animate(_controller);
     _leftCalfAngle = TweenSequence(
-            BodyTweenSequenceComponents([0, 0, 0, 0, 0], 0)
-                .getTweenComponents())
+        BodyTweenSequenceComponents([0, 0, 0, 0, 0], 0)
+            .getTweenComponents())
         .animate(_controller);
     _rightCalfAngle = TweenSequence(
-            BodyTweenSequenceComponents([-60, -30, -20, -10, 0], 0)
-                .getTweenComponents())
+        BodyTweenSequenceComponents([-60, -30, -20, -10, 0], 0)
+            .getTweenComponents())
         .animate(_controller);
     _bodyY1 = TweenSequence(BodyTweenSequenceComponents([0, 0, 0, 0, 0], 0)
-            .getTweenComponents())
+        .getTweenComponents())
         .animate(_controller);
   }
 
   void setRunningPlayerAnimation() {
     _bodyAngle = TweenSequence(
-            BodyTweenSequenceComponents([-10, -10, -10, -10, -10], -10)
-                .getTweenComponents())
+        BodyTweenSequenceComponents([-10, -10, -10, -10, -10], -10)
+            .getTweenComponents())
         .animate(_bodyController);
     _leftArmAngle = TweenSequence(
-            BodyTweenSequenceComponents([-75, -95, 15, 30, 35], 60)
-                .getTweenComponents())
+        BodyTweenSequenceComponents([-75, -95, 15, 30, 35], 60)
+            .getTweenComponents())
         .animate(_bodyController);
     _rightArmAngle = TweenSequence(
-            BodyTweenSequenceComponents([60, 70, -20, -35, -50], -75)
-                .getTweenComponents())
+        BodyTweenSequenceComponents([60, 70, -20, -35, -50], -75)
+            .getTweenComponents())
         .animate(_bodyController);
     _leftForearmAngle = TweenSequence(
-            BodyTweenSequenceComponents([110, 110, 110, 130, 135], 120)
-                .getTweenComponents())
+        BodyTweenSequenceComponents([110, 110, 110, 130, 135], 120)
+            .getTweenComponents())
         .animate(_bodyController);
     _rightForearmAngle = TweenSequence(
-            BodyTweenSequenceComponents([120, 120, 90, 90, 100], 110)
-                .getTweenComponents())
+        BodyTweenSequenceComponents([120, 120, 90, 90, 100], 110)
+            .getTweenComponents())
         .animate(_bodyController);
     _leftThighAngle = TweenSequence(
-            BodyTweenSequenceComponents([-20, 5, 30, 45, 50], 50)
-                .getTweenComponents())
+        BodyTweenSequenceComponents([-20, 5, 30, 45, 50], 50)
+            .getTweenComponents())
         .animate(_bodyController);
     _rightThighAngle = TweenSequence(BodyTweenSequenceComponents(
-                [firstRightLegAngle, 60, 10, -5, -10], -20)
-            .getTweenComponents())
+        [firstRightLegAngle, 60, 10, -5, -10], -20)
+        .getTweenComponents())
         .animate(_bodyController);
     _leftCalfAngle = TweenSequence(
-            BodyTweenSequenceComponents([-60, -95, -100, -70, -40], 0)
-                .getTweenComponents())
+        BodyTweenSequenceComponents([-60, -95, -100, -70, -40], 0)
+            .getTweenComponents())
         .animate(_bodyController);
     _rightCalfAngle = TweenSequence(
-            BodyTweenSequenceComponents([0, -60, -20, -10, -30], -60)
-                .getTweenComponents())
+        BodyTweenSequenceComponents([0, -60, -20, -10, -30], -60)
+            .getTweenComponents())
         .animate(_bodyController);
     _bodyY1 = TweenSequence(BodyTweenSequenceComponents([0, 10, 0, -5, -15], 0)
-            .getTweenComponents())
+        .getTweenComponents())
         .animate(_bodyController);
   }
 
   void setDrinkingPlayer() {
     _bodyAngle = TweenSequence(
-            BodyTweenSequenceComponents([-10, 0, 0, 0, 0], -10)
-                .getTweenComponents())
+        BodyTweenSequenceComponents([-10, 0, 0, 0, 0], -10)
+            .getTweenComponents())
         .animate(_controller);
     _leftArmAngle = TweenSequence(
-            BodyTweenSequenceComponents([60, 40, 70, 70, 40.1], 70)
-                .getTweenComponents())
+        BodyTweenSequenceComponents([60, 40, 70, 70, 40.1], 70)
+            .getTweenComponents())
         .animate(_controller);
     _rightArmAngle = TweenSequence(
-            BodyTweenSequenceComponents([-75, -30, -15, -15, -15], -65)
-                .getTweenComponents())
+        BodyTweenSequenceComponents([-75, -30, -15, -15, -15], -65)
+            .getTweenComponents())
         .animate(_controller);
     _leftForearmAngle = TweenSequence(
-            BodyTweenSequenceComponents([120, 20, 70, 80, 20], 120)
-                .getTweenComponents())
+        BodyTweenSequenceComponents([120, 20, 70, 80, 20], 120)
+            .getTweenComponents())
         .animate(_controller);
     _rightForearmAngle = TweenSequence(
-            BodyTweenSequenceComponents([120, 60, 15, 15, 15], 110)
-                .getTweenComponents())
+        BodyTweenSequenceComponents([120, 60, 15, 15, 15], 110)
+            .getTweenComponents())
         .animate(_controller);
     _leftThighAngle = TweenSequence(
-            BodyTweenSequenceComponents([50, -10, -10, -10, -10], -20)
-                .getTweenComponents())
+        BodyTweenSequenceComponents([50, -10, -10, -10, -10], -20)
+            .getTweenComponents())
         .animate(_controller);
     _rightThighAngle = TweenSequence(BodyTweenSequenceComponents(
-                [-20, 10, 10, 10, 10], firstRightLegAngle)
-            .getTweenComponents())
+        [-20, 10, 10, 10, 10], firstRightLegAngle)
+        .getTweenComponents())
         .animate(_controller);
     _leftCalfAngle = TweenSequence(
-            BodyTweenSequenceComponents([0, 0, 0, 0, 0], -60)
-                .getTweenComponents())
+        BodyTweenSequenceComponents([0, 0, 0, 0, 0], -60)
+            .getTweenComponents())
         .animate(_controller);
     _rightCalfAngle = TweenSequence(BodyTweenSequenceComponents(
-                [-60, 0, 0, 0.1, 0.1], 0.1) //větší než 0 = nebude pěna
-            .getTweenComponents())
+        [-60, 0, 0, 0.1, 0.1], 0.1) //větší než 0 = nebude pěna
+        .getTweenComponents())
         .animate(_controller);
     _bodyY1 = TweenSequence(BodyTweenSequenceComponents([0, 0, 0.1, 0.2, 0],
-                0) //desetinný čárky určujou kdy bude pivo v ruce
-            .getTweenComponents())
+        0) //desetinný čárky určujou kdy bude pivo v ruce
+        .getTweenComponents())
         .animate(_controller);
   }
 
   void setCelebratingPlayerAnimation() {
     _bodyAngle = TweenSequence(
-            BodyTweenSequenceComponents([-10, 0, -0, 0, -0], -10)
-                .getTweenComponents())
+        BodyTweenSequenceComponents([-10, 0, -0, 0, -0], -10)
+            .getTweenComponents())
         .animate(_controller);
     _leftArmAngle = TweenSequence(
-            BodyTweenSequenceComponents([70, 180, 130, 180, 130], 110)
-                .getTweenComponents())
+        BodyTweenSequenceComponents([70, 180, 130, 180, 130], 110)
+            .getTweenComponents())
         .animate(_controller);
     _rightArmAngle = TweenSequence(
-            BodyTweenSequenceComponents([-65, -180, -130, -180, -30], -75)
-                .getTweenComponents())
+        BodyTweenSequenceComponents([-65, -180, -130, -180, -30], -75)
+            .getTweenComponents())
         .animate(_controller);
     _leftForearmAngle = TweenSequence(
-            BodyTweenSequenceComponents([120, 0, 30, 0, 60], 120)
-                .getTweenComponents())
+        BodyTweenSequenceComponents([120, 0, 30, 0, 60], 120)
+            .getTweenComponents())
         .animate(_controller);
     _rightForearmAngle = TweenSequence(
-            BodyTweenSequenceComponents([0, 0, 30, 0, 60], 110)
-                .getTweenComponents())
+        BodyTweenSequenceComponents([0, 0, 30, 0, 60], 110)
+            .getTweenComponents())
         .animate(_controller);
     _leftThighAngle = TweenSequence(
-            BodyTweenSequenceComponents([5, -10, -10, -10, -15], -20)
-                .getTweenComponents())
+        BodyTweenSequenceComponents([5, -10, -10, -10, -15], -20)
+            .getTweenComponents())
         .animate(_controller);
     _rightThighAngle = TweenSequence(BodyTweenSequenceComponents(
-                [90, 10, 10, 10, 30], firstRightLegAngle)
-            .getTweenComponents())
+        [90, 10, 10, 10, 30], firstRightLegAngle)
+        .getTweenComponents())
         .animate(_controller);
     _leftCalfAngle = TweenSequence(
-            BodyTweenSequenceComponents([0, 0, 0, -15, -30], -60)
-                .getTweenComponents())
+        BodyTweenSequenceComponents([0, 0, 0, -15, -30], -60)
+            .getTweenComponents())
         .animate(_controller);
     _rightCalfAngle = TweenSequence(
-            BodyTweenSequenceComponents([-0, 0, 0, -10, -10], 0)
-                .getTweenComponents())
+        BodyTweenSequenceComponents([-0, 0, 0, -10, -10], 0)
+            .getTweenComponents())
         .animate(_controller);
     _bodyY1 = TweenSequence(BodyTweenSequenceComponents([0, -15, 0, -15, 0], 0)
-            .getTweenComponents())
+        .getTweenComponents())
         .animate(_controller);
   }
 
@@ -294,39 +295,37 @@ class _RunAndKickAnimationScreenState extends State<RunAndKickAnimationScreen>
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Colors.white,
-      body: Center(
-        child: AnimatedBuilder(
-          animation: _controller,
-          builder: (BuildContext context, Widget? child) {
-            return CustomPaint(
-              painter: _RunAndKickPainter(
-                loadingStatus,
-                _kickAnimation.value,
-                _bodyAngle.value,
-                _leftArmAngle.value,
-                _rightArmAngle.value,
-                _leftForearmAngle.value,
-                _rightForearmAngle.value,
-                _leftThighAngle.value,
-                _rightThighAngle.value,
-                _leftCalfAngle.value,
-                _rightCalfAngle.value,
-                _bodyY1.value,
-                firstRightLegAngle,
-                _ballJumpingAnimation.value,
-                _ballFlyingAnimation.value,
-                _ballFallingAnimation.value,
-                animationStatus,
-              ),
-              child: const SizedBox(
-                width: 180,
-                height: 180,
-              ),
-            );
-          },
-        ),
+    return Center(
+      child: AnimatedBuilder(
+        animation: _controller,
+        builder: (BuildContext context, Widget? child) {
+          return CustomPaint(
+            painter: _RunAndKickPainter(
+              loadingStatus,
+              _kickAnimation.value,
+              _bodyAngle.value,
+              _leftArmAngle.value,
+              _rightArmAngle.value,
+              _leftForearmAngle.value,
+              _rightForearmAngle.value,
+              _leftThighAngle.value,
+              _rightThighAngle.value,
+              _leftCalfAngle.value,
+              _rightCalfAngle.value,
+              _bodyY1.value,
+              firstRightLegAngle,
+              _ballJumpingAnimation.value,
+              _ballFlyingAnimation.value,
+              _ballFallingAnimation.value,
+              animationStatus,
+              context,
+            ),
+            child: const SizedBox(
+              width: 180,
+              height: 180,
+            ),
+          );
+        },
       ),
     );
   }
@@ -350,6 +349,7 @@ class _RunAndKickPainter extends CustomPainter {
   final double ballFallingAnimationValue;
   final LoadingAnimationStatus status;
   final AnimationStatus animationStatus;
+  final BuildContext context;
 
   _RunAndKickPainter(
       this.status,
@@ -368,19 +368,20 @@ class _RunAndKickPainter extends CustomPainter {
       this.ballJumpingAnimationValue,
       this.ballFlyingAnimationValue,
       this.ballFallingAnimationValue,
-      this.animationStatus);
+      this.animationStatus,
+      this.context);
 
   @override
   void paint(Canvas canvas, Size size) {
     final Paint linePaint = Paint()
-      ..color = Colors.black
+      ..color = context.appColors.textPrimary
       ..strokeWidth = 10.5
       ..style = PaintingStyle.fill
       ..strokeWidth = size.width / 20
       ..strokeCap = StrokeCap.round;
 
     final Paint goalPaint = Paint()
-      ..color = Colors.black87
+      ..color = context.appColors.textPrimary
       ..strokeWidth = 10.5
       ..style = PaintingStyle.stroke
       ..strokeWidth = size.width / 30
@@ -543,9 +544,9 @@ class _RunAndKickPainter extends CustomPainter {
         bodyX1 + (size.width - bodyX1) * kickAnimationValue + size.width / 2;
     Offset leftPostOffset = Offset(goalX + size.width / 1.85, size.height);
     Offset rightPostOffset =
-        Offset(goalX + size.width / 1.85 + size.width / 3, size.height);
+    Offset(goalX + size.width / 1.85 + size.width / 3, size.height);
     GoalPaint goal =
-        GoalPaint(leftPostOffset, rightPostOffset, size.height - ballRadius);
+    GoalPaint(leftPostOffset, rightPostOffset, size.height - ballRadius);
     canvas.drawPath(goal.returnGoalPaint(), goalPaint);
   }
 
@@ -554,9 +555,9 @@ class _RunAndKickPainter extends CustomPainter {
     final double goalX = bodyX1 + size.width / 2;
     Offset leftPostOffset = Offset(goalX + size.width / 1.85, size.height);
     Offset rightPostOffset =
-        Offset(goalX + size.width / 1.85 + size.width / 3, size.height);
+    Offset(goalX + size.width / 1.85 + size.width / 3, size.height);
     GoalPaint goal =
-        GoalPaint(leftPostOffset, rightPostOffset, size.height - ballRadius);
+    GoalPaint(leftPostOffset, rightPostOffset, size.height - ballRadius);
     canvas.drawPath(goal.returnGoalPaint(), goalPaint);
   }
 
@@ -569,9 +570,9 @@ class _RunAndKickPainter extends CustomPainter {
             (kickAnimationValue - 1).abs();
     Offset leftPostOffset = Offset(leftGoalX, size.height);
     Offset rightPostOffset =
-        Offset(leftGoalX + lineFromLeftToRight, size.height);
+    Offset(leftGoalX + lineFromLeftToRight, size.height);
     GoalPaint goal =
-        GoalPaint(leftPostOffset, rightPostOffset, size.height - ballRadius);
+    GoalPaint(leftPostOffset, rightPostOffset, size.height - ballRadius);
     canvas.drawPath(goal.returnGoalPaint(), goalPaint);
   }
 
@@ -658,7 +659,7 @@ class _RunAndKickPainter extends CustomPainter {
           figure.leftForearmComponents[1].dy,
         ),
         degree,
-        () => canvas.drawPath(beer.returnBeerPaint(), goalPaint),
+            () => canvas.drawPath(beer.returnBeerPaint(), goalPaint),
       );
     } else {
       drawStandingBeer(canvas, goalPaint, tableX, tableLength, tableHeight,
@@ -690,11 +691,11 @@ class _RunAndKickPainter extends CustomPainter {
   }
 
   void drawRotated(
-    Canvas canvas,
-    Offset center,
-    double angle,
-    VoidCallback drawFunction,
-  ) {
+      Canvas canvas,
+      Offset center,
+      double angle,
+      VoidCallback drawFunction,
+      ) {
     canvas.save();
     canvas.translate(center.dx, center.dy);
     canvas.rotate(angle);
@@ -704,11 +705,11 @@ class _RunAndKickPainter extends CustomPainter {
   }
 
   void writeText(Canvas canvas, Size size) {
-    const textStyle = TextStyle(
-      color: Colors.black,
+    final textStyle = TextStyle(
+      color: context.appColors.textPrimary,
       fontSize: 30,
     );
-    const textSpan = TextSpan(
+    final textSpan = TextSpan(
       text: 'Načítám...',
       style: textStyle,
     );

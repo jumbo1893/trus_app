@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:trus_app/colors.dart';
+import 'package:trus_app/theme/app_colors.dart';
 import 'package:trus_app/common/widgets/loader.dart';
 import 'package:trus_app/features/general/confirm_operations.dart';
 import 'package:trus_app/features/main/controller/screen_notifier.dart';
@@ -40,24 +40,24 @@ class _ConfirmButtonState extends ConsumerState<ConfirmButton> {
       child: ElevatedButton(
         onPressed: _isLoading ? null : onPressed,
         style: ButtonStyle(
-          backgroundColor: WidgetStateProperty.all<Color>(Colors.orange),
+          backgroundColor: WidgetStateProperty.all<Color>(context.appColors.legacyAccent),
           minimumSize:
-              WidgetStateProperty.all(const Size(double.infinity, 50)),
+          WidgetStateProperty.all(const Size(double.infinity, 50)),
           shape: WidgetStateProperty.all<RoundedRectangleBorder>(
             RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(18.0),
-              side: const BorderSide(color: Colors.orange),
+              side: BorderSide(color: context.appColors.legacyAccent),
             ),
           ),
         ),
         child: _isLoading
             ? const Loader() // Loader widget
             : Text(
-                widget.text,
-                style: const TextStyle(
-                  color: blackColor,
-                ),
-              ),
+          widget.text,
+          style: TextStyle(
+            color: context.appColors.buttonForeground,
+          ),
+        ),
       ),
     );
   }

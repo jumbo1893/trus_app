@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:trus_app/theme/app_colors.dart';
 import 'package:trus_app/models/api/match/match_api_model.dart';
 
 class MatchDropdownSheet extends StatelessWidget {
@@ -19,7 +20,7 @@ class MatchDropdownSheet extends StatelessWidget {
     showModalBottomSheet<void>(
       context: context,
       isScrollControlled: true,
-      backgroundColor: Colors.white,
+      backgroundColor: context.appColors.cardBackground,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
       ),
@@ -35,7 +36,7 @@ class MatchDropdownSheet extends StatelessWidget {
                   width: 42,
                   height: 5,
                   decoration: BoxDecoration(
-                    color: Colors.black12,
+                    color: context.appColors.shadow.withAlpha(31),
                     borderRadius: BorderRadius.circular(999),
                   ),
                 ),
@@ -55,15 +56,15 @@ class MatchDropdownSheet extends StatelessWidget {
                   child: ListView.separated(
                     shrinkWrap: true,
                     itemCount: matches.length,
-                    separatorBuilder: (_, __) => const SizedBox(height: 8),
+                    separatorBuilder: (_, __) => SizedBox(height: 8),
                     itemBuilder: (context, index) {
                       final item = matches[index];
                       final isSelected = item == selected;
 
                       return Material(
                         color: isSelected
-                            ? Colors.orange.withAlpha(20)
-                            : Colors.black.withAlpha(8),
+                            ? context.appColors.legacyAccent.withAlpha(20)
+                            : context.appColors.shadow.withAlpha(8),
                         borderRadius: BorderRadius.circular(18),
                         child: InkWell(
                           borderRadius: BorderRadius.circular(18),
@@ -93,9 +94,9 @@ class MatchDropdownSheet extends StatelessWidget {
                                 ),
                                 const SizedBox(width: 12),
                                 if (isSelected)
-                                  const Icon(
+                                  Icon(
                                     Icons.check_rounded,
-                                    color: Colors.orange,
+                                    color: context.appColors.legacyAccent,
                                   ),
                               ],
                             ),
@@ -122,15 +123,15 @@ class MatchDropdownSheet extends StatelessWidget {
       children: [
         Text(
           hint,
-          style: const TextStyle(
+          style: TextStyle(
             fontSize: 13,
             fontWeight: FontWeight.w600,
-            color: Colors.black54,
+            color: context.appColors.textSecondary,
           ),
         ),
         const SizedBox(height: 5),
         Material(
-          color: Colors.black.withAlpha(8),
+          color: context.appColors.shadow.withAlpha(8),
           borderRadius: BorderRadius.circular(16),
           child: InkWell(
             borderRadius: BorderRadius.circular(16),
@@ -142,19 +143,19 @@ class MatchDropdownSheet extends StatelessWidget {
                   Expanded(
                     child: Text(
                       selected?.listViewTitle() ?? matches.first.listViewTitle(),
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontSize: 12,
                         fontWeight: FontWeight.w600,
                         height: 1.2,
-                        color: Colors.black87,
+                        color: context.appColors.textPrimary,
                       ),
                     ),
                   ),
                   const SizedBox(width: 12),
-                  const Icon(
+                  Icon(
                     Icons.keyboard_arrow_down_rounded,
                     size: 20,
-                    color: Colors.black54,
+                    color: context.appColors.textSecondary,
                   ),
                 ],
               ),

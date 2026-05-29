@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:trus_app/colors.dart';
+import 'package:trus_app/theme/app_colors.dart';
 
 import '../utils/utils.dart';
 
@@ -27,6 +27,8 @@ class CustomTextField extends StatelessWidget {
   Widget build(BuildContext context) {
     return TextField(
       enabled: enabled,
+      style: TextStyle(color: context.appColors.textPrimary),
+      cursorColor: context.appColors.accent,
       controller: textController,
       onChanged: (value) {
         if (onChanged != null && value.isNotEmpty) {
@@ -34,25 +36,28 @@ class CustomTextField extends StatelessWidget {
         }
       },
       decoration: InputDecoration(
-          enabledBorder: const UnderlineInputBorder(
-            borderSide: BorderSide(color: orangeColor),
+          enabledBorder: UnderlineInputBorder(
+            borderSide: BorderSide(color: context.appColors.legacyAccent),
           ),
-          focusedBorder: const UnderlineInputBorder(
-            borderSide: BorderSide(color: orangeColor),
+          focusedBorder: UnderlineInputBorder(
+            borderSide: BorderSide(color: context.appColors.legacyAccent),
           ),
           labelText: labelText,
-          labelStyle: const TextStyle(
+          labelStyle: TextStyle(
             fontSize: 12,
+            color: context.appColors.textSecondary,
           ),
-          floatingLabelStyle: const TextStyle(color: blackColor),
+          floatingLabelStyle: TextStyle(
+            color: context.appColors.textPrimary,
+          ),
           errorText: errorText.isNotEmpty ? errorText : null,
           contentPadding: const EdgeInsets.only(left: 10, top: 10),
           suffixIcon: textController.text.isNotEmpty
               ? IconButton(
-                  onPressed: () => {textController.clear(), onChanged!("")},
-                  icon: Icon(Icons.cancel,
-                      color: Colors.grey,
-                      key: ValueKey("${getValueFromValueKey(key!)}_button")))
+              onPressed: () => {textController.clear(), onChanged!("")},
+              icon: Icon(Icons.cancel,
+                  color: context.appColors.textMuted,
+                  key: ValueKey("${getValueFromValueKey(key!)}_button")))
               : null),
       textAlign: TextAlign.left,
       obscureText: password,

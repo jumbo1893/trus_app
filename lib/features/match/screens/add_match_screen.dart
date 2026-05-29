@@ -29,7 +29,7 @@ class _AddMatchScreenState extends ConsumerState<AddMatchScreen> {
     return BaseFormScreen(
       headerTitle: "Nový zápas: ${state.name}",
       headerText: "datum: ${dateTimeToString(state.date)}",
-      fields: matchFields(state, notifier),
+      fields: matchFields(context, state, notifier),
       actions: [
         ActionButtonItem(
           label: "Uložit zápas",

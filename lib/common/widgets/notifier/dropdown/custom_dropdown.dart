@@ -1,5 +1,6 @@
 import 'package:dropdown_button2/dropdown_button2.dart';
 import 'package:flutter/material.dart';
+import 'package:trus_app/theme/app_colors.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:trus_app/common/widgets/notifier/dropdown/i_dropdown_notifier.dart';
 import 'package:trus_app/common/widgets/notifier/dropdown/i_dropdown_state.dart';
@@ -22,6 +23,7 @@ class CustomDropdown extends ConsumerWidget {
   }) : super(key: key);
 
   List<DropdownMenuItem<DropdownItem>> _buildItems(
+      BuildContext context,
       List<DropdownItem> dropdownItems,
       ) {
     return dropdownItems.map((item) {
@@ -29,9 +31,9 @@ class CustomDropdown extends ConsumerWidget {
         value: item,
         child: Text(
           item.dropdownItem(),
-          style: const TextStyle(
+          style: TextStyle(
             fontSize: 12,
-            color: Colors.black87,
+            color: context.appColors.textPrimary,
             fontWeight: FontWeight.w500,
           ),
           softWrap: true,
@@ -60,10 +62,10 @@ class CustomDropdown extends ConsumerWidget {
           children: [
             Text(
               hint,
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 13,
                 fontWeight: FontWeight.w600,
-                color: Colors.black54,
+                color: context.appColors.textSecondary,
               ),
             ),
             const SizedBox(height: 5),
@@ -71,7 +73,7 @@ class CustomDropdown extends ConsumerWidget {
               height: 42,
               padding: const EdgeInsets.symmetric(horizontal: 12),
               decoration: BoxDecoration(
-                color: Colors.black.withAlpha(8),
+                color: context.appColors.shadow.withAlpha(8),
                 borderRadius: BorderRadius.circular(16),
               ),
               child: DropdownButtonHideUnderline(
@@ -80,22 +82,22 @@ class CustomDropdown extends ConsumerWidget {
                   value: state.getSelected(),
                   hint: Text(
                     hint,
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontSize: 14,
-                      color: Colors.black45,
+                      color: context.appColors.textMuted,
                     ),
                   ),
-                  items: _buildItems(dropdownItems),
+                  items: _buildItems(context, dropdownItems),
                   onChanged: (item) {
                     if (item != null) {
                       notifier.selectDropdown(item);
                     }
                   },
-                  iconStyleData: const IconStyleData(
+                  iconStyleData: IconStyleData(
                     icon: Icon(
                       Icons.keyboard_arrow_down_rounded,
                       size: 20,
-                      color: Colors.black54,
+                      color: context.appColors.textSecondary,
                     ),
                   ),
                   buttonStyleData: const ButtonStyleData(
@@ -107,7 +109,7 @@ class CustomDropdown extends ConsumerWidget {
                     maxHeight: 260,
                     elevation: 6,
                     decoration: BoxDecoration(
-                      color: Colors.white,
+                      color: context.appColors.cardBackground,
                       borderRadius: BorderRadius.circular(18),
                     ),
                     offset: const Offset(0, 6),
@@ -123,8 +125,8 @@ class CustomDropdown extends ConsumerWidget {
               const SizedBox(height: 6),
               Text(
                 error!,
-                style: const TextStyle(
-                  color: Colors.red,
+                style: TextStyle(
+                  color: context.appColors.errorSolid,
                   fontSize: 12,
                 ),
               ),

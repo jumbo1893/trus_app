@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:trus_app/colors.dart';
+import 'package:trus_app/theme/app_colors.dart';
 import 'package:trus_app/features/home/controller/home_notifier.dart'; // uprav import dle cesty
 
 import '../../../models/api/home/chart.dart';
@@ -52,10 +52,10 @@ class _PickChartPlayerState extends ConsumerState<PickChartPlayer> {
       child: Center(
         child: Column(
           children: [
-            const Row(
+            Row(
               children: [
-                Icon(Icons.warning, color: orangeColor, size: 40),
-                Flexible(
+                Icon(Icons.warning, color: context.appColors.legacyAccent, size: 40),
+                const Flexible(
                   child: Text(
                     "Pro zobrazení svého grafu vyber hráče/fanouška pod kterým piješ. Do té doby zde budeš mít graf největších borců",
                     textAlign: TextAlign.center,

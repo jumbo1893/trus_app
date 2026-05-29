@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:trus_app/theme/app_colors.dart';
 
 class ToggleMode extends StatelessWidget {
   final bool secondChoice;
@@ -32,12 +33,12 @@ class ToggleMode extends StatelessWidget {
         'Musíš zadat secondIconWidget nebo secondIcon',
         );
 
-  Widget _buildIcon({
+  Widget _buildIcon(BuildContext context, {
     required bool selected,
     Widget? iconWidget,
     IconData? iconData,
   }) {
-    final color = selected ? Colors.black87 : Colors.black54;
+    final color = selected ? context.appColors.textPrimary : context.appColors.textSecondary;
 
     if (iconWidget != null) {
       return iconWidget;
@@ -55,7 +56,7 @@ class ToggleMode extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(4),
       decoration: BoxDecoration(
-        color: Colors.black.withAlpha(8),
+        color: context.appColors.shadow.withAlpha(8),
         borderRadius: BorderRadius.circular(18),
       ),
       child: Row(
@@ -63,7 +64,7 @@ class ToggleMode extends StatelessWidget {
           Expanded(
             child: _ModeButton(
               label: firstLabel,
-              icon: _buildIcon(
+              icon: _buildIcon(context,
                 selected: !secondChoice,
                 iconWidget: firstIconWidget,
                 iconData: firstIcon,
@@ -75,7 +76,7 @@ class ToggleMode extends StatelessWidget {
           Expanded(
             child: _ModeButton(
               label: secondLabel,
-              icon: _buildIcon(
+              icon: _buildIcon(context,
                 selected: secondChoice,
                 iconWidget: secondIconWidget,
                 iconData: secondIcon,
@@ -105,10 +106,10 @@ class _ModeButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final textColor = selected ? Colors.black87 : Colors.black54;
+    final textColor = selected ? context.appColors.textPrimary : context.appColors.textSecondary;
 
     return Material(
-      color: selected ? Colors.white : Colors.transparent,
+      color: selected ? context.appColors.cardBackground : Colors.transparent,
       borderRadius: BorderRadius.circular(14),
       child: InkWell(
         borderRadius: BorderRadius.circular(14),

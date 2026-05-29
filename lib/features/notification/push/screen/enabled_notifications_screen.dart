@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:trus_app/theme/app_colors.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../common/widgets/builder/enabled_notifications_list_builder.dart';
@@ -102,7 +103,7 @@ class _PushStatusLoadingCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const Card(
+    return Card(
       margin: EdgeInsets.fromLTRB(12, 8, 12, 8),
       child: Padding(
         padding: EdgeInsets.all(16),
@@ -142,23 +143,23 @@ class _PushStatusErrorCard extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text(
+            Text(
               "Stav push notifikací se nepodařilo ověřit",
               style: TextStyle(
                 fontWeight: FontWeight.bold,
                 fontSize: 16,
               ),
             ),
-            const SizedBox(height: 8),
+            SizedBox(height: 8),
             Text(
               error.toString(),
               maxLines: 3,
               overflow: TextOverflow.ellipsis,
             ),
-            const SizedBox(height: 12),
+            SizedBox(height: 12),
             OutlinedButton(
               onPressed: onRefresh,
-              child: const Text("Zkusit znovu"),
+              child: Text("Zkusit znovu"),
             ),
           ],
         ),
@@ -187,10 +188,10 @@ class _PushStatusLoadedCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final statusColor = info.ready
-        ? Colors.green
+        ? context.appColors.successSolid
         : info.denied
-        ? Colors.red
-        : Colors.orange;
+        ? context.appColors.errorSolid
+        : context.appColors.legacyAccent;
 
     final title = info.ready
         ? "Push notifikace jsou připravené"
@@ -323,7 +324,7 @@ class _StatusLine extends StatelessWidget {
           Icon(
             ok ? Icons.check_circle : Icons.warning_amber_rounded,
             size: 17,
-            color: ok ? Colors.green : Colors.orange,
+            color: ok ? context.appColors.successSolid : context.appColors.legacyAccent,
           ),
           const SizedBox(width: 6),
           Expanded(

@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:trus_app/colors.dart';
+import 'package:trus_app/features/appearance/screens/appearance_screen.dart';
 import 'package:trus_app/features/footbar/screens/footbar_compare_screen.dart';
 import 'package:trus_app/features/footbar/screens/footbar_connect_screen.dart';
 import 'package:trus_app/features/info/screens/info_screen.dart';
@@ -38,10 +38,10 @@ class UpperSheetNavigationManager {
       useListView: true,
       trailing: TextButton.icon(
         onPressed: signOut,
-        icon: const Icon(Icons.logout, color: orangeColor),
-        label: const Text(
+        icon: Icon(Icons.logout, color: appColors.legacyAccent),
+        label: Text(
           "Odhlásit",
-          style: TextStyle(color: orangeColor),
+          style: TextStyle(color: appColors.legacyAccent),
         ),
       ),
       children: [
@@ -55,7 +55,7 @@ class UpperSheetNavigationManager {
         ),
         MenuTile(
           icon: Icons.account_box,
-          iconColor: player != null ? appColors.accent : Colors.red,
+          iconColor: player != null ? appColors.accent : appColors.errorSolid,
           title: player != null
               ? const Text("Můj profil")
               : const _WarningText(
@@ -90,6 +90,11 @@ class UpperSheetNavigationManager {
         ),
         const MenuSectionLabel(text: "NASTAVENÍ"),
         MenuTile(
+          icon: Icons.palette_outlined,
+          title: const Text("Vzhled"),
+          onTap: () => onModalBottomSheetMenuTapped(AppearanceScreen.id),
+        ),
+        MenuTile(
           icon: Icons.info,
           title: const Text("Informace o appce"),
           onTap: () => onModalBottomSheetMenuTapped(InfoScreen.id),
@@ -101,7 +106,7 @@ class UpperSheetNavigationManager {
         ),
         MenuTile(
           icon: Icons.delete_outline,
-          iconColor: Colors.red,
+          iconColor: appColors.errorSolid,
           title: const Text("Smazat účet"),
           onTap: () => onModalBottomSheetMenuTapped(deleteAccount),
         ),
@@ -128,12 +133,12 @@ class _WarningText extends StatelessWidget {
         const SizedBox(height: 2),
         Row(
           children: [
-            const Icon(Icons.warning, color: Colors.red, size: 14),
+            Icon(Icons.warning, color: context.appColors.errorSolid, size: 14),
             const SizedBox(width: 4),
             Text(
               sub,
-              style: const TextStyle(
-                color: Colors.red,
+              style: TextStyle(
+                color: context.appColors.errorSolid,
                 fontSize: 12,
               ),
             ),

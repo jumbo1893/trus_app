@@ -43,6 +43,10 @@ class AppTheme {
       surface: appColors.cardBackground,
       onSurface: appColors.textPrimary,
       error: appColors.errorForeground,
+      onError: appColors.cardBackground,
+      surfaceContainer: appColors.cardBackground,
+      surfaceContainerHigh: appColors.backgroundSecondary,
+      outline: appColors.border,
       onPrimary: brightness == Brightness.dark ? Colors.black : Colors.white,
     );
 
@@ -99,7 +103,7 @@ class AppTheme {
         shape: RoundedRectangleBorder(
           borderRadius: AppWidgetValues.borderRadiusXl,
         ),
-        shadowColor: Colors.black.withAlpha(30),
+        shadowColor: appColors.shadow.withAlpha(30),
       ),
 
       tabBarTheme: TabBarThemeData(
@@ -178,9 +182,7 @@ class AppTheme {
           minimumSize: const Size(double.infinity, 52),
           elevation: 0,
           backgroundColor: appColors.accent,
-          foregroundColor: brightness == Brightness.dark
-              ? Colors.black
-              : appColors.textPrimary,
+          foregroundColor: appColors.buttonForeground,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(18),
           ),
@@ -208,9 +210,7 @@ class AppTheme {
 
       floatingActionButtonTheme: FloatingActionButtonThemeData(
         backgroundColor: appColors.accent,
-        foregroundColor: brightness == Brightness.dark
-            ? Colors.black
-            : appColors.textPrimary,
+        foregroundColor: appColors.buttonForeground,
         elevation: 4,
       ),
 
@@ -245,8 +245,77 @@ class AppTheme {
       listTileTheme: ListTileThemeData(
         iconColor: appColors.textPrimary,
         textColor: appColors.textPrimary,
+        tileColor: appColors.cardBackground,
       ),
 
+      dialogTheme: DialogThemeData(
+        backgroundColor: appColors.cardBackground,
+        surfaceTintColor: Colors.transparent,
+        titleTextStyle: TextStyle(
+          color: appColors.textPrimary,
+          fontSize: 19,
+          fontWeight: FontWeight.w700,
+        ),
+        contentTextStyle: TextStyle(color: appColors.textSecondary),
+      ),
+
+      snackBarTheme: SnackBarThemeData(
+        backgroundColor: brightness == Brightness.dark
+            ? appColors.cardBackground
+            : const Color(0xFF1F2937),
+        contentTextStyle: const TextStyle(
+          color: Colors.white,
+          fontWeight: FontWeight.w600,
+          fontSize: 14,
+        ),
+        actionTextColor: appColors.accent,
+        behavior: SnackBarBehavior.floating,
+        elevation: 6,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16),
+        ),
+      ),
+
+      switchTheme: SwitchThemeData(
+        thumbColor: WidgetStateProperty.resolveWith(
+              (states) => states.contains(WidgetState.selected)
+              ? appColors.buttonForeground
+              : appColors.textMuted,
+        ),
+        trackColor: WidgetStateProperty.resolveWith(
+              (states) => states.contains(WidgetState.selected)
+              ? appColors.accent
+              : appColors.disabled.withValues(alpha: 0.35),
+        ),
+      ),
+
+      radioTheme: RadioThemeData(
+        fillColor: WidgetStateProperty.resolveWith(
+              (states) => states.contains(WidgetState.selected)
+              ? appColors.accent
+              : appColors.textMuted,
+        ),
+      ),
+
+      checkboxTheme: CheckboxThemeData(
+        fillColor: WidgetStateProperty.resolveWith(
+              (states) => states.contains(WidgetState.selected)
+              ? appColors.accent
+              : Colors.transparent,
+        ),
+        checkColor: WidgetStatePropertyAll(appColors.buttonForeground),
+        side: BorderSide(color: appColors.textMuted),
+      ),
+
+      progressIndicatorTheme: ProgressIndicatorThemeData(
+        color: appColors.accent,
+        linearTrackColor: appColors.backgroundSecondary,
+        circularTrackColor: appColors.backgroundSecondary,
+      ),
+
+      dividerTheme: DividerThemeData(
+        color: appColors.disabled.withAlpha(50),
+      ),
       dividerColor: appColors.disabled.withAlpha(50),
     );
   }

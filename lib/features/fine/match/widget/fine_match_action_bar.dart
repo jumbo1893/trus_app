@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:trus_app/theme/app_colors.dart';
 
 class FineMatchActionBar extends StatelessWidget {
   final int selectedCount;
@@ -29,13 +30,13 @@ class FineMatchActionBar extends StatelessWidget {
       top: false,
       child: Container(
         padding: EdgeInsets.fromLTRB(12, verticalPadding, 12, verticalPadding),
-        decoration: const BoxDecoration(
-          color: Colors.white,
+        decoration: BoxDecoration(
+          color: context.appColors.cardBackground,
           boxShadow: [
             BoxShadow(
               blurRadius: 16,
-              offset: Offset(0, -4),
-              color: Colors.black12,
+              offset: const Offset(0, -4),
+              color: context.appColors.shadow.withAlpha(31),
             ),
           ],
         ),
@@ -44,18 +45,18 @@ class FineMatchActionBar extends StatelessWidget {
           children: [
             Row(
               children: [
-                const Icon(
+                Icon(
                   Icons.checklist_rounded,
                   size: 18,
-                  color: Colors.black54,
+                  color: context.appColors.textSecondary,
                 ),
                 const SizedBox(width: 8),
                 Text(
                   'Vybráno: $selectedCount',
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 14,
                     fontWeight: FontWeight.w700,
-                    color: Colors.black87,
+                    color: context.appColors.textPrimary,
                   ),
                 ),
               ],
@@ -141,7 +142,7 @@ class _ActionChipButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Material(
-      color: Colors.black.withAlpha(8),
+      color: context.appColors.shadow.withAlpha(8),
       borderRadius: BorderRadius.circular(14),
       child: InkWell(
         borderRadius: BorderRadius.circular(14),
@@ -151,15 +152,15 @@ class _ActionChipButton extends StatelessWidget {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Icon(icon, size: 18, color: Colors.orange),
+              Icon(icon, size: 18, color: context.appColors.legacyAccent),
               const SizedBox(height: 4),
               Text(
                 label,
                 textAlign: TextAlign.center,
-                style: const TextStyle(
+                style: TextStyle(
                   fontSize: 12,
                   fontWeight: FontWeight.w600,
-                  color: Colors.black87,
+                  color: context.appColors.textPrimary,
                 ),
               ),
             ],

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:trus_app/theme/app_colors.dart';
 
 class AppSwitchField extends StatelessWidget {
   final bool value;
@@ -17,7 +18,7 @@ class AppSwitchField extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
       decoration: BoxDecoration(
-        color: Colors.black.withAlpha(6),
+        color: context.appColors.shadow.withAlpha(6),
         borderRadius: BorderRadius.circular(16),
       ),
       child: Row(
@@ -25,9 +26,9 @@ class AppSwitchField extends StatelessWidget {
           Expanded(
             child: Text(
               text,
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 15,
-                color: Colors.black87,
+                color: context.appColors.textPrimary,
               ),
             ),
           ),

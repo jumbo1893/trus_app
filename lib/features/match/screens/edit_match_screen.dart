@@ -31,7 +31,7 @@ class _EditMatchScreenState extends ConsumerState<EditMatchScreen> {
     return BaseFormScreen(
       headerTitle: state.name,
       headerText: dateTimeToString(state.date),
-      fields: matchFields(state, notifier),
+      fields: matchFields(context, state, notifier),
       actions: [
         ActionButtonItem(
           label: "Uložit",

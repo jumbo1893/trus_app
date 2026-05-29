@@ -434,8 +434,9 @@ class _TableRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final appColors = context.appColors;
     final rowColor =
-    isHeader ? Colors.black.withAlpha(20) : Colors.black.withAlpha(10);
+    isHeader ? appColors.shadow.withAlpha(20) : appColors.shadow.withAlpha(10);
 
     return Container(
       padding: EdgeInsets.symmetric(

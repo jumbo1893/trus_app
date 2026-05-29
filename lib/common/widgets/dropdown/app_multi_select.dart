@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:trus_app/theme/app_colors.dart';
 
 import '../../../models/api/interfaces/model_to_string.dart';
 import '../bottomsheet/multi_select_bottom_sheet.dart';
@@ -33,7 +34,7 @@ class AppMultiSelectField<T extends ModelToString> extends StatelessWidget {
       useRootNavigator: true,
       context: context,
       isScrollControlled: true,
-      backgroundColor: Colors.white,
+      backgroundColor: context.appColors.cardBackground,
       builder: (_) => MultiSelectBottomSheet<T>(
         models: models,
         selectedModels: selectedModels,

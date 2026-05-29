@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import '../../../colors.dart';
+import 'package:trus_app/theme/app_colors.dart';
 import '../../../models/api/interfaces/add_to_string.dart';
 
 class ListviewAddModelDouble extends StatelessWidget {
@@ -28,13 +28,13 @@ class ListviewAddModelDouble extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.fromLTRB(16, 16, 16, 16),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: context.appColors.cardBackground,
         borderRadius: BorderRadius.circular(20),
-        boxShadow: const [
+        boxShadow: [
           BoxShadow(
             blurRadius: 12,
-            offset: Offset(0, 6),
-            color: Colors.black12,
+            offset: const Offset(0, 6),
+            color: context.appColors.shadow.withAlpha(31),
           ),
         ],
       ),
@@ -43,18 +43,18 @@ class ListviewAddModelDouble extends StatelessWidget {
         children: [
           Text(
             addToString.toStringForListView(),
-            style: const TextStyle(
+            style: TextStyle(
               fontSize: 18,
               fontWeight: FontWeight.w600,
               height: 1.35,
-              color: Color(0xFF111827),
+              color: context.appColors.textPrimary,
             ),
           ),
           const SizedBox(height: 14),
           _DoubleCounterRow(
             label: 'Piva',
             icon: Icons.sports_bar,
-            iconColor: blackColor,
+            iconColor: context.appColors.buttonForeground,
             value: firstValue,
             onMinus: onFirstNumberRemoved,
             onPlus: onFirstNumberAdded,
@@ -63,7 +63,7 @@ class ListviewAddModelDouble extends StatelessWidget {
           _DoubleCounterRow(
             label: 'Tvrdej',
             icon: Icons.liquor,
-            iconColor: blackColor,
+            iconColor: context.appColors.buttonForeground,
             value: secondValue,
             onMinus: onSecondNumberRemoved,
             onPlus: onSecondNumberAdded,
@@ -96,7 +96,7 @@ class _DoubleCounterRow extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
       decoration: BoxDecoration(
-        color: Colors.black.withAlpha(6),
+        color: context.appColors.shadow.withAlpha(6),
         borderRadius: BorderRadius.circular(16),
       ),
       child: Row(
@@ -105,7 +105,7 @@ class _DoubleCounterRow extends StatelessWidget {
             width: 34,
             height: 34,
             decoration: BoxDecoration(
-              color: Colors.white,
+              color: context.appColors.cardBackground,
               borderRadius: BorderRadius.circular(12),
             ),
             child: Icon(
@@ -118,16 +118,16 @@ class _DoubleCounterRow extends StatelessWidget {
           Expanded(
             child: Text(
               label,
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 15,
                 fontWeight: FontWeight.w600,
-                color: Color(0xFF111827),
+                color: context.appColors.textPrimary,
               ),
             ),
           ),
           _MiniStepperButton(
             icon: Icons.remove,
-            color: Colors.redAccent,
+            color: context.appColors.errorSolid,
             onTap: onMinus,
           ),
           Container(
@@ -135,16 +135,16 @@ class _DoubleCounterRow extends StatelessWidget {
             alignment: Alignment.center,
             child: Text(
               value,
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 18,
                 fontWeight: FontWeight.w700,
-                color: Color(0xFF111827),
+                color: context.appColors.textPrimary,
               ),
             ),
           ),
           _MiniStepperButton(
             icon: Icons.add,
-            color: Colors.green,
+            color: context.appColors.successSolid,
             onTap: onPlus,
           ),
         ],
@@ -167,7 +167,7 @@ class _MiniStepperButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Material(
-      color: Colors.white,
+      color: context.appColors.cardBackground,
       borderRadius: BorderRadius.circular(10),
       child: InkWell(
         borderRadius: BorderRadius.circular(10),

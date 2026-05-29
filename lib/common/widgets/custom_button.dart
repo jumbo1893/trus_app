@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:trus_app/colors.dart';
+import 'package:trus_app/theme/app_colors.dart';
 
 class CustomButton extends StatelessWidget {
   final String text;
@@ -17,21 +17,21 @@ class CustomButton extends StatelessWidget {
       child: ElevatedButton(
         onPressed: () => {onPressed(), FocusManager.instance.primaryFocus?.unfocus()},
         style: ButtonStyle(
-          backgroundColor: WidgetStateProperty.all<Color>(Colors.orange),
+          backgroundColor: WidgetStateProperty.all<Color>(context.appColors.legacyAccent),
           minimumSize: WidgetStateProperty.all(const Size(double.infinity, 50)),
           shape: WidgetStateProperty.all<RoundedRectangleBorder>(
-            RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(18.0),
-              side: const BorderSide(color: Colors.orange),
-            )
-          ),
-        ),
-          child: Text(
-              text,
-              style: const TextStyle(
-                color: blackColor,
+              RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(18.0),
+                side: BorderSide(color: context.appColors.legacyAccent),
               )
           ),
+        ),
+        child: Text(
+            text,
+            style: TextStyle(
+              color: context.appColors.buttonForeground,
+            )
+        ),
       ),
     );
   }

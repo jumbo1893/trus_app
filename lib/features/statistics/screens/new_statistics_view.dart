@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:trus_app/theme/app_colors.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:trus_app/common/widgets/notifier/listview/model_to_string_listview.dart';
 import 'package:trus_app/config.dart';
@@ -44,13 +45,13 @@ class NewStatisticsView extends ConsumerWidget {
                 width: double.infinity,
                 padding: const EdgeInsets.fromLTRB(18, 18, 18, 18),
                 decoration: BoxDecoration(
-                  color: Colors.white,
+                  color: context.appColors.cardBackground,
                   borderRadius: BorderRadius.circular(22),
-                  boxShadow: const [
+                  boxShadow: [
                     BoxShadow(
                       blurRadius: 12,
-                      offset: Offset(0, 6),
-                      color: Colors.black12,
+                      offset: const Offset(0, 6),
+                      color: context.appColors.shadow.withAlpha(31),
                     ),
                   ],
                 ),
@@ -59,18 +60,18 @@ class NewStatisticsView extends ConsumerWidget {
                   children: [
                     Text(
                       value.title,
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontWeight: FontWeight.w700,
                         fontSize: 17,
-                        color: Color(0xFF111827),
+                        color: context.appColors.textPrimary,
                       ),
                     ),
                     const SizedBox(height: 10),
                     Text(
                       value.text,
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontSize: 15,
-                        color: Colors.black54,
+                        color: context.appColors.textSecondary,
                         height: 1.45,
                       ),
                     ),

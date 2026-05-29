@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:trus_app/theme/app_colors.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../statistics/controller/stats_notifier.dart';
@@ -47,13 +48,13 @@ class _StatisticsFilterBarState extends ConsumerState<StatisticsFilterBar> {
     return Container(
       padding: const EdgeInsets.fromLTRB(14, 12, 14, 14),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: context.appColors.cardBackground,
         borderRadius: BorderRadius.circular(22),
-        boxShadow: const [
+        boxShadow: [
           BoxShadow(
             blurRadius: 12,
-            offset: Offset(0, 6),
-            color: Colors.black12,
+            offset: const Offset(0, 6),
+            color: context.appColors.shadow.withAlpha(31),
           ),
         ],
       ),
@@ -68,14 +69,14 @@ class _StatisticsFilterBarState extends ConsumerState<StatisticsFilterBar> {
                   height: 52,
                   padding: const EdgeInsets.symmetric(horizontal: 14),
                   decoration: BoxDecoration(
-                    color: Colors.black.withAlpha(8),
+                    color: context.appColors.shadow.withAlpha(8),
                     borderRadius: BorderRadius.circular(16),
                   ),
                   child: Row(
                     children: [
-                      const Icon(
+                      Icon(
                         Icons.search,
-                        color: Colors.black54,
+                        color: context.appColors.textSecondary,
                         size: 20,
                       ),
                       const SizedBox(width: 10),
@@ -97,7 +98,7 @@ class _StatisticsFilterBarState extends ConsumerState<StatisticsFilterBar> {
               ),
               const SizedBox(width: 10),
               Material(
-                color: Colors.black.withAlpha(8),
+                color: context.appColors.shadow.withAlpha(8),
                 borderRadius: BorderRadius.circular(16),
                 child: InkWell(
                   borderRadius: BorderRadius.circular(16),
@@ -115,7 +116,7 @@ class _StatisticsFilterBarState extends ConsumerState<StatisticsFilterBar> {
                       orderDescending
                           ? Icons.arrow_downward_rounded
                           : Icons.arrow_upward_rounded,
-                      color: Colors.orange,
+                      color: context.appColors.legacyAccent,
                     ),
                   ),
                 ),

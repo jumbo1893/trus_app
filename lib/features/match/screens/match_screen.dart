@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:trus_app/theme/app_colors.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:trus_app/common/widgets/dropdown/custom_dropdown_sheet.dart';
 import 'package:trus_app/features/main/controller/screen_notifier.dart';
@@ -31,11 +32,11 @@ class MatchScreen extends CustomConsumerWidget {
     seasonDropdownNotifierProvider(const SeasonArgs(false, true, true));
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF6F7F9),
+      backgroundColor: context.appColors.backgroundPrimary,
       body: SafeArea(
         child: Column(
           children: [
-            const SizedBox(height: 8),
+            SizedBox(height: 8),
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: horizontalPadding),
               child: FilterCard(

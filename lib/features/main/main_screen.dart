@@ -150,7 +150,7 @@ class _MainScreenState extends ConsumerState<MainScreen> {
                   actions: [
                     TextButton(
                       onPressed: () => Navigator.of(context).pop(),
-                      child: const Text("OK"),
+                      child: Text("OK"),
                     ),
                   ],
                 ),
@@ -349,12 +349,12 @@ class _MainScreenState extends ConsumerState<MainScreen> {
                   IconButton(
                     key: const ValueKey('account_button'),
                     onPressed: notifier.onUpperMenuTapped,
-                    icon: const Icon(Icons.manage_accounts),
+                    icon: Icon(Icons.manage_accounts),
                   ),
                   IconButton(
                     key: const ValueKey('notifications_button'),
                     onPressed: () => screenNotifier.changeByFragmentId(NotificationScreen.id),
-                    icon: const Icon(Icons.notifications),
+                    icon: Icon(Icons.notifications),
                   ),
                 ],
               ),
@@ -366,7 +366,7 @@ class _MainScreenState extends ConsumerState<MainScreen> {
               floatingActionButton: FloatingActionButton(
                 onPressed: () => screenNotifier.changeByFragmentId(BeerSimpleScreen.id),
                 key: const ValueKey('beer_button'),
-                child: const Icon(Icons.sports_bar_outlined),
+                child: Icon(Icons.sports_bar_outlined),
               ),
               floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
               bottomNavigationBar: BottomNavigationBar(
@@ -410,14 +410,14 @@ class _MainScreenState extends ConsumerState<MainScreen> {
                   children: [
                     CircularProgressIndicator(color: colorScheme.onPrimary),
                     if (uiState.loadingMessage != null) ...[
-                      const SizedBox(height: 16),
+                      SizedBox(height: 16),
                       ConstrainedBox(
                         constraints: const BoxConstraints(maxWidth: 250),
                         child: Text(
                           uiState.loadingMessage!,
                           textAlign: TextAlign.center,
-                          style: const TextStyle(
-                            color: Colors.white,
+                          style: TextStyle(
+                            color: appColors.buttonForeground,
                             fontSize: 15,
                             decoration: TextDecoration.none,
                           ),

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:trus_app/theme/app_colors.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:trus_app/features/main/controller/screen_notifier.dart';
 import 'package:trus_app/features/season/controller/season_dropdown_notifier.dart';
@@ -80,7 +81,7 @@ class _StatsScreenState extends ConsumerState<StatsScreen> {
     );
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF6F7F9),
+      backgroundColor: context.appColors.backgroundPrimary,
       body: SafeArea(
         child: Column(
           children: [

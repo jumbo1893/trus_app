@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:trus_app/theme/app_colors.dart';
 
 import '../../common/widgets/dropdown/app_multi_select.dart';
 import '../../common/widgets/dropdown/custom_dropdown_sheet.dart';
@@ -9,6 +10,7 @@ import '../../common/widgets/rows/form/form_field_wrapper.dart';
 import '../../models/api/player/player_api_model.dart';
 
 List<Widget> matchFields(
+    BuildContext context,
     dynamic state,
     dynamic notifier,
     ) {
@@ -55,9 +57,9 @@ List<Widget> matchFields(
                   homeTeamName.isEmpty ? "Domácí" : homeTeamName,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 12,
-                    color: Colors.grey,
+                    color: context.appColors.textMuted,
                   ),
                 ),
                 const SizedBox(height: 6),
@@ -88,9 +90,9 @@ List<Widget> matchFields(
                   awayTeamName.isEmpty ? "Hosté" : awayTeamName,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 12,
-                    color: Colors.grey,
+                    color: context.appColors.textMuted,
                   ),
                 ),
                 const SizedBox(height: 6),

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:trus_app/theme/app_colors.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:trus_app/models/api/interfaces/model_to_string.dart';
 
@@ -101,7 +102,7 @@ class _MultiSelectBottomSheetState<T extends ModelToString>
                 ),
               ),
             ),
-            const Divider(color: Colors.black, height: 1),
+            Divider(color: context.appColors.border, height: 1),
 
             Expanded(
               child: GridView.builder(
@@ -170,12 +171,12 @@ class _MultiSelectBottomSheetState<T extends ModelToString>
                   child: ElevatedButton(
                     style: ButtonStyle(
                       backgroundColor:
-                      WidgetStateProperty.all<Color>(Colors.orange),
+                      WidgetStateProperty.all<Color>(context.appColors.legacyAccent),
                       shape:
                       WidgetStateProperty.all<RoundedRectangleBorder>(
                         RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(18.0),
-                          side: const BorderSide(color: Colors.orange),
+                          side: BorderSide(color: context.appColors.legacyAccent),
                         ),
                       ),
                     ),
@@ -183,9 +184,9 @@ class _MultiSelectBottomSheetState<T extends ModelToString>
                       widget.onChanged(_tempSelected);
                       Navigator.pop(context);
                     },
-                    child: const Text(
+                    child: Text(
                       "Potvrdit",
-                      style: TextStyle(color: Colors.black),
+                      style: TextStyle(color: context.appColors.buttonForeground),
                     ),
                   ),
                 ),

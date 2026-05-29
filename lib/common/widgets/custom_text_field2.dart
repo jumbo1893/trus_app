@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:trus_app/colors.dart';
+import 'package:trus_app/theme/app_colors.dart';
 
 class CustomTextField2 extends StatelessWidget {
   final TextEditingController textController;
@@ -25,20 +25,25 @@ class CustomTextField2 extends StatelessWidget {
   Widget build(BuildContext context) {
     return TextField(
       enabled: enabled,
+      style: TextStyle(color: context.appColors.textPrimary),
+      cursorColor: context.appColors.accent,
       controller: textController,
       obscureText: password,
       keyboardType: number ? TextInputType.number : TextInputType.text,
       onChanged: onChanged,
       decoration: InputDecoration(
-        enabledBorder: const UnderlineInputBorder(
-          borderSide: BorderSide(color: orangeColor),
+        enabledBorder: UnderlineInputBorder(
+          borderSide: BorderSide(color: context.appColors.legacyAccent),
         ),
-        focusedBorder: const UnderlineInputBorder(
-          borderSide: BorderSide(color: orangeColor),
+        focusedBorder: UnderlineInputBorder(
+          borderSide: BorderSide(color: context.appColors.legacyAccent),
         ),
         labelText: label,
-        labelStyle: const TextStyle(fontSize: 12),
-        floatingLabelStyle: const TextStyle(color: blackColor),
+        labelStyle: TextStyle(
+          fontSize: 12,
+          color: context.appColors.textSecondary,
+        ),
+        floatingLabelStyle: TextStyle(color: context.appColors.textPrimary),
         errorText: (error != null && error!.isNotEmpty)
             ? error
             : null,
@@ -46,7 +51,7 @@ class CustomTextField2 extends StatelessWidget {
         contentPadding: const EdgeInsets.only(left: 10, top: 10),
         suffixIcon: textController.text.isNotEmpty
             ? IconButton(
-          icon: const Icon(Icons.cancel, color: Colors.grey),
+          icon: Icon(Icons.cancel, color: context.appColors.textMuted),
           onPressed: () {
             textController.clear();
             onChanged("");

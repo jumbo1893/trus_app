@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import '../../../colors.dart';
+import 'package:trus_app/theme/app_colors.dart';
 
 class EnabledIconButton extends StatelessWidget {
   final VoidCallback onPressed;
@@ -23,7 +23,7 @@ class EnabledIconButton extends StatelessWidget {
       decoration: BoxDecoration(
         border: Border(
           right: hasRightBorder
-              ? const BorderSide(color: Colors.black54)
+              ? BorderSide(color: context.appColors.textSecondary)
               : BorderSide.none,
         ),
       ),
@@ -32,10 +32,10 @@ class EnabledIconButton extends StatelessWidget {
         mainAxisSize: MainAxisSize.min,
         children: [
           IconButton(
-            onPressed: () => enabled ? onPressed() : {}, icon: icon, color: enabled ? orangeColor : Colors.black38,),
+            onPressed: () => enabled ? onPressed() : {}, icon: icon, color: enabled ? context.appColors.legacyAccent : context.appColors.disabled,),
           Padding(
             padding: const EdgeInsets.only(left: 2, right: 2, bottom: 2),
-            child: FittedBox(fit: BoxFit.scaleDown, child: Text(text, style: TextStyle(color: enabled ? blackColor : Colors.black38, fontSize: 10),)),
+            child: FittedBox(fit: BoxFit.scaleDown, child: Text(text, style: TextStyle(color: enabled ? context.appColors.buttonForeground : context.appColors.disabled, fontSize: 10),)),
           )
         ],
       ),

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:trus_app/theme/app_colors.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:trus_app/common/widgets/home/birthday_text.dart';
 import 'package:trus_app/features/general/global_variables_controller.dart';
@@ -29,10 +30,15 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     final notifier = ref.read(homeNotifierProvider.notifier);
     final appTeam = ref.read(globalVariablesControllerProvider).appTeam;
 
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final titleImagePath = isDark
+        ? 'images/nazev_background_dark.png'
+        : 'images/nazev_background.png';
+
     return Scaffold(
       body: RefreshIndicator(
-        color: Colors.orange,
-        backgroundColor: Colors.white,
+        color: context.appColors.legacyAccent,
+        backgroundColor: context.appColors.cardBackground,
         onRefresh: notifier.load,
         notificationPredicate: (n) => n.depth == 0,
         child: ListView(
@@ -45,7 +51,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                   crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
                     Image.asset(
-                      'images/nazev_background.png',
+                      titleImagePath,
                       height: 76,
                       width: 331,
                     ),

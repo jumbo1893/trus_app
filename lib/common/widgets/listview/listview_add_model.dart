@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:trus_app/theme/app_colors.dart';
 
 import '../../../models/api/interfaces/add_to_string.dart';
 import '../../../theme/app_colors.dart';
@@ -36,15 +37,15 @@ class ListviewAddModel extends StatelessWidget {
           Expanded(
             child: Text(
               addToString.toStringForListView(),
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 16,
                 fontWeight: FontWeight.w600,
                 height: 1.3,
-                color: Color(0xFF111827),
+                color: context.appColors.textPrimary,
               ),
             ),
           ),
-          const SizedBox(width: 10),
+          SizedBox(width: 10),
           _SingleStepperControl(
             value: value,
             onMinus: onNumberRemoved,
@@ -81,7 +82,7 @@ class _SingleStepperControl extends StatelessWidget {
         children: [
           _StepperButton(
             icon: Icons.remove,
-            color: Colors.redAccent,
+            color: context.appColors.errorSolid,
             onTap: onMinus,
           ),
           Container(
@@ -89,16 +90,16 @@ class _SingleStepperControl extends StatelessWidget {
             alignment: Alignment.center,
             child: Text(
               value,
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 18,
                 fontWeight: FontWeight.w700,
-                color: Color(0xFF111827),
+                color: context.appColors.textPrimary,
               ),
             ),
           ),
           _StepperButton(
             icon: Icons.add,
-            color: Colors.green,
+            color: context.appColors.successSolid,
             onTap: onPlus,
           ),
         ],
@@ -121,7 +122,7 @@ class _StepperButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Material(
-      color: Colors.white,
+      color: context.appColors.cardBackground,
       borderRadius: BorderRadius.circular(10),
       child: InkWell(
         borderRadius: BorderRadius.circular(10),

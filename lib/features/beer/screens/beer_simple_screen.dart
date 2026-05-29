@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:trus_app/theme/app_colors.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:trus_app/common/widgets/screen/custom_consumer_stateful_widget.dart';
 import 'package:trus_app/common/widgets/toggle_mode.dart';
@@ -68,16 +69,16 @@ class _BeerSimpleScreenState extends ConsumerState<BeerSimpleScreen> {
     super.dispose();
   }
 
-  Widget _buildModeToggle(BeerState state, BeerNotifier notifier) {
+  Widget _buildModeToggle(BuildContext context, BeerState state, BeerNotifier notifier) {
     return ToggleMode(
       secondChoice: state.drawMode,
       onChanged: notifier.toggleMode,
       firstLabel: "Seznam",
       secondLabel: "Čárkování",
       firstIcon: Icons.format_list_bulleted_rounded,
-      secondIconWidget: const BeerTallyIcon(
+      secondIconWidget: BeerTallyIcon(
         size: 18,
-        color: Colors.black87,
+        color: context.appColors.textPrimary,
       ),
     );
   }
@@ -98,10 +99,10 @@ class _BeerSimpleScreenState extends ConsumerState<BeerSimpleScreen> {
     final seasonProvider =
     seasonDropdownNotifierProvider(const SeasonArgs(false, true, true));
 
-    final modeToggle = _buildModeToggle(state, notifier);
+    final modeToggle = _buildModeToggle(context, state, notifier);
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF6F7F9),
+      backgroundColor: context.appColors.backgroundPrimary,
       body: SafeArea(
         child: Column(
           children: [
@@ -129,7 +130,7 @@ class _BeerSimpleScreenState extends ConsumerState<BeerSimpleScreen> {
                           notifier: ref.read(seasonProvider.notifier),
                           state: ref.watch(seasonProvider),
                         ),
-                        const SizedBox(height: 12),
+                        SizedBox(height: 12),
                         modeToggle
                       ],
                     ),
@@ -139,8 +140,8 @@ class _BeerSimpleScreenState extends ConsumerState<BeerSimpleScreen> {
 
             if (state.drawMode)
               Padding(
-                padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
-                child: modeToggle
+                  padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
+                  child: modeToggle
               ),
 
             Expanded(

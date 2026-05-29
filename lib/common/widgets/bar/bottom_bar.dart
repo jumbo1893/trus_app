@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:trus_app/theme/app_colors.dart';
 
 class BottomBar extends StatelessWidget {
   final VoidCallback onConfirm;
@@ -18,13 +19,13 @@ class BottomBar extends StatelessWidget {
       top: false,
       child: Container(
         padding: const EdgeInsets.fromLTRB(16, 10, 16, 10),
-        decoration: const BoxDecoration(
-          color: Colors.white,
+        decoration: BoxDecoration(
+          color: context.appColors.cardBackground,
           boxShadow: [
             BoxShadow(
               blurRadius: 16,
-              offset: Offset(0, -4),
-              color: Colors.black12,
+              offset: const Offset(0, -4),
+              color: context.appColors.shadow.withAlpha(31),
             ),
           ],
         ),
