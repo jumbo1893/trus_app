@@ -10,8 +10,10 @@ import 'package:trus_app/features/match/screens/add_match_screen.dart';
 import '../../../common/widgets/filter_card.dart';
 import '../../../common/widgets/notifier/listview/model_to_string_listview.dart';
 import '../../../common/widgets/screen/custom_consumer_widget.dart';
+import '../../../models/api/match/match_api_model.dart';
 import '../../season/controller/season_dropdown_notifier.dart';
 import '../../season/season_args.dart';
+import '../widget/match_list_tile.dart';
 
 class MatchScreen extends CustomConsumerWidget {
   static const String id = "match-screen";
@@ -52,6 +54,12 @@ class MatchScreen extends CustomConsumerWidget {
                   storageKey: id,
                   state: ref.watch(matchNotifierProvider),
                   notifier: ref.read(matchNotifierProvider.notifier),
+                  itemBuilder: (context, item, onTap, _, _) {
+                    return MatchListTile(
+                      match: item as MatchApiModel,
+                      onTap: onTap,
+                    );
+                  },
                 ),
               ),
             ),

@@ -6,6 +6,8 @@ import 'package:trus_app/features/player/screens/add_player_screen.dart';
 
 import '../../../common/widgets/notifier/listview/model_to_string_listview.dart';
 import '../../../common/widgets/screen/custom_consumer_widget.dart';
+import '../../../models/api/player/player_api_model.dart';
+import '../widget/player_list_tile.dart';
 
 class PlayerScreen extends CustomConsumerWidget {
   static const String id = "player-screen";
@@ -21,6 +23,12 @@ class PlayerScreen extends CustomConsumerWidget {
           storageKey: id,
           state: ref.watch(playerNotifierProvider),
           notifier: ref.read(playerNotifierProvider.notifier),
+          itemBuilder: (context, item, onTap, _, _) {
+            return PlayerListTile(
+              player: item as PlayerApiModel,
+              onTap: onTap,
+            );
+          },
         ),
       ),
       floatingActionButton: FloatingActionButton(

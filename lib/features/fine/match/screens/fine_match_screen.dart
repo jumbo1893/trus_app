@@ -126,9 +126,14 @@ class _FineMatchScreenState extends ConsumerState<FineMatchScreen> {
                   scrollController: _scrollController,
                   checkedPlayers: state.checkedPlayers,
                   multiselect: state.multiCheck,
-                  onPlayerChecked: (player) => notifier.toggleCheckedPlayer(player),
-                  onPlayerSelected: (player) => notifier.setSelectedPlayer(player),
+                  onPlayerChecked: notifier.toggleCheckedPlayer,
+                  onPlayerSelected: notifier.setSelectedPlayer,
                   players: state.allPlayers,
+                  playersInMatchIds: state.playersInMatch
+                      .map((player) => player.id)
+                      .whereType<int>()
+                      .toSet(),
+                  playerFineSummaryByPlayerId: state.playerFineSummaryByPlayerId,
                 ),
               ),
             ),

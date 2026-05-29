@@ -66,7 +66,6 @@ class MatchApiModel implements ModelToString, JsonAndHttpConverter, DropdownItem
     };
   }
 
-  @override
   factory MatchApiModel.fromJson(Map<String, dynamic> json) {
     return MatchApiModel(
       date: DateTime.parse(json['date']),
@@ -96,7 +95,15 @@ class MatchApiModel implements ModelToString, JsonAndHttpConverter, DropdownItem
 
   @override
   String listViewTitle() {
-    return "${home ? "Liščí Trus - $name" : "$name - Liščí Trus, "}${footballMatch!=null ? " ${footballMatch!.simpleResultToString()}" : ""}, ${dateTimeToString(date)}";
+    final teams = home
+        ? "Liščí Trus - $name"
+        : "$name - Liščí Trus";
+
+    final result = footballMatch != null
+        ? " ${footballMatch!.simpleResultToString()}"
+        : "";
+
+    return "$teams$result, ${dateTimeToString(date)}";
   }
 
   @override

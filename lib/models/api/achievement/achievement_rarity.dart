@@ -1,5 +1,3 @@
-// lib/models/api/achievement/achievement_rarity.dart
-
 enum AchievementRarity {
   common,
   rare,

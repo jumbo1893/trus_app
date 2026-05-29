@@ -18,6 +18,7 @@ class TableTeamApiModel implements JsonAndHttpConverter, ModelToString {
   final int teamId;
   final String teamName;
   final LeagueApiModel league;
+  final FootballTableZone? tableZone;
 
   TableTeamApiModel({
     this.id,
@@ -33,6 +34,7 @@ class TableTeamApiModel implements JsonAndHttpConverter, ModelToString {
     required this.teamId,
     required this.teamName,
     required this.league,
+    this.tableZone,
   });
 
   TableTeamApiModel.dummy()
@@ -48,7 +50,8 @@ class TableTeamApiModel implements JsonAndHttpConverter, ModelToString {
         points = 0,
         teamId = 0,
         teamName = "",
-        league = LeagueApiModel.dummy();
+        league = LeagueApiModel.dummy(),
+        tableZone = null;
 
   @override
   Map<String, dynamic> toJson() {
@@ -66,6 +69,7 @@ class TableTeamApiModel implements JsonAndHttpConverter, ModelToString {
       "teamId": teamId,
       "league": league,
       "teamName": teamName,
+      "tableZone": tableZone?.toJson(),
     };
   }
 
@@ -84,6 +88,7 @@ class TableTeamApiModel implements JsonAndHttpConverter, ModelToString {
       teamId: json["teamId"],
       teamName: json["teamName"],
       league: LeagueApiModel.fromJson(json["league"]),
+      tableZone: FootballTableZone.fromJson(json["tableZone"]),
     );
   }
 
@@ -141,4 +146,44 @@ class TableTeamApiModel implements JsonAndHttpConverter, ModelToString {
 
   @override
   int get hashCode => id.hashCode;
+}
+
+enum FootballTableZone {
+  promotion,
+  promotionPlayoff,
+  neutral,
+  relegationPlayoff,
+  relegation;
+
+  static FootballTableZone? fromJson(String? value) {
+    switch (value) {
+      case 'PROMOTION':
+        return FootballTableZone.promotion;
+      case 'PROMOTION_PLAYOFF':
+        return FootballTableZone.promotionPlayoff;
+      case 'NEUTRAL':
+        return FootballTableZone.neutral;
+      case 'RELEGATION_PLAYOFF':
+        return FootballTableZone.relegationPlayoff;
+      case 'RELEGATION':
+        return FootballTableZone.relegation;
+      default:
+        return null;
+    }
+  }
+
+  String toJson() {
+    switch (this) {
+      case FootballTableZone.promotion:
+        return 'PROMOTION';
+      case FootballTableZone.promotionPlayoff:
+        return 'PROMOTION_PLAYOFF';
+      case FootballTableZone.neutral:
+        return 'NEUTRAL';
+      case FootballTableZone.relegationPlayoff:
+        return 'RELEGATION_PLAYOFF';
+      case FootballTableZone.relegation:
+        return 'RELEGATION';
+    }
+  }
 }

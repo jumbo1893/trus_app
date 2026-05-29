@@ -9,6 +9,7 @@ import 'package:trus_app/models/api/achievement/player_achievement_api_model.dar
 import 'package:trus_app/theme/app_colors.dart';
 import 'package:trus_app/theme/app_widget_values.dart';
 
+import '../../../features/achievement/widget/achievement_rarity_style.dart';
 import '../../utils/utils.dart';
 
 class AchievementView extends ConsumerWidget {
@@ -136,7 +137,7 @@ class _AchievementSection extends StatelessWidget {
   Widget build(BuildContext context) {
     final colors = context.appColors;
     final textTheme = Theme.of(context).textTheme;
-    final style = _AchievementRarityStyle.fromRarity(rarity);
+    final style = AchievementRarityStyle.fromRarity(rarity);
 
     final accomplishedCount = achievements
         .where((achievement) => achievement.isAccomplished)
@@ -204,7 +205,7 @@ class _AchievementSection extends StatelessWidget {
 class _AchievementTile extends StatelessWidget {
   final PlayerAchievementApiModel achievement;
   final bool accomplished;
-  final _AchievementRarityStyle style;
+  final AchievementRarityStyle style;
   final VoidCallback onTap;
 
   const _AchievementTile({
@@ -278,35 +279,6 @@ class _AchievementTile extends StatelessWidget {
         ),
       ),
     );
-  }
-}
-
-class _AchievementRarityStyle {
-  final Color color;
-
-  const _AchievementRarityStyle({
-    required this.color,
-  });
-
-  factory _AchievementRarityStyle.fromRarity(AchievementRarity rarity) {
-    switch (rarity) {
-      case AchievementRarity.common:
-        return const _AchievementRarityStyle(
-          color: Color(0xFFF59E0B), // orange
-        );
-      case AchievementRarity.rare:
-        return const _AchievementRarityStyle(
-          color: Color(0xFFEAB308), // gold/yellow
-        );
-      case AchievementRarity.epic:
-        return const _AchievementRarityStyle(
-          color: Color(0xFF3B82F6), // blue
-        );
-      case AchievementRarity.legendary:
-        return const _AchievementRarityStyle(
-          color: Color(0xFFA855F7), // purple
-        );
-    }
   }
 }
 

@@ -78,7 +78,6 @@ class FineMatchNotifier extends AppNotifier<FineMatchState> {
   }
 
   void _applySetup(ReceivedFineSetup setup) {
-    // Sync sezonního dropdownu na setup.season bez vyvolání reload smyčky
     _suppressSeasonListen = true;
     try {
       ref
@@ -93,9 +92,13 @@ class FineMatchNotifier extends AppNotifier<FineMatchState> {
       matches: AsyncValue.data(setup.matchList),
       otherPlayers: setup.otherPlayers,
       playersInMatch: setup.playersInMatch,
-      allPlayers: setup.playersInMatch+setup.otherPlayers,
+      allPlayers: [
+        ...setup.playersInMatch,
+        ...setup.otherPlayers,
+      ],
+      playerFineSummaryByPlayerId: setup.playerFineSummaryByPlayerId,
       checkedPlayers: [],
-      multiCheck: false
+      multiCheck: false,
     );
   }
 

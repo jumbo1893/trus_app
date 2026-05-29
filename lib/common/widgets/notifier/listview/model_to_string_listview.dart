@@ -8,6 +8,14 @@ import '../../../../theme/app_colors.dart';
 import '../../../../theme/app_widget_values.dart';
 import '../../loader.dart';
 
+typedef ModelToStringItemBuilder = Widget Function(
+    BuildContext context,
+    dynamic item,
+    VoidCallback? onTap,
+    int index,
+    int itemCount,
+    );
+
 class ModelToStringListview extends ConsumerStatefulWidget {
   final IListviewState state;
   final IListviewNotifier? notifier;
@@ -15,6 +23,7 @@ class ModelToStringListview extends ConsumerStatefulWidget {
   final String emptyListTitle;
   final String? storageKey;
   final ScrollController? scrollController;
+  final ModelToStringItemBuilder? itemBuilder;
 
   const ModelToStringListview({
     super.key,
@@ -24,6 +33,7 @@ class ModelToStringListview extends ConsumerStatefulWidget {
     this.emptyListTitle = "Po změně sezony se záznamy objeví zde",
     this.storageKey,
     this.scrollController,
+    this.itemBuilder,
   }) : assert(
   storageKey == null || scrollController == null,
   'Použij buď storageKey, nebo scrollController, ne obojí současně.',
@@ -148,64 +158,23 @@ class _ModelToStringListviewState
           itemBuilder: (context, index) {
             final item = modelList[index];
 
-            return Material(
-              color: context.appColors.cardBackground,
-              borderRadius: AppWidgetValues.borderRadiusXl,
-              child: InkWell(
-                borderRadius: AppWidgetValues.borderRadiusXl,
-                onTap: widget.notifier == null
-                    ? null
-                    : () => widget.notifier!.selectListviewItem(item),
-                child: Container(
-                  padding: const EdgeInsets.fromLTRB(18, 18, 16, 18),
-                  decoration: BoxDecoration(
-                    color: context.appColors.cardBackground,
-                    borderRadius: AppWidgetValues.borderRadiusXl,
-                    boxShadow: AppWidgetValues.cardShadow,
-                  ),
-                  child: Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              item.listViewTitle(),
-                              style: TextStyle(
-                                fontWeight: FontWeight.w700,
-                                fontSize: 17,
-                                height: 1.3,
-                                color: context.appColors.textPrimary,
-                              ),
-                            ),
-                            const SizedBox(height: 12),
-                            Text(
-                              item.toStringForListView(),
-                              style: TextStyle(
-                                color: context.appColors.textSecondary,
-                                fontSize: 14,
-                                height: 1.4,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                      if (widget.notifier != null) ...[
-                        const SizedBox(width: 10),
-                        Padding(
-                          padding: const EdgeInsets.only(top: 2),
-                          child: Icon(
-                            Icons.chevron_right_rounded,
-                            color: context.appColors.textSecondary,
-                            size: 22,
-                          ),
-                        ),
-                      ],
-                    ],
-                  ),
-                ),
-              ),
+            final onTap = widget.notifier == null
+                ? null
+                : () => widget.notifier!.selectListviewItem(item);
+
+            if (widget.itemBuilder != null) {
+              return widget.itemBuilder!(
+                context,
+                item,
+                onTap,
+                index,
+                modelList.length,
+              );
+            }
+
+            return _DefaultModelListTile(
+              item: item,
+              onTap: onTap,
             );
           },
         );
@@ -265,6 +234,77 @@ class _EmptyListState extends StatelessWidget {
                   height: 1.4,
                 ),
               ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _DefaultModelListTile extends StatelessWidget {
+  final dynamic item;
+  final VoidCallback? onTap;
+
+  const _DefaultModelListTile({
+    required this.item,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: context.appColors.cardBackground,
+      borderRadius: AppWidgetValues.borderRadiusXl,
+      child: InkWell(
+        borderRadius: AppWidgetValues.borderRadiusXl,
+        onTap: onTap,
+        child: Container(
+          padding: const EdgeInsets.fromLTRB(18, 18, 16, 18),
+          decoration: BoxDecoration(
+            color: context.appColors.cardBackground,
+            borderRadius: AppWidgetValues.borderRadiusXl,
+            boxShadow: AppWidgetValues.cardShadow,
+          ),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      item.listViewTitle(),
+                      style: TextStyle(
+                        fontWeight: FontWeight.w700,
+                        fontSize: 17,
+                        height: 1.3,
+                        color: context.appColors.textPrimary,
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    Text(
+                      item.toStringForListView(),
+                      style: TextStyle(
+                        color: context.appColors.textSecondary,
+                        fontSize: 14,
+                        height: 1.4,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              if (onTap != null) ...[
+                const SizedBox(width: 10),
+                Padding(
+                  padding: const EdgeInsets.only(top: 2),
+                  child: Icon(
+                    Icons.chevron_right_rounded,
+                    color: context.appColors.textSecondary,
+                    size: 22,
+                  ),
+                ),
+              ],
             ],
           ),
         ),
