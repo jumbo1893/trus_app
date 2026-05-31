@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:trus_app/models/api/receivedfine/stats/received_fine_stats_detail_models.dart';
 
 import '../../../models/api/interfaces/model_to_string.dart';
+import '../../../models/api/notification/push/push_payload.dart';
 
 sealed class UiEffect {
   const UiEffect();
@@ -58,4 +59,10 @@ class UiFineStatsBottomSheet extends UiEffect {
   final String subtitle;
   final ReceivedFineStatsDetailResponse response;
   const UiFineStatsBottomSheet(this.title, this.subtitle, this.response);
+}
+
+class UiPushNotificationSheet extends UiEffect {
+  final PushPayload payload;
+
+  const UiPushNotificationSheet(this.payload);
 }

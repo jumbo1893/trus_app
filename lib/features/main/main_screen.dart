@@ -19,8 +19,10 @@ import 'package:trus_app/features/main/widget/appbar/player_stats_app_bar_text.d
 
 import '../../common/utils/utils.dart';
 import '../../common/widgets/bottomsheet/confirm_action_bottom_sheet.dart';
+import '../../common/widgets/bottomsheet/push_notification_bottom_sheet.dart';
 import '../../common/widgets/confirmation_dialog.dart';
 import '../../models/api/player/player_api_model.dart';
+import '../../services/push/push_navigation_handler.dart';
 import '../auth/controller/auth_controller.dart';
 import '../beer/screens/beer_simple_screen.dart';
 import '../general/error/api_executor.dart';
@@ -186,7 +188,6 @@ class _MainScreenState extends ConsumerState<MainScreen> {
               ).whenComplete(() {
                 _loadingSheetVisible = false;
               });
-
               break;
 
             case UiHideLoadingSheet():
@@ -214,6 +215,21 @@ class _MainScreenState extends ConsumerState<MainScreen> {
                   subtitle: effect.subtitle,
                   response: effect.response
               );
+            case UiPushNotificationSheet():
+              PushNotificationBottomSheet.show(
+                context,
+                title: effect.payload.title,
+                message: effect.payload.body,
+                navigateText: effect.payload.navigateText?? "Mrknu na to!",
+                onOk: () {
+                  Navigator.of(context).pop();
+                },
+                onGo: () {
+                  Navigator.of(context).pop();
+                  PushNavigationHandler.navigate(ref, effect.payload);
+                },
+              );
+              break;
           }
         });
       },
@@ -349,12 +365,12 @@ class _MainScreenState extends ConsumerState<MainScreen> {
                   IconButton(
                     key: const ValueKey('account_button'),
                     onPressed: notifier.onUpperMenuTapped,
-                    icon: Icon(Icons.manage_accounts),
+                    icon: const Icon(Icons.manage_accounts),
                   ),
                   IconButton(
                     key: const ValueKey('notifications_button'),
                     onPressed: () => screenNotifier.changeByFragmentId(NotificationScreen.id),
-                    icon: Icon(Icons.notifications),
+                    icon: const Icon(Icons.notifications),
                   ),
                 ],
               ),
@@ -366,7 +382,7 @@ class _MainScreenState extends ConsumerState<MainScreen> {
               floatingActionButton: FloatingActionButton(
                 onPressed: () => screenNotifier.changeByFragmentId(BeerSimpleScreen.id),
                 key: const ValueKey('beer_button'),
-                child: Icon(Icons.sports_bar_outlined),
+                child: const Icon(Icons.sports_bar_outlined),
               ),
               floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
               bottomNavigationBar: BottomNavigationBar(

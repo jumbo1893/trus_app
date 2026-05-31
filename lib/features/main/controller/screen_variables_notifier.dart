@@ -15,10 +15,10 @@ import '../../../models/api/season_api_model.dart';
 
 // nechávám tvůj MatchNotifierArgs provider
 final matchNotifierArgsProvider =
-    StateProvider<MatchNotifierArgs>((ref) => const MatchNotifierArgs.add());
+StateProvider<MatchNotifierArgs>((ref) => const MatchNotifierArgs.add());
 
 final screenVariablesNotifierProvider =
-    StateNotifierProvider<ScreenVariablesNotifier, ScreenVariablesState>((ref) {
+StateNotifierProvider<ScreenVariablesNotifier, ScreenVariablesState>((ref) {
   return ScreenVariablesNotifier(ref: ref);
 });
 
@@ -35,6 +35,14 @@ class ScreenVariablesNotifier extends StateNotifier<ScreenVariablesState> {
       footballMatch: null,
       commonMatchesOnly: false,
       matchId: id,
+    );
+  }
+
+  void setFootballMatchId(int id) {
+    state = state.copyWith(
+      footballMatch: null,
+      commonMatchesOnly: false,
+      footballMatchId: id,
     );
   }
 
@@ -64,7 +72,17 @@ class ScreenVariablesNotifier extends StateNotifier<ScreenVariablesState> {
   }
 
   void setPlayer(PlayerApiModel playerModel) {
-    state = state.copyWith(playerModel: playerModel);
+    state = state.copyWith(
+      playerModel: playerModel,
+      playerId: playerModel.id,
+    );
+  }
+
+  void setPlayerId(int id) {
+    state = state.copyWith(
+      playerId: id,
+      playerModel: PlayerApiModel.dummy(),
+    );
   }
 
   void setSeason(SeasonApiModel seasonModel) {

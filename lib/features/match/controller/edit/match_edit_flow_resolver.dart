@@ -7,6 +7,7 @@ enum MatchFlow {
   editFromHomeByMatchId,
   openDetailByMatchId,
   openFootballDetailOnly,
+  openFootballDetailByFootballMatchId,
   openMutualOnly,
 }
 
@@ -21,6 +22,12 @@ class MatchEditFlowResolver {
     if (a.matchId != null &&
         a.preferredScreen == MatchDetailOptions.footballMatchDetail) {
       return MatchFlow.openDetailByMatchId;
+    }
+
+    // footballMatchId from push notification - no MatchEntity has to exist yet.
+    if (a.footballMatchId != null &&
+        a.preferredScreen == MatchDetailOptions.footballMatchDetail) {
+      return MatchFlow.openFootballDetailByFootballMatchId;
     }
 
     // footballMatch + preferredScreen

@@ -3,7 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:trus_app/features/notification/repository/notification_api_service.dart';
 
 import '../../../../models/api/notification/push/enabled_push_notification.dart';
-import '../../../../services/notifications_service.dart';
+import '../../../../services/push/notifications_service.dart';
 import '../../../general/notifier/safe_state_notifier.dart';
 import '../../../main/controller/screen_notifier.dart';
 import '../state/enabled_notifications_state.dart';

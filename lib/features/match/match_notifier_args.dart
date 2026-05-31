@@ -5,6 +5,7 @@ import '../../models/enum/match_detail_options.dart';
 class MatchNotifierArgs {
   final MatchDetailOptions preferredScreen;
   final int? matchId;
+  final int? footballMatchId;
   final FootballMatchApiModel? footballMatchApiModel;
   final bool openBottomSheet;
 
@@ -12,42 +13,56 @@ class MatchNotifierArgs {
       : preferredScreen = MatchDetailOptions.editMatch,
         footballMatchApiModel = null,
         openBottomSheet = false,
-        matchId = null;
+        matchId = null,
+        footballMatchId = null;
 
   const MatchNotifierArgs.edit(this.matchId)
       : preferredScreen = MatchDetailOptions.editMatch,
         openBottomSheet = false,
-        footballMatchApiModel = null;
+        footballMatchApiModel = null,
+        footballMatchId = null;
 
   const MatchNotifierArgs.footballMatchDetailByMatchId(this.matchId)
       : preferredScreen = MatchDetailOptions.footballMatchDetail,
         openBottomSheet = false,
-        footballMatchApiModel = null;
+        footballMatchApiModel = null,
+        footballMatchId = null;
+
+  const MatchNotifierArgs.footballMatchDetailByFootballMatchId(this.footballMatchId)
+      : preferredScreen = MatchDetailOptions.footballMatchDetail,
+        openBottomSheet = false,
+        footballMatchApiModel = null,
+        matchId = null;
 
   const MatchNotifierArgs.newByFootballMatch(this.footballMatchApiModel)
       : preferredScreen = MatchDetailOptions.editMatch,
         openBottomSheet = false,
-        matchId = null;
+        matchId = null,
+        footballMatchId = null;
 
   const MatchNotifierArgs.footballMatchDetail(this.footballMatchApiModel)
       : preferredScreen = MatchDetailOptions.footballMatchDetail,
         openBottomSheet = false,
-        matchId = null;
+        matchId = null,
+        footballMatchId = null;
 
   const MatchNotifierArgs.mutualMatches(this.footballMatchApiModel)
       : preferredScreen = MatchDetailOptions.mutualMatches,
         openBottomSheet = false,
-        matchId = null;
+        matchId = null,
+        footballMatchId = null;
 
   const MatchNotifierArgs.newByFootballMatchWithBottomSheet(this.footballMatchApiModel)
       : preferredScreen = MatchDetailOptions.editMatch,
         openBottomSheet = true,
-        matchId = null;
+        matchId = null,
+        footballMatchId = null;
 
   const MatchNotifierArgs.editWithBottomSheet(this.matchId)
       : preferredScreen = MatchDetailOptions.editMatch,
         openBottomSheet = true,
-        footballMatchApiModel = null;
+        footballMatchApiModel = null,
+        footballMatchId = null;
 
   @override
   bool operator ==(Object other) =>
@@ -56,18 +71,19 @@ class MatchNotifierArgs {
               runtimeType == other.runtimeType &&
               preferredScreen == other.preferredScreen &&
               matchId == other.matchId &&
+              footballMatchId == other.footballMatchId &&
               footballMatchApiModel == other.footballMatchApiModel;
 
   @override
-  int get hashCode =>
-      Object.hash(
-        preferredScreen,
-        matchId,
-        footballMatchApiModel,
-      );
+  int get hashCode => Object.hash(
+    preferredScreen,
+    matchId,
+    footballMatchId,
+    footballMatchApiModel,
+  );
 
   @override
   String toString() {
-    return 'MatchNotifierArgs{preferredScreen: $preferredScreen, matchId: $matchId, footballMatchApiModel: $footballMatchApiModel}';
+    return 'MatchNotifierArgs{preferredScreen: $preferredScreen, matchId: $matchId, footballMatchId: $footballMatchId, footballMatchApiModel: $footballMatchApiModel}';
   }
 }

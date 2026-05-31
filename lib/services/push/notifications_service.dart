@@ -4,16 +4,18 @@ import 'dart:math';
 
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:trus_app/config.dart';
 import 'package:trus_app/firebase_options.dart';
-import 'package:trus_app/models/api/log/log_api_model.dart';
-
-import '../features/general/repository/crud_api_service.dart';
-import '../models/api/notification/push/device_token_api_model.dart';
+import 'package:trus_app/services/push/push_navigation_handler.dart';
+import '../../features/general/repository/crud_api_service.dart';
+import '../../features/main/ui/ui_feedback_notifier.dart';
+import '../../models/api/notification/push/device_token_api_model.dart';
+import '../../models/api/notification/push/push_payload.dart';
 
 @pragma('vm:entry-point')
 Future<void> firebaseMessagingBackgroundHandler(RemoteMessage message) async {
@@ -52,6 +54,18 @@ class NotificationsService {
 
     if (initialMsg != null) {
       await _d('getInitialMessage', ref, _serializeMessage(initialMsg));
+
+      final payload = PushPayload.fromData({
+        ...initialMsg.data,
+        if (initialMsg.notification?.title != null)
+          'title': initialMsg.notification!.title!,
+        if (initialMsg.notification?.body != null)
+          'body': initialMsg.notification!.body!,
+      });
+
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        PushNavigationHandler.navigate(ref, payload);
+      });
     } else {
       await _d('getInitialMessage_none', ref);
     }
@@ -96,11 +110,10 @@ class NotificationsService {
         'notificationCenter': settings.notificationCenter,
       });
 
-      await FirebaseMessaging.instance
-          .setForegroundNotificationPresentationOptions(
-        alert: true,
+      await FirebaseMessaging.instance.setForegroundNotificationPresentationOptions(
+        alert: false,
         badge: true,
-        sound: true,
+        sound: false,
       );
 
       await _d('ios_foreground_presentation_set', ref, {
@@ -194,27 +207,29 @@ class NotificationsService {
         _serializeMessage(message),
       );
 
-      if (message.data.isNotEmpty) {
-        await _d('onMessage_show_local_from_data', ref, {
-          'title': message.data['title'],
-          'body': message.data['body'],
-        });
+      final payload = PushPayload.fromData({
+        ...message.data,
+        if (message.notification?.title != null)
+          'title': message.notification!.title!,
+        if (message.notification?.body != null)
+          'body': message.notification!.body!,
+      });
 
-        await _showLocalNotificationFromData(message.data);
-      } else if (message.notification != null) {
-        await _d('onMessage_show_local_from_notification', ref, {
-          'title': message.notification?.title,
-          'body': message.notification?.body,
-        });
-
-        await _showLocalNotification(message);
-      } else {
-        await _d('onMessage_no_payload_to_show', ref);
-      }
+      ref.read(uiFeedbackProvider.notifier).showPushNotificationSheet(payload);
     });
 
     FirebaseMessaging.onMessageOpenedApp.listen((RemoteMessage message) async {
       await _d('onMessageOpenedApp', ref, _serializeMessage(message));
+
+      final payload = PushPayload.fromData({
+        ...message.data,
+        if (message.notification?.title != null)
+          'title': message.notification!.title!,
+        if (message.notification?.body != null)
+          'body': message.notification!.body!,
+      });
+
+      PushNavigationHandler.navigate(ref, payload);
     });
 
     _listenersRegistered = true;
@@ -369,24 +384,6 @@ class NotificationsService {
     return id;
   }
 
-  static Future<void> _sendLogToBackend(String message, Ref ref) async {
-    try {
-      final crud = CrudApiService(ref);
-
-      await crud.addModel(
-        LogApiModel(
-          message: message,
-          logClass: "NotificationsService",
-        ),
-      );
-    } catch (e) {
-      if (kDebugMode) {
-        // ignore: only_throw_errors
-        throw e;
-      }
-    }
-  }
-
   static Future<void> _d(
       String label,
       Ref ref, [
@@ -406,11 +403,6 @@ class NotificationsService {
       'isDebug': kDebugMode,
       if (extra != null) ...extra,
     };
-
-    await _sendLogToBackend(
-      '[push-diagnostics] ${jsonEncode(payload)}',
-      ref,
-    );
 
     if (kDebugMode) {
       // ignore: avoid_print

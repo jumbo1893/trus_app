@@ -118,6 +118,10 @@ class MatchEditNotifier extends BaseCrudNotifier<MatchApiModel, MatchEditState>
         await _handleOpenFootballDetailOnly(args.footballMatchApiModel!);
         break;
 
+      case MatchFlow.openFootballDetailByFootballMatchId:
+        await _handleOpenFootballDetailByFootballMatchId(args.footballMatchId!);
+        break;
+
       case MatchFlow.openMutualOnly:
         await _handleOpenMutualOnly(args.footballMatchApiModel!);
         break;
@@ -257,6 +261,36 @@ class MatchEditNotifier extends BaseCrudNotifier<MatchApiModel, MatchEditState>
     }
   }
 
+  Future<void> _handleOpenFootballDetailByFootballMatchId(int footballMatchId) async {
+    state = state.copyWith(
+      initialTab: MatchDetailOptions.footballMatchDetail,
+      matchOptions: const [],
+      footballMatch: null,
+    );
+
+    final cached = loader.cachedFootballDetail(footballMatchId);
+    if (cached != null) {
+      _applyFootballDetailFromPush(
+        cached,
+        refreshStats: false,
+      );
+    }
+
+    final fresh = await runUiWithResult<FootballMatchDetail>(
+          () => loader.fetchFootballDetail(footballMatchId),
+      loadingMessage: "Načítám zápas…",
+      showLoading: cached == null,
+      successSnack: null,
+    );
+
+    if (!mounted) return;
+
+    _applyFootballDetailFromPush(
+      fresh,
+      refreshStats: true,
+    );
+  }
+
   Future<void> _handleOpenMutualOnly(FootballMatchApiModel fm) async {
     final matchId = _matchIdFromFootballMatch(fm);
 
@@ -317,6 +351,33 @@ class MatchEditNotifier extends BaseCrudNotifier<MatchApiModel, MatchEditState>
       includeEditTab: true,
       refresh: refreshDetailData,
     );
+  }
+
+  void _applyFootballDetailFromPush(
+      FootballMatchDetail detail, {
+        required bool refreshStats,
+      }) {
+    final fm = detail.footballMatch;
+    final matchId = _matchIdFromFootballMatch(fm);
+
+    state = state.copyWith(
+      footballMatch: fm,
+      initialTab: MatchDetailOptions.footballMatchDetail,
+    );
+
+    _applyFootballDetail(
+      detail,
+      includeEditTab: false,
+      includeStatsTab: matchId != null,
+    );
+
+    if (matchId != null) {
+      _loadMatchStats(
+        matchId,
+        includeEditTab: false,
+        refresh: refreshStats,
+      );
+    }
   }
 
   /// -------------------------

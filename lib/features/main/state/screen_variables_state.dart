@@ -15,7 +15,9 @@ class ScreenVariablesState {
   final Map<String, double> scrollOffsets;
 
   final int? matchId;
+  final int? footballMatchId;
   final int? footballTeamId;
+  final int? playerId;
 
   final FootballMatchApiModel? footballMatch;
   final TableTeamApiModel tableTeam;
@@ -38,7 +40,9 @@ class ScreenVariablesState {
     required this.currentScreenId,
     required this.scrollOffsets,
     required this.matchId,
+    required this.footballMatchId,
     required this.footballTeamId,
+    required this.playerId,
     required this.footballMatch,
     required this.tableTeam,
     required this.matchModel,
@@ -58,7 +62,9 @@ class ScreenVariablesState {
     currentScreenId: HomeScreen.id,
     scrollOffsets: const {},
     matchId: null,
+    footballMatchId: null,
     footballTeamId: null,
+    playerId: null,
     footballMatch: null,
     tableTeam: TableTeamApiModel.dummy(),
     matchModel: MatchApiModel.dummy(),
@@ -78,7 +84,9 @@ class ScreenVariablesState {
     String? currentScreenId,
     Map<String, double>? scrollOffsets,
     int? matchId,
+    int? footballMatchId,
     int? footballTeamId,
+    int? playerId,
     FootballMatchApiModel? footballMatch,
     TableTeamApiModel? tableTeam,
     MatchApiModel? matchModel,
@@ -97,7 +105,9 @@ class ScreenVariablesState {
       currentScreenId: currentScreenId ?? this.currentScreenId,
       scrollOffsets: scrollOffsets ?? this.scrollOffsets,
       matchId: matchId ?? this.matchId,
+      footballMatchId: footballMatchId ?? this.footballMatchId,
       footballTeamId: footballTeamId ?? this.footballTeamId,
+      playerId: playerId ?? this.playerId,
       footballMatch: footballMatch ?? this.footballMatch,
       tableTeam: tableTeam ?? this.tableTeam,
       matchModel: matchModel ?? this.matchModel,

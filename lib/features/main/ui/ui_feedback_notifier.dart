@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:trus_app/models/api/receivedfine/stats/received_fine_stats_detail_models.dart';
 
 import '../../../models/api/interfaces/model_to_string.dart';
+import '../../../models/api/notification/push/push_payload.dart';
 import 'ui_effect.dart';
 import 'ui_feedback_state.dart';
 
@@ -81,6 +82,10 @@ class UiFeedbackNotifier extends StateNotifier<UiFeedbackState> {
 
   void showFineStatsBottomSheet(String title, String subtitle, ReceivedFineStatsDetailResponse response) {
     emit(UiFineStatsBottomSheet(title, subtitle, response));
+  }
+
+  void showPushNotificationSheet(PushPayload payload) {
+    emit(UiPushNotificationSheet(payload));
   }
 
   void showSessionLoadingSheet([String? message]) {

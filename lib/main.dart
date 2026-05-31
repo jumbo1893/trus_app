@@ -8,7 +8,7 @@ import 'package:trus_app/common/widgets/loader.dart';
 import 'package:trus_app/features/appearance/controller/appearance_notifier.dart';
 import 'package:trus_app/firebase_options.dart';
 import 'package:trus_app/router.dart';
-import 'package:trus_app/services/notification_init_provider.dart';
+import 'package:trus_app/services/push/notification_init_provider.dart';
 import 'package:trus_app/theme/app_theme.dart';
 
 import 'config.dart';

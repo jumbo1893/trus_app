@@ -66,7 +66,7 @@ List<Widget> matchFields(
                 AppTextInputField(
                   value: state.homeGoalNumber?.toString() ?? "",
                   keyboardType: TextInputType.number,
-                  hintText: "0",
+                  hintText: "domácí",
                   onChanged: notifier.setHomeGoalNumber,
                 ),
               ],
@@ -99,7 +99,7 @@ List<Widget> matchFields(
                 AppTextInputField(
                   value: state.awayGoalNumber?.toString() ?? "",
                   keyboardType: TextInputType.number,
-                  hintText: "0",
+                  hintText: "hosté",
                   onChanged: notifier.setAwayGoalNumber,
                 ),
               ],

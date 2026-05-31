@@ -1,6 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../features/auth/login/controller/auth_login_controller.dart';
+import '../../features/auth/login/controller/auth_login_controller.dart';
 import 'notifications_service.dart';
 
 final notificationsInitProvider = Provider<void>((ref) {
