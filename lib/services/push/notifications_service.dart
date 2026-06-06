@@ -55,17 +55,8 @@ class NotificationsService {
     if (initialMsg != null) {
       await _d('getInitialMessage', ref, _serializeMessage(initialMsg));
 
-      final payload = PushPayload.fromData({
-        ...initialMsg.data,
-        if (initialMsg.notification?.title != null)
-          'title': initialMsg.notification!.title!,
-        if (initialMsg.notification?.body != null)
-          'body': initialMsg.notification!.body!,
-      });
-
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        PushNavigationHandler.navigate(ref, payload);
-      });
+      final payload = _payloadFromMessage(initialMsg);
+      _navigateFromOpenedNotification(ref, payload, source: 'getInitialMessage');
     } else {
       await _d('getInitialMessage_none', ref);
     }
@@ -180,7 +171,19 @@ class NotificationsService {
       iOS: iosInitSettings,
     );
 
-    final initResult = await _localNotifications.initialize(initSettings);
+    final initResult = await _localNotifications.initialize(
+      initSettings,
+      onDidReceiveNotificationResponse: (response) {
+        _handleLocalNotificationTap(ref, response);
+      },
+    );
+
+    final launchDetails =
+        await _localNotifications.getNotificationAppLaunchDetails();
+    if (launchDetails?.didNotificationLaunchApp == true &&
+        launchDetails?.notificationResponse != null) {
+      _handleLocalNotificationTap(ref, launchDetails!.notificationResponse!);
+    }
 
     _localNotificationsInitialized = true;
 
@@ -207,13 +210,14 @@ class NotificationsService {
         _serializeMessage(message),
       );
 
-      final payload = PushPayload.fromData({
-        ...message.data,
-        if (message.notification?.title != null)
-          'title': message.notification!.title!,
-        if (message.notification?.body != null)
-          'body': message.notification!.body!,
-      });
+      final payload = _payloadFromMessage(message);
+
+      // Push bez vlastních dat (případně pouze s title/body) nemá akci,
+      // proto ji ve foregroundu zobrazíme jako běžné systémové oznámení.
+      if (!_hasCustomData(message.data)) {
+        await _showLocalNotification(message, payload: payload);
+        return;
+      }
 
       ref.read(uiFeedbackProvider.notifier).showPushNotificationSheet(payload);
     });
@@ -221,20 +225,73 @@ class NotificationsService {
     FirebaseMessaging.onMessageOpenedApp.listen((RemoteMessage message) async {
       await _d('onMessageOpenedApp', ref, _serializeMessage(message));
 
-      final payload = PushPayload.fromData({
-        ...message.data,
-        if (message.notification?.title != null)
-          'title': message.notification!.title!,
-        if (message.notification?.body != null)
-          'body': message.notification!.body!,
-      });
-
-      PushNavigationHandler.navigate(ref, payload);
+      final payload = _payloadFromMessage(message);
+      _navigateFromOpenedNotification(ref, payload, source: 'onMessageOpenedApp');
     });
 
     _listenersRegistered = true;
 
     await _d('listeners_registered', ref);
+  }
+
+  static PushPayload _payloadFromMessage(RemoteMessage message) {
+    return PushPayload.fromData({
+      ...message.data,
+      if (message.notification?.title != null)
+        'title': message.notification!.title!,
+      if (message.notification?.body != null)
+        'body': message.notification!.body!,
+    });
+  }
+
+  static bool _hasCustomData(Map<String, dynamic> data) {
+    return data.keys.any((key) => key != 'title' && key != 'body');
+  }
+
+  static void _navigateFromOpenedNotification(
+    Ref ref,
+    PushPayload payload, {
+    required String source,
+  }) {
+    if (!payload.hasNavigationTarget) {
+      _d('${source}_without_navigation_target', ref, {
+        'screenId': payload.screenId,
+      });
+      return;
+    }
+
+    // U terminated stavu se inicializace push služby může dokončit ve stejném
+    // frame jako vytvoření MainScreen. Navigaci proto odložíme za první frame.
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      PushNavigationHandler.navigate(ref, payload);
+    });
+  }
+
+  static void _handleLocalNotificationTap(
+    Ref ref,
+    NotificationResponse response,
+  ) {
+    final rawPayload = response.payload;
+    if (rawPayload == null || rawPayload.isEmpty) return;
+
+    try {
+      final decoded = jsonDecode(rawPayload);
+      if (decoded is! Map) return;
+
+      final payload = PushPayload.fromData(
+        decoded.map((key, value) => MapEntry(key.toString(), value)),
+      );
+      _navigateFromOpenedNotification(
+        ref,
+        payload,
+        source: 'localNotificationTap',
+      );
+    } catch (e, st) {
+      _d('local_notification_payload_error', ref, {
+        'error': e.toString(),
+        'stack': st.toString(),
+      });
+    }
   }
 
   static Future<String?> syncCurrentTokenWithBackend(Ref ref) async {
@@ -451,10 +508,13 @@ class NotificationsService {
     };
   }
 
-  static Future<void> _showLocalNotification(RemoteMessage message) async {
+  static Future<void> _showLocalNotification(
+    RemoteMessage message, {
+    PushPayload? payload,
+  }) async {
     final notification = message.notification;
-
-    if (notification == null) return;
+    final title = notification?.title ?? payload?.title ?? 'Notifikace';
+    final body = notification?.body ?? payload?.body ?? '';
 
     const AndroidNotificationDetails androidDetails =
     AndroidNotificationDetails(
@@ -476,10 +536,22 @@ class NotificationsService {
     );
 
     await _localNotifications.show(
-      notification.hashCode,
-      notification.title,
-      notification.body,
+      message.messageId?.hashCode ?? DateTime.now().millisecondsSinceEpoch ~/ 1000,
+      title,
+      body,
       platformDetails,
+      payload: payload == null ? null : jsonEncode({
+        'title': payload.title,
+        'body': payload.body,
+        if (payload.screenId != null) 'screenId': payload.screenId,
+        if (payload.notificationType != null)
+          'notificationType': payload.notificationType,
+        if (payload.navigateText != null) 'navigateText': payload.navigateText,
+        if (payload.matchId != null) 'matchId': payload.matchId,
+        if (payload.footballMatchId != null)
+          'footballMatchId': payload.footballMatchId,
+        if (payload.playerId != null) 'playerId': payload.playerId,
+      }),
     );
   }
 

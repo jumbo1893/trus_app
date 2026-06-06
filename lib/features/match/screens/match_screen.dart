@@ -36,7 +36,7 @@ class MatchScreen extends CustomConsumerWidget {
       body: SafeArea(
         child: Column(
           children: [
-            SizedBox(height: 8),
+            const SizedBox(height: 8),
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: horizontalPadding),
               child: FilterCard(

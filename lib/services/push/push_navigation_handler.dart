@@ -18,6 +18,8 @@ import 'package:trus_app/models/api/notification/push/push_payload.dart';
 
 class PushNavigationHandler {
   static void navigate(var ref, PushPayload payload) {
+    if (!payload.hasNavigationTarget) return;
+
     final ui = ref.read(uiFeedbackProvider.notifier);
     final loadingToken = ui.startLoading("Otevírám notifikaci…");
 
