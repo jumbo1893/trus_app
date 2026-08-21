@@ -26,11 +26,18 @@ class _FootballMatchDetailScreenState
 
     final state = ref.watch(matchEditNotifierProvider(arg));
     final footballState = state.footballMatchDetailState;
-
     return BaseFormScreen(
       headerTitle: footballState.nameAndResult,
       headerText: footballState.dateAndLeague,
       fields: [
+        if (footballState.weather.trim().isNotEmpty)
+        FormFieldWrapper(
+          label: "Počasí",
+          child: AppReadOnlyField(
+            value: footballState.weather,
+            allowWrap: true,
+          ),
+        ),
         FormFieldWrapper(
           label: "Stadion",
           child: AppReadOnlyField(

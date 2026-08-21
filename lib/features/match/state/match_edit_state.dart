@@ -27,7 +27,7 @@ class MatchEditState extends BaseCrudState<MatchApiModel> implements IDropdownSt
   final MatchStatsState matchStatsState;
   final int? homeGoalNumber;
   final int? awayGoalNumber;
-
+  final String weather;
 
   const MatchEditState({
     required this.name,
@@ -47,6 +47,7 @@ class MatchEditState extends BaseCrudState<MatchApiModel> implements IDropdownSt
     required this.footballMatchDetailState,
     required this.matchStatsState,
     MatchApiModel? model,
+    required this.weather,
     super.errors,
   }) : super(model: model);
 
@@ -68,6 +69,7 @@ class MatchEditState extends BaseCrudState<MatchApiModel> implements IDropdownSt
     FootballMatchDetailState? footballMatchDetailState,
     MatchStatsState? matchStatsState,
     MatchDetailOptions? initialTab,
+    String? weather,
     MatchApiModel? model,
     Map<String, String>? errors,
   }) {
@@ -88,6 +90,7 @@ class MatchEditState extends BaseCrudState<MatchApiModel> implements IDropdownSt
       initialTab: initialTab ?? this.initialTab,
       footballMatchDetailState: footballMatchDetailState ?? this.footballMatchDetailState,
       matchStatsState: matchStatsState ?? this.matchStatsState,
+      weather: weather ?? this.weather,
       model: model ?? this.model,
       errors: errors ?? this.errors,
     );

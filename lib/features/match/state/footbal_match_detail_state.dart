@@ -22,6 +22,7 @@ class FootballMatchDetailState implements IListviewState {
   final AsyncValue<List<FootballMatchApiModel>> mutualMatches;
   final String? aggregateScore;
   final String? aggregateMatches;
+  final String weather;
 
 
   const FootballMatchDetailState({
@@ -43,6 +44,7 @@ class FootballMatchDetailState implements IListviewState {
     required this.mutualMatches,
     this.aggregateMatches,
     this.aggregateScore,
+    required this.weather,
   });
 
   FootballMatchDetailState copyWith({
@@ -64,6 +66,7 @@ class FootballMatchDetailState implements IListviewState {
     AsyncValue<List<FootballMatchApiModel>>? mutualMatches,
     String? aggregateScore,
     String? aggregateMatches,
+    String? weather,
   }) {
     return FootballMatchDetailState(
       nameAndResult: nameAndResult ?? this.nameAndResult,
@@ -84,6 +87,7 @@ class FootballMatchDetailState implements IListviewState {
       mutualMatches: mutualMatches ?? this.mutualMatches,
       aggregateScore: aggregateScore ?? this.aggregateScore,
       aggregateMatches: aggregateMatches ?? this.aggregateMatches,
+      weather: weather ?? this.weather,
     );
   }
 
@@ -106,6 +110,7 @@ class FootballMatchDetailState implements IListviewState {
     this.mutualMatches = const AsyncValue.data([]),
     this.aggregateScore,
     this.aggregateMatches,
+    this.weather = "",
     });
 
   @override

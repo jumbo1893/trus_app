@@ -87,6 +87,7 @@ class MatchEditNotifier extends BaseCrudNotifier<MatchApiModel, MatchEditState>
       footballMatch: null,
       matchOptions: const [],
       initialTab: args.preferredScreen,
+      weather: "",
       footballMatchDetailState: FootballMatchDetailState.init(),
       matchStatsState: MatchStatsState.init(),
     ),
@@ -611,7 +612,7 @@ class MatchEditNotifier extends BaseCrudNotifier<MatchApiModel, MatchEditState>
       },
       onSuccessRedirect: HomeScreen.id,
       invalidateProvider: matchNotifierProvider,
-      onSuccessAction: (model) {
+      onSuccessAction: (  model) {
         if (crud != Crud.delete && goal) {
           screenVariablesNotifier.setMatchId(model!.id!);
           screenVariablesNotifier.setMatch(model);

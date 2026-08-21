@@ -1,6 +1,8 @@
 import 'package:trus_app/models/api/football/detail/best_scorer.dart';
 import 'package:trus_app/models/api/football/football_match_api_model.dart';
 
+import '../../weather/match_weather_api_model.dart';
+
 class FootballMatchDetail {
   final FootballMatchApiModel footballMatch;
   final List<FootballMatchApiModel> mutualMatches;
@@ -10,6 +12,7 @@ class FootballMatchDetail {
   final int awayTeamAverageBirthYear;
   BestScorer? homeTeamBestScorer;
   BestScorer? awayTeamBestScorer;
+  MatchWeatherApiModel? weather;
 
   FootballMatchDetail({
     required this.footballMatch,
@@ -20,6 +23,7 @@ class FootballMatchDetail {
     required this.awayTeamAverageBirthYear,
     required this.homeTeamBestScorer,
     required this.awayTeamBestScorer,
+    this.weather
   });
 
   FootballMatchDetail.dummy()
@@ -55,7 +59,17 @@ class FootballMatchDetail {
           json["homeTeamBestScorer"]) : null,
       awayTeamBestScorer: json["awayTeamBestScorer"] != null ? BestScorer.fromJson(
           json["awayTeamBestScorer"]) : null,
+      weather: json["weather"] != null
+          ? MatchWeatherApiModel.fromJson(json["weather"])
+          : null,
     );
+  }
+
+  String weatherToFootballDetail() {
+    if (weather == null) {
+      return "";
+    }
+    return "${weather!.temperature}°C, ${weather!.weatherCode}";
   }
 
   @override

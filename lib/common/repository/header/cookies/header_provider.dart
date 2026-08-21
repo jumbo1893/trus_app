@@ -24,7 +24,6 @@ class HeaderProvider {
     return {
       ...cookies,
       'Content-Type': 'application/json; charset=UTF-8',
-      'app-team-id': '1',
       'device': deviceInfo,
       if (appTeamHeader != null) ...appTeamHeader,
     };

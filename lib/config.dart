@@ -16,11 +16,11 @@ const int allSeasonId = -3;
 
 
 //api
-const testUrl = "192.168.0.10:8443";
+const testUrl = "192.168.0.9:8443";
 const prodUrl = "trus.up.railway.app";
 const devUrl = "192.168.0.150:8080";
 const anickaTestUrl = "192.168.0.9:8443";
-const workTestUrl = "192.168.101.61:8443";
+const workTestUrl = "10.220.237.61:8443";
 const runningUrl = prodUrl;
 const serverUrl = "https://$runningUrl";
 //const serverUrl = "https://trus.up.railway.app";

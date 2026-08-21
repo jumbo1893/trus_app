@@ -8,6 +8,7 @@ import 'package:trus_app/models/api/football/football_match_api_model.dart';
 import 'package:trus_app/models/api/match/match_setup.dart';
 import 'package:trus_app/models/api/match/match_stats.dart';
 import 'package:trus_app/models/api/player/player_api_model.dart';
+import 'package:trus_app/models/api/weather/match_weather_api_model.dart';
 
 class MatchEditStateMapper {
   const MatchEditStateMapper();
@@ -40,6 +41,7 @@ class MatchEditStateMapper {
         setup.fanList,
         setup.match?.playerIdList ?? const [],
       ),
+      weather: setup.match?.weatherToFootballDetail(),
       footballMatch: setup.match?.footballMatch,
       model: setup.match,
     );
@@ -63,6 +65,7 @@ class MatchEditStateMapper {
       selectedPlayers: const [],
       allFans: setup.fanList,
       selectedFans: const [],
+      weather: setup.match?.weatherToFootballDetail(),
       footballMatch: footballMatch,
       model: null,
     );
@@ -101,6 +104,7 @@ class MatchEditStateMapper {
       aggregateMatches: d.aggregateMatches,
       aggregateScore: d.aggregateScore,
       mutualMatches: AsyncValue.data(d.mutualMatches),
+      weather: d.weatherToFootballDetail(),
     );
   }
 

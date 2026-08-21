@@ -6,6 +6,7 @@ import 'package:trus_app/models/api/interfaces/model_to_string.dart';
 import 'package:trus_app/models/api/player/player_api_model.dart';
 
 import '../interfaces/dropdown_item.dart';
+import '../weather/match_weather_api_model.dart';
 
 class MatchApiModel implements ModelToString, JsonAndHttpConverter, DropdownItem {
   int? id;
@@ -17,6 +18,7 @@ class MatchApiModel implements ModelToString, JsonAndHttpConverter, DropdownItem
   final int? homeGoalNumber;
   final int? awayGoalNumber;
   FootballMatchApiModel? footballMatch;
+  MatchWeatherApiModel? weather;
 
   MatchApiModel({
     required this.name,
@@ -28,6 +30,7 @@ class MatchApiModel implements ModelToString, JsonAndHttpConverter, DropdownItem
     this.awayGoalNumber,
     this.id,
     this.footballMatch,
+    this.weather
   });
 
   MatchApiModel.withPlayers({
@@ -40,6 +43,7 @@ class MatchApiModel implements ModelToString, JsonAndHttpConverter, DropdownItem
     List<PlayerApiModel>? players,
     this.id,
     this.footballMatch,
+    this.weather
   }) : playerIdList = _getIdsFromPlayers(players ?? []);
 
   MatchApiModel.dummy()
@@ -80,6 +84,9 @@ class MatchApiModel implements ModelToString, JsonAndHttpConverter, DropdownItem
       footballMatch: json["footballMatch"] != null
           ? FootballMatchApiModel.fromJson(json["footballMatch"])
           : null,
+      weather: json["weather"] != null
+          ? MatchWeatherApiModel.fromJson(json["weather"])
+          : null,
     );
   }
 
@@ -106,6 +113,13 @@ class MatchApiModel implements ModelToString, JsonAndHttpConverter, DropdownItem
       return "";
     }
     return "$homeGoalNumber:$awayGoalNumber";
+  }
+
+  String weatherToFootballDetail() {
+    if (weather == null) {
+      return "";
+    }
+    return "${weather!.temperature}°C, ${weather!.weatherCode}";
   }
 
   @override
