@@ -329,15 +329,14 @@ class _MainScreenState extends ConsumerState<MainScreen> {
     );
   }
 
-  Future<bool> _onWillPop() async {
+  void _handleBack() {
     final handler = ref.read(backHandlerProvider);
 
     if (handler != null && handler.onBack()) {
-      return false;
+      return;
     }
 
     ref.read(screenNotifierProvider.notifier).onBackButtonTap();
-    return false;
   }
 
   @override
@@ -355,19 +354,23 @@ class _MainScreenState extends ConsumerState<MainScreen> {
       children: [
         AbsorbPointer(
           absorbing: uiState.isLoading,
-          child: WillPopScope(
-            onWillPop: _onWillPop,
+          // MainScreen is the authenticated root of the app and must never be
+          // popped by the system back gesture/button. Back only navigates the
+          // in-app screen history; on the dashboard that history is empty, so
+          // back intentionally does nothing. Routes above MainScreen (dialogs,
+          // sheets and the authentication flow) keep their own pop behaviour.
+          child: PopScope(
+            canPop: false,
+            onPopInvokedWithResult: (didPop, result) {
+              if (!didPop) _handleBack();
+            },
             child: Scaffold(
               resizeToAvoidBottomInset: false,
               appBar: AppBar(
                 leading: screenState.backButtonVisible
                     ? BackButton(
                         onPressed: () {
-                          final handler = ref.read(backHandlerProvider);
-                          if (handler != null && handler.onBack()) {
-                            return;
-                          }
-                          screenNotifier.onBackButtonTap();
+                          _handleBack();
                         },
                       )
                     : null,

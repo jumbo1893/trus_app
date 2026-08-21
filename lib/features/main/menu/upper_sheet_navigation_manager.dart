@@ -57,9 +57,9 @@ class UpperSheetNavigationManager {
           icon: Icons.account_box,
           iconColor: player != null ? appColors.accent : appColors.errorSolid,
           title: player != null
-              ? const Text("Můj profil")
+              ? const Text("Nastavení uživatele")
               : const _WarningText(
-            main: "Můj profil",
+            main: "Nastavení uživatele",
             sub: "Je třeba se spárovat",
           ),
           onTap: () => onModalBottomSheetMenuTapped(ViewUserScreen.id),
@@ -67,7 +67,7 @@ class UpperSheetNavigationManager {
         if (player != null)
           MenuTile(
             icon: Icons.person,
-            title: const Text("Hráčský profil"),
+            title: const Text("Můj profil/seznam achievementů"),
             onTap: () {
               onPlayerSelected(player);
               onModalBottomSheetMenuTapped(ViewPlayerScreen.id);
