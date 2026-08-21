@@ -1,9 +1,9 @@
-import 'package:flutter/cupertino.dart';
-import 'package:flutter/material.dart';
+import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../../../main.dart';
 import '../request_executor.dart';
+import '../../../steps/service/step_sync_scheduler.dart';
+import '../../../steps/controller/step_controller.dart';
 
 class LifecycleEventHandler extends WidgetsBindingObserver {
   final ProviderContainer container;
@@ -13,17 +13,11 @@ class LifecycleEventHandler extends WidgetsBindingObserver {
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
     if (state == AppLifecycleState.resumed) {
-      final context = navigatorKey.currentContext;
-      /*if (context != null) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text("Obnovuji požadavky...")),
-        );
-      }*/
-
       container.read(requestExecutorProvider).retryQueuedRequests();
+      container
+          .read(stepSyncSchedulerProvider)
+          .onAppResumed()
+          .whenComplete(() => container.invalidate(stepControllerProvider));
     }
   }
 }
-
-
-

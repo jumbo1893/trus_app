@@ -23,11 +23,11 @@ import '../../../models/api/player/player_api_model.dart';
 import '../../../models/api/receivedfine/received_fine_api_model.dart';
 import '../../../models/api/season_api_model.dart';
 import '../../../models/api/stats/stats.dart';
-import '../../../models/api/step/step_api_model.dart';
 import '../../general/repository/request_executor.dart';
 
 class CrudApiService extends RequestExecutor {
   CrudApiService(super.ref);
+
   ///mapuje json na objecty podle parametru apiClass
   JsonAndHttpConverter _mapToModel(Map<String, dynamic> json, String apiClass) {
     switch (apiClass) {
@@ -55,8 +55,6 @@ class CrudApiService extends RequestExecutor {
         return FootballPlayerApiModel.fromJson(json);
       case footballTableApi:
         return TableTeamApiModel.fromJson(json);
-      case stepApi:
-        return StepApiModel.fromJson(json);
       case statsApi:
         return Stats.fromJson(json);
       case achievementApi:
@@ -84,13 +82,16 @@ class CrudApiService extends RequestExecutor {
   /// [queryParameters] parametry requestu
   /// vrací list modelů zabalené v classe JsonAndHttpConverter
   Future<List<T>> getModels<T extends JsonAndHttpConverter>(
-      String apiClass, Map<String, String?>? queryParameters) async {
+    String apiClass,
+    Map<String, String?>? queryParameters,
+  ) async {
     final decodedBody = await executeGetRequest<List<JsonAndHttpConverter>>(
-        Uri.parse("$serverUrl/$apiClass/get-all"),
-        (dynamic body) => (body as List<dynamic>)
-            .map((e) => _mapToModel(e as Map<String, dynamic>, apiClass) as T)
-            .toList(),
-        queryParameters);
+      Uri.parse("$serverUrl/$apiClass/get-all"),
+      (dynamic body) => (body as List<dynamic>)
+          .map((e) => _mapToModel(e as Map<String, dynamic>, apiClass) as T)
+          .toList(),
+      queryParameters,
+    );
     return decodedBody.cast<T>();
   }
 
@@ -100,13 +101,16 @@ class CrudApiService extends RequestExecutor {
   /// [queryParameters] parametry requestu
   /// vrací list modelů zabalené v classe JsonAndHttpConverter
   Future<List<T>> getModelsWithoutGetAll<T extends JsonAndHttpConverter>(
-      String apiClass, Map<String, String?>? queryParameters) async {
+    String apiClass,
+    Map<String, String?>? queryParameters,
+  ) async {
     final decodedBody = await executeGetRequest<List<JsonAndHttpConverter>>(
-        Uri.parse("$serverUrl/$apiClass"),
-            (dynamic body) => (body as List<dynamic>)
-            .map((e) => _mapToModel(e as Map<String, dynamic>, apiClass) as T)
-            .toList(),
-        queryParameters);
+      Uri.parse("$serverUrl/$apiClass"),
+      (dynamic body) => (body as List<dynamic>)
+          .map((e) => _mapToModel(e as Map<String, dynamic>, apiClass) as T)
+          .toList(),
+      queryParameters,
+    );
     return decodedBody.cast<T>();
   }
 
@@ -116,15 +120,17 @@ class CrudApiService extends RequestExecutor {
   /// [queryParameters] parametry requestu
   /// vrací list modelů zabalené v classe JsonAndHttpConverter
   Future<List<T>> getModelsWithVariableEndpoint<T extends JsonAndHttpConverter>(
-      String apiClass,
-      Map<String, String?>? queryParameters,
-      String endpoint) async {
+    String apiClass,
+    Map<String, String?>? queryParameters,
+    String endpoint,
+  ) async {
     final decodedBody = await executeGetRequest<List<JsonAndHttpConverter>>(
-        Uri.parse("$serverUrl/$apiClass/$endpoint"),
-            (dynamic body) => (body as List<dynamic>)
-            .map((e) => _mapToModel(e as Map<String, dynamic>, apiClass) as T)
-            .toList(),
-        queryParameters);
+      Uri.parse("$serverUrl/$apiClass/$endpoint"),
+      (dynamic body) => (body as List<dynamic>)
+          .map((e) => _mapToModel(e as Map<String, dynamic>, apiClass) as T)
+          .toList(),
+      queryParameters,
+    );
     return decodedBody.cast<T>();
   }
 
@@ -133,16 +139,19 @@ class CrudApiService extends RequestExecutor {
   /// [apiClass] třída na kterou posíláme req
   /// [queryParameters] parametry requestu
   /// vrací list modelů zabalené v classe JsonAndHttpConverter
-  Future<List<T>> getModelsWithVariableControllerEndpoint<T extends JsonAndHttpConverter>(
-      String controllerEndpoint,
-      Map<String, String?>? queryParameters,
-      String apiClass) async {
+  Future<List<T>>
+  getModelsWithVariableControllerEndpoint<T extends JsonAndHttpConverter>(
+    String controllerEndpoint,
+    Map<String, String?>? queryParameters,
+    String apiClass,
+  ) async {
     final decodedBody = await executeGetRequest<List<JsonAndHttpConverter>>(
-        Uri.parse("$serverUrl/$controllerEndpoint/$apiClass"),
-            (dynamic body) => (body as List<dynamic>)
-            .map((e) => _mapToModel(e as Map<String, dynamic>, apiClass) as T)
-            .toList(),
-        queryParameters);
+      Uri.parse("$serverUrl/$controllerEndpoint/$apiClass"),
+      (dynamic body) => (body as List<dynamic>)
+          .map((e) => _mapToModel(e as Map<String, dynamic>, apiClass) as T)
+          .toList(),
+      queryParameters,
+    );
     return decodedBody.cast<T>();
   }
 
@@ -151,15 +160,17 @@ class CrudApiService extends RequestExecutor {
   /// [model] JsonAndHttpConverter model který chceme přidat
   /// vrací model v classe JsonAndHttpConverter
   Future<T> addModel<T extends JsonAndHttpConverter>(
-      JsonAndHttpConverter model) async {
+    JsonAndHttpConverter model,
+  ) async {
     final Map<String, dynamic> requestPayload = model.toJson();
     final String url = "$serverUrl/${model.httpRequestClass()}/add";
     final T response = await executePostRequest(
-        Uri.parse(url),
-            (dynamic body) =>
-        _mapToModel(body as Map<String, dynamic>, model.httpRequestClass())
-        as T,
-        jsonEncode(requestPayload));
+      Uri.parse(url),
+      (dynamic body) =>
+          _mapToModel(body as Map<String, dynamic>, model.httpRequestClass())
+              as T,
+      jsonEncode(requestPayload),
+    );
     return response;
   }
 
@@ -169,16 +180,19 @@ class CrudApiService extends RequestExecutor {
   /// [id] id modelu, který chceme změnit
   /// vrací model v classe JsonAndHttpConverter
   Future<T> editModel<T extends JsonAndHttpConverter>(
-      JsonAndHttpConverter model, int id) async {
+    JsonAndHttpConverter model,
+    int id,
+  ) async {
     final Map<String, dynamic> requestPayload = model.toJson();
     final String url = "$serverUrl/${model.httpRequestClass()}/$id";
 
     final T response = await executePutRequest(
-        Uri.parse(url),
-            (dynamic body) =>
-        _mapToModel(body as Map<String, dynamic>, model.httpRequestClass())
-        as T,
-        jsonEncode(requestPayload));
+      Uri.parse(url),
+      (dynamic body) =>
+          _mapToModel(body as Map<String, dynamic>, model.httpRequestClass())
+              as T,
+      jsonEncode(requestPayload),
+    );
     return response;
   }
 
@@ -191,9 +205,9 @@ class CrudApiService extends RequestExecutor {
     final String url = "$serverUrl/$apiClass/$id";
 
     final bool isDeleted = await executeDeleteRequest(
-        Uri.parse(url),
-            (_) => true,
-      jsonEncode(null)
+      Uri.parse(url),
+      (_) => true,
+      jsonEncode(null),
     );
     return isDeleted;
   }

@@ -12,6 +12,7 @@ import 'package:trus_app/features/match/screens/match_screen.dart';
 import 'package:trus_app/features/player/screens/add_player_screen.dart';
 import 'package:trus_app/features/player/screens/player_screen.dart';
 import 'package:trus_app/features/season/screens/season_screen.dart';
+import 'package:trus_app/features/steps/screens/step_screen.dart';
 import 'package:trus_app/models/api/auth/app_team_api_model.dart';
 
 import '../../fine/match/screens/fine_match_screen.dart';
@@ -30,10 +31,10 @@ class BottomSheetNavigationManager {
   }
 
   void showBottomSheetNavigation(
-      Function(String) onModalBottomSheetMenuTapped,
-      String userName,
-      VoidCallback signOut,
-      ) {
+    Function(String) onModalBottomSheetMenuTapped,
+    String userName,
+    VoidCallback signOut,
+  ) {
     AppMenuBottomSheet.show(
       context: context,
       title: 'Menu',
@@ -63,23 +64,19 @@ class BottomSheetNavigationManager {
           icon: Icons.sports_soccer,
           title: isTableTeamFromAppTeamUsable()
               ? Text(
-            "Program ${appTeamApiModel!.team.currentTableTeam!.league.organization} zápasů",
-          )
+                  "Program ${appTeamApiModel!.team.currentTableTeam!.league.organization} zápasů",
+                )
               : const Text("Program zápasů"),
-          onTap: () => onModalBottomSheetMenuTapped(
-            FootballFixturesScreen.id,
-          ),
+          onTap: () => onModalBottomSheetMenuTapped(FootballFixturesScreen.id),
         ),
         MenuTile(
           icon: Icons.scoreboard_rounded,
           title: isTableTeamFromAppTeamUsable()
               ? Text(
-            "${appTeamApiModel!.team.currentTableTeam!.league.organization} tabulka",
-          )
+                  "${appTeamApiModel!.team.currentTableTeam!.league.organization} tabulka",
+                )
               : const Text("Ligová tabulka"),
-          onTap: () => onModalBottomSheetMenuTapped(
-            FootballTableScreen.id,
-          ),
+          onTap: () => onModalBottomSheetMenuTapped(FootballTableScreen.id),
         ),
         const MenuSectionLabel(text: "HRÁČI"),
         MenuTile(
@@ -114,6 +111,11 @@ class BottomSheetNavigationManager {
           icon: Icons.star,
           title: const Text("Seznam achievementů"),
           onTap: () => onModalBottomSheetMenuTapped(AchievementScreen.id),
+        ),
+        MenuTile(
+          icon: Icons.directions_walk_rounded,
+          title: const Text("Kroky"),
+          onTap: () => onModalBottomSheetMenuTapped(StepScreen.id),
         ),
         const MenuSectionLabel(text: "NASTAVENÍ"),
         MenuTile(

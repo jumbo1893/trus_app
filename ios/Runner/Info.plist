@@ -22,10 +22,15 @@
 	<string>????</string>
 	<key>NSMotionUsageDescription</key>
     <string>Tato aplikace počítá vaše kroky</string>
+	<key>NSHealthShareUsageDescription</key>
+	<string>Aplikace čte počet kroků pro týmové statistiky.</string>
+	<key>NSHealthUpdateUsageDescription</key>
+	<string>Aplikace používá zdravotní data pouze pro týmové statistiky kroků.</string>
     <key>NSPushNotificationsUsageDescription</key>
     <string>Aplikace chce odesílat oznámení o výsledcích zápasů</string>
     <key>UIBackgroundModes</key>
     <array>
+        <string>fetch</string>
         <string>processing</string>
         <string>remote-notification</string>
     </array>
@@ -56,7 +61,7 @@
 	<true/>
 	<key>BGTaskSchedulerPermittedIdentifiers</key>
     <array>
-        <string>$(PRODUCT_BUNDLE_IDENTIFIER)</string>
+        <string>com.jumbo.trus_app.steps.sync</string>
     </array>
 </dict>
 </plist>
