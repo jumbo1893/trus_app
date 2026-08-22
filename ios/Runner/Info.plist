@@ -22,6 +22,10 @@
 	<string>????</string>
 	<key>NSMotionUsageDescription</key>
     <string>Tato aplikace počítá vaše kroky</string>
+	<key>NSMicrophoneUsageDescription</key>
+	<string>Aplikace používá mikrofon pro nadiktování dotazu TrusBotovi.</string>
+	<key>NSSpeechRecognitionUsageDescription</key>
+	<string>Aplikace převádí nadiktovaný dotaz pro TrusBota na text.</string>
 	<key>NSHealthShareUsageDescription</key>
 	<string>Aplikace čte počet kroků pro týmové statistiky.</string>
 	<key>NSHealthUpdateUsageDescription</key>

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:trus_app/features/ai/screens/ai_assistant_screen.dart';
 import 'package:trus_app/features/achievement/screens/achievement_screen.dart';
 import 'package:trus_app/features/beer/screens/beer_simple_screen.dart';
 import 'package:trus_app/features/fine/screens/fine_screen.dart';
@@ -43,6 +44,12 @@ class BottomSheetNavigationManager {
           icon: Icons.home,
           title: const Text("Přehled"),
           onTap: () => onModalBottomSheetMenuTapped(HomeScreen.id),
+        ),
+        MenuTile(
+          icon: Icons.auto_awesome_rounded,
+          iconWidget: const Text('💩', style: TextStyle(fontSize: 20)),
+          title: const Text("TrusBot"),
+          onTap: () => onModalBottomSheetMenuTapped(AiAssistantScreen.id),
         ),
         const MenuSectionLabel(text: "ZÁPASY"),
         MenuTile(

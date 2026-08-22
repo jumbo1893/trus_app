@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:trus_app/features/ai/screens/ai_assistant_screen.dart';
 import 'package:trus_app/features/achievement/screens/achievement_screen.dart';
 import 'package:trus_app/features/appearance/screens/appearance_screen.dart';
 import 'package:trus_app/features/achievement/screens/view_achievement_detail_screen.dart';
@@ -186,6 +187,8 @@ final List<Widget> _widgetList = [
   //49
   const AttendanceMatchStatisticScreen(),
   //50
+  const AiAssistantScreen(),
+  //51
 ];
 
 List<Widget> get widgetList => _widgetList;

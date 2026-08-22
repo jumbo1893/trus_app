@@ -48,6 +48,12 @@ post_install do |installer|
           ## dart: PermissionGroup.sensors
           'PERMISSION_SENSORS=1',
 
+          ## dart: PermissionGroup.microphone
+          'PERMISSION_MICROPHONE=1',
+
+          ## dart: PermissionGroup.speech
+          'PERMISSION_SPEECH_RECOGNIZER=1',
+
         ]
       end
       # End of the permission_handler configuration

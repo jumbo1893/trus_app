@@ -24,6 +24,7 @@ import '../../common/widgets/confirmation_dialog.dart';
 import '../../models/api/player/player_api_model.dart';
 import '../../services/push/push_navigation_handler.dart';
 import '../auth/controller/auth_controller.dart';
+import '../ai/screens/ai_assistant_screen.dart';
 import '../beer/screens/beer_simple_screen.dart';
 import '../general/error/api_executor.dart';
 import '../notification/screen/notification_screen.dart';
@@ -365,7 +366,8 @@ class _MainScreenState extends ConsumerState<MainScreen> {
               if (!didPop) _handleBack();
             },
             child: Scaffold(
-              resizeToAvoidBottomInset: false,
+              resizeToAvoidBottomInset:
+                  screenState.currentScreenId == AiAssistantScreen.id,
               appBar: AppBar(
                 leading: screenState.backButtonVisible
                     ? BackButton(
@@ -391,6 +393,16 @@ class _MainScreenState extends ConsumerState<MainScreen> {
                     icon: const Icon(Icons.manage_accounts),
                   ),
                   IconButton(
+                    key: const ValueKey('trusbot_button'),
+                    tooltip: 'Otevřít TrusBot',
+                    onPressed: () {
+                      if (screenState.currentScreenId != AiAssistantScreen.id) {
+                        screenNotifier.changeByFragmentId(AiAssistantScreen.id);
+                      }
+                    },
+                    icon: const Text('💩', style: TextStyle(fontSize: 21)),
+                  ),
+                  IconButton(
                     key: const ValueKey('notifications_button'),
                     onPressed: () => screenNotifier.changeByFragmentId(
                       NotificationScreen.id,
@@ -404,12 +416,17 @@ class _MainScreenState extends ConsumerState<MainScreen> {
                 physics: const NeverScrollableScrollPhysics(),
                 children: widgetList,
               ),
-              floatingActionButton: FloatingActionButton(
-                onPressed: () =>
-                    screenNotifier.changeByFragmentId(BeerSimpleScreen.id),
-                key: const ValueKey('beer_button'),
-                child: const Icon(Icons.sports_bar_outlined),
-              ),
+              floatingActionButton:
+                  screenState.currentScreenId == AiAssistantScreen.id &&
+                      MediaQuery.viewInsetsOf(context).bottom > 0
+                  ? null
+                  : FloatingActionButton(
+                      onPressed: () => screenNotifier.changeByFragmentId(
+                        BeerSimpleScreen.id,
+                      ),
+                      key: const ValueKey('beer_button'),
+                      child: const Icon(Icons.sports_bar_outlined),
+                    ),
               floatingActionButtonLocation:
                   FloatingActionButtonLocation.centerDocked,
               bottomNavigationBar: BottomNavigationBar(

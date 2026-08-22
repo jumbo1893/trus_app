@@ -13,7 +13,6 @@ import '../server_exception.dart';
 import 'error_statutes.dart';
 
 class ResponseValidator {
-
   void validateStatusCode(http.Response response) {
     int value = response.statusCode;
     if (value == 404) {
@@ -21,10 +20,9 @@ class ResponseValidator {
     } else if (value == 401) {
       final decodedBody = json.decode(utf8.decode(response.bodyBytes));
       ErrorResponse errorResponse = ErrorResponse.fromJson(decodedBody);
-      if(errorResponse.code == notLoggedIn) {
+      if (errorResponse.code == notLoggedIn) {
         throw LoginExpiredException();
-      }
-      else {
+      } else {
         throw LoginException(errorResponse.message);
       }
     } else if (value == 403) {
@@ -34,14 +32,15 @@ class ResponseValidator {
     } else if (value == 400) {
       try {
         final decodedBody = json.decode(utf8.decode(response.bodyBytes));
-        FieldValidationResponse fieldValidationResponse = FieldValidationResponse.fromJson(decodedBody);
+        FieldValidationResponse fieldValidationResponse =
+            FieldValidationResponse.fromJson(decodedBody);
         throw FieldValidationException(fieldValidationResponse.fields);
       } catch (e) {
-        if(e is! FieldValidationException) {
+        if (e is! FieldValidationException) {
           throw ServerException(
-              'Nelze načíst data z neznámých důvodů. Status: $value');
-        }
-        else {
+            'Nelze načíst data z neznámých důvodů. Status: $value',
+          );
+        } else {
           rethrow;
         }
       }
@@ -53,9 +52,14 @@ class ResponseValidator {
       final decodedBody = json.decode(utf8.decode(response.bodyBytes));
       ErrorResponse errorResponse = ErrorResponse.fromJson(decodedBody);
       throw InternalSnackBarException(errorResponse.message);
+    } else if (value == 429 || value == 503) {
+      final decodedBody = json.decode(utf8.decode(response.bodyBytes));
+      ErrorResponse errorResponse = ErrorResponse.fromJson(decodedBody);
+      throw ServerException(errorResponse.message);
     } else if (value > 200 || value < 200) {
       throw ServerException(
-          'Nelze načíst data z neznámých důvodů. Status: $value');
+        'Nelze načíst data z neznámých důvodů. Status: $value',
+      );
     }
   }
 
@@ -69,6 +73,4 @@ class ResponseValidator {
       throw PkflUnavailableException('Web PKFL je nedostupný. Status: $value');
     }
   }
-
-
 }
