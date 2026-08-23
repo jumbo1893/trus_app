@@ -2,6 +2,7 @@ import 'dart:io';
 
 import 'package:device_info_plus/device_info_plus.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:package_info_plus/package_info_plus.dart';
 import 'package:trus_app/features/general/global_variables_controller.dart';
 
 import 'cookie_manager.dart';
@@ -20,11 +21,13 @@ class HeaderProvider {
   Future<Map<String, String>> getHeaders() async {
     final cookies = _cookieJar.getCookies();
     final deviceInfo = await _getDeviceInfo();
+    final packageInfo = await PackageInfo.fromPlatform();
     final appTeamHeader = await _getAppTeamHeader();
     return {
       ...cookies,
       'Content-Type': 'application/json; charset=UTF-8',
       'device': deviceInfo,
+      'x-app-version': packageInfo.version,
       if (appTeamHeader != null) ...appTeamHeader,
     };
   }

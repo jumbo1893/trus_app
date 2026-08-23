@@ -5,6 +5,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/widgets.dart';
 import 'package:http/http.dart' as http;
+import 'package:package_info_plus/package_info_plus.dart';
 import 'package:trus_app/config.dart';
 import 'package:trus_app/features/steps/repository/health_step_service.dart';
 import 'package:trus_app/features/steps/repository/step_sync_preferences.dart';
@@ -57,10 +58,14 @@ class BackgroundStepSync {
     int teamId,
     bool permissionGranted,
     List<StepSyncDay> days,
-  ) {
+  ) async {
+    final packageInfo = await PackageInfo.fromPlatform();
     return http.post(
       Uri.parse('$serverUrl/$stepApi/background-sync'),
-      headers: const {'Content-Type': 'application/json; charset=UTF-8'},
+      headers: {
+        'Content-Type': 'application/json; charset=UTF-8',
+        'x-app-version': packageInfo.version,
+      },
       body: jsonEncode({
         'mail': user.email,
         'password': user.uid,
