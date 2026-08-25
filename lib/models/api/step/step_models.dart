@@ -32,8 +32,7 @@ class StepLeaderboardEntry {
           : 'Uživatel',
       stepCount: (json['stepCount'] as num?)?.toInt() ?? 0,
       dayCount: (json['dayCount'] as num?)?.toInt() ?? 0,
-      averageStepsPerDay:
-          (json['averageStepsPerDay'] as num?)?.toDouble() ?? 0,
+      averageStepsPerDay: (json['averageStepsPerDay'] as num?)?.toDouble() ?? 0,
     );
   }
 }
@@ -51,8 +50,7 @@ class StepMatch {
 
   factory StepMatch.fromJson(Map<String, dynamic> json) => StepMatch(
     matchId: (json['matchId'] as num).toInt(),
-    opponentName:
-        (json['opponentName'] as String?)?.trim().isNotEmpty == true
+    opponentName: (json['opponentName'] as String?)?.trim().isNotEmpty == true
         ? (json['opponentName'] as String).trim()
         : 'Neznámý soupeř',
     date: DateTime.parse(json['date'] as String),
@@ -95,9 +93,59 @@ class StepLeaderboardData {
     );
   }
 
-  static DateTime? _parseDate(dynamic value) => value is String
-      ? DateTime.tryParse(value)
-      : null;
+  static DateTime? _parseDate(dynamic value) =>
+      value is String ? DateTime.tryParse(value) : null;
+}
+
+class StepHistoryDay {
+  final DateTime date;
+  final int? stepCount;
+
+  const StepHistoryDay({required this.date, required this.stepCount});
+
+  factory StepHistoryDay.fromJson(Map<String, dynamic> json) => StepHistoryDay(
+    date: DateTime.parse(json['date'] as String),
+    stepCount: (json['stepCount'] as num?)?.toInt(),
+  );
+}
+
+class StepHistoryData {
+  final int userId;
+  final String userName;
+  final DateTime from;
+  final DateTime to;
+  final List<StepHistoryDay> days;
+
+  const StepHistoryData({
+    required this.userId,
+    required this.userName,
+    required this.from,
+    required this.to,
+    required this.days,
+  });
+
+  factory StepHistoryData.fromJson(Map<String, dynamic> json) =>
+      StepHistoryData(
+        userId: (json['userId'] as num).toInt(),
+        userName: (json['userName'] as String?)?.trim().isNotEmpty == true
+            ? (json['userName'] as String).trim()
+            : 'Uživatel',
+        from: DateTime.parse(json['from'] as String),
+        to: DateTime.parse(json['to'] as String),
+        days: (json['days'] as List<dynamic>? ?? const [])
+            .map(
+              (item) => StepHistoryDay.fromJson(item as Map<String, dynamic>),
+            )
+            .toList(),
+      );
+
+  int get reportedDays => days.where((day) => day.stepCount != null).length;
+
+  int get totalSteps =>
+      days.fold(0, (total, day) => total + (day.stepCount ?? 0));
+
+  int get averageSteps =>
+      reportedDays == 0 ? 0 : (totalSteps / reportedDays).round();
 }
 
 class StepSyncDay {

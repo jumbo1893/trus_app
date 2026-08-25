@@ -144,4 +144,7 @@ class StepController extends SafeStateNotifier<StepsState> {
     );
     if (mounted) safeSetState(state.copyWith(leaderboard: result));
   }
+
+  Future<StepHistoryData> loadHistory({int? userId, int days = 30}) =>
+      api.getHistory(userId: userId, days: days);
 }

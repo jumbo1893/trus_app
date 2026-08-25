@@ -37,4 +37,13 @@ class StepApiService extends RequestExecutor {
       {'period': period.apiValue},
     );
   }
+
+  Future<StepHistoryData> getHistory({int? userId, int days = 30}) {
+    final path = userId == null ? 'history' : 'history/$userId';
+    return executeGetRequest(
+      Uri.parse('$serverUrl/$stepApi/$path'),
+      (json) => StepHistoryData.fromJson(json as Map<String, dynamic>),
+      {'days': '$days'},
+    );
+  }
 }

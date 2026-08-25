@@ -4,6 +4,7 @@ import 'package:intl/intl.dart';
 import 'package:trus_app/common/widgets/loader.dart';
 import 'package:trus_app/common/widgets/screen/custom_consumer_stateful_widget.dart';
 import 'package:trus_app/features/steps/controller/step_controller.dart';
+import 'package:trus_app/features/steps/screens/step_history_sheet.dart';
 import 'package:trus_app/features/steps/state/step_state.dart';
 import 'package:trus_app/models/api/step/step_models.dart';
 import 'package:trus_app/theme/app_colors.dart';
@@ -109,6 +110,13 @@ class _LeaderboardView extends StatelessWidget {
             ),
           ),
         ),
+        const SizedBox(height: 10),
+        OutlinedButton.icon(
+          onPressed: () =>
+              StepHistorySheet.show(context, controller: controller),
+          icon: const Icon(Icons.history_rounded),
+          label: const Text('Moje historie kroků'),
+        ),
         const SizedBox(height: 14),
         SingleChildScrollView(
           scrollDirection: Axis.horizontal,
@@ -157,6 +165,12 @@ class _LeaderboardView extends StatelessWidget {
             data: leaderboard,
             period: state.period,
             sort: state.currentSort,
+            onEntryTap: (entry) => StepHistorySheet.show(
+              context,
+              controller: controller,
+              userId: entry.userId,
+              initialUserName: entry.userName,
+            ),
           ),
         ),
       ],
@@ -232,17 +246,20 @@ class _LeaderboardTable extends StatelessWidget {
   final StepLeaderboardData data;
   final StepPeriod period;
   final StepSortConfig sort;
+  final ValueChanged<StepLeaderboardEntry> onEntryTap;
 
   const _LeaderboardTable({
     required this.data,
     required this.period,
     required this.sort,
+    required this.onEntryTap,
   });
 
   @override
   Widget build(BuildContext context) {
     final entries = sort.sort(data.entries);
-    final isMatchPeriod = period == StepPeriod.betweenMatches ||
+    final isMatchPeriod =
+        period == StepPeriod.betweenMatches ||
         period == StepPeriod.sinceLastMatch;
     if (entries.isEmpty && !isMatchPeriod) {
       return const Padding(
@@ -283,6 +300,7 @@ class _LeaderboardTable extends StatelessWidget {
                 showAllTimeStats: period == StepPeriod.allTime,
                 highlightRank:
                     sort.descending && sort.field != StepSortField.name,
+                onTap: () => onEntryTap(entries[index]),
               ),
               if (index < entries.length - 1) const Divider(height: 1),
             ],
@@ -360,12 +378,14 @@ class _LeaderboardRow extends StatelessWidget {
   final StepLeaderboardEntry entry;
   final bool showAllTimeStats;
   final bool highlightRank;
+  final VoidCallback onTap;
 
   const _LeaderboardRow({
     required this.rank,
     required this.entry,
     required this.showAllTimeStats,
     required this.highlightRank,
+    required this.onTap,
   });
 
   @override
@@ -380,6 +400,7 @@ class _LeaderboardRow extends StatelessWidget {
         ? Colors.brown.shade400
         : context.appColors.textSecondary;
     return ListTile(
+      onTap: onTap,
       leading: CircleAvatar(
         backgroundColor: color.withValues(alpha: 0.14),
         foregroundColor: color,
@@ -398,9 +419,16 @@ class _LeaderboardRow extends StatelessWidget {
               'průměr ${NumberFormat.decimalPattern('cs_CZ').format(entry.averageStepsPerDay.round())} kroků/den',
             )
           : null,
-      trailing: Text(
-        '${NumberFormat.decimalPattern('cs_CZ').format(entry.stepCount)} kroků',
-        style: const TextStyle(fontWeight: FontWeight.w700),
+      trailing: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(
+            '${NumberFormat.decimalPattern('cs_CZ').format(entry.stepCount)} kroků',
+            style: const TextStyle(fontWeight: FontWeight.w700),
+          ),
+          const SizedBox(width: 4),
+          const Icon(Icons.chevron_right_rounded),
+        ],
       ),
     );
   }
