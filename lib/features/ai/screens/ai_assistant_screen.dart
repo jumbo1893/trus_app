@@ -9,6 +9,7 @@ import 'package:trus_app/common/widgets/loader.dart';
 import 'package:trus_app/common/widgets/screen/custom_consumer_stateful_widget.dart';
 import 'package:trus_app/features/ai/controller/ai_assistant_controller.dart';
 import 'package:trus_app/features/ai/state/ai_assistant_state.dart';
+import 'package:trus_app/features/ai/widgets/trusbot_markdown_text.dart';
 import 'package:trus_app/models/api/ai/ai_models.dart';
 import 'package:trus_app/theme/app_colors.dart';
 
@@ -486,8 +487,9 @@ class _HistoryHeader extends StatelessWidget {
 class _EmptyConversation extends StatelessWidget {
   static const suggestions = [
     'Kdo letos vypil nejvíce piv?',
-    'Kdo vstřelil nejvíc gólů před 14 dny?',
-    'Co se musí stát, abych vyhrál krále střelců?',
+    'Jaké informace o mě víš?',
+    'Řekni mi nějaké trusí pokřiky',
+    'Co musím udělat abych splnil achievement Ledový muž?',
   ];
 
   final ValueChanged<String> onSuggestionSelected;
@@ -623,12 +625,9 @@ class _AssistantBubble extends StatelessWidget {
                 bottomRight: Radius.circular(18),
               ),
             ),
-            child: SelectableText(
-              text,
-              style: TextStyle(
-                color: error ? colors.onErrorContainer : colors.onSurface,
-                height: 1.4,
-              ),
+            child: TrusBotMarkdownText(
+              data: text,
+              color: error ? colors.onErrorContainer : colors.onSurface,
             ),
           ),
         ),

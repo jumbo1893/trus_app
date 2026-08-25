@@ -1,10 +1,13 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:trus_app/features/app_notice/repository/app_notice_repository.dart';
 import 'package:trus_app/features/auth/repository/auth_repository.dart';
 import 'package:trus_app/features/general/global_variables_controller.dart';
 import 'package:trus_app/features/general/notifier/safe_state_notifier.dart';
 import 'package:trus_app/features/home/repository/home_repository.dart';
 import 'package:trus_app/features/home/state/home_state.dart';
 import 'package:trus_app/features/player/repository/player_repository.dart';
+import 'package:trus_app/models/api/app_notice/app_notice.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import '../../../models/api/football/football_match_api_model.dart';
 import '../../../models/api/home/home_setup.dart';
@@ -19,26 +22,71 @@ import '../../match/screens/match_detail_screen.dart';
 
 final homeNotifierProvider =
     StateNotifierProvider.autoDispose<HomeNotifier, HomeState>((ref) {
-  return HomeNotifier(
-    ref: ref,
-    homeRepository: ref.read(homeRepositoryProvider),
-    playerRepository: ref.read(playerRepositoryProvider),
-    authRepository: ref.read(authRepositoryProvider),
-  );
-});
+      return HomeNotifier(
+        ref: ref,
+        homeRepository: ref.read(homeRepositoryProvider),
+        playerRepository: ref.read(playerRepositoryProvider),
+        authRepository: ref.read(authRepositoryProvider),
+        appNoticeRepository: ref.read(appNoticeRepositoryProvider),
+      );
+    });
 
 class HomeNotifier extends SafeStateNotifier<HomeState> {
   final HomeRepository homeRepository;
   final PlayerRepository playerRepository;
   final AuthRepository authRepository;
+  final AppNoticeRepository appNoticeRepository;
 
   HomeNotifier({
     required Ref ref,
     required this.homeRepository,
     required this.playerRepository,
     required this.authRepository,
+    required this.appNoticeRepository,
   }) : super(ref, HomeState.initial()) {
     Future.microtask(load);
+    Future.microtask(loadAppNotice);
+  }
+
+  Future<void> loadAppNotice() async {
+    await guardSet<AppNotice?>(
+      action: appNoticeRepository.fetchCurrent,
+      reduce: (result) => state.copyWith(appNotice: result),
+    );
+  }
+
+  Future<void> markAppNoticeShown(int noticeId) async {
+    try {
+      await appNoticeRepository.markShown(noticeId);
+    } catch (_) {
+      // Pokud potvrzení selže, backend může oznámení nabídnout při dalším spuštění.
+    }
+  }
+
+  Future<void> onAppNoticeAction(AppNoticeAction action) async {
+    switch (action.type) {
+      case AppNoticeActionType.close:
+        return;
+      case AppNoticeActionType.openScreen:
+        final screenId = action.value;
+        if (screenId == null || screenId.isEmpty) return;
+        changeFragment(screenId);
+        return;
+      case AppNoticeActionType.openUrl:
+        final uri = Uri.tryParse(action.value ?? '');
+        if (uri == null || !{'http', 'https'}.contains(uri.scheme)) {
+          ui.showSnack('Odkaz není platný');
+          return;
+        }
+        final opened = await launchUrl(
+          uri,
+          mode: LaunchMode.externalApplication,
+        );
+        if (!opened) {
+          ui.showSnack('Odkaz se nepodařilo otevřít');
+        }
+        return;
+    }
   }
 
   Future<void> load() async {
@@ -93,8 +141,10 @@ class HomeNotifier extends SafeStateNotifier<HomeState> {
 
   void onButtonAddBeerClick(FootballMatchApiModel footballMatch) {
     final appTeam = ref.read(globalVariablesControllerProvider).appTeam;
-    final matchId = footballMatch
-            .findMatchIdForCurrentAppTeamInMatchIdAndAppTeamIdList(appTeam) ??
+    final matchId =
+        footballMatch.findMatchIdForCurrentAppTeamInMatchIdAndAppTeamIdList(
+          appTeam,
+        ) ??
         -1;
     if (matchId != -1) {
       ref.read(screenVariablesNotifierProvider.notifier).setMatchId(matchId);
@@ -104,8 +154,10 @@ class HomeNotifier extends SafeStateNotifier<HomeState> {
 
   void onButtonAddFineClick(FootballMatchApiModel footballMatch) {
     final appTeam = ref.read(globalVariablesControllerProvider).appTeam;
-    final matchId = footballMatch
-            .findMatchIdForCurrentAppTeamInMatchIdAndAppTeamIdList(appTeam) ??
+    final matchId =
+        footballMatch.findMatchIdForCurrentAppTeamInMatchIdAndAppTeamIdList(
+          appTeam,
+        ) ??
         -1;
     if (matchId != -1) {
       ref.read(screenVariablesNotifierProvider.notifier).setMatchId(matchId);
@@ -115,8 +167,10 @@ class HomeNotifier extends SafeStateNotifier<HomeState> {
 
   void onButtonAddGoalsClick(FootballMatchApiModel footballMatch) {
     final appTeam = ref.read(globalVariablesControllerProvider).appTeam;
-    final matchId = footballMatch
-            .findMatchIdForCurrentAppTeamInMatchIdAndAppTeamIdList(appTeam) ??
+    final matchId =
+        footballMatch.findMatchIdForCurrentAppTeamInMatchIdAndAppTeamIdList(
+          appTeam,
+        ) ??
         -1;
     if (matchId != -1) {
       ref.read(screenVariablesNotifierProvider.notifier).setMatchId(matchId);
@@ -126,13 +180,18 @@ class HomeNotifier extends SafeStateNotifier<HomeState> {
 
   void onButtonAddPlayersClick(FootballMatchApiModel footballMatch) {
     final appTeam = ref.read(globalVariablesControllerProvider).appTeam;
-    final matchId = footballMatch
-            .findMatchIdForCurrentAppTeamInMatchIdAndAppTeamIdList(appTeam) ??
+    final matchId =
+        footballMatch.findMatchIdForCurrentAppTeamInMatchIdAndAppTeamIdList(
+          appTeam,
+        ) ??
         -1;
 
     if (matchId == -1) {
-      ref.read(screenVariablesNotifierProvider.notifier).setMatchNotifierArgs(
-          MatchNotifierArgs.newByFootballMatch(footballMatch));
+      ref
+          .read(screenVariablesNotifierProvider.notifier)
+          .setMatchNotifierArgs(
+            MatchNotifierArgs.newByFootballMatch(footballMatch),
+          );
       changeFragment(AddMatchScreen.id);
     } else {
       ref
@@ -143,8 +202,11 @@ class HomeNotifier extends SafeStateNotifier<HomeState> {
   }
 
   void onButtonDetailMatchClick(FootballMatchApiModel footballMatch) {
-    ref.read(screenVariablesNotifierProvider.notifier).setMatchNotifierArgs(
-        MatchNotifierArgs.footballMatchDetail(footballMatch));
+    ref
+        .read(screenVariablesNotifierProvider.notifier)
+        .setMatchNotifierArgs(
+          MatchNotifierArgs.footballMatchDetail(footballMatch),
+        );
     changeFragment(MatchDetailScreen.id);
   }
 

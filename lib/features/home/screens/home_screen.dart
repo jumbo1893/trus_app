@@ -1,9 +1,13 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:trus_app/theme/app_colors.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:trus_app/common/widgets/home/birthday_text.dart';
+import 'package:trus_app/features/app_notice/widgets/app_notice_bottom_sheet.dart';
 import 'package:trus_app/features/general/global_variables_controller.dart';
 import 'package:trus_app/features/home/screens/rotating_stats_widget.dart';
+import 'package:trus_app/models/api/app_notice/app_notice.dart';
 
 import '../../../common/widgets/football/football_match_box.dart';
 import '../../../common/widgets/home/random_fact_box.dart';
@@ -13,9 +17,8 @@ import '../controller/home_notifier.dart';
 class HomeScreen extends CustomConsumerStatefulWidget {
   static const String id = "home-screen";
 
-  const HomeScreen({
-    Key? key,
-  }) : super(key: key, title: "Trusí appka", name: id);
+  const HomeScreen({Key? key})
+    : super(key: key, title: "Trusí appka", name: id);
 
   @override
   ConsumerState<HomeScreen> createState() => _HomeScreenState();
@@ -23,6 +26,38 @@ class HomeScreen extends CustomConsumerStatefulWidget {
 
 class _HomeScreenState extends ConsumerState<HomeScreen> {
   static const double sectionSpacing = 16;
+  final Set<int> _presentedNoticeIds = {};
+  late final ProviderSubscription<AsyncValue<AppNotice?>> _noticeSubscription;
+
+  @override
+  void initState() {
+    super.initState();
+    _noticeSubscription = ref.listenManual<AsyncValue<AppNotice?>>(
+      homeNotifierProvider.select((state) => state.appNotice),
+      (_, next) {
+        final notice = next.asData?.value;
+        if (notice == null || !_presentedNoticeIds.add(notice.id)) return;
+
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (!mounted) return;
+          final notifier = ref.read(homeNotifierProvider.notifier);
+          AppNoticeBottomSheet.show(
+            context,
+            notice: notice,
+            onAction: notifier.onAppNoticeAction,
+          );
+          unawaited(notifier.markAppNoticeShown(notice.id));
+        });
+      },
+      fireImmediately: true,
+    );
+  }
+
+  @override
+  void dispose() {
+    _noticeSubscription.close();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -50,11 +85,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                 return Column(
                   crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
-                    Image.asset(
-                      titleImagePath,
-                      height: 76,
-                      width: 331,
-                    ),
+                    Image.asset(titleImagePath, height: 76, width: 331),
                     const SizedBox(height: sectionSpacing),
 
                     FootballMatchBox(
@@ -85,17 +116,16 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                     ),
                     const SizedBox(height: sectionSpacing),
 
-                    BirthdayText(
-                      nextBirthdayText: setup.nextBirthday,
+                    BirthdayText(nextBirthdayText: setup.nextBirthday),
+                    const SizedBox(height: sectionSpacing),
+
+                    RotatingStatsWidget(
+                      statsBoards: setup.statsBoards,
+                      onRedirect: notifier.onRedirect,
                     ),
                     const SizedBox(height: sectionSpacing),
 
-                    RotatingStatsWidget(statsBoards: setup.statsBoards, onRedirect: notifier.onRedirect,),
-                    const SizedBox(height: sectionSpacing),
-
-                    RandomFactBox(
-                      facts: setup.randomFacts,
-                    ),
+                    RandomFactBox(facts: setup.randomFacts),
 
                     const SizedBox(height: 24),
                   ],
@@ -116,9 +146,6 @@ class _HomePlaceholder extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const SizedBox(
-      height: 600,
-      child: Center(child: Text("")),
-    );
+    return const SizedBox(height: 600, child: Center(child: Text("")));
   }
 }
