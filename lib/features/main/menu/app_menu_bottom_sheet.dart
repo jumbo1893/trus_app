@@ -6,6 +6,7 @@ import 'package:trus_app/theme/app_colors.dart';
 class AppMenuBottomSheet extends StatelessWidget {
   final String? title;
   final String? subtitle;
+  final Widget? titleBadge;
   final Widget? trailing;
   final List<Widget> children;
   final double heightFactor;
@@ -16,6 +17,7 @@ class AppMenuBottomSheet extends StatelessWidget {
     super.key,
     this.title,
     this.subtitle,
+    this.titleBadge,
     this.trailing,
     required this.children,
     this.heightFactor = 0.78,
@@ -28,6 +30,7 @@ class AppMenuBottomSheet extends StatelessWidget {
     required List<Widget> children,
     String? title,
     String? subtitle,
+    Widget? titleBadge,
     Widget? trailing,
     double heightFactor = 0.78,
     EdgeInsets contentPadding = const EdgeInsets.only(bottom: 20, top: 6),
@@ -47,6 +50,7 @@ class AppMenuBottomSheet extends StatelessWidget {
         return AppMenuBottomSheet(
           title: title,
           subtitle: subtitle,
+          titleBadge: titleBadge,
           trailing: trailing,
           heightFactor: heightFactor,
           contentPadding: contentPadding,
@@ -95,15 +99,24 @@ class AppMenuBottomSheet extends StatelessWidget {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           if (title != null)
-                            Text(
-                              title!,
-                              style: TextStyle(
-                                fontSize: subtitle == null ? 13 : 20,
-                                fontWeight: subtitle == null
-                                    ? FontWeight.w500
-                                    : FontWeight.w700,
-                                color: appColors.textPrimary,
-                              ),
+                            Row(
+                              children: [
+                                Flexible(
+                                  child: Text(
+                                    title!,
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                    style: TextStyle(
+                                      fontSize: subtitle == null ? 13 : 20,
+                                      fontWeight: subtitle == null
+                                          ? FontWeight.w500
+                                          : FontWeight.w700,
+                                      color: appColors.textPrimary,
+                                    ),
+                                  ),
+                                ),
+                                if (titleBadge != null) titleBadge!,
+                              ],
                             ),
                           if (subtitle != null) ...[
                             const SizedBox(height: 2),
@@ -132,22 +145,22 @@ class AppMenuBottomSheet extends StatelessWidget {
           Expanded(
             child: useListView
                 ? ListView(
-              padding: contentPadding,
-              children: [
-                ...children,
-                const SizedBox(height: 30),
-              ].withStaggeredAnimation(),
-            )
+                    padding: contentPadding,
+                    children: [
+                      ...children,
+                      const SizedBox(height: 30),
+                    ].withStaggeredAnimation(),
+                  )
                 : SingleChildScrollView(
-              padding: contentPadding,
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  ...children,
-                  const SizedBox(height: 30),
-                ].withStaggeredAnimation(),
-              ),
-            ),
+                    padding: contentPadding,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        ...children,
+                        const SizedBox(height: 30),
+                      ].withStaggeredAnimation(),
+                    ),
+                  ),
           ),
         ],
       ),

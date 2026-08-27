@@ -10,6 +10,7 @@ import 'package:trus_app/common/widgets/screen/custom_consumer_stateful_widget.d
 import 'package:trus_app/features/ai/controller/ai_assistant_controller.dart';
 import 'package:trus_app/features/ai/state/ai_assistant_state.dart';
 import 'package:trus_app/features/ai/widgets/trusbot_markdown_text.dart';
+import 'package:trus_app/features/membership/widgets/membership_info.dart';
 import 'package:trus_app/models/api/ai/ai_models.dart';
 import 'package:trus_app/theme/app_colors.dart';
 
@@ -363,6 +364,11 @@ class _AssistantHeader extends StatelessWidget {
                     ),
                   ],
                 ),
+              ),
+              IconButton(
+                tooltip: 'Informace o členství',
+                onPressed: () => showMembershipInfo(context),
+                icon: const Icon(Icons.info_outline_rounded),
               ),
               IconButton(
                 tooltip: 'Obnovit',

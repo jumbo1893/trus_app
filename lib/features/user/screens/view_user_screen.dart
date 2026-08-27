@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:trus_app/features/user/controller/view_user_notifier.dart';
+import 'package:trus_app/features/membership/widgets/membership_info.dart';
 
 import '../../../common/widgets/bar/action_button_item.dart';
 import '../../../common/widgets/dropdown/custom_dropdown_sheet.dart';
@@ -12,9 +13,8 @@ import '../../../common/widgets/screen/custom_consumer_stateful_widget.dart';
 class ViewUserScreen extends CustomConsumerStatefulWidget {
   static const String id = "view-user-screen";
 
-  const ViewUserScreen({
-    Key? key,
-  }) : super(key: key, title: "Nastavení uživatele", name: id);
+  const ViewUserScreen({Key? key})
+    : super(key: key, title: "Nastavení uživatele", name: id);
 
   @override
   ConsumerState<ViewUserScreen> createState() => _ViewUserScreenState();
@@ -29,7 +29,12 @@ class _ViewUserScreenState extends ConsumerState<ViewUserScreen> {
     return BaseFormScreen(
       headerTitle: state.name,
       headerText: state.email,
+      headerTitleWidget: MembershipUserName(name: state.name),
       fields: [
+        const FormFieldWrapper(
+          label: "Úroveň účtu",
+          child: MembershipStatusCard(),
+        ),
         FormFieldWrapper(
           label: "Spárování s hráčem",
           child: CustomDropdownSheet(
@@ -48,10 +53,7 @@ class _ViewUserScreenState extends ConsumerState<ViewUserScreen> {
         if (state.otherRoles.trim().isNotEmpty)
           FormFieldWrapper(
             label: "Jiné týmy",
-            child: AppReadOnlyField(
-              value: state.otherRoles,
-              allowWrap: true,
-            ),
+            child: AppReadOnlyField(value: state.otherRoles, allowWrap: true),
           ),
       ],
       actions: [

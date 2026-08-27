@@ -5,6 +5,7 @@ import 'package:trus_app/features/footbar/screens/footbar_connect_screen.dart';
 import 'package:trus_app/features/info/screens/info_screen.dart';
 import 'package:trus_app/features/main/menu/widget/menu_section_label.dart';
 import 'package:trus_app/features/main/menu/widget/menu_tile.dart';
+import 'package:trus_app/features/membership/widgets/membership_tier_badge.dart';
 import 'package:trus_app/features/notification/push/screen/enabled_notifications_screen.dart';
 import 'package:trus_app/features/player/screens/view_player_screen.dart';
 import 'package:trus_app/features/user/screens/user_screen.dart';
@@ -23,17 +24,18 @@ class UpperSheetNavigationManager {
   UpperSheetNavigationManager(this.context, this.appTeamApiModel);
 
   void showBottomSheetNavigation(
-      Function(String) onModalBottomSheetMenuTapped,
-      String userName,
-      PlayerApiModel? player,
-      VoidCallback signOut,
-      Function(PlayerApiModel) onPlayerSelected,
-      ) {
+    Function(String) onModalBottomSheetMenuTapped,
+    String userName,
+    PlayerApiModel? player,
+    VoidCallback signOut,
+    Function(PlayerApiModel) onPlayerSelected,
+  ) {
     final appColors = context.appColors;
 
     AppMenuBottomSheet.show(
       context: context,
       title: userName,
+      titleBadge: const MembershipTierBadge(),
       subtitle: 'Nastavení a navigace',
       useListView: true,
       trailing: TextButton.icon(
@@ -49,9 +51,8 @@ class UpperSheetNavigationManager {
         MenuTile(
           icon: Icons.notifications,
           title: const Text("Oznámení"),
-          onTap: () => onModalBottomSheetMenuTapped(
-            EnabledNotificationsScreen.id,
-          ),
+          onTap: () =>
+              onModalBottomSheetMenuTapped(EnabledNotificationsScreen.id),
         ),
         MenuTile(
           icon: Icons.account_box,
@@ -59,9 +60,9 @@ class UpperSheetNavigationManager {
           title: player != null
               ? const Text("Nastavení uživatele")
               : const _WarningText(
-            main: "Nastavení uživatele",
-            sub: "Je třeba se spárovat",
-          ),
+                  main: "Nastavení uživatele",
+                  sub: "Je třeba se spárovat",
+                ),
           onTap: () => onModalBottomSheetMenuTapped(ViewUserScreen.id),
         ),
         if (player != null)
@@ -77,16 +78,12 @@ class UpperSheetNavigationManager {
         MenuTile(
           icon: Icons.link,
           title: const Text("Připojení k Footbar"),
-          onTap: () => onModalBottomSheetMenuTapped(
-            FootbarConnectScreen.id,
-          ),
+          onTap: () => onModalBottomSheetMenuTapped(FootbarConnectScreen.id),
         ),
         MenuTile(
           icon: Icons.compare_arrows,
           title: const Text("Porovnání statistik"),
-          onTap: () => onModalBottomSheetMenuTapped(
-            FootbarCompareScreen.id,
-          ),
+          onTap: () => onModalBottomSheetMenuTapped(FootbarCompareScreen.id),
         ),
         const MenuSectionLabel(text: "NASTAVENÍ"),
         MenuTile(
@@ -119,10 +116,7 @@ class _WarningText extends StatelessWidget {
   final String main;
   final String sub;
 
-  const _WarningText({
-    required this.main,
-    required this.sub,
-  });
+  const _WarningText({required this.main, required this.sub});
 
   @override
   Widget build(BuildContext context) {

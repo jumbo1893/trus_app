@@ -1,5 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:trus_app/features/ai/repository/ai_api_service.dart';
+import 'package:trus_app/features/membership/repository/membership_api_service.dart';
 import 'package:trus_app/features/ai/state/ai_assistant_state.dart';
 import 'package:trus_app/features/general/notifier/safe_state_notifier.dart';
 import 'package:trus_app/models/api/ai/ai_models.dart';
@@ -88,6 +89,7 @@ class AiAssistantController extends SafeStateNotifier<AiAssistantState> {
           clearPendingQuestion: true,
         ),
       );
+      ref.invalidate(membershipProvider);
       return true;
     } catch (error) {
       if (!mounted) return false;

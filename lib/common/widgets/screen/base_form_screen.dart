@@ -9,6 +9,7 @@ import '../../../theme/app_widget_values.dart';
 class BaseFormScreen extends StatelessWidget {
   final String headerTitle;
   final String headerText;
+  final Widget? headerTitleWidget;
   final List<Widget> fields;
   final List<ActionButtonItem> actions;
   final List<Widget> extraSections;
@@ -21,6 +22,7 @@ class BaseFormScreen extends StatelessWidget {
     super.key,
     required this.headerTitle,
     required this.headerText,
+    this.headerTitleWidget,
     required this.fields,
     required this.actions,
     this.extraSections = const [],
@@ -42,12 +44,11 @@ class BaseFormScreen extends StatelessWidget {
           child: HeaderCard(
             title: headerTitle,
             text: headerText,
+            titleWidget: headerTitleWidget,
           ),
         ),
         AppWidgetValues.field,
-        FormCard(
-          children: fields,
-        ),
+        FormCard(children: fields),
         ...extraSections,
       ],
     );
@@ -57,9 +58,9 @@ class BaseFormScreen extends StatelessWidget {
       bottomNavigationBar: actions.isEmpty
           ? null
           : Padding(
-        padding: const EdgeInsets.only(bottom: 18),
-            child: FormActionBarHorizontal(actions: actions),
-          ),
+              padding: const EdgeInsets.only(bottom: 18),
+              child: FormActionBarHorizontal(actions: actions),
+            ),
       floatingActionButton: floatingActionButton,
     );
   }

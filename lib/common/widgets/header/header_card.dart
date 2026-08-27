@@ -4,10 +4,13 @@ import 'package:trus_app/theme/app_colors.dart';
 class HeaderCard extends StatelessWidget {
   final String title;
   final String text;
+  final Widget? titleWidget;
 
-  const HeaderCard({super.key,
+  const HeaderCard({
+    super.key,
     required this.title,
     required this.text,
+    this.titleWidget,
   });
 
   @override
@@ -28,15 +31,16 @@ class HeaderCard extends StatelessWidget {
       ),
       child: Column(
         children: [
-          Text(
-            title,
-            textAlign: TextAlign.center,
-            style: TextStyle(
-              fontSize: 22,
-              fontWeight: FontWeight.w700,
-              color: context.appColors.textPrimary,
-            ),
-          ),
+          titleWidget ??
+              Text(
+                title,
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  fontSize: 22,
+                  fontWeight: FontWeight.w700,
+                  color: context.appColors.textPrimary,
+                ),
+              ),
           const SizedBox(height: 6),
           Text(
             text,
