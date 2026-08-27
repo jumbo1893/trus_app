@@ -2,7 +2,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:trus_app/common/widgets/notifier/listview/i_listview_notifier.dart';
 import 'package:trus_app/features/general/notifier/app_notifier.dart';
 import 'package:trus_app/features/season/controller/season_dropdown_notifier.dart';
-import 'package:trus_app/features/season/season_args.dart';
 import 'package:trus_app/features/statistics/repository/stats_api_service.dart';
 import 'package:trus_app/features/statistics/stats_level.dart';
 import 'package:trus_app/models/api/goal/goal_detailed_model.dart';
@@ -41,7 +40,7 @@ class StatsNotifier extends AppNotifier<StatsState>
     required bool matchOrPlayer,
   }) : super(ref, StatsState.initial(api, matchOrPlayer)) {
     ref.listen<DropdownState>(
-        seasonDropdownNotifierProvider(const SeasonArgs(false, false, true)),
+        seasonDropdownNotifierProvider(statisticsSeasonArgs),
             (_, next) {
           SeasonApiModel? season = next.selected as SeasonApiModel?;
           if (season != null) {
@@ -77,7 +76,7 @@ class StatsNotifier extends AppNotifier<StatsState>
     final selectedSeason = ref
         .read(
       seasonDropdownNotifierProvider(
-        const SeasonArgs(false, false, true),
+        statisticsSeasonArgs,
       ),
     )
         .selected as SeasonApiModel?;
@@ -267,8 +266,7 @@ class StatsNotifier extends AppNotifier<StatsState>
   /// API volání
   Future<void> search(String text) async {
     SeasonApiModel? season = ref
-        .read(seasonDropdownNotifierProvider(
-        const SeasonArgs(false, false, true)))
+        .read(seasonDropdownNotifierProvider(statisticsSeasonArgs))
         .selected as SeasonApiModel?;
     if (season == null) return;
 

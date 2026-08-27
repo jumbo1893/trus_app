@@ -10,7 +10,6 @@ import '../../../common/widgets/animated_filter_panel.dart';
 import '../../../common/widgets/dropdown/custom_dropdown_sheet.dart';
 import '../../../common/widgets/loader.dart';
 import '../../home/screens/home_screen.dart';
-import '../../season/season_args.dart';
 import '../controller/stats_notifier.dart';
 import '../state/stats_state.dart';
 import '../widget/statistics_filter_bar.dart';
@@ -64,7 +63,7 @@ class _StatsScreenState extends ConsumerState<StatsScreen> {
   Widget build(BuildContext context) {
     final stats = ref.watch(statsNotifierProvider(widget.statsArgs));
     final seasonProvider =
-    seasonDropdownNotifierProvider(const SeasonArgs(false, false, true));
+    seasonDropdownNotifierProvider(statisticsSeasonArgs);
 
     ref.listen<StatsState>(
       statsNotifierProvider(widget.statsArgs),

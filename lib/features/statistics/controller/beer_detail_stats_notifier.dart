@@ -9,30 +9,35 @@ import '../../../common/widgets/notifier/dropdown/dropdown_state.dart';
 import '../../../common/widgets/notifier/dropdown/i_dropdown_notifier.dart';
 import '../../../models/api/interfaces/model_to_string.dart';
 import '../../../models/api/stats/stats.dart';
-import '../../season/season_args.dart';
+import '../stat_args.dart';
 import '../state/beer_detail_stats_state.dart';
 
 final beerDetailStatsNotifierProvider =
-StateNotifierProvider<BeerDetailStatsNotifier, BeerDetailStatsState>((ref) {
+    StateNotifierProvider<BeerDetailStatsNotifier, BeerDetailStatsState>((ref) {
   return BeerDetailStatsNotifier(
     ref: ref,
     beerApiService: ref.read(beerApiServiceProvider),
   );
 });
 
-class BeerDetailStatsNotifier extends AppNotifier<BeerDetailStatsState> implements IDropdownNotifier {
+class BeerDetailStatsNotifier extends AppNotifier<BeerDetailStatsState>
+    implements IDropdownNotifier {
   final BeerApiService beerApiService;
 
   BeerDetailStatsNotifier({
     required Ref ref,
     required this.beerApiService,
   }) : super(ref, BeerDetailStatsState.initial()) {
-    ref.listen<DropdownState>(seasonDropdownNotifierProvider(const SeasonArgs(false, false, true)), (_, next) {
-      SeasonApiModel? season = next.selected as SeasonApiModel?;
-      if (season != null) {
-        Future.microtask(() => _loadBeerStats(season.id!));
-      }
-    }, fireImmediately: true);
+    ref.listen<DropdownState>(
+      seasonDropdownNotifierProvider(statisticsSeasonArgs),
+      (_, next) {
+        SeasonApiModel? season = next.selected as SeasonApiModel?;
+        if (season != null) {
+          Future.microtask(() => _loadBeerStats(season.id!));
+        }
+      },
+      fireImmediately: true,
+    );
   }
 
   Future<void> _loadBeerStats(int seasonId) async {
@@ -41,20 +46,32 @@ class BeerDetailStatsNotifier extends AppNotifier<BeerDetailStatsState> implemen
       stats: const AsyncValue.loading(),
     );
     final response = await runUiWithResult<List<Stats>>(
-              () => beerApiService.getBeerStats(
-      seasonId),
-          showLoading: false,
-          successSnack: null,
-        );
+      () => beerApiService.getBeerStats(seasonId),
+      showLoading: false,
+      successSnack: null,
+    );
     state = state.copyWith(
       dropdownTexts: AsyncValue.data(response),
-      selectedText: state.selectedText?? response.first,
-      stats: AsyncValue.data(_getStatsBySelectedText(response, state.selectedText?? response.first)),
+      selectedText: state.selectedText ?? response.first,
+      stats: AsyncValue.data(
+        _getStatsBySelectedText(
+          response,
+          state.selectedText ?? response.first,
+        ),
+      ),
     );
   }
 
-  List<ModelToString> _getStatsBySelectedText(List<Stats> stats, DropdownItem selectedText) {
-    return stats.firstWhere((stat) => stat.dropdownText == selectedText.dropdownItem(), orElse: () => Stats(dropdownText: "", playerStats: [])).playerStats;
+  List<ModelToString> _getStatsBySelectedText(
+    List<Stats> stats,
+    DropdownItem selectedText,
+  ) {
+    return stats
+        .firstWhere(
+          (stat) => stat.dropdownText == selectedText.dropdownItem(),
+          orElse: () => Stats(dropdownText: "", playerStats: []),
+        )
+        .playerStats;
   }
 
   @override

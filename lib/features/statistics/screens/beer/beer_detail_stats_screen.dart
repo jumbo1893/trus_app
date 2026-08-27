@@ -6,10 +6,10 @@ import 'package:trus_app/features/statistics/controller/beer_detail_stats_notifi
 
 import '../../../../common/widgets/notifier/dropdown/custom_dropdown.dart';
 import '../../../../common/widgets/screen/custom_consumer_stateful_widget.dart';
-import '../../../season/season_args.dart';
+import '../../stat_args.dart';
 
 class BeerDetailStatsScreen extends CustomConsumerStatefulWidget {
-   static const String id = "beer-detail-stats-screen";
+  static const String id = "beer-detail-stats-screen";
 
   const BeerDetailStatsScreen({
     Key? key,
@@ -29,31 +29,38 @@ class _BeerDetailStatsScreenState
     return Scaffold(
       body: Column(
         children: [
-            Row(
-              children: [
-                SizedBox(
-                  width: size.width / 2 - padding,
-                  child: CustomDropdown(
-                    hint: "Vyber sezonu",
-                    notifier: ref.read(seasonDropdownNotifierProvider(const SeasonArgs(false, false, true)).notifier),
-                    state: ref.watch(seasonDropdownNotifierProvider(const SeasonArgs(false, false, true))),
+          Row(
+            children: [
+              SizedBox(
+                width: size.width / 2 - padding,
+                child: CustomDropdown(
+                  hint: "Vyber sezonu",
+                  notifier: ref.read(
+                    seasonDropdownNotifierProvider(
+                      statisticsSeasonArgs,
+                    ).notifier,
+                  ),
+                  state: ref.watch(
+                    seasonDropdownNotifierProvider(statisticsSeasonArgs),
                   ),
                 ),
-                SizedBox(
-                  width: size.width / 2 - padding,
-                  child: CustomDropdown(
-                    hint: "Vyber možnost",
-                    notifier: ref.read(beerDetailStatsNotifierProvider.notifier),
-                    state: ref.watch(beerDetailStatsNotifierProvider),
-                  ),
+              ),
+              SizedBox(
+                width: size.width / 2 - padding,
+                child: CustomDropdown(
+                  hint: "Vyber možnost",
+                  notifier: ref.read(beerDetailStatsNotifierProvider.notifier),
+                  state: ref.watch(beerDetailStatsNotifierProvider),
                 ),
-              ],
-            ),
+              ),
+            ],
+          ),
           Expanded(
             child: ModelToStringListview(
                 storageKey: BeerDetailStatsScreen.id,
                 state: ref.watch(beerDetailStatsNotifierProvider),
-                notifier: null,),
+                notifier: null,
+              ),
           )
         ],
       ),
