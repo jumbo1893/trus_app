@@ -15,22 +15,20 @@ import '../../goal/screen/goal_screen.dart';
 import '../../match/match_notifier_args.dart';
 import '../../match/screens/add_match_screen.dart';
 import '../../match/screens/match_detail_screen.dart';
+import '../../match_participation/screens/match_participation_screen.dart';
 import '../../player/screens/view_player_screen.dart';
+import '../../player/screens/add_player_screen.dart';
+import '../../match_participation/participation_flow.dart';
 import '../screens.dart';
 import '../state/screen_state.dart';
 
 final screenNotifierProvider =
-StateNotifierProvider<ScreenNotifier, ScreenState>((ref) {
-  return ScreenNotifier(
-    ref: ref,
-  );
-});
+    StateNotifierProvider<ScreenNotifier, ScreenState>((ref) {
+      return ScreenNotifier(ref: ref);
+    });
 
 class ScreenNotifier extends SafeStateNotifier<ScreenState> {
-
-  ScreenNotifier({
-    ref,
-  }) : super(ref, ScreenState.initial());
+  ScreenNotifier({ref}) : super(ref, ScreenState.initial());
 
   int _bottomIndexFor(String screenId) {
     if (screenId == HomeScreen.id) return 0;
@@ -38,7 +36,6 @@ class ScreenNotifier extends SafeStateNotifier<ScreenState> {
     if (statisticScreenList.contains(screenId)) return 3;
     return 2;
   }
-
 
   //screen
 
@@ -65,30 +62,46 @@ class ScreenNotifier extends SafeStateNotifier<ScreenState> {
   }
 
   void changeByFragmentId(String screenId) {
+    if (state.currentScreenId == AddPlayerScreen.id &&
+        screenId != AddPlayerScreen.id &&
+        ref.read(pendingParticipationProvider) != null) {
+      ref.read(pendingParticipationProvider.notifier).state = null;
+    }
     addScreenIdToBackButtonList(screenId);
     manageBackButton(screenId);
     _changeFragment(screenId);
   }
 
   void changeByBackButton() {
-    List<String> backButtonFragmentList = List<String>.from(state.backButtonFragmentList);
+    if (state.currentScreenId == AddPlayerScreen.id &&
+        ref.read(pendingParticipationProvider) != null) {
+      ref.read(pendingParticipationProvider.notifier).state = null;
+    }
+    List<String> backButtonFragmentList = List<String>.from(
+      state.backButtonFragmentList,
+    );
     if (backButtonFragmentList.isEmpty) return;
     backButtonFragmentList.removeLast();
     state = state.copyWith(backButtonFragmentList: backButtonFragmentList);
-    String lastScreenId = backButtonFragmentList.isNotEmpty ? backButtonFragmentList.last : HomeScreen.id;
+    String lastScreenId = backButtonFragmentList.isNotEmpty
+        ? backButtonFragmentList.last
+        : HomeScreen.id;
     manageBackButton(lastScreenId);
     _changeFragment(lastScreenId);
   }
 
   void addScreenIdToBackButtonList(String screenId) {
-    List<String> backButtonFragmentList = List<String>.from(state.backButtonFragmentList);
+    List<String> backButtonFragmentList = List<String>.from(
+      state.backButtonFragmentList,
+    );
     backButtonFragmentList.add(screenId);
     state = state.copyWith(backButtonFragmentList: backButtonFragmentList);
   }
 
   void manageBackButton(String screenId) {
     List<String> backButtonFragmentList = List<String>.from(
-        state.backButtonFragmentList);
+      state.backButtonFragmentList,
+    );
     if (screenId == HomeScreen.id) {
       backButtonFragmentList.clear();
       state = state.copyWith(backButtonFragmentList: backButtonFragmentList);
@@ -107,14 +120,16 @@ class ScreenNotifier extends SafeStateNotifier<ScreenState> {
     final isHome = screenId == HomeScreen.id;
     final title = isHome ? "" : _titleFor(screenId);
 
-    safeSetState(state.copyWith(
-      currentScreenId: screenId,
-      currentPageIndex: idx,
-      selectedBottomSheetIndex: bottomIndex,
+    safeSetState(
+      state.copyWith(
+        currentScreenId: screenId,
+        currentPageIndex: idx,
+        selectedBottomSheetIndex: bottomIndex,
 
-      showPlayerStatsTitle: isHome,
-      appBarTitleText: title,
-    ));
+        showPlayerStatsTitle: isHome,
+        appBarTitleText: title,
+      ),
+    );
   }
 
   String _titleFor(String screenId) {
@@ -127,7 +142,7 @@ class ScreenNotifier extends SafeStateNotifier<ScreenState> {
 
   Widget getFragmentByFragmentId(String fragmentId) {
     return widgetList.firstWhere(
-          (w) => (w as ScreenName).screenName() == fragmentId,
+      (w) => (w as ScreenName).screenName() == fragmentId,
       orElse: () => widgetList[0],
     );
   }
@@ -138,47 +153,74 @@ class ScreenNotifier extends SafeStateNotifier<ScreenState> {
   }
 
   void redirect(RedirectApiModel redirect) {
-    if(redirect.match != null) {
-      ref.read(screenVariablesNotifierProvider.notifier).setMatch(redirect.match!);
-      ref.read(screenVariablesNotifierProvider.notifier).setMatchId(redirect.match!.id!);
+    if (redirect.match != null) {
+      ref
+          .read(screenVariablesNotifierProvider.notifier)
+          .setMatch(redirect.match!);
+      ref
+          .read(screenVariablesNotifierProvider.notifier)
+          .setMatchId(redirect.match!.id!);
     }
-    if(redirect.player != null) {
-      ref.read(screenVariablesNotifierProvider.notifier).setPlayer(
-          redirect.player!);
+    if (redirect.player != null) {
+      ref
+          .read(screenVariablesNotifierProvider.notifier)
+          .setPlayer(redirect.player!);
     }
-    if(redirect.footballMatch != null) {
-      ref.read(screenVariablesNotifierProvider.notifier).setFootballMatch(
-          redirect.footballMatch!);
+    if (redirect.footballMatch != null) {
+      ref
+          .read(screenVariablesNotifierProvider.notifier)
+          .setFootballMatch(redirect.footballMatch!);
     }
-    if(redirect.season != null) {
-      ref.read(screenVariablesNotifierProvider.notifier).setSeason(
-          redirect.season!);
+    if (redirect.season != null) {
+      ref
+          .read(screenVariablesNotifierProvider.notifier)
+          .setSeason(redirect.season!);
     }
     chooseRedirect(redirect.redirect);
   }
-  
+
   void chooseRedirect(Redirect? redirect) {
-    switch(redirect) {
+    switch (redirect) {
       case Redirect.playerBeerStats:
         changeByFragmentId(BeerSimpleScreen.id);
       case Redirect.matchWithPlayerBottomsheet:
         final appTeam = ref.read(globalVariablesControllerProvider).appTeam;
-        final footballMatch = ref.read(screenVariablesNotifierProvider).footballMatch;
+        final footballMatch = ref
+            .read(screenVariablesNotifierProvider)
+            .footballMatch;
         if (footballMatch == null) return;
-        final matchId = footballMatch
-            .findMatchIdForCurrentAppTeamInMatchIdAndAppTeamIdList(appTeam) ??
+        final matchId =
+            footballMatch.findMatchIdForCurrentAppTeamInMatchIdAndAppTeamIdList(
+              appTeam,
+            ) ??
             -1;
 
         if (matchId == -1) {
-          ref.read(screenVariablesNotifierProvider.notifier).setMatchNotifierArgs(
-              MatchNotifierArgs.newByFootballMatchWithBottomSheet(footballMatch));
+          ref
+              .read(screenVariablesNotifierProvider.notifier)
+              .setMatchNotifierArgs(
+                MatchNotifierArgs.newByFootballMatchWithBottomSheet(
+                  footballMatch,
+                ),
+              );
           changeFragment(AddMatchScreen.id);
         } else {
           ref
               .read(screenVariablesNotifierProvider.notifier)
-              .setMatchNotifierArgs(MatchNotifierArgs.editWithBottomSheet(matchId));
+              .setMatchNotifierArgs(
+                MatchNotifierArgs.editWithBottomSheet(matchId),
+              );
           changeFragment(MatchDetailScreen.id);
         }
+      case Redirect.matchParticipation:
+        final footballMatch = ref
+            .read(screenVariablesNotifierProvider)
+            .footballMatch;
+        if (footballMatch?.id == null) return;
+        ref
+            .read(screenVariablesNotifierProvider.notifier)
+            .setFootballMatchId(footballMatch!.id!);
+        changeByFragmentId(MatchParticipationScreen.id);
       case Redirect.playerFineStats:
         // TODO: Handle this case.
         throw UnimplementedError();
@@ -190,5 +232,4 @@ class ScreenNotifier extends SafeStateNotifier<ScreenState> {
   }
 
   Widget get currentWidget => getFragmentByFragmentId(state.currentScreenId);
-
 }

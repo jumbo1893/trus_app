@@ -31,6 +31,7 @@ import '../footbar/screens/footbar_connect_screen.dart';
 import '../home/screens/home_screen.dart';
 import '../info/screens/info_screen.dart';
 import '../match/screens/match_detail_screen.dart';
+import '../match_participation/screens/match_participation_screen.dart';
 import '../notification/push/screen/enabled_notifications_screen.dart';
 import '../notification/screen/notification_screen.dart';
 import '../player/screens/view_player_screen.dart';
@@ -189,6 +190,8 @@ final List<Widget> _widgetList = [
   //50
   const AiAssistantScreen(),
   //51
+  const MatchParticipationScreen(),
+  //52
 ];
 
 List<Widget> get widgetList => _widgetList;

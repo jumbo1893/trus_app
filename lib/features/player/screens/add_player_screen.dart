@@ -17,9 +17,8 @@ import '../player_notifier_args.dart';
 class AddPlayerScreen extends CustomConsumerStatefulWidget {
   static const String id = "add-player-screen";
 
-  const AddPlayerScreen({
-    Key? key,
-  }) : super(key: key, title: "Přidat hráče", name: id);
+  const AddPlayerScreen({Key? key})
+    : super(key: key, title: "Přidat hráče", name: id);
 
   @override
   ConsumerState<AddPlayerScreen> createState() => _AddPlayerScreenState();
@@ -32,9 +31,8 @@ class _AddPlayerScreenState extends ConsumerState<AddPlayerScreen> {
 
     final notifier = ref.read(playerEditNotifierProvider(arg).notifier);
     final state = ref.watch(playerEditNotifierProvider(arg));
-
     return BaseFormScreen(
-      headerTitle: "Nový ${state.fan? "fanoušek": "hráč"}: ${state.name}",
+      headerTitle: "Nový ${state.fan ? "fanoušek" : "hráč"}: ${state.name}",
       headerText: "Datum narození: ${dateTimeToString(state.birthdate)}",
       fields: [
         FormFieldWrapper(

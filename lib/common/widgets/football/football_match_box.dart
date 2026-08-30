@@ -21,6 +21,7 @@ class FootballMatchBox extends StatelessWidget {
     required this.onAddBeer,
     required this.onAddFine,
     required this.onDetailMatch,
+    required this.onParticipation,
     required this.onCommonMatches,
     required this.onRedirect,
   });
@@ -34,6 +35,7 @@ class FootballMatchBox extends StatelessWidget {
   final void Function(FootballMatchApiModel match) onAddBeer;
   final void Function(FootballMatchApiModel match) onAddFine;
   final void Function(FootballMatchApiModel match) onDetailMatch;
+  final void Function(FootballMatchApiModel match) onParticipation;
   final void Function(FootballMatchApiModel match) onCommonMatches;
   final void Function(RedirectApiModel redirect) onRedirect;
 
@@ -43,11 +45,16 @@ class FootballMatchBox extends StatelessWidget {
     if (dashboardMatch?.match?.footballMatch == null) return -1;
 
     return dashboardMatch!.match!.footballMatch
-        .findMatchIdForCurrentAppTeamInMatchIdAndAppTeamIdList(appTeamApiModel) ??
+            .findMatchIdForCurrentAppTeamInMatchIdAndAppTeamIdList(
+              appTeamApiModel,
+            ) ??
         -1;
   }
 
-  bool _isMatchButtonEnabled(FootballMatchApiModel? footballMatch, int matchId) {
+  bool _isMatchButtonEnabled(
+    FootballMatchApiModel? footballMatch,
+    int matchId,
+  ) {
     return footballMatch != null && matchId != -1;
   }
 
@@ -75,9 +82,9 @@ class FootballMatchBox extends StatelessWidget {
   }
 
   List<_WarningItem> _buildWarnings(
-      FootballMatchDetail? detail,
-      List<TextWithRedirect> matchInfoList,
-      ) {
+    FootballMatchDetail? detail,
+    List<TextWithRedirect> matchInfoList,
+  ) {
     if (detail == null) return [];
 
     final warnings = <_WarningItem>[];
@@ -96,16 +103,17 @@ class FootballMatchBox extends StatelessWidget {
       warnings.add(
         _WarningItem(
           text:
-          "Průměrný rok narození domácích: ${detail.homeTeamAverageBirthYear} × hostů: ${detail.awayTeamAverageBirthYear}",
+              "Průměrný rok narození domácích: ${detail.homeTeamAverageBirthYear} × hostů: ${detail.awayTeamAverageBirthYear}",
           warningType: WarningType.info,
         ),
       );
 
-      if (detail.homeTeamBestScorer != null && detail.awayTeamBestScorer != null) {
+      if (detail.homeTeamBestScorer != null &&
+          detail.awayTeamBestScorer != null) {
         warnings.add(
           _WarningItem(
             text:
-            "Nejlepší střelec domácích: ${detail.homeTeamBestScorer} × hostů: ${detail.awayTeamBestScorer}",
+                "Nejlepší střelec domácích: ${detail.homeTeamBestScorer} × hostů: ${detail.awayTeamBestScorer}",
             warningType: WarningType.info,
           ),
         );
@@ -116,10 +124,10 @@ class FootballMatchBox extends StatelessWidget {
   }
 
   void _showMoreActionsSheet(
-      BuildContext context,
-      FootballMatchApiModel match,
-      bool matchActionsEnabled,
-      ) {
+    BuildContext context,
+    FootballMatchApiModel match,
+    bool matchActionsEnabled,
+  ) {
     final appColors = context.appColors;
 
     showModalBottomSheet<void>(
@@ -178,10 +186,10 @@ class FootballMatchBox extends StatelessWidget {
   }
 
   void _showWarningsSheet(
-      BuildContext context, {
-        required List<_WarningItem> warnings,
-        required void Function(RedirectApiModel redirect) onRedirect,
-      }) {
+    BuildContext context, {
+    required List<_WarningItem> warnings,
+    required void Function(RedirectApiModel redirect) onRedirect,
+  }) {
     final appColors = context.appColors;
 
     showModalBottomSheet<void>(
@@ -207,7 +215,7 @@ class FootballMatchBox extends StatelessWidget {
                   ),
                   const SizedBox(height: 16),
                   ...warnings.map(
-                        (warning) => Padding(
+                    (warning) => Padding(
                       padding: const EdgeInsets.only(bottom: 10),
                       child: _CompactWarningCard(
                         warning: warning,
@@ -239,8 +247,9 @@ class FootballMatchBox extends StatelessWidget {
     final visibleWarnings = warnings.take(1).toList();
 
     final secondActionLabel = matchActionsEnabled ? "Přidat góly" : "Detail";
-    final secondActionIcon =
-    matchActionsEnabled ? Icons.sports_soccer : Icons.description_outlined;
+    final secondActionIcon = matchActionsEnabled
+        ? Icons.sports_soccer
+        : Icons.description_outlined;
 
     return HomeSectionCard(
       padding: const EdgeInsets.all(16),
@@ -258,9 +267,13 @@ class FootballMatchBox extends StatelessWidget {
               children: [
                 Expanded(
                   child: _PrimaryActionButton(
-                    label: "Přidat hráče",
-                    icon: Icons.person_add_alt_1,
-                    onTap: () => onAddPlayers(match),
+                    label: isNextMatch ? "Účast" : "Přidat hráče",
+                    icon: isNextMatch
+                        ? Icons.how_to_reg_outlined
+                        : Icons.person_add_alt_1,
+                    onTap: () => isNextMatch
+                        ? onParticipation(match)
+                        : onAddPlayers(match),
                   ),
                 ),
                 const SizedBox(width: 10),
@@ -297,7 +310,7 @@ class FootballMatchBox extends StatelessWidget {
             const _SectionLabel(text: "Důležité informace"),
             const SizedBox(height: 8),
             ...visibleWarnings.map(
-                  (warning) => Padding(
+              (warning) => Padding(
                 padding: const EdgeInsets.only(bottom: 8),
                 child: _CompactWarningCard(
                   warning: warning,
@@ -312,7 +325,10 @@ class FootballMatchBox extends StatelessWidget {
                   alignment: Alignment.centerLeft,
                   child: TextButton(
                     style: TextButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 0),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 4,
+                        vertical: 0,
+                      ),
                       minimumSize: const Size(0, 32),
                       tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                     ),
@@ -487,11 +503,7 @@ class _PrimaryActionButton extends StatelessWidget {
                   color: appColors.accentSoft,
                   shape: BoxShape.circle,
                 ),
-                child: Icon(
-                  icon,
-                  size: 18,
-                  color: appColors.accent,
-                ),
+                child: Icon(icon, size: 18, color: appColors.accent),
               ),
               const SizedBox(height: 6),
               Text(
@@ -541,10 +553,7 @@ class _BottomSheetActionTile extends StatelessWidget {
       trailing: Icon(Icons.chevron_right, color: trailingColor),
       title: Text(
         title,
-        style: TextStyle(
-          color: textColor,
-          fontWeight: FontWeight.w600,
-        ),
+        style: TextStyle(color: textColor, fontWeight: FontWeight.w600),
       ),
       onTap: enabled ? onTap : null,
     );
@@ -552,10 +561,7 @@ class _BottomSheetActionTile extends StatelessWidget {
 }
 
 class _CompactWarningCard extends StatelessWidget {
-  const _CompactWarningCard({
-    required this.warning,
-    required this.onRedirect,
-  });
+  const _CompactWarningCard({required this.warning, required this.onRedirect});
 
   final _WarningItem warning;
   final void Function(RedirectApiModel redirect) onRedirect;
@@ -576,11 +582,7 @@ class _CompactWarningCard extends StatelessWidget {
         children: [
           Padding(
             padding: const EdgeInsets.only(top: 1),
-            child: Icon(
-              style.icon,
-              color: style.iconColor,
-              size: 18,
-            ),
+            child: Icon(style.icon, color: style.iconColor, size: 18),
           ),
           const SizedBox(width: 8),
           Expanded(

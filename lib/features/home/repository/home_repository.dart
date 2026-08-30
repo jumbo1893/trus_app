@@ -5,8 +5,7 @@ import 'package:trus_app/models/api/home/home_setup.dart';
 import '../../general/cache/cached_repository.dart';
 import '../../general/cache/memory_cache.dart';
 
-final homeRepositoryProvider =
-Provider<HomeRepository>((ref) {
+final homeRepositoryProvider = Provider<HomeRepository>((ref) {
   return HomeRepository(
     ref.read(homeApiServiceProvider),
     ref.read(memoryCacheProvider),
@@ -16,13 +15,9 @@ Provider<HomeRepository>((ref) {
 class HomeRepository extends CachedRepository {
   final HomeApiService api;
 
-  HomeRepository(
-      this.api,
-      MemoryCache cache,
-      ) : super(cache);
+  HomeRepository(this.api, MemoryCache cache) : super(cache);
 
   static const _setupKey = 'home_setup';
-
 
   /// LIST
   HomeSetup? getCachedSetup() {
@@ -35,8 +30,11 @@ class HomeRepository extends CachedRepository {
     return data;
   }
 
-
   void invalidatePlayerSetup(int? id) {
     invalidate(key(_setupKey, id));
+  }
+
+  void invalidateSetup() {
+    invalidate(_setupKey);
   }
 }

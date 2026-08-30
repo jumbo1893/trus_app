@@ -6,12 +6,17 @@ import 'package:trus_app/features/general/notifier/safe_state_notifier.dart';
 import 'package:trus_app/features/home/repository/home_repository.dart';
 import 'package:trus_app/features/home/state/home_state.dart';
 import 'package:trus_app/features/player/repository/player_repository.dart';
+import 'package:trus_app/features/match_participation/participation_flow.dart';
+import 'package:trus_app/features/match_participation/repository/match_participation_repository.dart';
+import 'package:trus_app/features/match_participation/screens/match_participation_screen.dart';
 import 'package:trus_app/models/api/app_notice/app_notice.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../../../models/api/football/football_match_api_model.dart';
 import '../../../models/api/home/home_setup.dart';
 import '../../../models/api/player/player_api_model.dart';
+import '../../../models/api/participation/match_participation_detail.dart';
+import '../../../models/api/participation/match_participation_status.dart';
 import '../../beer/screens/beer_simple_screen.dart';
 import '../../fine/match/screens/fine_match_screen.dart';
 import '../../goal/screen/goal_screen.dart';
@@ -19,6 +24,8 @@ import '../../main/controller/screen_variables_notifier.dart';
 import '../../match/match_notifier_args.dart';
 import '../../match/screens/add_match_screen.dart';
 import '../../match/screens/match_detail_screen.dart';
+import '../../player/screens/add_player_screen.dart';
+import '../../general/notifier/global_variables_notifier.dart';
 
 final homeNotifierProvider =
     StateNotifierProvider.autoDispose<HomeNotifier, HomeState>((ref) {
@@ -28,6 +35,9 @@ final homeNotifierProvider =
         playerRepository: ref.read(playerRepositoryProvider),
         authRepository: ref.read(authRepositoryProvider),
         appNoticeRepository: ref.read(appNoticeRepositoryProvider),
+        matchParticipationRepository: ref.read(
+          matchParticipationRepositoryProvider,
+        ),
       );
     });
 
@@ -36,6 +46,7 @@ class HomeNotifier extends SafeStateNotifier<HomeState> {
   final PlayerRepository playerRepository;
   final AuthRepository authRepository;
   final AppNoticeRepository appNoticeRepository;
+  final MatchParticipationRepository matchParticipationRepository;
 
   HomeNotifier({
     required Ref ref,
@@ -43,6 +54,7 @@ class HomeNotifier extends SafeStateNotifier<HomeState> {
     required this.playerRepository,
     required this.authRepository,
     required this.appNoticeRepository,
+    required this.matchParticipationRepository,
   }) : super(ref, HomeState.initial()) {
     Future.microtask(load);
     Future.microtask(loadAppNotice);
@@ -215,6 +227,68 @@ class HomeNotifier extends SafeStateNotifier<HomeState> {
         .read(screenVariablesNotifierProvider.notifier)
         .setMatchNotifierArgs(MatchNotifierArgs.mutualMatches(footballMatch));
     changeFragment(MatchDetailScreen.id);
+  }
+
+  void onParticipationClick(FootballMatchApiModel footballMatch) {
+    if (footballMatch.id == null) return;
+    ref
+        .read(screenVariablesNotifierProvider.notifier)
+        .setFootballMatchId(footballMatch.id!);
+    changeFragment(MatchParticipationScreen.id);
+  }
+
+  Future<void> respondToParticipation(
+    FootballMatchApiModel footballMatch,
+    MatchParticipationStatus status, {
+    PlayerApiModel? player,
+    String? comment,
+  }) async {
+    if (footballMatch.id == null) return;
+    late final MatchParticipationDetail detail;
+    try {
+      detail = await runUiWithResult<MatchParticipationDetail>(
+        () => matchParticipationRepository.respond(
+          footballMatchId: footballMatch.id!,
+          status: status,
+          playerId: player?.id,
+          comment: comment,
+        ),
+        loadingMessage: 'Ukládám účast…',
+        successSnack: 'Odpověď byla uložena',
+      );
+    } catch (_) {
+      return;
+    }
+    if (!mounted) return;
+    if (detail.currentPlayer != null) {
+      ref
+          .read(globalVariablesControllerProvider)
+          .setPlayerApiModel(detail.currentPlayer);
+      ref
+          .read(globalVariablesProvider.notifier)
+          .setPlayer(detail.currentPlayer);
+    }
+    homeRepository.invalidateSetup();
+    await load();
+  }
+
+  void startNewPlayerParticipation(
+    FootballMatchApiModel footballMatch,
+    MatchParticipationStatus status, {
+    String? comment,
+  }) {
+    if (footballMatch.id == null) return;
+    ref
+        .read(pendingParticipationProvider.notifier)
+        .state = PendingParticipation(
+      footballMatchId: footballMatch.id!,
+      status: status,
+      comment: comment,
+    );
+    ref
+        .read(screenVariablesNotifierProvider.notifier)
+        .setFootballMatchId(footballMatch.id!);
+    changeFragment(AddPlayerScreen.id);
   }
 
   Future<void> onPlayerPicked(PlayerApiModel player) async {

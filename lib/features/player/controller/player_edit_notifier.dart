@@ -5,6 +5,14 @@ import 'package:trus_app/features/player/screens/player_screen.dart';
 import 'package:trus_app/features/player/state/player_edit_state.dart';
 import 'package:trus_app/models/api/player/player_api_model.dart';
 import 'package:trus_app/models/api/player/player_setup.dart';
+import 'package:trus_app/features/general/global_variables_controller.dart';
+import 'package:trus_app/features/general/notifier/global_variables_notifier.dart';
+import 'package:trus_app/features/main/controller/screen_variables_notifier.dart';
+import 'package:trus_app/features/home/controller/home_notifier.dart';
+import 'package:trus_app/features/home/repository/home_repository.dart';
+import 'package:trus_app/features/match_participation/participation_flow.dart';
+import 'package:trus_app/features/match_participation/repository/match_participation_repository.dart';
+import 'package:trus_app/features/match_participation/screens/match_participation_screen.dart';
 
 import '../../../common/utils/field_validator.dart';
 import '../../../common/widgets/notifier/dropdown/i_dropdown_notifier.dart';
@@ -16,16 +24,20 @@ import '../player_mode.dart';
 import '../player_notifier_args.dart';
 
 final playerEditNotifierProvider = StateNotifierProvider.autoDispose
-    .family<PlayerEditNotifier, PlayerEditState, PlayerNotifierArgs>((ref, args) {
-  return PlayerEditNotifier(
-    ref: ref,
-    repository: ref.read(playerRepositoryProvider),
-    playerNotifierArgs: args,
-  );
-});
+    .family<PlayerEditNotifier, PlayerEditState, PlayerNotifierArgs>((
+      ref,
+      args,
+    ) {
+      return PlayerEditNotifier(
+        ref: ref,
+        repository: ref.read(playerRepositoryProvider),
+        playerNotifierArgs: args,
+      );
+    });
 
 class PlayerEditNotifier
-    extends BaseCrudNotifier<PlayerApiModel, PlayerEditState> implements IDropdownNotifier {
+    extends BaseCrudNotifier<PlayerApiModel, PlayerEditState>
+    implements IDropdownNotifier {
   final PlayerRepository repository;
   final PlayerNotifierArgs playerNotifierArgs;
 
@@ -34,17 +46,17 @@ class PlayerEditNotifier
     required this.repository,
     required this.playerNotifierArgs,
   }) : super(
-    ref,
-    PlayerEditState(
-      footballPlayers: const AsyncValue.loading(),
-      playerStats: const [],
-      pairedPlayerStats: const [],
-      name: "",
-      birthdate: DateTime(2000, 1, 1),
-      fan: false,
-      active: true,
-    ),
-  ) {
+         ref,
+         PlayerEditState(
+           footballPlayers: const AsyncValue.loading(),
+           playerStats: const [],
+           pairedPlayerStats: const [],
+           name: "",
+           birthdate: DateTime(2000, 1, 1),
+           fan: false,
+           active: true,
+         ),
+       ) {
     Future.microtask(() => _load(args: playerNotifierArgs));
   }
 
@@ -63,7 +75,7 @@ class PlayerEditNotifier
       return;
     }
     final setup = await runUiWithResult<PlayerSetup>(
-          () => repository.fetchPlayerSetup(playerId),
+      () => repository.fetchPlayerSetup(playerId),
       showLoading: (cached == null),
       successSnack: null,
     );
@@ -95,14 +107,22 @@ class PlayerEditNotifier
   void setName(String value) => state = state.copyWith(name: value);
   void setFan(bool fan) => state = state.copyWith(fan: fan);
   void setActive(bool active) => state = state.copyWith(active: active);
-  void setBirthday(DateTime birthdate) => state = state.copyWith(birthdate: birthdate);
-
+  void setBirthday(DateTime birthdate) =>
+      state = state.copyWith(birthdate: birthdate);
 
   /// =========================
   /// CRUD
   /// =========================
 
   void submitCrud(Crud crud) {
+    final pending = crud == Crud.create
+        ? ref.read(pendingParticipationProvider)
+        : null;
+    if (pending != null) {
+      ref
+          .read(screenVariablesNotifierProvider.notifier)
+          .setFootballMatchId(pending.footballMatchId);
+    }
     submit(
       crud: crud,
       loadingText: switch (crud) {
@@ -111,12 +131,18 @@ class PlayerEditNotifier
         Crud.delete => "Mažu hráče…",
       },
       successSnack: switch (crud) {
-        Crud.create => "Hráč přidán",
+        Crud.create =>
+          pending == null ? "Hráč přidán" : "Hráč přidán a účast uložena",
         Crud.update => "Hráč upraven",
         Crud.delete => "Hráč smazán",
       },
-      onSuccessRedirect: PlayerScreen.id,
+      onSuccessRedirect: pending == null
+          ? PlayerScreen.id
+          : MatchParticipationScreen.id,
       invalidateProvider: playerNotifierProvider,
+      onSuccessAction: pending == null
+          ? null
+          : (_) => changeFragment(MatchParticipationScreen.id),
     );
   }
 
@@ -127,7 +153,30 @@ class PlayerEditNotifier
 
   @override
   Future<void> create(PlayerApiModel model) async {
-    await repository.api.addPlayer(model);
+    final pending = ref.read(pendingParticipationProvider);
+    if (pending == null) {
+      await repository.api.addPlayer(model);
+    } else {
+      final detail = await ref
+          .read(matchParticipationRepositoryProvider)
+          .createPlayerAndRespond(
+            footballMatchId: pending.footballMatchId,
+            status: pending.status,
+            player: model,
+            comment: pending.comment,
+          );
+      final createdPlayer = detail.currentPlayer;
+      if (createdPlayer != null) {
+        ref
+            .read(globalVariablesControllerProvider)
+            .setPlayerApiModel(createdPlayer);
+        ref.read(globalVariablesProvider.notifier).setPlayer(createdPlayer);
+      }
+      ref.read(pendingParticipationProvider.notifier).state = null;
+      ref.read(homeRepositoryProvider).invalidateSetup();
+      ref.invalidate(homeNotifierProvider);
+    }
+    repository.invalidateList();
     repository.invalidatePlayerSetup(null);
   }
 
@@ -156,15 +205,15 @@ class PlayerEditNotifier
   }
 
   FootballPlayerApiModel? _getPickedFootballer(DropdownItem? dropdownItem) {
-    FootballPlayerApiModel? footballer = dropdownItem as FootballPlayerApiModel?;
-    if(footballer == null || footballer.id! == 0) {
+    FootballPlayerApiModel? footballer =
+        dropdownItem as FootballPlayerApiModel?;
+    if (footballer == null || footballer.id! == 0) {
       return null;
     }
     return footballer;
   }
 
   // ========= validation + BaseCrud glue =========
-
 
   @override
   bool validate() {
@@ -178,11 +227,7 @@ class PlayerEditNotifier
   }
 
   @override
-  PlayerEditState copyWithState({
-    Map<String, String>? errors,
-  }) {
-    return state.copyWith(
-      errors: errors,
-    );
+  PlayerEditState copyWithState({Map<String, String>? errors}) {
+    return state.copyWith(errors: errors);
   }
 }
