@@ -22,12 +22,17 @@ import '../../screens/user_information_screen.dart';
 import '../screens/login_screen.dart';
 import '../widget/i_user_login_key.dart';
 
-
 final authLoginControllerProvider = Provider((ref) {
   final authRepository = ref.watch(authRepositoryProvider);
-  final globalVariablesController = ref.watch(globalVariablesControllerProvider);
-  return AuthLoginController(authRepository: authRepository, globalVariablesController: globalVariablesController, globalVariablesNotifier: ref.read(globalVariablesProvider.notifier));
-  });
+  final globalVariablesController = ref.watch(
+    globalVariablesControllerProvider,
+  );
+  return AuthLoginController(
+    authRepository: authRepository,
+    globalVariablesController: globalVariablesController,
+    globalVariablesNotifier: ref.read(globalVariablesProvider.notifier),
+  );
+});
 
 final userDataAuthProvider = FutureProvider((ref) {
   final authController = ref.watch(authLoginControllerProvider);
@@ -64,23 +69,22 @@ class AuthLoginController with StringControllerMixin implements IUserLoginKey {
   }
 
   Future<UserApiModel> _setupUser() async {
-    return await sharedPrefsHelper.getUserWithEmailAndPasswordOnly();
+    return await sharedPrefsHelper.getUserWithEmailOnly();
   }
 
   Future<LoginRedirect> sendEmailAndPassword() async {
     String email = stringValues[emailKey()]!.trim();
-    String password = stringValues[passwordKey()]!.trim();
+    String password = stringValues[passwordKey()]!;
     loadingController.add(true);
     if (validateFields(email, password)) {
       try {
         UserApiModel? user = await signInWithEmail(email, password);
 
         if (user != null) {
-          sharedPrefsHelper.setEmailAndPassword(email, password);
+          await sharedPrefsHelper.setEmail(email);
           loadedUser = user;
           loadingSuccessController.add(true);
-        }
-        else {
+        } else {
           loadingController.add(false);
           loadingSuccessController.add(false);
         }
@@ -94,28 +98,28 @@ class AuthLoginController with StringControllerMixin implements IUserLoginKey {
         showGlobalErrorDialog(e, stack);
         return LoginRedirect.needToLogin;
       }
-
-    }
-    else {
+    } else {
       loadingController.add(false);
       return LoginRedirect.needToLogin;
     }
   }
 
-  Future<void> setErrorFieldByFieldValidationException(FieldValidationException e) async {
-    await Future.delayed(const Duration(milliseconds: 200), ()
-    {
+  Future<void> setErrorFieldByFieldValidationException(
+    FieldValidationException e,
+  ) async {
+    await Future.delayed(const Duration(milliseconds: 200), () {
       if (e.fields != null) {
         for (FieldModel fieldModel in e.fields!) {
           if (fieldModel.field != null) {
             if (fieldModel.field == "email") {
-              print("nastavuju chybu");
               stringErrorTextControllers[emailKey()]!.add(
-                  fieldModel.message ?? "test");
+                fieldModel.message ?? "test",
+              );
             }
             if (fieldModel.field == "password") {
               stringErrorTextControllers[passwordKey()]!.add(
-                  fieldModel.message ?? "test");
+                fieldModel.message ?? "test",
+              );
             }
           }
         }
@@ -124,7 +128,7 @@ class AuthLoginController with StringControllerMixin implements IUserLoginKey {
   }
 
   Widget chooseScreenByLoginRedirect(LoginRedirect redirect) {
-    switch(redirect) {
+    switch (redirect) {
       case LoginRedirect.needToLogin:
         return const LoginScreen();
       case LoginRedirect.completeUserInformation:
@@ -135,8 +139,6 @@ class AuthLoginController with StringControllerMixin implements IUserLoginKey {
         return const LoginScreen();
       case LoginRedirect.ok:
         return const MainScreen();
-      default:
-        return const LoginScreen();
     }
   }
 
@@ -144,7 +146,7 @@ class AuthLoginController with StringControllerMixin implements IUserLoginKey {
     String email = stringValues[emailKey()]!.trim();
     if (validateFields(email, "password")) {
       BoolAndString successAndText = await getForgottenPassword(email);
-      if(successAndText.boolean) {
+      if (successAndText.boolean) {
         return successAndText.text;
       }
       stringErrorTextControllers[emailKey()]!.add(successAndText.text);
@@ -174,10 +176,12 @@ class AuthLoginController with StringControllerMixin implements IUserLoginKey {
   }
 
   Future<UserApiModel?> signInWithEmail(String email, String password) async {
-    UserApiModel? result = await authRepository.signInWithEmail(email, password);
-    if(result != null) {
-    }
-     return result;
+    UserApiModel? result = await authRepository.signInWithEmail(
+      email,
+      password,
+    );
+    if (result != null) {}
+    return result;
   }
 
   Future<BoolAndString> getForgottenPassword(String email) async {
@@ -196,16 +200,13 @@ class AuthLoginController with StringControllerMixin implements IUserLoginKey {
   }
 
   LoginRedirect chooseLoginRedirect(UserApiModel? user) {
-    if(user == null) {
+    if (user == null) {
       return LoginRedirect.needToLogin;
-    }
-    else if (user.name == null || user.name!.isEmpty) {
+    } else if (user.name == null || user.name!.isEmpty) {
       return LoginRedirect.completeUserInformation;
-    }
-    else if (isNeededToSetAppTeam(user)) {
+    } else if (isNeededToSetAppTeam(user)) {
       return LoginRedirect.setAppTeam;
-    }
-    else if (isNeededToChooseAppTeam(user)) {
+    } else if (isNeededToChooseAppTeam(user)) {
       return LoginRedirect.chooseAppTeam;
     }
     _savePreferencesBeforeLogin(user);
@@ -218,14 +219,14 @@ class AuthLoginController with StringControllerMixin implements IUserLoginKey {
   }
 
   bool isNeededToSetAppTeam(UserApiModel user) {
-    if(user.teamRoles == null || user.teamRoles!.isEmpty) {
+    if (user.teamRoles == null || user.teamRoles!.isEmpty) {
       return true;
     }
     return false;
   }
 
   bool isNeededToChooseAppTeam(UserApiModel user) {
-    if(user.teamRoles!.length > 1) {
+    if (user.teamRoles!.length > 1) {
       return true;
     }
     return false;

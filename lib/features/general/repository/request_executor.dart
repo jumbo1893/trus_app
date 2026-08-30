@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'dart:io' show HttpClient, Platform, X509Certificate;
 
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:http/http.dart' as http;
 import 'package:http/io_client.dart';
@@ -15,7 +16,6 @@ import '../../../common/repository/exception/handler/response_validator.dart';
 import '../../../common/repository/exception/login_exception.dart';
 import '../../../common/repository/exception/model/login_expired_exception.dart';
 import '../../../common/repository/header/cookies/header_provider.dart';
-import '../../../models/api/auth/user_api_model.dart';
 import '../../main/ui/ui_feedback_notifier.dart';
 
 final requestExecutorProvider = Provider<RequestExecutor>((ref) {
@@ -59,9 +59,10 @@ class RequestExecutor extends ResponseValidator {
   ///[request] request do kterým se ptáme
   /// [mapFunction] mapování na které se namapuje response
   Future<T> _executeRequest<T extends dynamic>(
-      Future<http.Response> Function(http.Client) request,
-      T Function(dynamic) mapFunction,
-      bool secondTry) async {
+    Future<http.Response> Function(http.Client) request,
+    T Function(dynamic) mapFunction,
+    bool secondTry,
+  ) async {
     final client = getClient();
     dynamic response;
     // _requestQueue.add(() async => _executeRequest(request, mapFunction, false));
@@ -73,8 +74,7 @@ class RequestExecutor extends ResponseValidator {
         final decodedBody = json.decode(utf8.decode(response.bodyBytes));
         return mapFunction(decodedBody);
       }
-    }
-    catch (e, stack) {
+    } catch (e, stack) {
       if (e is LoginExpiredException && !secondTry) {
         final ui = ref.read(uiFeedbackProvider.notifier);
 
@@ -90,24 +90,22 @@ class RequestExecutor extends ResponseValidator {
       if (e is TimeoutException || e is http.ClientException) {
         _enqueueRequest(request, mapFunction);
         throw ClientTimeoutException();
-      }
-      else {
-        print(e);
-        print(stack);
+      } else {
+        debugPrint(e.toString());
+        debugPrint(stack.toString());
         rethrow;
       }
     }
     return mapFunction(response);
   }
 
-
   Future<T> executeGetRequest<T>(
-      Uri uri,
-      T Function(dynamic) mapFunction,
-      Map<String, String?>? queryParameters,
-      ) async {
+    Uri uri,
+    T Function(dynamic) mapFunction,
+    Map<String, String?>? queryParameters,
+  ) async {
     return await _executeRequest(
-          (client) async {
+      (client) async {
         final headers = await _headerProvider.getHeaders();
 
         return client.get(
@@ -120,83 +118,63 @@ class RequestExecutor extends ResponseValidator {
     );
   }
 
-
   Future<T> executePostRequest<T>(
-      Uri uri,
-      T Function(dynamic) mapFunction,
-      Object body,
-      ) async {
+    Uri uri,
+    T Function(dynamic) mapFunction,
+    Object body,
+  ) async {
     return await _executeRequest(
-          (client) async {
+      (client) async {
         final headers = await _headerProvider.getHeaders();
 
-        return client.post(
-          uri,
-          headers: headers,
-          body: body,
-        );
+        return client.post(uri, headers: headers, body: body);
       },
       mapFunction,
       false,
     );
   }
-
 
   Future<T> executePutRequest<T>(
-      Uri uri,
-      T Function(dynamic) mapFunction,
-      Object body,
-      ) async {
+    Uri uri,
+    T Function(dynamic) mapFunction,
+    Object body,
+  ) async {
     return await _executeRequest(
-          (client) async {
+      (client) async {
         final headers = await _headerProvider.getHeaders();
 
-        return client.put(
-          uri,
-          headers: headers,
-          body: body,
-        );
+        return client.put(uri, headers: headers, body: body);
       },
       mapFunction,
       false,
     );
   }
-
 
   Future<T> executeDeleteRequest<T>(
-      Uri uri,
-      T Function(dynamic) mapFunction,
-      Object? body,
-      ) async {
+    Uri uri,
+    T Function(dynamic) mapFunction,
+    Object? body,
+  ) async {
     return await _executeRequest(
-          (client) async {
+      (client) async {
         final headers = await _headerProvider.getHeaders();
 
-        return client.delete(
-          uri,
-          headers: headers,
-          body: body,
-        );
+        return client.delete(uri, headers: headers, body: body);
       },
       mapFunction,
       false,
     );
-  }
-
-
-  Future<void> reLoginToServer(String email, String password) async {
-    var url = Uri.parse("$serverUrl/$authApi/auth");
-    UserApiModel user = UserApiModel(password: password, mail: email);
-    await executePostRequest(url, (dynamic json) => UserApiModel.fromJson(json),
-        jsonEncode(user.toJson()));
   }
 
   final List<QueuedRequest> _queuedRequests = [];
 
-  void _enqueueRequest<T>(Future<http.Response> Function(http.Client) request,
-      T Function(dynamic) mapFunction,) {
+  void _enqueueRequest<T>(
+    Future<http.Response> Function(http.Client) request,
+    T Function(dynamic) mapFunction,
+  ) {
     _queuedRequests.add(
-        QueuedRequest<T>(request: request, mapFunction: mapFunction));
+      QueuedRequest<T>(request: request, mapFunction: mapFunction),
+    );
   }
 
   Future<void> retryQueuedRequests() async {
@@ -207,7 +185,7 @@ class RequestExecutor extends ResponseValidator {
       try {
         await _executeRequest(req.request, req.mapFunction, false);
       } catch (e) {
-        print("Retry request failed: $e");
+        debugPrint("Retry request failed: $e");
       }
     }
   }
@@ -219,10 +197,7 @@ class RequestExecutor extends ResponseValidator {
       throw LoginException("Byl jste automaticky odhlášen, nelze pokračovat");
     }
 
-    _reLoginFuture ??= reLoginToServer(
-      current.email!,
-      current.uid,
-    ).whenComplete(() {
+    _reLoginFuture ??= current.getIdToken(true).then((_) {}).whenComplete(() {
       _reLoginFuture = null;
     });
 

@@ -4,7 +4,6 @@ import 'package:riverpod/riverpod.dart';
 import 'package:trus_app/features/general/global_variables_controller.dart';
 import 'package:trus_app/features/helper/shared_prefs_helper.dart';
 import 'package:trus_app/features/mixin/string_controller_mixin.dart';
-import 'package:trus_app/models/api/auth/registration/registration_setup.dart';
 
 import '../../../../common/repository/exception/field_validation_exception.dart';
 import '../../../../common/repository/exception/model/field_model.dart';
@@ -16,11 +15,13 @@ import '../widget/i_user_registration_key.dart';
 
 final authRegistrationControllerProvider = Provider((ref) {
   final authRepository = ref.watch(authRepositoryProvider);
-  final globalVariablesController =
-      ref.watch(globalVariablesControllerProvider);
+  final globalVariablesController = ref.watch(
+    globalVariablesControllerProvider,
+  );
   return AuthRegistrationController(
-      authRepository: authRepository,
-      globalVariablesController: globalVariablesController);
+    authRepository: authRepository,
+    globalVariablesController: globalVariablesController,
+  );
 });
 
 class AuthRegistrationController
@@ -29,10 +30,10 @@ class AuthRegistrationController
   final AuthRepository authRepository;
   final GlobalVariablesController globalVariablesController;
   late UserApiModel loadedUser;
-  late RegistrationSetup registrationSetup;
   final SharedPrefsHelper sharedPrefsHelper = SharedPrefsHelper();
   final loadingController = StreamController<bool>.broadcast();
   final loadingSuccessController = StreamController<bool>.broadcast();
+  bool _initialized = false;
 
   AuthRegistrationController({
     required this.authRepository,
@@ -40,21 +41,17 @@ class AuthRegistrationController
   });
 
   void loadRegistration() {
+    if (_initialized) {
+      return;
+    }
     initStringFields("", emailKey());
     initStringFields("", passwordKey());
     initStringFields("", nameKey());
+    _initialized = true;
   }
 
   Future<void> loadRegistrationSetup() async {
     await Future.delayed(Duration.zero, () => loadRegistration());
-  }
-
-  Future<void> setupRegistration() async {
-    registrationSetup = await _setupRegistration();
-  }
-
-  Future<RegistrationSetup> _setupRegistration() async {
-    return await authRepository.setupRegistration();
   }
 
   Future<bool> sendEmailAndPassword() async {
@@ -64,8 +61,11 @@ class AuthRegistrationController
 
     if (validateFields(email, password, name)) {
       try {
-        bool result =
-            await authRepository.signUpWithEmail(email, password, name);
+        bool result = await authRepository.signUpWithEmail(
+          email,
+          password,
+          name,
+        );
         return result;
       } on FieldValidationException catch (e) {
         loadingController.add(false);
@@ -79,19 +79,21 @@ class AuthRegistrationController
   }
 
   Future<void> setErrorFieldByFieldValidationException(
-      FieldValidationException e) async {
+    FieldValidationException e,
+  ) async {
     await Future.delayed(Duration.zero, () {
       if (e.fields != null) {
         for (FieldModel fieldModel in e.fields!) {
           if (fieldModel.field != null) {
             if (fieldModel.field == "email") {
-              print("nastavuju chybu");
-              stringErrorTextControllers[emailKey()]!
-                  .add(fieldModel.message ?? "test");
+              stringErrorTextControllers[emailKey()]!.add(
+                fieldModel.message ?? "test",
+              );
             }
             if (fieldModel.field == "password") {
-              stringErrorTextControllers[passwordKey()]!
-                  .add(fieldModel.message ?? "test");
+              stringErrorTextControllers[passwordKey()]!.add(
+                fieldModel.message ?? "test",
+              );
             }
           }
         }
@@ -102,6 +104,9 @@ class AuthRegistrationController
   bool validateFields(String email, String password, String name) {
     String emailErrorText = validateEmptyField(email);
     String passwordErrorText = validateEmptyField(password);
+    if (passwordErrorText.isEmpty && password.length < 6) {
+      passwordErrorText = "Heslo musí mít alespoň 6 znaků";
+    }
     String nameErrorText = validateEmptyField(name);
     stringErrorTextControllers[emailKey()]!.add(emailErrorText);
     stringErrorTextControllers[passwordKey()]!.add(passwordErrorText);
@@ -112,7 +117,10 @@ class AuthRegistrationController
   }
 
   Future<bool> signUpWithEmail(
-      String email, String password, String name) async {
+    String email,
+    String password,
+    String name,
+  ) async {
     bool result = await authRepository.signUpWithEmail(email, password, name);
     return result;
   }

@@ -37,7 +37,6 @@ class UserApiModel implements ModelToString, JsonAndHttpConverter {
     };
   }
 
-  @override
   factory UserApiModel.fromJson(Map<String, dynamic> json) {
     return UserApiModel(
       mail: json["mail"] ?? "",
@@ -46,17 +45,22 @@ class UserApiModel implements ModelToString, JsonAndHttpConverter {
       admin: json['admin'] ?? false,
       teamRoles: json['teamRoles'] != null
           ? List<UserTeamRoleApiModel>.from(
-          (json['teamRoles'] as List<dynamic>)
-              .map((role) => UserTeamRoleApiModel.fromJson(role)))
+              (json['teamRoles'] as List<dynamic>).map(
+                (role) => UserTeamRoleApiModel.fromJson(role),
+              ),
+            )
           : null,
     );
   }
 
   String getDescriptionOfOtherRoles(int appTeamId) {
-    List<UserTeamRoleApiModel> otherRoles = getAllOtherThanCurrentTeamRole(appTeamId);
+    List<UserTeamRoleApiModel> otherRoles = getAllOtherThanCurrentTeamRole(
+      appTeamId,
+    );
     String returnString = "";
     for (UserTeamRoleApiModel teamRole in otherRoles) {
-      returnString += "Tým: ${teamRole.appTeam.name}, role: ${teamRole.roleToString()}\n";
+      returnString +=
+          "Tým: ${teamRole.appTeam.name}, role: ${teamRole.roleToString()}\n";
     }
     return returnString;
   }
@@ -64,7 +68,7 @@ class UserApiModel implements ModelToString, JsonAndHttpConverter {
   UserTeamRoleApiModel? getCurrentUserTeamRole(int appTeamId) {
     if (teamRoles != null && teamRoles!.isNotEmpty) {
       for (UserTeamRoleApiModel userTeamRoleApiModel in teamRoles!) {
-        if(userTeamRoleApiModel.appTeam.id == appTeamId) {
+        if (userTeamRoleApiModel.appTeam.id == appTeamId) {
           return userTeamRoleApiModel;
         }
       }
@@ -76,7 +80,7 @@ class UserApiModel implements ModelToString, JsonAndHttpConverter {
     if (teamRoles != null) {
       for (UserTeamRoleApiModel userTeamRoleApiModel in teamRoles!) {
         List<UserTeamRoleApiModel> otherTeamRoles = [];
-        if(userTeamRoleApiModel.appTeam.id != appTeamId) {
+        if (userTeamRoleApiModel.appTeam.id != appTeamId) {
           otherTeamRoles.add(userTeamRoleApiModel);
           return otherTeamRoles;
         }
@@ -97,7 +101,7 @@ class UserApiModel implements ModelToString, JsonAndHttpConverter {
 
   @override
   String toStringForListView() {
-    if(teamRoles != null && teamRoles!.isNotEmpty) {
+    if (teamRoles != null && teamRoles!.isNotEmpty) {
       return "Uživatel s právy ${teamRoles![0].roleToString()}";
     }
     return "Uživatel s neznámými právy";
@@ -110,7 +114,7 @@ class UserApiModel implements ModelToString, JsonAndHttpConverter {
 
   @override
   String toStringForAdd() {
-    return "Vítejte pane $name, přejeme příjemné pití";
+    return "Vítej, $name!";
   }
 
   @override

@@ -1,6 +1,5 @@
 import 'dart:convert';
 
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -21,44 +20,40 @@ import '../../../models/api/interfaces/json_and_http_converter.dart';
 import '../../general/repository/crud_api_service.dart';
 
 final authRepositoryProvider = Provider<AuthRepository>((ref) {
-  return AuthRepository(
-    firestore: FirebaseFirestore.instance,
-    ref: ref,
-  );
+  return AuthRepository(ref: ref);
 });
 
 class AuthRepository extends CrudApiService {
-  final FirebaseFirestore firestore;
-
-  AuthRepository({
-    required this.firestore,
-    required Ref ref,
-  }) : super(ref);
+  AuthRepository({required Ref ref}) : super(ref);
 
   Future<UserApiModel?> fastLogin() async {
     UserApiModel userApiModel;
     try {
-      userApiModel = await signInWithEmailToServer(
-          auth.currentUser!.email!, auth.currentUser!.uid);
+      userApiModel = await getCurrentUserData();
     } catch (e) {
-      print("Je nutné se projednou přihlásit ručně");
+      debugPrint("Je nutné se znovu přihlásit ručně: $e");
       throw LoginException("Je nutné se projednou přihlásit ručně");
-
     }
     return userApiModel;
   }
 
-  Future<UserApiModel?> getCurrentUserData() async {
+  Future<UserApiModel> getCurrentUserData() async {
     var url = Uri.parse("$serverUrl/$authApi/auth");
     final UserApiModel userApiModel = await executeGetRequest(
-        url, (dynamic json) => UserApiModel.fromJson(json), null);
+      url,
+      (dynamic json) => UserApiModel.fromJson(json),
+      null,
+    );
     return userApiModel;
   }
 
   Future<UserSetup> getUserSetup() async {
     var url = Uri.parse("$serverUrl/$authApi/setup");
     final UserSetup userSetup = await executeGetRequest(
-        url, (dynamic json) => UserSetup.fromJson(json), null);
+      url,
+      (dynamic json) => UserSetup.fromJson(json),
+      null,
+    );
     return userSetup;
   }
 
@@ -68,19 +63,23 @@ class AuthRepository extends CrudApiService {
 
   Future<List<UserApiModel>> getUsers(bool? appTeamTeamRolesOnly) async {
     Map<String, String?>? queryParameters;
-    if(appTeamTeamRolesOnly != null) {
+    if (appTeamTeamRolesOnly != null) {
       queryParameters = {
         'appTeamTeamRolesOnly': appTeamTeamRolesOnly.toString(),
       };
     }
-    final decodedBody = await getModels<JsonAndHttpConverter>(authApi, queryParameters);
+    final decodedBody = await getModels<JsonAndHttpConverter>(
+      authApi,
+      queryParameters,
+    );
     return decodedBody.map((model) => model as UserApiModel).toList();
   }
 
-  Future<void> setUserWritePermissions(
-      int userRoleId, String role) async {
-    var url = Uri.parse("$serverUrl/$authApi/$userRoleId/role-change?role=$role");
-    return await executePutRequest(url, (_) => null, jsonEncode(null));
+  Future<void> setUserWritePermissions(int userRoleId, String role) async {
+    var url = Uri.parse(
+      "$serverUrl/$authApi/$userRoleId/role-change?role=$role",
+    );
+    return await executePutRequest(url, (_) {}, jsonEncode(null));
   }
 
   Future<bool> deleteAccount() async {
@@ -93,10 +92,9 @@ class AuthRepository extends CrudApiService {
     try {
       await auth.currentUser!.delete();
       return true;
-    }
-    catch (e) {
-    print(e);
-    return false;
+    } catch (e) {
+      debugPrint(e.toString());
+      return false;
     }
   }
 
@@ -104,9 +102,8 @@ class AuthRepository extends CrudApiService {
     var url = Uri.parse("$serverUrl/$authApi/delete");
     try {
       return await executeDeleteRequest(url, (_) => true, jsonEncode(null));
-    }
-    catch (e) {
-      print(e);
+    } catch (e) {
+      debugPrint(e.toString());
       return false;
     }
   }
@@ -130,56 +127,51 @@ class AuthRepository extends CrudApiService {
   Future<UserApiModel?> signInWithEmail(String email, String password) async {
     String userId = await signInWithEmailToFirebase(email, password);
     if (userId.isNotEmpty) {
-      UserApiModel user =
-          await signInWithEmailToServer(email, auth.currentUser!.uid);
+      UserApiModel user = await getCurrentUserData();
       return user;
     }
     return null;
   }
 
   Future<String> signInWithEmailToFirebase(
-      String email, String password) async {
+    String email,
+    String password,
+  ) async {
     try {
-      UserCredential credentials =
-      await auth.signInWithEmailAndPassword(email: email, password: password);
+      UserCredential credentials = await auth.signInWithEmailAndPassword(
+        email: email,
+        password: password,
+      );
       return credentials.user!.uid;
     } on FirebaseAuthException catch (e) {
       throw convertFireBaseExceptionToFieldValidationException(e);
     }
   }
 
-  Future<UserApiModel> signInWithEmailToServer(
-      String email, String password) async {
-    var url = Uri.parse("$serverUrl/$authApi/auth");
-    UserApiModel user = UserApiModel(password: password, mail: email);
-    final UserApiModel userApiModel = await executePostRequest(
-        url,
-        (dynamic json) => UserApiModel.fromJson(json),
-        jsonEncode(user.toJson()));
-    return userApiModel;
-  }
-
-  Future<bool> signUpWithEmail(String email, String password, String name) async {
-    String userId = await signUpWithEmailToFireBase(email, password);
-    if (userId.isNotEmpty) {
-      await auth.currentUser!.updateDisplayName(name);
-      try {
-        await signUpWithEmailToServer(
-            email, auth.currentUser!.uid, name);
-        await signInWithEmailToFirebase(email, password);
-        await signInWithEmailToServer(email, auth.currentUser!.uid);
+  Future<bool> signUpWithEmail(
+    String email,
+    String password,
+    String name,
+  ) async {
+    User? firebaseUser = auth.currentUser;
+    if (firebaseUser == null ||
+        firebaseUser.email?.toLowerCase() != email.toLowerCase()) {
+      String userId = await signUpWithEmailToFireBase(email, password);
+      if (userId.isEmpty) {
+        return false;
       }
-      catch (e) {
-        deleteAccount();
-        rethrow;
-      }
-      return true;
+      firebaseUser = auth.currentUser;
     }
-    return false;
+    await firebaseUser!.updateDisplayName(name);
+    await signUpWithEmailToServer(name);
+    await getCurrentUserData();
+    return true;
   }
 
   Future<String> signUpWithEmailToFireBase(
-      String email, String password) async {
+    String email,
+    String password,
+  ) async {
     try {
       final credential = await auth.createUserWithEmailAndPassword(
         email: email,
@@ -191,40 +183,50 @@ class AuthRepository extends CrudApiService {
     }
   }
 
-  Future<UserApiModel> signUpWithEmailToServer(
-      String email, String password, String name) async {
+  Future<UserApiModel> signUpWithEmailToServer(String name) async {
     var url = Uri.parse("$serverUrl/$authApi/create");
-    UserApiModel user = UserApiModel(password: password, mail: email, name: name);
+    UserApiModel user = UserApiModel(name: name);
     final UserApiModel userApiModel = await executePostRequest(
-        url,
-        (dynamic json) => UserApiModel.fromJson(json),
-        jsonEncode(user.toJson()));
+      url,
+      (dynamic json) => UserApiModel.fromJson(json),
+      jsonEncode(user.toJson()),
+    );
     return userApiModel;
   }
 
   Future<UserApiModel> createNewAppTeam(
-      String name, int footballTeamId) async {
+    String name,
+    int? footballTeamId,
+  ) async {
     var url = Uri.parse("$serverUrl/$appTeamApi/create");
-    AppTeamRegistration appTeamRegistration = AppTeamRegistration(name: name, footballTeamId: footballTeamId);
+    AppTeamRegistration appTeamRegistration = AppTeamRegistration(
+      name: name,
+      footballTeamId: footballTeamId,
+    );
     final UserApiModel userApiModel = await executePostRequest(
-        url,
-            (dynamic json) => UserApiModel.fromJson(json),
-        jsonEncode(appTeamRegistration.toJson()));
+      url,
+      (dynamic json) => UserApiModel.fromJson(json),
+      jsonEncode(appTeamRegistration.toJson()),
+    );
     return userApiModel;
   }
 
-  Future<UserApiModel> addUserToAppTeam(
-      int appTeamId) async {
+  Future<UserApiModel> addUserToAppTeam(int appTeamId) async {
     var url = Uri.parse("$serverUrl/$appTeamApi/add");
     final UserApiModel userApiModel = await executePostRequest(
-        url,
-            (dynamic json) => UserApiModel.fromJson(json),
-        jsonEncode(appTeamId));
+      url,
+      (dynamic json) => UserApiModel.fromJson(json),
+      jsonEncode(appTeamId),
+    );
     return userApiModel;
   }
 
-  Future<UserApiModel> editCurrentUser(bool? admin, String? name, int? playerId) async {
-    if(name != null) {
+  Future<UserApiModel> editCurrentUser(
+    bool? admin,
+    String? name,
+    int? playerId,
+  ) async {
+    if (name != null) {
       await auth.currentUser!.updateDisplayName(name);
     }
     UserApiModel user = UserApiModel();
@@ -233,25 +235,25 @@ class AuthRepository extends CrudApiService {
     user.name = name;
     //user.playerId = playerId;
     final UserApiModel userApiModel = await executePostRequest(
-        url,
-        (dynamic json) => UserApiModel.fromJson(json),
-        jsonEncode(user.toJson()));
+      url,
+      (dynamic json) => UserApiModel.fromJson(json),
+      jsonEncode(user.toJson()),
+    );
     return userApiModel;
   }
 
   Future<void> setUserPlayerId(PlayerApiModel playerApiModel) async {
     var url = Uri.parse("$serverUrl/$authApi/player-add");
-    await executePostRequest(
-        url,
-            (_) => null,
-        jsonEncode(playerApiModel.toJson()));
+    await executePostRequest(url, (_) {}, jsonEncode(playerApiModel.toJson()));
   }
 
   Future<BoolAndString> sendForgottenPassword(String email) async {
     try {
       await auth.sendPasswordResetEmail(email: email);
-      return BoolAndString(true, "Na mail $email byl zaslán link pro reset hesla. Stojí tě to přesně jednu rundu");
-
+      return BoolAndString(
+        true,
+        "Na e-mail $email jsme poslali odkaz pro obnovení hesla.",
+      );
     } on FirebaseAuthException catch (e) {
       return BoolAndString(false, convertFirebaseAuthExceptionToString(e));
     }
@@ -260,34 +262,60 @@ class AuthRepository extends CrudApiService {
   Future<RegistrationSetup> setupRegistration() async {
     const String url = "$serverUrl/$authApi/$registrationSetupApi";
     final RegistrationSetup registrationSetup = await executeGetRequest(
-        Uri.parse(url), (dynamic json) => RegistrationSetup.fromJson(json), null);
+      Uri.parse(url),
+      (dynamic json) => RegistrationSetup.fromJson(json),
+      null,
+    );
     return registrationSetup;
   }
 
-  FieldValidationException convertFireBaseExceptionToFieldValidationException(FirebaseAuthException e) {
+  FieldValidationException convertFireBaseExceptionToFieldValidationException(
+    FirebaseAuthException e,
+  ) {
     String emailField = "email";
     String passwordField = "password";
     List<FieldModel> fields = [];
     if (e.code == 'user-not-found') {
-      FieldModel fieldModel = FieldModel(field: emailField, message: "Uživatel/email nebyl nalezen!");
+      FieldModel fieldModel = FieldModel(
+        field: emailField,
+        message: "Uživatel/email nebyl nalezen!",
+      );
       fields.add(fieldModel);
-    } else if (e.code == 'wrong-password') {
-      FieldModel fieldModel = FieldModel(field: passwordField, message: "Špatné heslo!");
+    } else if (e.code == 'wrong-password' || e.code == 'invalid-credential') {
+      FieldModel fieldModel = FieldModel(
+        field: passwordField,
+        message: "E-mail nebo heslo není správně",
+      );
       fields.add(fieldModel);
     } else if (e.code == 'invalid-email') {
-      FieldModel fieldModel = FieldModel(field: emailField, message: "Email není ve správném formátu");
+      FieldModel fieldModel = FieldModel(
+        field: emailField,
+        message: "Email není ve správném formátu",
+      );
       fields.add(fieldModel);
     } else if (e.code == 'user-disabled') {
-      FieldModel fieldModel = FieldModel(field: emailField, message: "Uživatel je blokovanej, asi sis čárkoval víc než si měl vole");
+      FieldModel fieldModel = FieldModel(
+        field: emailField,
+        message: "Účet je zablokovaný. Kontaktuj správce.",
+      );
       fields.add(fieldModel);
     } else if (e.code == 'email-already-in-use') {
-      FieldModel fieldModel = FieldModel(field: emailField, message: "Na tento mail se již někdo zaregistroval");
+      FieldModel fieldModel = FieldModel(
+        field: emailField,
+        message: "Na tento mail se již někdo zaregistroval",
+      );
       fields.add(fieldModel);
     } else if (e.code == 'operation-not-allowed') {
-      FieldModel fieldModel = FieldModel(field: emailField, message: "Operace není povolena! Řekni adminovi co to je za klauni, že se nedá registrovat");
+      FieldModel fieldModel = FieldModel(
+        field: emailField,
+        message: "Registrace nyní není dostupná. Kontaktuj správce.",
+      );
       fields.add(fieldModel);
     } else if (e.code == 'weak-password') {
-      FieldModel fieldModel = FieldModel(field: passwordField, message: "Moc slabý heslo, zadej takový aby vyhovovalo googlu");
+      FieldModel fieldModel = FieldModel(
+        field: passwordField,
+        message: "Heslo je příliš slabé",
+      );
       fields.add(fieldModel);
     } else {
       FieldModel fieldModel = FieldModel(field: emailField, message: e.message);
@@ -299,25 +327,28 @@ class AuthRepository extends CrudApiService {
   String convertFirebaseAuthExceptionToString(FirebaseAuthException e) {
     if (e.code == 'user-not-found') {
       return "Uživatel/email nebyl nalezen!";
-    } else if (e.code == 'wrong-password') {
-      return "Zadal jsi špatné heslo!";
+    } else if (e.code == 'wrong-password' || e.code == 'invalid-credential') {
+      return "E-mail nebo heslo není správně";
     } else if (e.code == 'invalid-email') {
       return "Email není ve správném formátu";
     } else if (e.code == 'user-disabled') {
-      return "Uživatel je blokovanej, asi sis čárkoval víc než si měl vole";
+      return "Účet je zablokovaný. Kontaktuj správce.";
     } else if (e.code == 'email-already-in-use') {
       return "Na tento mail se již někdo zaregistroval";
     } else if (e.code == 'operation-not-allowed') {
-      return "Operace není povolena! Řekni adminovi co to je za klauni, že se nedá registrovat";
+      return "Operace nyní není dostupná. Kontaktuj správce.";
     } else if (e.code == 'weak-password') {
-      return "Moc slabý heslo, zadej takový aby vyhovovalo googlu";
+      return "Heslo je příliš slabé";
     } else {
       return e.message!;
     }
   }
 
   void showSnackBarError(BuildContext context, FirebaseAuthException e) {
-    showSnackBarWithPostFrame(context: context, content: convertFirebaseAuthExceptionToString(e));
+    showSnackBarWithPostFrame(
+      context: context,
+      content: convertFirebaseAuthExceptionToString(e),
+    );
   }
 
   void showSnackBarServerError(BuildContext context, ServerException e) {

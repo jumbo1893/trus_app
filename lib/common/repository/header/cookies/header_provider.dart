@@ -1,13 +1,13 @@
 import 'dart:io';
 
 import 'package:device_info_plus/device_info_plus.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:trus_app/features/general/global_variables_controller.dart';
 
 import 'cookie_manager.dart';
 import 'custom_cookie_manager.dart';
-
 
 class HeaderProvider {
   final DeviceInfoPlugin _deviceInfo = DeviceInfoPlugin();
@@ -23,11 +23,14 @@ class HeaderProvider {
     final deviceInfo = await _getDeviceInfo();
     final packageInfo = await PackageInfo.fromPlatform();
     final appTeamHeader = await _getAppTeamHeader();
+    final idToken = await FirebaseAuth.instance.currentUser?.getIdToken();
     return {
       ...cookies,
       'Content-Type': 'application/json; charset=UTF-8',
       'device': deviceInfo,
       'x-app-version': packageInfo.version,
+      if (idToken != null && idToken.isNotEmpty)
+        'Authorization': 'Bearer $idToken',
       if (appTeamHeader != null) ...appTeamHeader,
     };
   }

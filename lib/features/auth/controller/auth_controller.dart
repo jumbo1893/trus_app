@@ -9,9 +9,14 @@ import '../repository/auth_repository.dart';
 
 final authControllerProvider = Provider((ref) {
   final authRepository = ref.watch(authRepositoryProvider);
-  final globalVariablesController = ref.watch(globalVariablesControllerProvider);
-  return AuthController(authRepository: authRepository, globalVariablesController: globalVariablesController);
-  });
+  final globalVariablesController = ref.watch(
+    globalVariablesControllerProvider,
+  );
+  return AuthController(
+    authRepository: authRepository,
+    globalVariablesController: globalVariablesController,
+  );
+});
 
 class AuthController implements ReadOperations {
   final AuthRepository authRepository;
@@ -45,11 +50,11 @@ class AuthController implements ReadOperations {
   }
 
   Future<void> deleteAccount() async {
-    bool result = await authRepository.deleteAccount();
+    await authRepository.deleteAccount();
   }
 
-  Future<void> saveUserData(String username) async {
-    await authRepository.editCurrentUser(false, username, null);
+  Future<UserApiModel> saveUserData(String username) async {
+    return await authRepository.editCurrentUser(false, username, null);
   }
 
   void saveAppTeam(AppTeamApiModel appTeam) {
@@ -57,14 +62,14 @@ class AuthController implements ReadOperations {
   }
 
   bool isNeededToSetAppTeam(UserApiModel user) {
-    if(user.teamRoles == null || user.teamRoles!.isEmpty) {
+    if (user.teamRoles == null || user.teamRoles!.isEmpty) {
       return true;
     }
     return false;
   }
 
   bool isNeededToChooseAppTeam(UserApiModel user) {
-    if(user.teamRoles!.length > 1) {
+    if (user.teamRoles!.length > 1) {
       return true;
     }
     return false;

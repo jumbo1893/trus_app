@@ -3,6 +3,5 @@ abstract class IUserAppTeamRegistrationKey {
   String teamKey();
   String appTeamKey();
   String newAppTeamKey();
-  String primaryTeamKey();
-  String newAppTeamKeyPicked();
+  String linkFootballTeamKey();
 }

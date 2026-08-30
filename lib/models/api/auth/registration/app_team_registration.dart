@@ -1,21 +1,11 @@
-
-
-
 class AppTeamRegistration {
   final String name;
-  final int footballTeamId;
+  final int? footballTeamId;
 
-  AppTeamRegistration({
-    required this.name,
-    required this.footballTeamId,
-  });
-
+  AppTeamRegistration({required this.name, required this.footballTeamId});
 
   Map<String, dynamic> toJson() {
-    return {
-      "name": name,
-      "footballTeamId": footballTeamId,
-    };
+    return {"name": name, "footballTeamId": footballTeamId};
   }
 
   factory AppTeamRegistration.fromJson(Map<String, dynamic> json) {

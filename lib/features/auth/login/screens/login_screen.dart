@@ -1,5 +1,3 @@
-import 'dart:async';
-
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:trus_app/common/utils/utils.dart';
@@ -27,11 +25,10 @@ class LoginScreen extends ConsumerStatefulWidget {
 }
 
 class _LoginScreenState extends ConsumerState<LoginScreen> {
-
   late LoginRedirect redirectWidget;
 
   void chooseRouteNameByWidget(LoginRedirect redirect, UserApiModel user) {
-    switch(redirect) {
+    switch (redirect) {
       case LoginRedirect.needToLogin:
         navigateToLoginScreen();
         break;
@@ -47,16 +44,21 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
       case LoginRedirect.ok:
         navigateToHomePage(user);
         break;
-      }
+    }
   }
 
   void navigateToHomePage(UserApiModel user) {
     if (user.name == null || user.name!.isEmpty) {
       Navigator.pushNamedAndRemoveUntil(
-          context, UserInformationScreen.routeName, (route) => false);
+        context,
+        UserInformationScreen.routeName,
+        (route) => false,
+      );
     } else {
       showSnackBarWithPostFrame(
-          context: context, content: user.toStringForAdd());
+        context: context,
+        content: user.toStringForAdd(),
+      );
       Navigator.pushNamed(context, MainScreen.routeName);
     }
   }
@@ -79,84 +81,100 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final size = MediaQueryData.fromView(WidgetsBinding.instance.window).size;
+    final size = MediaQuery.sizeOf(context);
     const double padding = 8.0;
     return Scaffold(
-        body: FutureBuilder<void>(
-            future: ref.watch(authLoginControllerProvider).setupUser(),
-            builder: (context, snapshot) {
-              if (snapshot.connectionState == ConnectionState.waiting) {
-                return const Loader();
-              } else if (snapshot.hasError) {
-                Future.delayed(
-                    Duration.zero,
-                    () => showErrorDialog(snapshot, () {
-                          navigateToLoginScreen();
-                        }, context));
-                return const Loader();
+      body: FutureBuilder<void>(
+        future: ref.watch(authLoginControllerProvider).setupUser(),
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return const Loader();
+          } else if (snapshot.hasError) {
+            WidgetsBinding.instance.addPostFrameCallback((_) {
+              if (!mounted) {
+                return;
               }
-              return ColumnFutureBuilder(
-                crossAxisAlignment: CrossAxisAlignment.center,
-                loadModelFuture:
-                    ref.watch(authLoginControllerProvider).loadLoginUser(),
-                loadingScreen: ref.read(authLoginControllerProvider).loading(),
-                loadingScreenWidget: LoadingScreen(
-                  buttonClicked: () => chooseRouteNameByWidget(redirectWidget, ref.read(authLoginControllerProvider).loadedUser),
-                  buttonText: "Pokračovat na domovskou obrazovku",
-                  loadingFlag:
-                      ref.read(authLoginControllerProvider).loadingSuccess(),
-                  loadingDoneText: "Úspěšně přihlášeno!",
-                ),
-                columns: [
-                  Image.asset(
-                    key: const ValueKey('logo_image'),
-                    'images/logo.png',
-                    height: 240,
-                    width: 215,
-                  ),
-                  const Text("Pro přihlášení zadej uživatelské jméno a heslo."),
-                  const SizedBox(height: 15),
-                  RowTextFieldStream(
-                    key: const ValueKey('email_text_field'),
-                    size: size,
-                    labelText: "email",
-                    textFieldText: "email:",
-                    padding: padding,
-                    stringControllerMixin: ref.watch(authLoginControllerProvider),
-                    hashKey: ref.read(authLoginControllerProvider).emailKey(),
-                    showLabel: false,
-                  ),
-                  RowTextFieldStream(
-                    key: const ValueKey('password_text_field'),
-                    size: size,
-                    labelText: "heslo",
-                    textFieldText: "heslo:",
-                    padding: padding,
-                    password: true,
-                    stringControllerMixin: ref.watch(authLoginControllerProvider),
-                    hashKey: ref.read(authLoginControllerProvider).passwordKey(),
-                    showLabel: false,
-                  ),
-                  CustomButton(
-                      text: "Přihlaš se",
-                      onPressed: () async => redirectWidget = await ref.read(authLoginControllerProvider).sendEmailAndPassword(),
-                      key: const ValueKey('login_button')),
-                  CustomTextButton(
-                      text: "Zaregistruj se",
-                      onPressed: () => navigateToRegistrationScreen(context),
-                      key: const ValueKey('registration_button')),
-                  CustomTextButton(
-                      text: "Zapomněl jsem heslo",
-                      onPressed: () async {
-                        final text = await ref.read(authLoginControllerProvider).sendForgottenPassword();
-                        if (!context.mounted) return;
-                        showInfoDialog(context, text);
-                      },
-                      key: const ValueKey('forgotten_password_button')),
-                  const SizedBox(height: 10),
-                ],
-              );
-            }),
-        );
+              showErrorDialog(snapshot, () {
+                navigateToLoginScreen();
+              }, context);
+            });
+            return const Loader();
+          }
+          return ColumnFutureBuilder(
+            crossAxisAlignment: CrossAxisAlignment.center,
+            loadModelFuture: ref
+                .watch(authLoginControllerProvider)
+                .loadLoginUser(),
+            loadingScreen: ref.read(authLoginControllerProvider).loading(),
+            loadingScreenWidget: LoadingScreen(
+              buttonClicked: () => chooseRouteNameByWidget(
+                redirectWidget,
+                ref.read(authLoginControllerProvider).loadedUser,
+              ),
+              buttonText: "Pokračovat na domovskou obrazovku",
+              loadingFlag: ref
+                  .read(authLoginControllerProvider)
+                  .loadingSuccess(),
+              loadingDoneText: "Úspěšně přihlášeno!",
+            ),
+            columns: [
+              Image.asset(
+                key: const ValueKey('logo_image'),
+                'images/logo.png',
+                height: 240,
+                width: 215,
+              ),
+              const Text("Pro přihlášení zadej e-mail a heslo."),
+              const SizedBox(height: 15),
+              RowTextFieldStream(
+                key: const ValueKey('email_text_field'),
+                size: size,
+                labelText: "email",
+                textFieldText: "email:",
+                padding: padding,
+                stringControllerMixin: ref.watch(authLoginControllerProvider),
+                hashKey: ref.read(authLoginControllerProvider).emailKey(),
+                showLabel: false,
+              ),
+              RowTextFieldStream(
+                key: const ValueKey('password_text_field'),
+                size: size,
+                labelText: "heslo",
+                textFieldText: "heslo:",
+                padding: padding,
+                password: true,
+                stringControllerMixin: ref.watch(authLoginControllerProvider),
+                hashKey: ref.read(authLoginControllerProvider).passwordKey(),
+                showLabel: false,
+              ),
+              CustomButton(
+                text: "Přihlásit se",
+                onPressed: () async => redirectWidget = await ref
+                    .read(authLoginControllerProvider)
+                    .sendEmailAndPassword(),
+                key: const ValueKey('login_button'),
+              ),
+              CustomTextButton(
+                text: "Vytvořit účet",
+                onPressed: () => navigateToRegistrationScreen(context),
+                key: const ValueKey('registration_button'),
+              ),
+              CustomTextButton(
+                text: "Zapomenuté heslo",
+                onPressed: () async {
+                  final text = await ref
+                      .read(authLoginControllerProvider)
+                      .sendForgottenPassword();
+                  if (!context.mounted) return;
+                  showInfoDialog(context, text);
+                },
+                key: const ValueKey('forgotten_password_button'),
+              ),
+              const SizedBox(height: 10),
+            ],
+          );
+        },
+      ),
+    );
   }
 }

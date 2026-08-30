@@ -1,11 +1,9 @@
-
 import 'dart:math';
 
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:trus_app/models/api/auth/user_api_model.dart';
 
 class SharedPrefsHelper {
-
   Future<bool> isForegroundServiceStarted() async {
     SharedPreferences pref = await SharedPreferences.getInstance();
     return pref.getBool("foregroundServiceStart") ?? false;
@@ -16,19 +14,19 @@ class SharedPrefsHelper {
     pref.setBool("foregroundServiceStart", started);
   }
 
-  Future<void> setEmailAndPassword(String email, String password) async {
+  Future<void> setEmail(String email) async {
     SharedPreferences pref = await SharedPreferences.getInstance();
-    pref.setString("userEmail", email);
-    pref.setString("userPassword", password);
+    await pref.setString("userEmail", email);
+    await pref.remove("userPassword");
   }
 
-  Future<UserApiModel> getUserWithEmailAndPasswordOnly() async {
+  Future<UserApiModel> getUserWithEmailOnly() async {
     SharedPreferences pref = await SharedPreferences.getInstance();
     UserApiModel userApiModel = UserApiModel();
     String email = pref.getString("userEmail") ?? "";
-    String password = pref.getString("userPassword") ?? "";
+    await pref.remove("userPassword");
     userApiModel.mail = email;
-    userApiModel.password = password;
+    userApiModel.password = "";
     return userApiModel;
   }
 
@@ -47,5 +45,4 @@ class SharedPrefsHelper {
     await pref.setString("clientDeviceId", id);
     return id;
   }
-
 }

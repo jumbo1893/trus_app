@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:trus_app/features/auth/app_team/controller/auth_app_team_registration_controller.dart';
-import 'package:trus_app/features/auth/registration/controller/auth_registration_controller.dart';
 import 'package:trus_app/features/main/main_screen.dart';
 
 import '../../../../common/utils/utils.dart';
@@ -18,152 +17,216 @@ class AppTeamRegistrationScreen extends ConsumerStatefulWidget {
   static const routeName = '/app-team-registration-screen';
 
   @override
-  ConsumerState<AppTeamRegistrationScreen> createState() => _AppTeamRegistrationScreen();
+  ConsumerState<AppTeamRegistrationScreen> createState() =>
+      _AppTeamRegistrationScreen();
 }
 
-class _AppTeamRegistrationScreen extends ConsumerState<AppTeamRegistrationScreen> {
-
-  void decideIfNavigateToMainScreen(bool result) {
-    if(result) {
-      navigateToMainScreen(context);
-    }
-  }
-
-  void navigateToAppTeamRegistrationScreen(BuildContext context) {
-    Navigator.pushNamed(context, AppTeamRegistrationScreen.routeName);
-  }
-
-  void navigateToMainScreen(BuildContext context) {
-    Navigator.pushNamed(context, MainScreen.routeName);
+class _AppTeamRegistrationScreen
+    extends ConsumerState<AppTeamRegistrationScreen> {
+  void navigateToMainScreen() {
+    Navigator.pushNamedAndRemoveUntil(
+      context,
+      MainScreen.routeName,
+      (route) => false,
+    );
   }
 
   @override
   Widget build(BuildContext context) {
     final controller = ref.watch(authAppTeamRegistrationControllerProvider);
-    final size = MediaQueryData.fromView(WidgetsBinding.instance.window).size;
-    const double padding = 8.0;
+    final size = MediaQuery.sizeOf(context);
+    const padding = 8.0;
+
     return Scaffold(
-      appBar: AppBar(
-        title: const Text("Registrace"),
-        elevation: 0,
-      ),
+      appBar: AppBar(title: const Text('Vyber si tým'), elevation: 0),
       body: FutureBuilder<void>(
-          future: controller.setupRegistration(),
-          builder: (context, snapshot) {
-            if (snapshot.connectionState == ConnectionState.waiting) {
-              return const Loader();
-            } else if (snapshot.hasError) {
-              Future.delayed(
-                  Duration.zero,
-                      () => showErrorDialog(snapshot, () {
-                        navigateToAppTeamRegistrationScreen(context);
-                  }, context));
-              return const Loader();
-            }
-            return ColumnFutureBuilder(
-              crossAxisAlignment: CrossAxisAlignment.center,
-              loadModelFuture:
-              controller.loadRegistrationSetup(),
-              loadingScreen: controller.loading(),
-              loadingScreenWidget: LoadingScreen(
-                buttonClicked: () => navigateToMainScreen(context),
-                buttonText: "Pokračovat na domovskou obrazovku",
-                loadingFlag:
-                ref.read(authRegistrationControllerProvider).loadingSuccess(),
-                loadingDoneText: "Úspěšně registrováno!",
-              ),
-              columns: [
-                const SizedBox(height: 30),
-                const Text("Nyní si zvol tým, pod kterým budeš registrován"),
-                const Text("Doporučujeme Liščí Trus, pak nech vše jak je"),
-                const SizedBox(height: 15),
-                RowSwitchStream(
-                  key: const ValueKey('primary_team_field'),
-                  size: size,
-                  padding: padding,
-                  textFieldText: "Jsem hráč/fanoušek/chci pít za Liščí Trus",
-                  booleanControllerMixin: controller,
-                  hashKey: controller.primaryTeamKey(),
+        future: controller.setupRegistration(),
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return const Loader();
+          }
+          if (snapshot.hasError) {
+            WidgetsBinding.instance.addPostFrameCallback((_) {
+              if (!mounted) {
+                return;
+              }
+              showErrorDialog(
+                snapshot,
+                () => Navigator.pushReplacementNamed(
+                  context,
+                  AppTeamRegistrationScreen.routeName,
                 ),
-                StreamBuilder<bool>(
-                    stream: controller.boolean(controller.primaryTeamKey()),
-                    builder: (context, snapshot) {
-                      bool primaryTeam = true;
-                      if (snapshot.hasData) {
-                        primaryTeam = snapshot.data!;
+                context,
+              );
+            });
+            return const Loader();
+          }
+
+          return ColumnFutureBuilder(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            loadModelFuture: controller.loadRegistrationSetup(),
+            loadingScreen: controller.loading(),
+            loadingScreenWidget: LoadingScreen(
+              buttonClicked: navigateToMainScreen,
+              buttonText: 'Pokračovat do aplikace',
+              loadingFlag: controller.loadingSuccess(),
+              loadingDoneText: 'Tým je připravený!',
+            ),
+            columns: [
+              const SizedBox(height: 16),
+              Text(
+                'Jak chceš začít?',
+                style: Theme.of(context).textTheme.headlineSmall,
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 6),
+              const Text(
+                'Výběr můžeš později změnit nebo se přidat k dalším týmům.',
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 16),
+              StreamBuilder<TeamOnboardingChoice>(
+                stream: controller.choice(),
+                initialData: controller.selectedChoice,
+                builder: (context, choiceSnapshot) {
+                  final choice = choiceSnapshot.data!;
+                  return RadioGroup<TeamOnboardingChoice>(
+                    groupValue: choice,
+                    onChanged: (selected) {
+                      if (selected != null) {
+                        controller.setChoice(selected);
                       }
-                      if(!primaryTeam) {
-                        return Column(
-                          children: [
-                            const SizedBox(height: 15),
-                            const Text("Zvol si tým, pod kterým budeš pít."),
-                            const SizedBox(height: 15),
-                            RowApiModelDropDownStream(
-                              key: const ValueKey('league_spinner'),
-                              size: size,
-                              padding: padding,
-                              text: 'Liga',
-                              hint: 'Vyber ligu',
-                              dropdownControllerMixin: controller,
-                              hashKey: controller.leagueKey(),
-                            ),
-                            RowApiModelDropDownStream(
-                              key: const ValueKey('team_spinner'),
+                    },
+                    child: Column(
+                      children: [
+                        const _ChoiceCard(
+                          value: TeamOnboardingChoice.lisciTrus,
+                          title: 'Přidat se k Liščímu Trusu',
+                          subtitle:
+                              'Doporučená volba pro hráče a fanoušky Liščího Trusu.',
+                        ),
+                        const _ChoiceCard(
+                          value: TeamOnboardingChoice.joinExisting,
+                          title: 'Přidat se k existujícímu týmu',
+                          subtitle: 'Vyber tým, který už v aplikaci funguje.',
+                        ),
+                        if (choice == TeamOnboardingChoice.joinExisting)
+                          Padding(
+                            padding: const EdgeInsets.symmetric(vertical: 8),
+                            child: RowApiModelDropDownStream(
+                              key: const ValueKey('app_team_spinner'),
                               size: size,
                               padding: padding,
                               text: 'Tým',
                               hint: 'Vyber tým',
                               dropdownControllerMixin: controller,
-                              hashKey: controller.teamKey(),
+                              hashKey: controller.appTeamKey(),
                             ),
-                            StreamBuilder<bool>(
-                                stream: controller.boolean(controller.newAppTeamKeyPicked()),
-                                builder: (context, newAppTeamSnapshot) {
-                                  bool newAppTeamPicked = controller.boolValues[controller.newAppTeamKeyPicked()]!;
-                                  if (newAppTeamSnapshot.hasData) {
-                                    newAppTeamPicked = newAppTeamSnapshot.data!;
-                                  }
-                                  if(newAppTeamPicked) {
-                                    return RowTextFieldStream(
-                                      key: const ValueKey('new_app_team_field'),
-                                      size: size,
-                                      labelText: "Název picího týmu",
-                                      textFieldText: "Vlastní tým:",
-                                      padding: padding,
-                                      stringControllerMixin: controller,
-                                      hashKey: controller.newAppTeamKey(),
-                                    );
-                                  }
-                                  return RowApiModelDropDownStream(
-                                    key: const ValueKey('app_team_spinner'),
-                                    size: size,
-                                    padding: padding,
-                                    text: 'Připoj se k týmu',
-                                    hint: 'Žádný tým není/založ si nový',
-                                    dropdownControllerMixin: controller,
-                                    hashKey: controller.appTeamKey(),
-                                  );
-                                }),
+                          ),
+                        const _ChoiceCard(
+                          value: TeamOnboardingChoice.createNew,
+                          title: 'Založit vlastní tým',
+                          subtitle:
+                              'Stačí název. Propojení s PKFL je volitelné.',
+                        ),
+                        if (choice == TeamOnboardingChoice.createNew) ...[
+                          const SizedBox(height: 8),
+                          RowTextFieldStream(
+                            key: const ValueKey('new_app_team_field'),
+                            size: size,
+                            labelText: 'Název týmu',
+                            textFieldText: 'Název',
+                            padding: padding,
+                            stringControllerMixin: controller,
+                            hashKey: controller.newAppTeamKey(),
+                          ),
+                          if (controller.canLinkFootballTeam)
                             RowSwitchStream(
-                              key: const ValueKey('new_app_team_picked_field'),
+                              key: const ValueKey('link_football_team_field'),
                               size: size,
                               padding: padding,
-                              textFieldText: "Chci založit vlastní tým",
+                              textFieldText: 'Propojit s PKFL',
                               booleanControllerMixin: controller,
-                              hashKey: controller.newAppTeamKeyPicked(),
+                              hashKey: controller.linkFootballTeamKey(),
                             ),
-                          ],
-                        );
-                      }
-                      return const SizedBox.shrink();
-                    }),
-                CustomButton(
-                    text: "Dokonči registraci a přihlaš se",
-                    onPressed: () async => decideIfNavigateToMainScreen(await controller.setNewAppTeam()),
-                    key: const ValueKey('confirm_button')),
-              ],
-            );
-          }),
+                          if (controller.canLinkFootballTeam)
+                            StreamBuilder<bool>(
+                              stream: controller.boolean(
+                                controller.linkFootballTeamKey(),
+                              ),
+                              initialData: controller
+                                  .boolValues[controller.linkFootballTeamKey()],
+                              builder: (context, linkSnapshot) {
+                                if (linkSnapshot.data != true) {
+                                  return const SizedBox.shrink();
+                                }
+                                return Column(
+                                  children: [
+                                    RowApiModelDropDownStream(
+                                      key: const ValueKey('league_spinner'),
+                                      size: size,
+                                      padding: padding,
+                                      text: 'Liga',
+                                      hint: 'Vyber ligu',
+                                      dropdownControllerMixin: controller,
+                                      hashKey: controller.leagueKey(),
+                                    ),
+                                    RowApiModelDropDownStream(
+                                      key: const ValueKey('team_spinner'),
+                                      size: size,
+                                      padding: padding,
+                                      text: 'Tým PKFL',
+                                      hint: 'Vyber tým',
+                                      dropdownControllerMixin: controller,
+                                      hashKey: controller.teamKey(),
+                                    ),
+                                  ],
+                                );
+                              },
+                            ),
+                        ],
+                      ],
+                    ),
+                  );
+                },
+              ),
+              CustomButton(
+                text: 'Dokončit registraci',
+                onPressed: () async {
+                  if (await controller.completeRegistration() && mounted) {
+                    navigateToMainScreen();
+                  }
+                },
+                key: const ValueKey('confirm_button'),
+              ),
+            ],
+          );
+        },
+      ),
+    );
+  }
+}
+
+class _ChoiceCard extends StatelessWidget {
+  final TeamOnboardingChoice value;
+  final String title;
+  final String subtitle;
+
+  const _ChoiceCard({
+    required this.value,
+    required this.title,
+    required this.subtitle,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Card(
+      margin: const EdgeInsets.symmetric(vertical: 5),
+      child: RadioListTile<TeamOnboardingChoice>(
+        value: value,
+        title: Text(title),
+        subtitle: Text(subtitle),
+      ),
     );
   }
 }

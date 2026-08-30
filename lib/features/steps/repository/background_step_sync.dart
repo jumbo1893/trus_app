@@ -60,15 +60,16 @@ class BackgroundStepSync {
     List<StepSyncDay> days,
   ) async {
     final packageInfo = await PackageInfo.fromPlatform();
+    final idToken = await user.getIdToken();
     return http.post(
       Uri.parse('$serverUrl/$stepApi/background-sync'),
       headers: {
         'Content-Type': 'application/json; charset=UTF-8',
         'x-app-version': packageInfo.version,
+        if (idToken != null && idToken.isNotEmpty)
+          'Authorization': 'Bearer $idToken',
       },
       body: jsonEncode({
-        'mail': user.email,
-        'password': user.uid,
         'appTeamId': teamId,
         'permissionGranted': permissionGranted,
         'days': days.map((day) => day.toJson()).toList(),
