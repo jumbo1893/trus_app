@@ -7,7 +7,8 @@ mixin DropdownControllerMixin {
   final Map<String, DropdownItem?> dropdownValues = {};
   final Map<String, bool> createdDropdownChecker = {};
   final Map<String, StreamController<DropdownItem?>> dropdownControllers = {};
-  final Map<String, StreamController<List<DropdownItem>>> dropdownListControllers = {};
+  final Map<String, StreamController<List<DropdownItem>>>
+  dropdownListControllers = {};
   final Map<String, StreamController<String>> dropdownErrorTextControllers = {};
 
   void _setAlreadyCreated(String key) {
@@ -15,11 +16,12 @@ mixin DropdownControllerMixin {
   }
 
   void _createDropdownCheckedList(String key) {
-    if(!(createdDropdownChecker[key]?? false)) {
+    if (!(createdDropdownChecker[key] ?? false)) {
       _setAlreadyCreated(key);
       dropdownLists[key] = [];
-      dropdownControllers[key] = StreamController<DropdownItem>.broadcast();
-      dropdownListControllers[key] = StreamController<List<DropdownItem>>.broadcast();
+      dropdownControllers[key] = StreamController<DropdownItem?>.broadcast();
+      dropdownListControllers[key] =
+          StreamController<List<DropdownItem>>.broadcast();
       dropdownErrorTextControllers[key] = StreamController<String>.broadcast();
     }
   }
@@ -62,6 +64,6 @@ mixin DropdownControllerMixin {
 
   void initDropdownItem(String key) {
     _createDropdownCheckedList(key);
-    dropdownControllers[key]!.add(dropdownValues[key]!);
+    dropdownControllers[key]!.add(dropdownValues[key]);
   }
 }

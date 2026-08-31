@@ -1,5 +1,6 @@
 import 'package:riverpod/riverpod.dart';
 import 'package:trus_app/features/general/global_variables_controller.dart';
+import 'package:trus_app/features/general/notifier/global_variables_notifier.dart';
 import 'package:trus_app/features/general/read_operations.dart';
 import 'package:trus_app/models/api/auth/app_team_api_model.dart';
 import 'package:trus_app/models/api/interfaces/model_to_string.dart';
@@ -15,16 +16,19 @@ final authControllerProvider = Provider((ref) {
   return AuthController(
     authRepository: authRepository,
     globalVariablesController: globalVariablesController,
+    globalVariablesNotifier: ref.read(globalVariablesProvider.notifier),
   );
 });
 
 class AuthController implements ReadOperations {
   final AuthRepository authRepository;
   final GlobalVariablesController globalVariablesController;
+  final GlobalVariablesNotifier globalVariablesNotifier;
 
   AuthController({
     required this.authRepository,
     required this.globalVariablesController,
+    required this.globalVariablesNotifier,
   });
 
   Future<List<UserApiModel>> users() async {
@@ -59,6 +63,7 @@ class AuthController implements ReadOperations {
 
   void saveAppTeam(AppTeamApiModel appTeam) {
     globalVariablesController.setAppTeam(appTeam);
+    globalVariablesNotifier.setAppTeam(appTeam);
   }
 
   bool isNeededToSetAppTeam(UserApiModel user) {

@@ -4,6 +4,7 @@ import 'package:flutter/foundation.dart';
 import 'package:riverpod/riverpod.dart';
 import 'package:trus_app/common/repository/exception/field_validation_exception.dart';
 import 'package:trus_app/features/general/global_variables_controller.dart';
+import 'package:trus_app/features/general/notifier/global_variables_notifier.dart';
 import 'package:trus_app/features/mixin/boolean_controller_mixin.dart';
 import 'package:trus_app/features/mixin/dropdown_controller_mixin.dart';
 import 'package:trus_app/features/mixin/string_controller_mixin.dart';
@@ -25,6 +26,7 @@ final authAppTeamRegistrationControllerProvider = Provider((ref) {
   return AuthAppTeamRegistrationController(
     authRepository: authRepository,
     globalVariablesController: globalVariablesController,
+    globalVariablesNotifier: ref.read(globalVariablesProvider.notifier),
   );
 });
 
@@ -35,6 +37,7 @@ class AuthAppTeamRegistrationController
     implements IUserAppTeamRegistrationKey {
   final AuthRepository authRepository;
   final GlobalVariablesController globalVariablesController;
+  final GlobalVariablesNotifier globalVariablesNotifier;
   late RegistrationSetup registrationSetup;
 
   final loadingController = StreamController<bool>.broadcast();
@@ -47,6 +50,7 @@ class AuthAppTeamRegistrationController
   AuthAppTeamRegistrationController({
     required this.authRepository,
     required this.globalVariablesController,
+    required this.globalVariablesNotifier,
   });
 
   void loadRegistration() {
@@ -56,10 +60,16 @@ class AuthAppTeamRegistrationController
     initBooleanFields(false, linkFootballTeamKey());
     initStringFields('', newAppTeamKey());
 
-    final leagues = registrationSetup.leagueWithTeamsList;
+    final leagues = registrationSetup.leagueWithTeamsList
+        .where((league) => league.teamWithAppTeamsList.isNotEmpty)
+        .toList();
+    final primaryLeagueId = registrationSetup.primaryLeague?.id;
     final LeagueWithTeams? initialLeague = leagues.isEmpty
         ? null
-        : registrationSetup.primaryLeague ?? leagues.first;
+        : leagues.firstWhere(
+            (league) => league.id == primaryLeagueId,
+            orElse: () => leagues.first,
+          );
     initDropdown(initialLeague, leagues, leagueKey());
 
     final teams = initialLeague?.teamWithAppTeamsList ?? <TeamWithAppTeams>[];
@@ -88,8 +98,9 @@ class AuthAppTeamRegistrationController
     _choiceController.add(choice);
   }
 
-  bool get canLinkFootballTeam =>
-      registrationSetup.leagueWithTeamsList.isNotEmpty;
+  bool get canLinkFootballTeam => registrationSetup.leagueWithTeamsList.any(
+    (league) => league.teamWithAppTeamsList.isNotEmpty,
+  );
 
   @override
   void setDropdownItem(DropdownItem dropdownItem, String key) {
@@ -155,6 +166,7 @@ class AuthAppTeamRegistrationController
         (role) => role.appTeam.id == selectedAppTeamId,
       );
       globalVariablesController.setAppTeam(selectedRole.appTeam);
+      globalVariablesNotifier.setAppTeam(selectedRole.appTeam);
       loadingSuccessController.add(true);
       return true;
     } on FieldValidationException catch (error) {

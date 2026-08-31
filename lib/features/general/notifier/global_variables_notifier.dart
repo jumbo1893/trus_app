@@ -4,11 +4,10 @@ import 'package:trus_app/models/api/player/player_api_model.dart';
 
 import '../state/global_variables_state.dart';
 
-
 final globalVariablesProvider =
-StateNotifierProvider<GlobalVariablesNotifier, GlobalVariablesState>((ref) {
-  return GlobalVariablesNotifier();
-});
+    StateNotifierProvider<GlobalVariablesNotifier, GlobalVariablesState>((ref) {
+      return GlobalVariablesNotifier();
+    });
 
 class GlobalVariablesNotifier extends StateNotifier<GlobalVariablesState> {
   GlobalVariablesNotifier() : super(GlobalVariablesState.initial());
@@ -18,6 +17,6 @@ class GlobalVariablesNotifier extends StateNotifier<GlobalVariablesState> {
   }
 
   void setPlayer(PlayerApiModel? player) {
-    state = state.copyWith(player: player);
+    state = GlobalVariablesState(appTeam: state.appTeam, player: player);
   }
 }

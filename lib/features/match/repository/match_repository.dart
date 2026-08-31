@@ -7,8 +7,7 @@ import '../../general/cache/cached_repository.dart';
 import '../../general/cache/memory_cache.dart';
 import 'match_api_service.dart';
 
-final matchRepositoryProvider =
-Provider<MatchRepository>((ref) {
+final matchRepositoryProvider = Provider<MatchRepository>((ref) {
   return MatchRepository(
     ref.read(matchApiServiceProvider),
     ref.read(memoryCacheProvider),
@@ -18,16 +17,11 @@ Provider<MatchRepository>((ref) {
 class MatchRepository extends CachedRepository {
   final MatchApiService api;
 
-  MatchRepository(
-      this.api,
-      MemoryCache cache,
-      ) : super(cache);
+  MatchRepository(this.api, MemoryCache cache) : super(cache);
 
   static const _listKey = 'match_list';
   static const _setupKey = 'match_setup';
   static const _statsKey = 'match_stats';
-
-
 
   /// LIST
   List<MatchApiModel>? getCachedList(int seasonId) {
@@ -42,12 +36,15 @@ class MatchRepository extends CachedRepository {
 
   /// DETAIL
   MatchSetup? getCachedMatchSetup(int? id) {
+    if (id == null) return null;
     return getCached<MatchSetup>(key(_setupKey, id));
   }
 
-  Future<MatchSetup> fetchMatchSetup(int? id) async {
-    final data = await api.setupMatch(id);
-    setCached(key(_setupKey, id), data);
+  Future<MatchSetup> fetchMatchSetup(int? id, {int? footballMatchId}) async {
+    final data = await api.setupMatch(id, footballMatchId: footballMatchId);
+    if (id != null) {
+      setCached(key(_setupKey, id), data);
+    }
     return data;
   }
 
@@ -63,11 +60,11 @@ class MatchRepository extends CachedRepository {
   }
 
   void invalidateMatchSetup(int? id) {
-    invalidate(key(_statsKey, id));
+    invalidate(key(_setupKey, id));
   }
 
   void invalidateMatchStats(int? id) {
-    invalidate(key(_setupKey, id));
+    invalidate(key(_statsKey, id));
   }
 
   void invalidateMatchDetailData(int? id) {

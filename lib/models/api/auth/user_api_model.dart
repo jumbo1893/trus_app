@@ -53,7 +53,7 @@ class UserApiModel implements ModelToString, JsonAndHttpConverter {
     );
   }
 
-  String getDescriptionOfOtherRoles(int appTeamId) {
+  String getDescriptionOfOtherRoles(int? appTeamId) {
     List<UserTeamRoleApiModel> otherRoles = getAllOtherThanCurrentTeamRole(
       appTeamId,
     );
@@ -65,28 +65,28 @@ class UserApiModel implements ModelToString, JsonAndHttpConverter {
     return returnString;
   }
 
-  UserTeamRoleApiModel? getCurrentUserTeamRole(int appTeamId) {
-    if (teamRoles != null && teamRoles!.isNotEmpty) {
-      for (UserTeamRoleApiModel userTeamRoleApiModel in teamRoles!) {
+  UserTeamRoleApiModel? getCurrentUserTeamRole(int? appTeamId) {
+    final roles = teamRoles ?? const <UserTeamRoleApiModel>[];
+    if (appTeamId != null) {
+      for (UserTeamRoleApiModel userTeamRoleApiModel in roles) {
         if (userTeamRoleApiModel.appTeam.id == appTeamId) {
           return userTeamRoleApiModel;
         }
       }
     }
+    if (roles.length == 1) {
+      return roles.first;
+    }
     return null;
   }
 
-  List<UserTeamRoleApiModel> getAllOtherThanCurrentTeamRole(int appTeamId) {
-    if (teamRoles != null) {
-      for (UserTeamRoleApiModel userTeamRoleApiModel in teamRoles!) {
-        List<UserTeamRoleApiModel> otherTeamRoles = [];
-        if (userTeamRoleApiModel.appTeam.id != appTeamId) {
-          otherTeamRoles.add(userTeamRoleApiModel);
-          return otherTeamRoles;
-        }
-      }
+  List<UserTeamRoleApiModel> getAllOtherThanCurrentTeamRole(int? appTeamId) {
+    if (appTeamId == null) {
+      return [];
     }
-    return [];
+    return (teamRoles ?? const <UserTeamRoleApiModel>[])
+        .where((role) => role.appTeam.id != appTeamId)
+        .toList();
   }
 
   @override

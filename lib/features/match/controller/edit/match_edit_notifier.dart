@@ -33,23 +33,25 @@ import 'match_options_builder.dart';
 
 final matchEditNotifierProvider = StateNotifierProvider.autoDispose
     .family<MatchEditNotifier, MatchEditState, MatchNotifierArgs>((ref, args) {
-  final matchRepository = ref.read(matchRepositoryProvider);
-  final footballRepository = ref.read(footballRepositoryProvider);
+      final matchRepository = ref.read(matchRepositoryProvider);
+      final footballRepository = ref.read(footballRepositoryProvider);
 
-  return MatchEditNotifier(
-    ref: ref,
-    args: args,
-    screenVariablesNotifier: ref.read(screenVariablesNotifierProvider.notifier),
-    globalVariablesController: ref.read(globalVariablesControllerProvider),
-    loader: MatchEditLoader(
-      matchRepository: matchRepository,
-      footballRepository: footballRepository,
-    ),
-    resolver: const MatchEditFlowResolver(),
-    mapper: const MatchEditStateMapper(),
-    optionsBuilder: const MatchOptionsBuilder(),
-  );
-});
+      return MatchEditNotifier(
+        ref: ref,
+        args: args,
+        screenVariablesNotifier: ref.read(
+          screenVariablesNotifierProvider.notifier,
+        ),
+        globalVariablesController: ref.read(globalVariablesControllerProvider),
+        loader: MatchEditLoader(
+          matchRepository: matchRepository,
+          footballRepository: footballRepository,
+        ),
+        resolver: const MatchEditFlowResolver(),
+        mapper: const MatchEditStateMapper(),
+        optionsBuilder: const MatchOptionsBuilder(),
+      );
+    });
 
 class MatchEditNotifier extends BaseCrudNotifier<MatchApiModel, MatchEditState>
     implements IDropdownNotifier, IListviewNotifier {
@@ -71,27 +73,27 @@ class MatchEditNotifier extends BaseCrudNotifier<MatchApiModel, MatchEditState>
     required this.mapper,
     required this.optionsBuilder,
   }) : super(
-    ref,
-    MatchEditState(
-      name: "",
-      date: DateTime.now(),
-      home: true,
-      homeGoalNumber: null,
-      awayGoalNumber: null,
-      seasons: const AsyncValue.data([]),
-      selectedSeason: null,
-      allPlayers: const [],
-      selectedPlayers: const [],
-      allFans: const [],
-      selectedFans: const [],
-      footballMatch: null,
-      matchOptions: const [],
-      initialTab: args.preferredScreen,
-      weather: "",
-      footballMatchDetailState: FootballMatchDetailState.init(),
-      matchStatsState: MatchStatsState.init(),
-    ),
-  ) {
+         ref,
+         MatchEditState(
+           name: "",
+           date: DateTime.now(),
+           home: true,
+           homeGoalNumber: null,
+           awayGoalNumber: null,
+           seasons: const AsyncValue.data([]),
+           selectedSeason: null,
+           allPlayers: const [],
+           selectedPlayers: const [],
+           allFans: const [],
+           selectedFans: const [],
+           footballMatch: null,
+           matchOptions: const [],
+           initialTab: args.preferredScreen,
+           weather: "",
+           footballMatchDetailState: FootballMatchDetailState.init(),
+           matchStatsState: MatchStatsState.init(),
+         ),
+       ) {
     Future.microtask(() => _bootstrap());
   }
 
@@ -145,7 +147,7 @@ class MatchEditNotifier extends BaseCrudNotifier<MatchApiModel, MatchEditState>
     }
 
     final fresh = await runUiWithResult<MatchSetup>(
-          () => loader.fetchSetup(null),
+      () => loader.fetchSetup(null),
       showLoading: cached == null,
       successSnack: null,
     );
@@ -175,7 +177,7 @@ class MatchEditNotifier extends BaseCrudNotifier<MatchApiModel, MatchEditState>
     }
 
     final fresh = await runUiWithResult<MatchSetup>(
-          () => loader.fetchSetup(null),
+      () => loader.fetchSetup(null, footballMatchId: fm.id),
       showLoading: cached == null,
       successSnack: null,
     );
@@ -202,7 +204,7 @@ class MatchEditNotifier extends BaseCrudNotifier<MatchApiModel, MatchEditState>
     }
 
     final fresh = await runUiWithResult<MatchSetup>(
-          () => loader.fetchSetup(matchId),
+      () => loader.fetchSetup(matchId),
       showLoading: cached == null,
       successSnack: null,
     );
@@ -223,7 +225,7 @@ class MatchEditNotifier extends BaseCrudNotifier<MatchApiModel, MatchEditState>
     }
 
     final fresh = await runUiWithResult<MatchSetup>(
-          () => loader.fetchSetup(matchId),
+      () => loader.fetchSetup(matchId),
       showLoading: cached == null,
       successSnack: null,
     );
@@ -254,15 +256,13 @@ class MatchEditNotifier extends BaseCrudNotifier<MatchApiModel, MatchEditState>
     );
 
     if (matchId != null) {
-      _loadMatchStats(
-        matchId,
-        includeEditTab: false,
-        refresh: true,
-      );
+      _loadMatchStats(matchId, includeEditTab: false, refresh: true);
     }
   }
 
-  Future<void> _handleOpenFootballDetailByFootballMatchId(int footballMatchId) async {
+  Future<void> _handleOpenFootballDetailByFootballMatchId(
+    int footballMatchId,
+  ) async {
     state = state.copyWith(
       initialTab: MatchDetailOptions.footballMatchDetail,
       matchOptions: const [],
@@ -271,14 +271,11 @@ class MatchEditNotifier extends BaseCrudNotifier<MatchApiModel, MatchEditState>
 
     final cached = loader.cachedFootballDetail(footballMatchId);
     if (cached != null) {
-      _applyFootballDetailFromPush(
-        cached,
-        refreshStats: false,
-      );
+      _applyFootballDetailFromPush(cached, refreshStats: false);
     }
 
     final fresh = await runUiWithResult<FootballMatchDetail>(
-          () => loader.fetchFootballDetail(footballMatchId),
+      () => loader.fetchFootballDetail(footballMatchId),
       loadingMessage: "Načítám zápas…",
       showLoading: cached == null,
       successSnack: null,
@@ -286,10 +283,7 @@ class MatchEditNotifier extends BaseCrudNotifier<MatchApiModel, MatchEditState>
 
     if (!mounted) return;
 
-    _applyFootballDetailFromPush(
-      fresh,
-      refreshStats: true,
-    );
+    _applyFootballDetailFromPush(fresh, refreshStats: true);
   }
 
   Future<void> _handleOpenMutualOnly(FootballMatchApiModel fm) async {
@@ -309,11 +303,7 @@ class MatchEditNotifier extends BaseCrudNotifier<MatchApiModel, MatchEditState>
     );
 
     if (matchId != null) {
-      _loadMatchStats(
-        matchId,
-        includeEditTab: false,
-        refresh: true,
-      );
+      _loadMatchStats(matchId, includeEditTab: false, refresh: true);
     }
   }
 
@@ -347,17 +337,13 @@ class MatchEditNotifier extends BaseCrudNotifier<MatchApiModel, MatchEditState>
       refresh: refreshDetailData,
     );
 
-    _loadMatchStats(
-      matchId,
-      includeEditTab: true,
-      refresh: refreshDetailData,
-    );
+    _loadMatchStats(matchId, includeEditTab: true, refresh: refreshDetailData);
   }
 
   void _applyFootballDetailFromPush(
-      FootballMatchDetail detail, {
-        required bool refreshStats,
-      }) {
+    FootballMatchDetail detail, {
+    required bool refreshStats,
+  }) {
     final fm = detail.footballMatch;
     final matchId = _matchIdFromFootballMatch(fm);
 
@@ -373,11 +359,7 @@ class MatchEditNotifier extends BaseCrudNotifier<MatchApiModel, MatchEditState>
     );
 
     if (matchId != null) {
-      _loadMatchStats(
-        matchId,
-        includeEditTab: false,
-        refresh: refreshStats,
-      );
+      _loadMatchStats(matchId, includeEditTab: false, refresh: refreshStats);
     }
   }
 
@@ -386,11 +368,11 @@ class MatchEditNotifier extends BaseCrudNotifier<MatchApiModel, MatchEditState>
   /// -------------------------
 
   Future<void> _loadFootballDetail(
-      FootballMatchApiModel fm, {
-        required bool includeEditTab,
-        required bool includeStatsTab,
-        required bool refresh,
-      }) async {
+    FootballMatchApiModel fm, {
+    required bool includeEditTab,
+    required bool includeStatsTab,
+    required bool refresh,
+  }) async {
     final footballMatchId = fm.id;
     if (footballMatchId == null) return;
 
@@ -406,7 +388,7 @@ class MatchEditNotifier extends BaseCrudNotifier<MatchApiModel, MatchEditState>
     if (!refresh) return;
 
     final fresh = await runUiWithResult<FootballMatchDetail>(
-          () => loader.fetchFootballDetail(footballMatchId),
+      () => loader.fetchFootballDetail(footballMatchId),
       showLoading: cached == null,
       successSnack: null,
     );
@@ -421,39 +403,33 @@ class MatchEditNotifier extends BaseCrudNotifier<MatchApiModel, MatchEditState>
   }
 
   Future<void> _loadMatchStats(
-      int matchId, {
-        required bool includeEditTab,
-        required bool refresh,
-      }) async {
+    int matchId, {
+    required bool includeEditTab,
+    required bool refresh,
+  }) async {
     final cached = loader.cachedStats(matchId);
     if (cached != null) {
-      _applyMatchStats(
-        cached,
-        includeEditTab: includeEditTab,
-      );
+      _applyMatchStats(cached, includeEditTab: includeEditTab);
     }
 
     if (!refresh) return;
 
     final fresh = await runUiWithResult<MatchStats>(
-          () => loader.fetchStats(matchId),
+      () => loader.fetchStats(matchId),
       showLoading: cached == null,
       successSnack: null,
     );
 
     if (!mounted) return;
 
-    _applyMatchStats(
-      fresh,
-      includeEditTab: includeEditTab,
-    );
+    _applyMatchStats(fresh, includeEditTab: includeEditTab);
   }
 
   void _applyFootballDetail(
-      FootballMatchDetail detail, {
-        required bool includeEditTab,
-        required bool includeStatsTab,
-      }) {
+    FootballMatchDetail detail, {
+    required bool includeEditTab,
+    required bool includeStatsTab,
+  }) {
     state = state.copyWith(
       footballMatchDetailState: mapper.mapFootballDetail(
         detail,
@@ -468,24 +444,15 @@ class MatchEditNotifier extends BaseCrudNotifier<MatchApiModel, MatchEditState>
     );
 
     state = state.copyWith(
-      matchOptions: optionsBuilder.mergeOrdered(
-        state.matchOptions,
-        computed,
-      ),
+      matchOptions: optionsBuilder.mergeOrdered(state.matchOptions, computed),
     );
 
     _ensureInitialTabExists();
   }
 
-  void _applyMatchStats(
-      MatchStats stats, {
-        required bool includeEditTab,
-      }) {
+  void _applyMatchStats(MatchStats stats, {required bool includeEditTab}) {
     state = state.copyWith(
-      matchStatsState: mapper.mapMatchStats(
-        stats,
-        state.matchStatsState,
-      ),
+      matchStatsState: mapper.mapMatchStats(stats, state.matchStatsState),
     );
 
     final computed = optionsBuilder.fromFootballDetail(
@@ -495,10 +462,7 @@ class MatchEditNotifier extends BaseCrudNotifier<MatchApiModel, MatchEditState>
     );
 
     state = state.copyWith(
-      matchOptions: optionsBuilder.mergeOrdered(
-        state.matchOptions,
-        computed,
-      ),
+      matchOptions: optionsBuilder.mergeOrdered(state.matchOptions, computed),
     );
 
     _ensureInitialTabExists();
@@ -508,9 +472,7 @@ class MatchEditNotifier extends BaseCrudNotifier<MatchApiModel, MatchEditState>
     if (state.matchOptions.isEmpty) return;
 
     if (!state.matchOptions.contains(state.initialTab)) {
-      state = state.copyWith(
-        initialTab: state.matchOptions.first,
-      );
+      state = state.copyWith(initialTab: state.matchOptions.first);
     }
   }
 
@@ -541,15 +503,11 @@ class MatchEditNotifier extends BaseCrudNotifier<MatchApiModel, MatchEditState>
   }
 
   void setHomeGoalNumber(String value) {
-    state = state.copyWith(
-      homeGoalNumber: int.tryParse(value),
-    );
+    state = state.copyWith(homeGoalNumber: int.tryParse(value));
   }
 
   void setAwayGoalNumber(String value) {
-    state = state.copyWith(
-      awayGoalNumber: int.tryParse(value),
-    );
+    state = state.copyWith(awayGoalNumber: int.tryParse(value));
   }
 
   void togglePlayer(player, bool fan) {
@@ -590,7 +548,8 @@ class MatchEditNotifier extends BaseCrudNotifier<MatchApiModel, MatchEditState>
       home: state.home,
       homeGoalNumber: state.homeGoalNumber,
       awayGoalNumber: state.awayGoalNumber,
-      playerIdList: state.selectedPlayers.map((e) => e.getId()).toList() +
+      playerIdList:
+          state.selectedPlayers.map((e) => e.getId()).toList() +
           state.selectedFans.map((e) => e.getId()).toList(),
       seasonId: (state.selectedSeason as SeasonApiModel).id!,
       footballMatch: state.footballMatch,
@@ -612,7 +571,7 @@ class MatchEditNotifier extends BaseCrudNotifier<MatchApiModel, MatchEditState>
       },
       onSuccessRedirect: HomeScreen.id,
       invalidateProvider: matchNotifierProvider,
-      onSuccessAction: (  model) {
+      onSuccessAction: (model) {
         if (crud != Crud.delete && goal) {
           screenVariablesNotifier.setMatchId(model!.id!);
           screenVariablesNotifier.setMatch(model);
@@ -668,12 +627,8 @@ class MatchEditNotifier extends BaseCrudNotifier<MatchApiModel, MatchEditState>
   }
 
   @override
-  MatchEditState copyWithState({
-    Map<String, String>? errors,
-  }) {
-    return state.copyWith(
-      errors: errors,
-    );
+  MatchEditState copyWithState({Map<String, String>? errors}) {
+    return state.copyWith(errors: errors);
   }
 
   @override

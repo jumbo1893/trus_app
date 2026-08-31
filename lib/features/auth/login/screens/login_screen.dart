@@ -14,6 +14,7 @@ import '../../../../common/widgets/rows/crud/row_text_field_stream.dart';
 import '../../../../models/api/auth/user_api_model.dart';
 import '../../../loading/loading_screen.dart';
 import '../controller/auth_login_controller.dart';
+import '../service/system_credential_service.dart';
 
 class LoginScreen extends ConsumerStatefulWidget {
   static const routeName = '/login-screen';
@@ -26,6 +27,31 @@ class LoginScreen extends ConsumerStatefulWidget {
 
 class _LoginScreenState extends ConsumerState<LoginScreen> {
   late LoginRedirect redirectWidget;
+  late final Future<void> _setupUserFuture;
+  bool _rememberPassword = true;
+  final SystemCredentialService _systemCredentialService =
+      SystemCredentialService();
+
+  @override
+  void initState() {
+    super.initState();
+    _setupUserFuture = ref.read(authLoginControllerProvider).setupUser();
+  }
+
+  Future<void> _signIn() async {
+    final controller = ref.read(authLoginControllerProvider);
+    final email = controller.enteredEmail;
+    final password = controller.enteredPassword;
+    final redirect = await controller.sendEmailAndPassword();
+    redirectWidget = redirect;
+    if (redirect != LoginRedirect.needToLogin) {
+      await _systemCredentialService.finishLogin(
+        email: email,
+        password: password,
+        shouldSave: _rememberPassword,
+      );
+    }
+  }
 
   void chooseRouteNameByWidget(LoginRedirect redirect, UserApiModel user) {
     switch (redirect) {
@@ -85,7 +111,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     const double padding = 8.0;
     return Scaffold(
       body: FutureBuilder<void>(
-        future: ref.watch(authLoginControllerProvider).setupUser(),
+        future: _setupUserFuture,
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
             return const Loader();
@@ -100,78 +126,101 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
             });
             return const Loader();
           }
-          return ColumnFutureBuilder(
-            crossAxisAlignment: CrossAxisAlignment.center,
-            loadModelFuture: ref
-                .watch(authLoginControllerProvider)
-                .loadLoginUser(),
-            loadingScreen: ref.read(authLoginControllerProvider).loading(),
-            loadingScreenWidget: LoadingScreen(
-              buttonClicked: () => chooseRouteNameByWidget(
-                redirectWidget,
-                ref.read(authLoginControllerProvider).loadedUser,
-              ),
-              buttonText: "Pokračovat na domovskou obrazovku",
-              loadingFlag: ref
-                  .read(authLoginControllerProvider)
-                  .loadingSuccess(),
-              loadingDoneText: "Úspěšně přihlášeno!",
-            ),
-            columns: [
-              Image.asset(
-                key: const ValueKey('logo_image'),
-                'images/logo.png',
-                height: 240,
-                width: 215,
-              ),
-              const Text("Pro přihlášení zadej e-mail a heslo."),
-              const SizedBox(height: 15),
-              RowTextFieldStream(
-                key: const ValueKey('email_text_field'),
-                size: size,
-                labelText: "email",
-                textFieldText: "email:",
-                padding: padding,
-                stringControllerMixin: ref.watch(authLoginControllerProvider),
-                hashKey: ref.read(authLoginControllerProvider).emailKey(),
-                showLabel: false,
-              ),
-              RowTextFieldStream(
-                key: const ValueKey('password_text_field'),
-                size: size,
-                labelText: "heslo",
-                textFieldText: "heslo:",
-                padding: padding,
-                password: true,
-                stringControllerMixin: ref.watch(authLoginControllerProvider),
-                hashKey: ref.read(authLoginControllerProvider).passwordKey(),
-                showLabel: false,
-              ),
-              CustomButton(
-                text: "Přihlásit se",
-                onPressed: () async => redirectWidget = await ref
+          return AutofillGroup(
+            // Uložení řídí checkbox a potvrzujeme ho až po úspěšném loginu.
+            onDisposeAction: AutofillContextAction.cancel,
+            child: ColumnFutureBuilder(
+              crossAxisAlignment: CrossAxisAlignment.center,
+              loadModelFuture: ref
+                  .watch(authLoginControllerProvider)
+                  .loadLoginUser(),
+              loadingScreen: ref.read(authLoginControllerProvider).loading(),
+              loadingScreenWidget: LoadingScreen(
+                buttonClicked: () => chooseRouteNameByWidget(
+                  redirectWidget,
+                  ref.read(authLoginControllerProvider).loadedUser,
+                ),
+                buttonText: "Pokračovat na domovskou obrazovku",
+                loadingFlag: ref
                     .read(authLoginControllerProvider)
-                    .sendEmailAndPassword(),
-                key: const ValueKey('login_button'),
+                    .loadingSuccess(),
+                loadingDoneText: "Úspěšně přihlášeno!",
               ),
-              CustomTextButton(
-                text: "Vytvořit účet",
-                onPressed: () => navigateToRegistrationScreen(context),
-                key: const ValueKey('registration_button'),
-              ),
-              CustomTextButton(
-                text: "Zapomenuté heslo",
-                onPressed: () async {
-                  final text = await ref
-                      .read(authLoginControllerProvider)
-                      .sendForgottenPassword();
-                  if (!context.mounted) return;
-                  showInfoDialog(context, text);
-                },
-                key: const ValueKey('forgotten_password_button'),
-              ),
-              const SizedBox(height: 10),
-            ],
+              columns: [
+                Image.asset(
+                  key: const ValueKey('logo_image'),
+                  'images/logo.png',
+                  height: 240,
+                  width: 215,
+                ),
+                const Text("Pro přihlášení zadej e-mail a heslo."),
+                const SizedBox(height: 15),
+                RowTextFieldStream(
+                  key: const ValueKey('email_text_field'),
+                  size: size,
+                  labelText: "email",
+                  textFieldText: "email:",
+                  padding: padding,
+                  stringControllerMixin: ref.watch(authLoginControllerProvider),
+                  hashKey: ref.read(authLoginControllerProvider).emailKey(),
+                  showLabel: false,
+                  hintText: 'E-mail',
+                  autofillHints: const [
+                    AutofillHints.username,
+                    AutofillHints.email,
+                  ],
+                  keyboardType: TextInputType.emailAddress,
+                  textInputAction: TextInputAction.next,
+                ),
+                RowTextFieldStream(
+                  key: const ValueKey('password_text_field'),
+                  size: size,
+                  labelText: "heslo",
+                  textFieldText: "heslo:",
+                  padding: padding,
+                  password: true,
+                  stringControllerMixin: ref.watch(authLoginControllerProvider),
+                  hashKey: ref.read(authLoginControllerProvider).passwordKey(),
+                  showLabel: false,
+                  hintText: 'Heslo',
+                  autofillHints: const [AutofillHints.password],
+                  textInputAction: TextInputAction.done,
+                ),
+                CheckboxListTile(
+                  key: const ValueKey('remember_password_checkbox'),
+                  value: _rememberPassword,
+                  onChanged: (value) {
+                    setState(() => _rememberPassword = value ?? true);
+                  },
+                  controlAffinity: ListTileControlAffinity.leading,
+                  contentPadding: EdgeInsets.zero,
+                  dense: true,
+                  title: const Text('Zapamatovat heslo'),
+                ),
+                CustomButton(
+                  text: "Přihlásit se",
+                  onPressed: _signIn,
+                  key: const ValueKey('login_button'),
+                ),
+                CustomTextButton(
+                  text: "Vytvořit účet",
+                  onPressed: () => navigateToRegistrationScreen(context),
+                  key: const ValueKey('registration_button'),
+                ),
+                CustomTextButton(
+                  text: "Zapomenuté heslo",
+                  onPressed: () async {
+                    final text = await ref
+                        .read(authLoginControllerProvider)
+                        .sendForgottenPassword();
+                    if (!context.mounted) return;
+                    showInfoDialog(context, text);
+                  },
+                  key: const ValueKey('forgotten_password_button'),
+                ),
+                const SizedBox(height: 10),
+              ],
+            ),
           );
         },
       ),

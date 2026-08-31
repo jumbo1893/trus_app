@@ -10,6 +10,10 @@ class CustomTextField extends StatelessWidget {
   final String errorText;
   final bool number;
   final bool enabled;
+  final String? hintText;
+  final Iterable<String>? autofillHints;
+  final TextInputType? keyboardType;
+  final TextInputAction? textInputAction;
   final Function(String)? onChanged;
 
   const CustomTextField({
@@ -21,6 +25,10 @@ class CustomTextField extends StatelessWidget {
     this.number = false,
     this.errorText = "",
     this.enabled = true,
+    this.hintText,
+    this.autofillHints,
+    this.keyboardType,
+    this.textInputAction,
   }) : super(key: key);
 
   @override
@@ -36,32 +44,40 @@ class CustomTextField extends StatelessWidget {
         }
       },
       decoration: InputDecoration(
-          enabledBorder: UnderlineInputBorder(
-            borderSide: BorderSide(color: context.appColors.legacyAccent),
-          ),
-          focusedBorder: UnderlineInputBorder(
-            borderSide: BorderSide(color: context.appColors.legacyAccent),
-          ),
-          labelText: labelText,
-          labelStyle: TextStyle(
-            fontSize: 12,
-            color: context.appColors.textSecondary,
-          ),
-          floatingLabelStyle: TextStyle(
-            color: context.appColors.textPrimary,
-          ),
-          errorText: errorText.isNotEmpty ? errorText : null,
-          contentPadding: const EdgeInsets.only(left: 10, top: 10),
-          suffixIcon: textController.text.isNotEmpty
-              ? IconButton(
-              onPressed: () => {textController.clear(), onChanged!("")},
-              icon: Icon(Icons.cancel,
+        enabledBorder: UnderlineInputBorder(
+          borderSide: BorderSide(color: context.appColors.legacyAccent),
+        ),
+        focusedBorder: UnderlineInputBorder(
+          borderSide: BorderSide(color: context.appColors.legacyAccent),
+        ),
+        labelText: labelText,
+        hintText: hintText,
+        labelStyle: TextStyle(
+          fontSize: 12,
+          color: context.appColors.textSecondary,
+        ),
+        floatingLabelStyle: TextStyle(color: context.appColors.textPrimary),
+        errorText: errorText.isNotEmpty ? errorText : null,
+        contentPadding: const EdgeInsets.only(left: 10, top: 10),
+        suffixIcon: textController.text.isNotEmpty
+            ? IconButton(
+                onPressed: () => {textController.clear(), onChanged!("")},
+                icon: Icon(
+                  Icons.cancel,
                   color: context.appColors.textMuted,
-                  key: ValueKey("${getValueFromValueKey(key!)}_button")))
-              : null),
+                  key: ValueKey("${getValueFromValueKey(key!)}_button"),
+                ),
+              )
+            : null,
+      ),
       textAlign: TextAlign.left,
       obscureText: password,
-      keyboardType: (number ? TextInputType.number : TextInputType.text),
+      autofillHints: autofillHints,
+      keyboardType:
+          keyboardType ?? (number ? TextInputType.number : TextInputType.text),
+      textInputAction: textInputAction,
+      autocorrect: !password,
+      enableSuggestions: !password,
     );
   }
 }

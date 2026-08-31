@@ -7,8 +7,9 @@ import '../../../models/api/interfaces/json_and_http_converter.dart';
 import '../../../models/api/match/match_api_model.dart';
 import '../../general/repository/crud_api_service.dart';
 
-final matchApiServiceProvider =
-    Provider<MatchApiService>((ref) => MatchApiService(ref));
+final matchApiServiceProvider = Provider<MatchApiService>(
+  (ref) => MatchApiService(ref),
+);
 
 class MatchApiService extends CrudApiService {
   MatchApiService(super.ref);
@@ -19,11 +20,11 @@ class MatchApiService extends CrudApiService {
   }
 
   Future<List<MatchApiModel>> getMatchesBySeason(int seasonId) async {
-    final queryParameters = {
-      'seasonId': seasonId.toString(),
-    };
-    final decodedBody =
-        await getModels<JsonAndHttpConverter>(matchApi, queryParameters);
+    final queryParameters = {'seasonId': seasonId.toString()};
+    final decodedBody = await getModels<JsonAndHttpConverter>(
+      matchApi,
+      queryParameters,
+    );
     return decodedBody.map((model) => model as MatchApiModel).toList();
   }
 
@@ -41,19 +42,30 @@ class MatchApiService extends CrudApiService {
     return await deleteModel(id, matchApi);
   }
 
-  Future<MatchSetup> setupMatch(int? id) async {
-    final String url = id == null
-        ? "$serverUrl/$matchApi/setup"
-        : "$serverUrl/$matchApi/setup?matchId=$id";
+  Future<MatchSetup> setupMatch(int? id, {int? footballMatchId}) async {
+    final queryParameters = <String, String>{
+      if (id != null) 'matchId': id.toString(),
+      if (footballMatchId != null)
+        'footballMatchId': footballMatchId.toString(),
+    };
+    final uri = Uri.parse("$serverUrl/$matchApi/setup").replace(
+      queryParameters: queryParameters.isEmpty ? null : queryParameters,
+    );
     final MatchSetup matchSetup = await executeGetRequest(
-        Uri.parse(url), (dynamic json) => MatchSetup.fromJson(json), null);
+      uri,
+      (dynamic json) => MatchSetup.fromJson(json),
+      null,
+    );
     return matchSetup;
   }
 
   Future<MatchStats> getMatchStats(int id) async {
     final String url = "$serverUrl/$matchApi/get-stats?matchId=$id";
     final MatchStats matchStats = await executeGetRequest(
-        Uri.parse(url), (dynamic json) => MatchStats.fromJson(json), null);
+      Uri.parse(url),
+      (dynamic json) => MatchStats.fromJson(json),
+      null,
+    );
     return matchStats;
   }
 }

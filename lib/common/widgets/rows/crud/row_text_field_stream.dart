@@ -18,20 +18,28 @@ class RowTextFieldStream extends StatefulWidget {
   final String hashKey;
   final bool editEnabled;
   final bool showLabel;
+  final String? hintText;
+  final Iterable<String>? autofillHints;
+  final TextInputType? keyboardType;
+  final TextInputAction? textInputAction;
 
-  const RowTextFieldStream(
-      {required Key key,
-      required this.size,
-      required this.padding,
-      required this.labelText,
-      required this.textFieldText,
-      required this.stringControllerMixin,
-      required this.hashKey,
-      this.number = false,
-      this.password = false,
-      this.editEnabled = true,
-      this.showLabel = true})
-      : super(key: key);
+  const RowTextFieldStream({
+    required Key key,
+    required this.size,
+    required this.padding,
+    required this.labelText,
+    required this.textFieldText,
+    required this.stringControllerMixin,
+    required this.hashKey,
+    this.number = false,
+    this.password = false,
+    this.editEnabled = true,
+    this.showLabel = true,
+    this.hintText,
+    this.autofillHints,
+    this.keyboardType,
+    this.textInputAction,
+  }) : super(key: key);
 
   @override
   State<RowTextFieldStream> createState() => _RowTextFieldStream();
@@ -47,19 +55,19 @@ class _RowTextFieldStream extends State<RowTextFieldStream> {
     _textStreamSubscription = widget.stringControllerMixin
         .stringValue(widget.hashKey)
         .listen((String name) {
-      final updatedSelection = _nameController.selection.copyWith(
-        baseOffset: name.length < _nameController.selection.baseOffset
-            ? name.length
-            : _nameController.selection.baseOffset,
-        extentOffset: name.length < _nameController.selection.extentOffset
-            ? name.length
-            : _nameController.selection.extentOffset,
-      );
-      _nameController.value = _nameController.value.copyWith(
-        text: name,
-        selection: updatedSelection,
-      );
-    });
+          final updatedSelection = _nameController.selection.copyWith(
+            baseOffset: name.length < _nameController.selection.baseOffset
+                ? name.length
+                : _nameController.selection.baseOffset,
+            extentOffset: name.length < _nameController.selection.extentOffset
+                ? name.length
+                : _nameController.selection.extentOffset,
+          );
+          _nameController.value = _nameController.value.copyWith(
+            text: name,
+            selection: updatedSelection,
+          );
+        });
   }
 
   @override
@@ -73,7 +81,8 @@ class _RowTextFieldStream extends State<RowTextFieldStream> {
     return StreamBuilder<String>(
       stream: widget.stringControllerMixin.stringValue(widget.hashKey),
       builder: (context, snapshot) {
-        String name = snapshot.data ??
+        String name =
+            snapshot.data ??
             widget.stringControllerMixin.stringValues[widget.hashKey]!;
 
         final updatedSelection = _nameController.selection.copyWith(
@@ -93,45 +102,62 @@ class _RowTextFieldStream extends State<RowTextFieldStream> {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               SizedBox(
-                  width: (widget.size.width / 3) - widget.padding,
-                  child: CustomText(text: widget.textFieldText)),
+                width: (widget.size.width / 3) - widget.padding,
+                child: CustomText(text: widget.textFieldText),
+              ),
               SizedBox(
-                  width: (widget.size.width / 1.5) - widget.padding,
-                  child: editTextWidget(
-                      widget.hashKey,
-                      widget.stringControllerMixin,
-                      widget.labelText,
-                      _nameController,
-                      widget.key!,
-                      widget.number,
-                      widget.password,
-                      widget.editEnabled)),
+                width: (widget.size.width / 1.5) - widget.padding,
+                child: editTextWidget(
+                  widget.hashKey,
+                  widget.stringControllerMixin,
+                  widget.labelText,
+                  _nameController,
+                  widget.key!,
+                  widget.number,
+                  widget.password,
+                  widget.editEnabled,
+                  widget.hintText,
+                  widget.autofillHints,
+                  widget.keyboardType,
+                  widget.textInputAction,
+                ),
+              ),
             ],
           );
         } else {
           return editTextWidget(
-              widget.hashKey,
-              widget.stringControllerMixin,
-              widget.labelText,
-              _nameController,
-              widget.key!,
-              widget.number,
-              widget.password,
-              widget.editEnabled);
+            widget.hashKey,
+            widget.stringControllerMixin,
+            widget.labelText,
+            _nameController,
+            widget.key!,
+            widget.number,
+            widget.password,
+            widget.editEnabled,
+            widget.hintText,
+            widget.autofillHints,
+            widget.keyboardType,
+            widget.textInputAction,
+          );
         }
       },
     );
   }
 
   Widget editTextWidget(
-      String hashKey,
-      StringControllerMixin stringControllerMixin,
-      String labelText,
-      TextEditingController nameController,
-      Key key,
-      bool number,
-      bool password,
-      bool editEnabled) {
+    String hashKey,
+    StringControllerMixin stringControllerMixin,
+    String labelText,
+    TextEditingController nameController,
+    Key key,
+    bool number,
+    bool password,
+    bool editEnabled,
+    String? hintText,
+    Iterable<String>? autofillHints,
+    TextInputType? keyboardType,
+    TextInputAction? textInputAction,
+  ) {
     return StreamBuilder<String>(
       stream: stringControllerMixin.stringErrorText(hashKey),
       builder: (context, errorSnapshot) {
@@ -145,6 +171,10 @@ class _RowTextFieldStream extends State<RowTextFieldStream> {
           onChanged: (string) =>
               stringControllerMixin.setStringValue(string, hashKey),
           enabled: editEnabled,
+          hintText: hintText,
+          autofillHints: autofillHints,
+          keyboardType: keyboardType,
+          textInputAction: textInputAction,
         );
       },
     );

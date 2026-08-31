@@ -2,6 +2,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:trus_app/features/general/global_variables_controller.dart';
 import 'package:trus_app/features/general/notifier/global_variables_notifier.dart';
 import 'package:trus_app/features/general/notifier/safe_state_notifier.dart';
+import 'package:trus_app/features/general/repository/api_result.dart';
 import 'package:trus_app/features/main/controller/screen_variables_notifier.dart';
 import 'package:trus_app/features/home/controller/home_notifier.dart';
 import 'package:trus_app/features/home/repository/home_repository.dart';
@@ -54,9 +55,9 @@ class MatchParticipationNotifier
     PlayerApiModel? player,
     String? comment,
   }) async {
-    late final MatchParticipationDetail detail;
+    late final ApiResult<MatchParticipationDetail> result;
     try {
-      detail = await runUiWithResult<MatchParticipationDetail>(
+      result = await runUi<MatchParticipationDetail>(
         () => repository.respond(
           footballMatchId: footballMatchId,
           status: status,
@@ -70,6 +71,20 @@ class MatchParticipationNotifier
       return;
     }
     if (!mounted) return;
+    if (result case ApiFieldError<MatchParticipationDetail>()) {
+      final fallbackMessage = result.fieldErrors.isEmpty
+          ? 'Hráče se nepodařilo spárovat.'
+          : result.fieldErrors.values.first;
+      ui.showErrorDialog(
+        result.fieldErrors['player'] ??
+            result.fieldErrors['playerId'] ??
+            fallbackMessage,
+      );
+      return;
+    }
+    if (result is! ApiSuccess<MatchParticipationDetail>) return;
+
+    final detail = result.data;
     _applyCurrentPlayer(detail.currentPlayer);
     safeSetState(state.copyWith(detail: AsyncValue.data(detail)));
     ref.read(homeRepositoryProvider).invalidateSetup();

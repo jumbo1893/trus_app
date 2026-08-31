@@ -31,31 +31,28 @@ class CustomDropdown extends ConsumerStatefulWidget {
 
 class _CustomDropdownState extends ConsumerState<CustomDropdown> {
   List<DropdownMenuItem<DropdownItem>> _addDividersAfterItems(
-      List<DropdownItem> items) {
+    List<DropdownItem> items,
+  ) {
     List<DropdownMenuItem<DropdownItem>> menuItems = [];
     for (var item in items) {
-      menuItems.addAll(
-        [
-          DropdownMenuItem<DropdownItem>(
-            value: item,
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 8.0),
-              child: Text(
-                item.dropdownItem(),
-                style: const TextStyle(
-                  fontSize: 14,
-                ),
-              ),
+      menuItems.addAll([
+        DropdownMenuItem<DropdownItem>(
+          value: item,
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 8.0),
+            child: Text(
+              item.dropdownItem(),
+              style: const TextStyle(fontSize: 14),
             ),
           ),
-          //If it's last item, we will not add Divider after it.
-          if (item != items.last)
-            const DropdownMenuItem<DropdownItem>(
-              enabled: false,
-              child: Divider(),
-            ),
-        ],
-      );
+        ),
+        //If it's last item, we will not add Divider after it.
+        if (item != items.last)
+          const DropdownMenuItem<DropdownItem>(
+            enabled: false,
+            child: Divider(),
+          ),
+      ]);
     }
     return menuItems;
   }
@@ -77,65 +74,70 @@ class _CustomDropdownState extends ConsumerState<CustomDropdown> {
   @override
   Widget build(BuildContext context) {
     return FutureBuilder<List<DropdownItem>>(
-        future: widget.dropdownList,
-        builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Loader();
-          } else if (snapshot.hasError) {
-            return Container();
-          }
-          List<DropdownItem> dropdownItems = snapshot.data!;
-          return StreamBuilder<List<DropdownItem>>(
-              stream: widget.dropDownListStream,
+      future: widget.dropdownList,
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const Loader();
+        } else if (snapshot.hasError) {
+          return Container();
+        }
+        List<DropdownItem> dropdownItems = snapshot.data!;
+        return StreamBuilder<List<DropdownItem>>(
+          stream: widget.dropDownListStream,
+          builder: (context, snapshot) {
+            if (snapshot.hasData) {
+              dropdownItems = snapshot.data!;
+            }
+            return StreamBuilder<DropdownItem?>(
+              stream: widget.pickedItem,
               builder: (context, snapshot) {
-                if (snapshot.hasData) {
-                  dropdownItems = snapshot.data!;
+                if (snapshot.connectionState == ConnectionState.waiting) {
+                  if (widget.initData != null) {
+                    widget.initData!();
+                  } else if (dropdownItems.isNotEmpty) {
+                    widget.onItemSelected(dropdownItems[0]);
+                  }
+                  return const Loader();
                 }
-                return StreamBuilder<DropdownItem?>(
-                    stream: widget.pickedItem,
-                    builder: (context, snapshot) {
-                      if (snapshot.connectionState == ConnectionState.waiting) {
-                        if (widget.initData != null) {
-                          widget.initData!();
-                        } else {
-                          widget.onItemSelected(dropdownItems[0]);
-                        }
-                        return const Loader();
-                      }
-                      DropdownItem dropdownItem = snapshot.data!;
-                      return DropdownButtonHideUnderline(
-                        key: const ValueKey("season_items"),
-                        child: DropdownButton2(
-                          isExpanded: true,
-                          hint: Text(
-                            widget.hint,
-                            style: TextStyle(
-                              fontSize: 14,
-                              color: Theme
-                                  .of(context)
-                                  .hintColor,
-                            ),
-                          ),
-                          items: _addDividersAfterItems(dropdownItems),
-                          value: dropdownItem,
-                          onChanged: (value) {
-                            widget.onItemSelected(value as DropdownItem);
+                final DropdownItem? dropdownItem = snapshot.data;
+                return DropdownButtonHideUnderline(
+                  key: const ValueKey("season_items"),
+                  child: DropdownButton2<DropdownItem>(
+                    isExpanded: true,
+                    hint: Text(
+                      widget.hint,
+                      style: TextStyle(
+                        fontSize: 14,
+                        color: Theme.of(context).hintColor,
+                      ),
+                    ),
+                    items: _addDividersAfterItems(dropdownItems),
+                    value: dropdownItem,
+                    onChanged: !widget.enabled || dropdownItems.isEmpty
+                        ? null
+                        : (value) {
+                            if (value != null) {
+                              widget.onItemSelected(value);
+                            }
                           },
-                          buttonStyleData:
-                          const ButtonStyleData(height: 40, width: 140),
-                          dropdownStyleData: const DropdownStyleData(
-                            maxHeight: 200,
-                          ),
-                          menuItemStyleData: MenuItemStyleData(
-                            padding: const EdgeInsets.symmetric(
-                                horizontal: 8.0),
-                            customHeights:
-                            _getCustomItemsHeights(dropdownItems.length),
-                          ),
-                        ),
-                      );
-                    });
-              });
-        });
+                    buttonStyleData: const ButtonStyleData(
+                      height: 40,
+                      width: 140,
+                    ),
+                    dropdownStyleData: const DropdownStyleData(maxHeight: 200),
+                    menuItemStyleData: MenuItemStyleData(
+                      padding: const EdgeInsets.symmetric(horizontal: 8.0),
+                      customHeights: _getCustomItemsHeights(
+                        dropdownItems.length,
+                      ),
+                    ),
+                  ),
+                );
+              },
+            );
+          },
+        );
+      },
+    );
   }
 }

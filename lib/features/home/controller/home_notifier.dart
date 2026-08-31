@@ -3,6 +3,7 @@ import 'package:trus_app/features/app_notice/repository/app_notice_repository.da
 import 'package:trus_app/features/auth/repository/auth_repository.dart';
 import 'package:trus_app/features/general/global_variables_controller.dart';
 import 'package:trus_app/features/general/notifier/safe_state_notifier.dart';
+import 'package:trus_app/features/general/repository/api_result.dart';
 import 'package:trus_app/features/home/repository/home_repository.dart';
 import 'package:trus_app/features/home/state/home_state.dart';
 import 'package:trus_app/features/player/repository/player_repository.dart';
@@ -244,9 +245,9 @@ class HomeNotifier extends SafeStateNotifier<HomeState> {
     String? comment,
   }) async {
     if (footballMatch.id == null) return;
-    late final MatchParticipationDetail detail;
+    late final ApiResult<MatchParticipationDetail> result;
     try {
-      detail = await runUiWithResult<MatchParticipationDetail>(
+      result = await runUi<MatchParticipationDetail>(
         () => matchParticipationRepository.respond(
           footballMatchId: footballMatch.id!,
           status: status,
@@ -260,6 +261,13 @@ class HomeNotifier extends SafeStateNotifier<HomeState> {
       return;
     }
     if (!mounted) return;
+    if (result case ApiFieldError<MatchParticipationDetail>()) {
+      _showPlayerPairingError(result);
+      return;
+    }
+    if (result is! ApiSuccess<MatchParticipationDetail>) return;
+
+    final detail = result.data;
     if (detail.currentPlayer != null) {
       ref
           .read(globalVariablesControllerProvider)
@@ -292,7 +300,7 @@ class HomeNotifier extends SafeStateNotifier<HomeState> {
   }
 
   Future<void> onPlayerPicked(PlayerApiModel player) async {
-    await runUiWithResult<void>(
+    final result = await runUi<void>(
       () async {
         await authRepository.setUserPlayerId(player);
         // po změně playera přetáhnout home setup z API:
@@ -302,6 +310,21 @@ class HomeNotifier extends SafeStateNotifier<HomeState> {
       loadingMessage: "Přepínám hráče…",
       showLoading: true,
       successSnack: null,
+    );
+    if (!mounted) return;
+    if (result case ApiFieldError<void>()) {
+      _showPlayerPairingError(result);
+    }
+  }
+
+  void _showPlayerPairingError(ApiFieldError<dynamic> result) {
+    final fallbackMessage = result.fieldErrors.isEmpty
+        ? 'Hráče se nepodařilo spárovat.'
+        : result.fieldErrors.values.first;
+    ui.showErrorDialog(
+      result.fieldErrors['player'] ??
+          result.fieldErrors['playerId'] ??
+          fallbackMessage,
     );
   }
 }

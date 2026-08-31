@@ -241,6 +241,10 @@ class AuthLoginController with StringControllerMixin implements IUserLoginKey {
   String passwordKey() {
     return "login_password";
   }
+
+  String get enteredEmail => stringValues[emailKey()]?.trim() ?? '';
+
+  String get enteredPassword => stringValues[passwordKey()] ?? '';
 }
 
 enum LoginRedirect {

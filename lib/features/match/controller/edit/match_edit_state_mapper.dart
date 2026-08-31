@@ -8,12 +8,14 @@ import 'package:trus_app/models/api/football/football_match_api_model.dart';
 import 'package:trus_app/models/api/match/match_setup.dart';
 import 'package:trus_app/models/api/match/match_stats.dart';
 import 'package:trus_app/models/api/player/player_api_model.dart';
-import 'package:trus_app/models/api/weather/match_weather_api_model.dart';
 
 class MatchEditStateMapper {
   const MatchEditStateMapper();
 
-  List<PlayerApiModel> playersByIds(List<PlayerApiModel> players, List<int> ids) {
+  List<PlayerApiModel> playersByIds(
+    List<PlayerApiModel> players,
+    List<int> ids,
+  ) {
     final out = <PlayerApiModel>[];
     for (final id in ids) {
       final p = players.firstWhereOrNull((e) => e.id == id);
@@ -48,11 +50,11 @@ class MatchEditStateMapper {
   }
 
   MatchEditState applyStateByFootballMatch(
-      MatchEditState s, {
-        required FootballMatchApiModel footballMatch,
-        required int userTeamId,
-        required MatchSetup setup,
-      }) {
+    MatchEditState s, {
+    required FootballMatchApiModel footballMatch,
+    required int userTeamId,
+    required MatchSetup setup,
+  }) {
     return s.copyWith(
       name: footballMatch.getOpponentName(userTeamId),
       date: footballMatch.date,
@@ -62,9 +64,15 @@ class MatchEditStateMapper {
       seasons: AsyncValue.data(setup.seasonList),
       selectedSeason: setup.primarySeason,
       allPlayers: setup.playerList,
-      selectedPlayers: const [],
+      selectedPlayers: playersByIds(
+        setup.playerList,
+        setup.attendingPlayers.map((player) => player.getId()).toList(),
+      ),
       allFans: setup.fanList,
-      selectedFans: const [],
+      selectedFans: playersByIds(
+        setup.fanList,
+        setup.attendingFans.map((fan) => fan.getId()).toList(),
+      ),
       weather: setup.match?.weatherToFootballDetail(),
       footballMatch: footballMatch,
       model: null,
@@ -72,35 +80,55 @@ class MatchEditStateMapper {
   }
 
   FootballMatchDetailState mapFootballDetail(
-      FootballMatchDetail d,
-      FootballMatchDetailState prev,
-      ) {
+    FootballMatchDetail d,
+    FootballMatchDetailState prev,
+  ) {
     return prev.copyWith(
       nameAndResult: d.footballMatch.toStringWithTeamsAndResult(),
       dateAndLeague: d.footballMatch.returnRoundLeagueDate(),
       stadium: d.footballMatch.stadiumToSimpleString(),
       referee: d.footballMatch.refereeToSimpleString(),
       refereeComment: d.footballMatch.refereeCommentToString(),
-      homeBestPlayer:
-      d.footballMatch.returnSecondDetailsOfMatch(true, StringReturnDetail.bestPlayer),
-      homeGoalScorers:
-      d.footballMatch.returnSecondDetailsOfMatch(true, StringReturnDetail.goalScorer),
-      homeYellowCards:
-      d.footballMatch.returnSecondDetailsOfMatch(true, StringReturnDetail.yellowCard),
-      homeRedCards:
-      d.footballMatch.returnSecondDetailsOfMatch(true, StringReturnDetail.redCard),
-      homeOwnGoals:
-      d.footballMatch.returnSecondDetailsOfMatch(true, StringReturnDetail.ownGoal),
-      awayBestPlayer:
-      d.footballMatch.returnSecondDetailsOfMatch(false, StringReturnDetail.bestPlayer),
-      awayGoalScorers:
-      d.footballMatch.returnSecondDetailsOfMatch(false, StringReturnDetail.goalScorer),
-      awayYellowCards:
-      d.footballMatch.returnSecondDetailsOfMatch(false, StringReturnDetail.yellowCard),
-      awayRedCards:
-      d.footballMatch.returnSecondDetailsOfMatch(false, StringReturnDetail.redCard),
-      awayOwnGoals:
-      d.footballMatch.returnSecondDetailsOfMatch(false, StringReturnDetail.ownGoal),
+      homeBestPlayer: d.footballMatch.returnSecondDetailsOfMatch(
+        true,
+        StringReturnDetail.bestPlayer,
+      ),
+      homeGoalScorers: d.footballMatch.returnSecondDetailsOfMatch(
+        true,
+        StringReturnDetail.goalScorer,
+      ),
+      homeYellowCards: d.footballMatch.returnSecondDetailsOfMatch(
+        true,
+        StringReturnDetail.yellowCard,
+      ),
+      homeRedCards: d.footballMatch.returnSecondDetailsOfMatch(
+        true,
+        StringReturnDetail.redCard,
+      ),
+      homeOwnGoals: d.footballMatch.returnSecondDetailsOfMatch(
+        true,
+        StringReturnDetail.ownGoal,
+      ),
+      awayBestPlayer: d.footballMatch.returnSecondDetailsOfMatch(
+        false,
+        StringReturnDetail.bestPlayer,
+      ),
+      awayGoalScorers: d.footballMatch.returnSecondDetailsOfMatch(
+        false,
+        StringReturnDetail.goalScorer,
+      ),
+      awayYellowCards: d.footballMatch.returnSecondDetailsOfMatch(
+        false,
+        StringReturnDetail.yellowCard,
+      ),
+      awayRedCards: d.footballMatch.returnSecondDetailsOfMatch(
+        false,
+        StringReturnDetail.redCard,
+      ),
+      awayOwnGoals: d.footballMatch.returnSecondDetailsOfMatch(
+        false,
+        StringReturnDetail.ownGoal,
+      ),
       aggregateMatches: d.aggregateMatches,
       aggregateScore: d.aggregateScore,
       mutualMatches: AsyncValue.data(d.mutualMatches),
@@ -108,10 +136,7 @@ class MatchEditStateMapper {
     );
   }
 
-  MatchStatsState mapMatchStats(
-      MatchStats s,
-      MatchStatsState prev,
-      ) {
+  MatchStatsState mapMatchStats(MatchStats s, MatchStatsState prev) {
     return prev.copyWith(
       goals: s.returnGoals(),
       assists: s.returnAssists(),

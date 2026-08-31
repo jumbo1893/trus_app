@@ -23,8 +23,11 @@ class MatchEditLoader {
   MatchStats? cachedStats(int matchId) =>
       matchRepository.getCachedMatchStats(matchId);
 
-  Future<MatchSetup> fetchSetup(int? matchId) =>
-      matchRepository.fetchMatchSetup(matchId);
+  Future<MatchSetup> fetchSetup(int? matchId, {int? footballMatchId}) =>
+      matchRepository.fetchMatchSetup(
+        matchId,
+        footballMatchId: footballMatchId,
+      );
 
   Future<FootballMatchDetail> fetchFootballDetail(int footballMatchId) =>
       footballRepository.fetchFootballMatchDetail(footballMatchId);
