@@ -77,6 +77,15 @@ class AiAssistantController extends SafeStateNotifier<AiAssistantState> {
     );
     try {
       final response = await api.ask(question);
+      var refreshedUsage = response.usage;
+      try {
+        // Achievement se přiděluje až po zodpovězení dotazu a může okamžitě
+        // změnit členství (např. na ULTRA). Usage z odpovědi proto může být
+        // zastaralé a po úspěšném dotazu jej načteme znovu.
+        refreshedUsage = await api.getUsage();
+      } catch (_) {
+        // Odpověď už máme; při selhání refreshu ponecháme přiložené usage.
+      }
       if (!mounted) return false;
       final messages = List<AiQuestion>.of(
         state.questions.valueOrNull ?? const [],
@@ -84,7 +93,7 @@ class AiAssistantController extends SafeStateNotifier<AiAssistantState> {
       safeSetState(
         state.copyWith(
           questions: AsyncValue.data(messages),
-          usage: AsyncValue.data(response.usage),
+          usage: AsyncValue.data(refreshedUsage),
           submitting: false,
           clearPendingQuestion: true,
         ),

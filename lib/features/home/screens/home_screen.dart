@@ -8,6 +8,7 @@ import 'package:trus_app/features/general/global_variables_controller.dart';
 import 'package:trus_app/features/home/screens/rotating_stats_widget.dart';
 import 'package:trus_app/models/api/app_notice/app_notice.dart';
 import 'package:trus_app/models/api/home/home_setup.dart';
+import 'package:trus_app/services/permissions/authenticated_permissions_provider.dart';
 
 import '../../../common/widgets/football/football_match_box.dart';
 import '../../../common/widgets/home/random_fact_box.dart';
@@ -32,6 +33,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
   late final ProviderSubscription<AsyncValue<AppNotice?>> _noticeSubscription;
   late final ProviderSubscription<AsyncValue<HomeSetup>> _setupSubscription;
   Future<void> _sheetQueue = Future.value();
+  bool _permissionsStarted = false;
 
   @override
   void initState() {
@@ -61,6 +63,16 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
     _setupSubscription = ref.listenManual<AsyncValue<HomeSetup>>(
       homeNotifierProvider.select((state) => state.setup),
       (_, next) {
+        if (next.hasValue && !_permissionsStarted) {
+          _permissionsStarted = true;
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            if (!mounted) return;
+            _enqueueSheet(
+              () => ref.read(authenticatedPermissionsProvider.future),
+            );
+          });
+        }
+
         final prompt = next.asData?.value.participationPrompt;
         final matchId = prompt?.footballMatch.id;
         if (prompt == null ||

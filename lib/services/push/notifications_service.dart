@@ -22,25 +22,35 @@ Future<void> firebaseMessagingBackgroundHandler(RemoteMessage message) async {
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
 
   // ignore: avoid_print
-  print('[push-diagnostics][background] '
-      'id=${message.messageId} data=${message.data} '
-      'notifTitle=${message.notification?.title} notifBody=${message.notification?.body}');
+  print(
+    '[push-diagnostics][background] '
+    'id=${message.messageId} data=${message.data} '
+    'notifTitle=${message.notification?.title} notifBody=${message.notification?.body}',
+  );
 }
 
 class NotificationsService {
   static final FlutterLocalNotificationsPlugin _localNotifications =
-  FlutterLocalNotificationsPlugin();
+      FlutterLocalNotificationsPlugin();
 
   static bool _backgroundHandlerRegistered = false;
   static bool _localNotificationsInitialized = false;
   static bool _listenersRegistered = false;
+  static bool _platformPermissionsRequested = false;
+  static Future<void>? _initializationInFlight;
 
-  static Future<void> initialize(Ref ref) async {
+  static Future<void> initialize(Ref ref) {
+    return _initializationInFlight ??= _initialize(ref).whenComplete(() {
+      _initializationInFlight = null;
+    });
+  }
+
+  static Future<void> _initialize(Ref ref) async {
     await _d('init_start', ref, {
       'firebaseProjectId': DefaultFirebaseOptions.currentPlatform.projectId,
       'firebaseAppId': DefaultFirebaseOptions.currentPlatform.appId,
       'firebaseSenderId':
-      DefaultFirebaseOptions.currentPlatform.messagingSenderId,
+          DefaultFirebaseOptions.currentPlatform.messagingSenderId,
     });
 
     await _registerBackgroundHandlerOnce(ref);
@@ -56,7 +66,11 @@ class NotificationsService {
       await _d('getInitialMessage', ref, _serializeMessage(initialMsg));
 
       final payload = _payloadFromMessage(initialMsg);
-      _navigateFromOpenedNotification(ref, payload, source: 'getInitialMessage');
+      _navigateFromOpenedNotification(
+        ref,
+        payload,
+        source: 'getInitialMessage',
+      );
     } else {
       await _d('getInitialMessage_none', ref);
     }
@@ -80,6 +94,21 @@ class NotificationsService {
   }
 
   static Future<void> _requestPlatformPermissionsIfNeeded(Ref ref) async {
+    if (_platformPermissionsRequested) {
+      await _d('platform_permissions_already_requested', ref);
+      return;
+    }
+    _platformPermissionsRequested = true;
+
+    try {
+      await _requestPlatformPermissions(ref);
+    } catch (_) {
+      _platformPermissionsRequested = false;
+      rethrow;
+    }
+  }
+
+  static Future<void> _requestPlatformPermissions(Ref ref) async {
     if (Platform.isIOS) {
       final settings = await FirebaseMessaging.instance.requestPermission(
         alert: true,
@@ -101,11 +130,12 @@ class NotificationsService {
         'notificationCenter': settings.notificationCenter,
       });
 
-      await FirebaseMessaging.instance.setForegroundNotificationPresentationOptions(
-        alert: false,
-        badge: true,
-        sound: false,
-      );
+      await FirebaseMessaging.instance
+          .setForegroundNotificationPresentationOptions(
+            alert: false,
+            badge: true,
+            sound: false,
+          );
 
       await _d('ios_foreground_presentation_set', ref, {
         'alert': true,
@@ -128,8 +158,8 @@ class NotificationsService {
         await _d('ios_apns_token_retry', ref, {'apnsToken': apnsToken});
       }
 
-      final nsettings =
-      await FirebaseMessaging.instance.getNotificationSettings();
+      final nsettings = await FirebaseMessaging.instance
+          .getNotificationSettings();
 
       await _d('ios_getNotificationSettings', ref, {
         'authorizationStatus': nsettings.authorizationStatus.toString(),
@@ -161,10 +191,10 @@ class NotificationsService {
     }
 
     const AndroidInitializationSettings androidInitSettings =
-    AndroidInitializationSettings('@mipmap/ic_launcher');
+        AndroidInitializationSettings('@mipmap/ic_launcher');
 
     const DarwinInitializationSettings iosInitSettings =
-    DarwinInitializationSettings();
+        DarwinInitializationSettings();
 
     const InitializationSettings initSettings = InitializationSettings(
       android: androidInitSettings,
@@ -178,8 +208,8 @@ class NotificationsService {
       },
     );
 
-    final launchDetails =
-        await _localNotifications.getNotificationAppLaunchDetails();
+    final launchDetails = await _localNotifications
+        .getNotificationAppLaunchDetails();
     if (launchDetails?.didNotificationLaunchApp == true &&
         launchDetails?.notificationResponse != null) {
       _handleLocalNotificationTap(ref, launchDetails!.notificationResponse!);
@@ -187,9 +217,7 @@ class NotificationsService {
 
     _localNotificationsInitialized = true;
 
-    await _d('local_notifications_initialized', ref, {
-      'result': initResult,
-    });
+    await _d('local_notifications_initialized', ref, {'result': initResult});
   }
 
   static Future<void> _registerListenersOnce(Ref ref) async {
@@ -226,7 +254,11 @@ class NotificationsService {
       await _d('onMessageOpenedApp', ref, _serializeMessage(message));
 
       final payload = _payloadFromMessage(message);
-      _navigateFromOpenedNotification(ref, payload, source: 'onMessageOpenedApp');
+      _navigateFromOpenedNotification(
+        ref,
+        payload,
+        source: 'onMessageOpenedApp',
+      );
     });
 
     _listenersRegistered = true;
@@ -302,7 +334,8 @@ class NotificationsService {
 
       if (apnsToken == null || apnsToken.isEmpty) {
         await _d('ios_apns_token_still_null_skip_fcm_token', ref, {
-          'hint': 'APNs token není dostupný, proto nevolám FirebaseMessaging.getToken().',
+          'hint':
+              'APNs token není dostupný, proto nevolám FirebaseMessaging.getToken().',
         });
 
         return null;
@@ -325,9 +358,7 @@ class NotificationsService {
     final tokenDuration = DateTime.now().difference(tokenStart).inMilliseconds;
 
     if (token == null || token.isEmpty) {
-      await _d('fcm_token_null', ref, {
-        'fetchMs': tokenDuration,
-      });
+      await _d('fcm_token_null', ref, {'fetchMs': tokenDuration});
 
       return null;
     }
@@ -380,7 +411,7 @@ class NotificationsService {
 
     await crud.executePostRequest<void>(
       Uri.parse("$serverUrl/$tokenApi/test"),
-          (_) => null,
+      (_) {},
       jsonEncode(model.toJson()),
     );
 
@@ -396,10 +427,7 @@ class NotificationsService {
       final clientDeviceId = await getOrCreateClientDeviceId();
 
       await crud.addModel<DeviceTokenApiModel>(
-        DeviceTokenApiModel(
-          token: token,
-          clientDeviceId: clientDeviceId,
-        ),
+        DeviceTokenApiModel(token: token, clientDeviceId: clientDeviceId),
       );
 
       await _d('token_sent_to_backend', ref, {
@@ -427,10 +455,7 @@ class NotificationsService {
 
     final random = Random.secure();
 
-    final bytes = List<int>.generate(
-      16,
-          (_) => random.nextInt(256),
-    );
+    final bytes = List<int>.generate(16, (_) => random.nextInt(256));
 
     final id = bytes
         .map((byte) => byte.toRadixString(16).padLeft(2, '0'))
@@ -442,10 +467,10 @@ class NotificationsService {
   }
 
   static Future<void> _d(
-      String label,
-      Ref ref, [
-        Map<String, dynamic>? extra,
-      ]) async {
+    String label,
+    Ref ref, [
+    Map<String, dynamic>? extra,
+  ]) async {
     final payload = <String, dynamic>{
       'label': label,
       'ts': DateTime.now().toIso8601String(),
@@ -463,7 +488,7 @@ class NotificationsService {
 
     if (kDebugMode) {
       // ignore: avoid_print
-      print('[push-diagnostics] $label :: ${jsonEncode(extra ?? {})}');
+      print('[push-diagnostics] $label :: ${jsonEncode(payload)}');
     }
   }
 
@@ -483,28 +508,27 @@ class NotificationsService {
       'notification': msg.notification == null
           ? null
           : {
-        'title': msg.notification?.title,
-        'body': msg.notification?.body,
-        'android': {
-          'channelId': msg.notification?.android?.channelId,
-          'count': msg.notification?.android?.count,
-          'imageUrl': msg.notification?.android?.imageUrl,
-          'link': msg.notification?.android?.link,
-          'smallIcon': msg.notification?.android?.smallIcon,
-          'sound': msg.notification?.android?.sound,
-          'ticker': msg.notification?.android?.ticker,
-          'visibility':
-          msg.notification?.android?.visibility.toString(),
-          'priority': msg.notification?.android?.priority.toString(),
-        },
-        'apple': {
-          'subtitle': msg.notification?.apple?.subtitle,
-          'subtitleLocKey': msg.notification?.apple?.subtitleLocKey,
-          'imageUrl': msg.notification?.apple?.imageUrl,
-          'sound': msg.notification?.apple?.sound?.name,
-          'badge': msg.notification?.apple?.badge,
-        },
-      },
+              'title': msg.notification?.title,
+              'body': msg.notification?.body,
+              'android': {
+                'channelId': msg.notification?.android?.channelId,
+                'count': msg.notification?.android?.count,
+                'imageUrl': msg.notification?.android?.imageUrl,
+                'link': msg.notification?.android?.link,
+                'smallIcon': msg.notification?.android?.smallIcon,
+                'sound': msg.notification?.android?.sound,
+                'ticker': msg.notification?.android?.ticker,
+                'visibility': msg.notification?.android?.visibility.toString(),
+                'priority': msg.notification?.android?.priority.toString(),
+              },
+              'apple': {
+                'subtitle': msg.notification?.apple?.subtitle,
+                'subtitleLocKey': msg.notification?.apple?.subtitleLocKey,
+                'imageUrl': msg.notification?.apple?.imageUrl,
+                'sound': msg.notification?.apple?.sound?.name,
+                'badge': msg.notification?.apple?.badge,
+              },
+            },
     };
   }
 
@@ -517,12 +541,12 @@ class NotificationsService {
     final body = notification?.body ?? payload?.body ?? '';
 
     const AndroidNotificationDetails androidDetails =
-    AndroidNotificationDetails(
-      'default_channel',
-      'Obecné',
-      importance: Importance.max,
-      priority: Priority.high,
-    );
+        AndroidNotificationDetails(
+          'default_channel',
+          'Obecné',
+          importance: Importance.max,
+          priority: Priority.high,
+        );
 
     const DarwinNotificationDetails iosDetails = DarwinNotificationDetails(
       presentAlert: true,
@@ -536,39 +560,43 @@ class NotificationsService {
     );
 
     await _localNotifications.show(
-      message.messageId?.hashCode ?? DateTime.now().millisecondsSinceEpoch ~/ 1000,
+      message.messageId?.hashCode ??
+          DateTime.now().millisecondsSinceEpoch ~/ 1000,
       title,
       body,
       platformDetails,
-      payload: payload == null ? null : jsonEncode({
-        'title': payload.title,
-        'body': payload.body,
-        if (payload.screenId != null) 'screenId': payload.screenId,
-        if (payload.notificationType != null)
-          'notificationType': payload.notificationType,
-        if (payload.navigateText != null) 'navigateText': payload.navigateText,
-        if (payload.matchId != null) 'matchId': payload.matchId,
-        if (payload.footballMatchId != null)
-          'footballMatchId': payload.footballMatchId,
-        if (payload.playerId != null) 'playerId': payload.playerId,
-      }),
+      payload: payload == null
+          ? null
+          : jsonEncode({
+              'title': payload.title,
+              'body': payload.body,
+              if (payload.screenId != null) 'screenId': payload.screenId,
+              if (payload.notificationType != null)
+                'notificationType': payload.notificationType,
+              if (payload.navigateText != null)
+                'navigateText': payload.navigateText,
+              if (payload.matchId != null) 'matchId': payload.matchId,
+              if (payload.footballMatchId != null)
+                'footballMatchId': payload.footballMatchId,
+              if (payload.playerId != null) 'playerId': payload.playerId,
+            }),
     );
   }
 
   static Future<void> _showLocalNotificationFromData(
-      Map<String, dynamic> data,
-      ) async {
+    Map<String, dynamic> data,
+  ) async {
     final title = data['title'] ?? 'Notifikace';
     final body = data['body'] ?? '';
 
     const AndroidNotificationDetails androidDetails =
-    AndroidNotificationDetails(
-      'default_channel',
-      'Obecné',
-      importance: Importance.max,
-      priority: Priority.high,
-      styleInformation: BigTextStyleInformation(''),
-    );
+        AndroidNotificationDetails(
+          'default_channel',
+          'Obecné',
+          importance: Importance.max,
+          priority: Priority.high,
+          styleInformation: BigTextStyleInformation(''),
+        );
 
     const DarwinNotificationDetails iosDetails = DarwinNotificationDetails(
       presentAlert: true,

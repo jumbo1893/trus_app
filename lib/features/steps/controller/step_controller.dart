@@ -47,16 +47,23 @@ class StepController extends SafeStateNotifier<StepsState> {
   }
 
   Future<void> grantConsent() async {
+    safeSetState(state.copyWith(consent: const AsyncValue.loading()));
     bool granted;
     try {
       granted = await health.requestPermission();
     } catch (_) {
+      if (mounted) {
+        safeSetState(state.copyWith(consent: const AsyncValue.data(false)));
+      }
       ui.showSnack(
         'Zdravotní data nejsou na tomto zařízení dostupná nebo nejsou správně nastavená.',
       );
       return;
     }
     if (!granted) {
+      if (mounted) {
+        safeSetState(state.copyWith(consent: const AsyncValue.data(false)));
+      }
       ui.showSnack('Přístup ke krokům nebyl udělen.');
       return;
     }
@@ -67,11 +74,9 @@ class StepController extends SafeStateNotifier<StepsState> {
     );
     if (!mounted) return;
     safeSetState(state.copyWith(consent: AsyncValue.data(enabled)));
-    final appTeam = ref.read(globalVariablesControllerProvider).appTeam;
-    if (appTeam != null) {
-      await ref.read(stepSyncSchedulerProvider).enable(appTeam.id);
-    }
-    await syncAndLoad();
+    // Znovu načteme celý stav až po návratu ze systémového permission flow.
+    // Obrazovka tak okamžitě přejde ze souhlasu na aktuální leaderboard.
+    await load();
   }
 
   Future<void> revokeConsent() async {
