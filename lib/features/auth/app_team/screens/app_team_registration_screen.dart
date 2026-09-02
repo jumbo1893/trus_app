@@ -2,6 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:trus_app/features/auth/app_team/controller/auth_app_team_registration_controller.dart';
 import 'package:trus_app/features/main/main_screen.dart';
+import 'package:trus_app/features/home/screens/home_screen.dart';
+import 'package:trus_app/features/main/controller/screen_notifier.dart';
+import 'package:trus_app/features/team_administration/screens/team_administration_screen.dart';
 
 import '../../../../common/utils/utils.dart';
 import '../../../../common/widgets/builder/column_future_builder.dart';
@@ -23,7 +26,11 @@ class AppTeamRegistrationScreen extends ConsumerStatefulWidget {
 
 class _AppTeamRegistrationScreen
     extends ConsumerState<AppTeamRegistrationScreen> {
-  void navigateToMainScreen() {
+  void navigateToMainScreen(TeamOnboardingChoice choice) {
+    final destination = choice == TeamOnboardingChoice.createNew
+        ? TeamAdministrationScreen.id
+        : HomeScreen.id;
+    ref.read(screenNotifierProvider.notifier).resetTo(destination);
     Navigator.pushNamedAndRemoveUntil(
       context,
       MainScreen.routeName,
@@ -67,7 +74,8 @@ class _AppTeamRegistrationScreen
             loadModelFuture: controller.loadRegistrationSetup(),
             loadingScreen: controller.loading(),
             loadingScreenWidget: LoadingScreen(
-              buttonClicked: navigateToMainScreen,
+              buttonClicked: () =>
+                  navigateToMainScreen(controller.selectedChoice),
               buttonText: 'Pokračovat do aplikace',
               loadingFlag: controller.loadingSuccess(),
               loadingDoneText: 'Tým je připravený!',
@@ -102,32 +110,31 @@ class _AppTeamRegistrationScreen
                         const _ChoiceCard(
                           value: TeamOnboardingChoice.lisciTrus,
                           title: 'Přidat se k Liščímu Trusu',
-                          subtitle:
-                              'Doporučená volba pro hráče a fanoušky Liščího Trusu.',
+                          subtitle: 'Staň se součástí Trusího týmu!',
                         ),
                         const _ChoiceCard(
                           value: TeamOnboardingChoice.joinExisting,
-                          title: 'Přidat se k existujícímu týmu',
-                          subtitle: 'Vyber tým, který už v aplikaci funguje.',
+                          title: 'Přidat se k jinému existujícímu týmu',
+                          subtitle:
+                              'Zadej kód co jsi získal od administrátora týmu.',
                         ),
                         if (choice == TeamOnboardingChoice.joinExisting)
                           Padding(
                             padding: const EdgeInsets.symmetric(vertical: 8),
-                            child: RowApiModelDropDownStream(
-                              key: const ValueKey('app_team_spinner'),
+                            child: RowTextFieldStream(
+                              key: const ValueKey('join_code_field'),
                               size: size,
                               padding: padding,
-                              text: 'Tým',
-                              hint: 'Vyber tým',
-                              dropdownControllerMixin: controller,
-                              hashKey: controller.appTeamKey(),
+                              labelText: 'Kód týmu',
+                              textFieldText: 'Např. LISCI-TRUS',
+                              stringControllerMixin: controller,
+                              hashKey: controller.joinCodeKey(),
                             ),
                           ),
                         const _ChoiceCard(
                           value: TeamOnboardingChoice.createNew,
                           title: 'Založit vlastní tým',
-                          subtitle:
-                              'Stačí název. Propojení s PKFL je volitelné.',
+                          subtitle: 'Stačí název. Volitelně propojení s PKFL.',
                         ),
                         if (choice == TeamOnboardingChoice.createNew) ...[
                           const SizedBox(height: 8),
@@ -194,7 +201,7 @@ class _AppTeamRegistrationScreen
                 text: 'Dokončit registraci',
                 onPressed: () async {
                   if (await controller.completeRegistration() && mounted) {
-                    navigateToMainScreen();
+                    navigateToMainScreen(controller.selectedChoice);
                   }
                 },
                 key: const ValueKey('confirm_button'),

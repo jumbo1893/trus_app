@@ -27,6 +27,7 @@ import '../auth/controller/auth_controller.dart';
 import '../ai/screens/ai_assistant_screen.dart';
 import '../beer/screens/beer_simple_screen.dart';
 import '../general/error/api_executor.dart';
+import '../home/screens/home_screen.dart';
 import '../notification/screen/notification_screen.dart';
 import '../steps/service/step_sync_scheduler.dart';
 import 'menu/bottom_sheet_navigation_manager.dart';
@@ -91,7 +92,7 @@ class _MainScreenState extends ConsumerState<MainScreen> {
             showBottomSheetNavigation(next.userName);
             break;
           case MainUiEventType.openUpperMenu:
-            showUpperSheetNavigation(next.userName);
+            await showUpperSheetNavigation(next.userName);
             break;
           case MainUiEventType.openStatsMenu:
             showStatisticsSheetNavigation();
@@ -264,6 +265,7 @@ class _MainScreenState extends ConsumerState<MainScreen> {
     );
 
     if (result != null && result) {
+      ref.read(screenNotifierProvider.notifier).resetTo(HomeScreen.id);
       Navigator.pushNamedAndRemoveUntil(
         context,
         LoginScreen.routeName,
@@ -309,7 +311,20 @@ class _MainScreenState extends ConsumerState<MainScreen> {
   }
 
   /// Zobrazí postraní menu
-  void showUpperSheetNavigation(String name) {
+  Future<void> showUpperSheetNavigation(String name) async {
+    bool isTeamAdministrator = false;
+    try {
+      final user = await ref.read(authControllerProvider).getUserData();
+      final currentAppTeamId = ref
+          .read(globalVariablesControllerProvider)
+          .appTeam
+          ?.id;
+      isTeamAdministrator =
+          user?.getCurrentUserTeamRole(currentAppTeamId)?.role == 'ADMIN';
+    } catch (_) {
+      // Nastavení profilu zůstane dostupné i při dočasném výpadku kontroly role.
+    }
+    if (!mounted) return;
     _upperSheetNavigationManager.showBottomSheetNavigation(
       (id) => ref
           .read(mainNotifierProvider.notifier)
@@ -319,6 +334,7 @@ class _MainScreenState extends ConsumerState<MainScreen> {
       () => signOut(),
       (player) =>
           ref.read(screenVariablesNotifierProvider.notifier).setPlayer(player),
+      isTeamAdministrator,
     );
   }
 

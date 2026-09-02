@@ -16,6 +16,7 @@ import 'package:trus_app/features/player/screens/player_screen.dart';
 import 'package:trus_app/features/season/screens/edit_season_screen.dart';
 import 'package:trus_app/features/season/screens/season_screen.dart';
 import 'package:trus_app/features/user/screens/view_user_screen.dart';
+import 'package:trus_app/features/team_administration/screens/team_administration_screen.dart';
 
 import '../beer/screens/beer_simple_screen.dart';
 import '../fine/match/screens/fine_match_screen.dart';
@@ -192,6 +193,8 @@ final List<Widget> _widgetList = [
   //51
   const MatchParticipationScreen(),
   //52
+  const TeamAdministrationScreen(),
+  //53
 ];
 
 List<Widget> get widgetList => _widgetList;

@@ -20,6 +20,8 @@ class _FakeGlobalVariablesController implements GlobalVariablesController {
 }
 
 class _FakeAuthLoginController extends AuthLoginController {
+  int loadLoginUserCalls = 0;
+
   _FakeAuthLoginController()
     : super(
         authRepository: _FakeAuthRepository(),
@@ -32,6 +34,7 @@ class _FakeAuthLoginController extends AuthLoginController {
 
   @override
   Future<void> loadLoginUser() async {
+    loadLoginUserCalls++;
     initStringFields('', emailKey());
     initStringFields('', passwordKey());
   }
@@ -64,11 +67,13 @@ void main() {
           .setMockMethodCallHandler(credentialChannel, null);
     });
 
+    final authController = _FakeAuthLoginController();
+
     await tester.pumpWidget(
       ProviderScope(
         overrides: [
           authLoginControllerProvider.overrideWithValue(
-            _FakeAuthLoginController(),
+            authController,
           ),
         ],
         child: MaterialApp(theme: AppTheme.light(), home: const LoginScreen()),
@@ -95,11 +100,31 @@ void main() {
     await tester.enterText(find.byType(TextField).at(0), 'hrac@example.cz');
     await tester.enterText(find.byType(TextField).at(1), 'tajne-heslo');
 
+    String fieldText(int index) => tester
+        .widget<TextField>(find.byType(TextField).at(index))
+        .controller!
+        .text;
+
     CheckboxListTile rememberTile() => tester.widget<CheckboxListTile>(
       find.byKey(const ValueKey('remember_password_checkbox')),
     );
 
+    expect(authController.loadLoginUserCalls, 1);
     expect(rememberTile().value, isTrue);
+
+    await tester.tap(find.text('Zapamatovat heslo'));
+    await tester.pump();
+    expect(rememberTile().value, isFalse);
+    expect(fieldText(0), 'hrac@example.cz');
+    expect(fieldText(1), 'tajne-heslo');
+
+    await tester.tap(find.text('Zapamatovat heslo'));
+    await tester.pump();
+    expect(rememberTile().value, isTrue);
+    expect(fieldText(0), 'hrac@example.cz');
+    expect(fieldText(1), 'tajne-heslo');
+    expect(authController.loadLoginUserCalls, 1);
+
     await tester.tap(find.byKey(const ValueKey('login_button')));
     await tester.pump();
     expect(credentialCalls, hasLength(1));
@@ -113,6 +138,8 @@ void main() {
     await tester.tap(find.text('Zapamatovat heslo'));
     await tester.pump();
     expect(rememberTile().value, isFalse);
+    expect(fieldText(0), 'hrac@example.cz');
+    expect(fieldText(1), 'tajne-heslo');
 
     await tester.tap(find.byKey(const ValueKey('login_button')));
     await tester.pump();

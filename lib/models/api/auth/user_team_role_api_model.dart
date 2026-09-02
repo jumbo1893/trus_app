@@ -17,27 +17,27 @@ class UserTeamRoleApiModel {
   });
 
   String roleToString() {
-    if(role == null) {
+    if (role == null) {
       return "";
-    }
-    else if(role == "ADMIN") {
-      return "pro změnu";
-    }
-    else if(role == "READER") {
+    } else if (role == "ADMIN") {
+      return "administrátor týmu";
+    } else if (role == "EDITOR") {
+      return "pro editaci";
+    } else if (role == "READER") {
       return "pro čtení";
     }
     return role!;
   }
 
   String playerToString() {
-    if(player == null) {
+    if (player == null) {
       return "";
     }
     return player!.name;
   }
 
   String getOppositeRole() {
-    if(role == "READER") {
+    if (role == "READER") {
       return "ADMIN";
     }
     return "READER";
@@ -64,7 +64,9 @@ class UserTeamRoleApiModel {
       userId: json["userId"],
       appTeam: AppTeamApiModel.fromJson(json["appTeam"]),
       role: json['role'] ?? "",
-      player: json["player"] != null ? PlayerApiModel.fromJson(json["player"]) : null,
+      player: json["player"] != null
+          ? PlayerApiModel.fromJson(json["player"])
+          : null,
     );
   }
 

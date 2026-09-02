@@ -9,6 +9,7 @@ import 'package:trus_app/common/utils/utils.dart';
 import 'package:trus_app/config.dart';
 import 'package:trus_app/models/api/auth/registration/app_team_registration.dart';
 import 'package:trus_app/models/api/auth/registration/registration_setup.dart';
+import 'package:trus_app/models/api/auth/app_team_join_result.dart';
 import 'package:trus_app/models/api/auth/user_setup.dart';
 import 'package:trus_app/models/api/player/player_api_model.dart';
 import 'package:trus_app/models/helper/bool_and_string.dart';
@@ -211,14 +212,22 @@ class AuthRepository extends CrudApiService {
     return userApiModel;
   }
 
-  Future<UserApiModel> addUserToAppTeam(int appTeamId) async {
-    var url = Uri.parse("$serverUrl/$appTeamApi/add");
-    final UserApiModel userApiModel = await executePostRequest(
+  Future<UserApiModel> joinPublicAppTeam() async {
+    final url = Uri.parse("$serverUrl/$appTeamApi/join-public");
+    return executePostRequest(
       url,
       (dynamic json) => UserApiModel.fromJson(json),
-      jsonEncode(appTeamId),
+      jsonEncode(null),
     );
-    return userApiModel;
+  }
+
+  Future<AppTeamJoinResult> joinAppTeamByCode(String code) async {
+    final url = Uri.parse("$serverUrl/$appTeamApi/join");
+    return executePostRequest(
+      url,
+      (dynamic json) => AppTeamJoinResult.fromJson(json),
+      jsonEncode({'code': code}),
+    );
   }
 
   Future<UserApiModel> editCurrentUser(
@@ -260,7 +269,7 @@ class AuthRepository extends CrudApiService {
   }
 
   Future<RegistrationSetup> setupRegistration() async {
-    const String url = "$serverUrl/$authApi/$registrationSetupApi";
+    const String url = "$serverUrl/$authApi/$registrationSetupApi/v2";
     final RegistrationSetup registrationSetup = await executeGetRequest(
       Uri.parse(url),
       (dynamic json) => RegistrationSetup.fromJson(json),

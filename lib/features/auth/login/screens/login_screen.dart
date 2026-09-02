@@ -8,6 +8,8 @@ import 'package:trus_app/features/auth/app_team/screens/app_team_registration_sc
 import 'package:trus_app/features/auth/registration/screens/registration_screen.dart';
 import 'package:trus_app/features/auth/screens/user_information_screen.dart';
 import 'package:trus_app/features/main/main_screen.dart';
+import 'package:trus_app/features/home/screens/home_screen.dart';
+import 'package:trus_app/features/main/controller/screen_notifier.dart';
 
 import '../../../../common/widgets/custom_button.dart';
 import '../../../../common/widgets/rows/crud/row_text_field_stream.dart';
@@ -28,6 +30,7 @@ class LoginScreen extends ConsumerStatefulWidget {
 class _LoginScreenState extends ConsumerState<LoginScreen> {
   late LoginRedirect redirectWidget;
   late final Future<void> _setupUserFuture;
+  late final Future<void> _loadLoginUserFuture;
   bool _rememberPassword = true;
   final SystemCredentialService _systemCredentialService =
       SystemCredentialService();
@@ -35,7 +38,11 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   @override
   void initState() {
     super.initState();
-    _setupUserFuture = ref.read(authLoginControllerProvider).setupUser();
+    final controller = ref.read(authLoginControllerProvider);
+    _setupUserFuture = controller.setupUser();
+    _loadLoginUserFuture = _setupUserFuture.then(
+      (_) => controller.loadLoginUser(),
+    );
   }
 
   Future<void> _signIn() async {
@@ -81,6 +88,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
         (route) => false,
       );
     } else {
+      ref.read(screenNotifierProvider.notifier).resetTo(HomeScreen.id);
       showSnackBarWithPostFrame(
         context: context,
         content: user.toStringForAdd(),
@@ -131,9 +139,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
             onDisposeAction: AutofillContextAction.cancel,
             child: ColumnFutureBuilder(
               crossAxisAlignment: CrossAxisAlignment.center,
-              loadModelFuture: ref
-                  .watch(authLoginControllerProvider)
-                  .loadLoginUser(),
+              loadModelFuture: _loadLoginUserFuture,
               loadingScreen: ref.read(authLoginControllerProvider).loading(),
               loadingScreenWidget: LoadingScreen(
                 buttonClicked: () => chooseRouteNameByWidget(

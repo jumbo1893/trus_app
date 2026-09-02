@@ -9,6 +9,7 @@ import 'package:trus_app/features/mixin/boolean_controller_mixin.dart';
 import 'package:trus_app/features/mixin/dropdown_controller_mixin.dart';
 import 'package:trus_app/features/mixin/string_controller_mixin.dart';
 import 'package:trus_app/models/api/auth/app_team_api_model.dart';
+import 'package:trus_app/models/api/auth/app_team_join_result.dart';
 import 'package:trus_app/models/api/auth/registration/league_with_teams.dart';
 import 'package:trus_app/models/api/auth/registration/registration_setup.dart';
 import 'package:trus_app/models/api/auth/registration/team_with_app_teams.dart';
@@ -59,6 +60,7 @@ class AuthAppTeamRegistrationController
     }
     initBooleanFields(false, linkFootballTeamKey());
     initStringFields('', newAppTeamKey());
+    initStringFields('', joinCodeKey());
 
     final leagues = registrationSetup.leagueWithTeamsList
         .where((league) => league.teamWithAppTeamsList.isNotEmpty)
@@ -139,12 +141,14 @@ class AuthAppTeamRegistrationController
       switch (selectedChoice) {
         case TeamOnboardingChoice.lisciTrus:
           selectedAppTeamId = registrationSetup.primaryAppTeam.id;
-          user = await authRepository.addUserToAppTeam(selectedAppTeamId);
+          user = await authRepository.joinPublicAppTeam();
           break;
         case TeamOnboardingChoice.joinExisting:
-          final selected = dropdownValues[appTeamKey()] as AppTeamApiModel?;
-          selectedAppTeamId = selected!.id;
-          user = await authRepository.addUserToAppTeam(selectedAppTeamId);
+          final code = (stringValues[joinCodeKey()] ?? '').trim();
+          final AppTeamJoinResult result = await authRepository
+              .joinAppTeamByCode(code);
+          selectedAppTeamId = result.appTeamId;
+          user = result.user;
           break;
         case TeamOnboardingChoice.createNew:
           final name = (stringValues[newAppTeamKey()] ?? '').trim();
@@ -175,6 +179,10 @@ class AuthAppTeamRegistrationController
           stringErrorTextControllers[newAppTeamKey()]!.add(
             field.message ?? 'Tento název nelze použít',
           );
+        } else if (field.field == 'joinCode') {
+          stringErrorTextControllers[joinCodeKey()]!.add(
+            field.message ?? 'Tento kód není platný',
+          );
         }
       }
       loadingController.add(false);
@@ -187,9 +195,14 @@ class AuthAppTeamRegistrationController
   }
 
   bool _validateChoice() {
-    if (selectedChoice == TeamOnboardingChoice.joinExisting &&
-        dropdownValues[appTeamKey()] == null) {
-      return false;
+    if (selectedChoice == TeamOnboardingChoice.joinExisting) {
+      final code = (stringValues[joinCodeKey()] ?? '').trim();
+      if (code.isEmpty) {
+        stringErrorTextControllers[joinCodeKey()]!.add(
+          'Zadej kód, který ti poslal administrátor týmu',
+        );
+        return false;
+      }
     }
     if (selectedChoice != TeamOnboardingChoice.createNew) {
       return true;
@@ -212,6 +225,9 @@ class AuthAppTeamRegistrationController
 
   @override
   String appTeamKey() => 'registration_app_team';
+
+  @override
+  String joinCodeKey() => 'registration_join_code';
 
   @override
   String leagueKey() => 'registration_league';

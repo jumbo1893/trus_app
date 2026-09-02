@@ -49,6 +49,13 @@ class ScreenNotifier extends SafeStateNotifier<ScreenState> {
 
   // ---- navigation ----
 
+  void resetTo(String screenId) {
+    state = ScreenState.initial();
+    if (screenId != HomeScreen.id) {
+      changeByFragmentId(screenId);
+    }
+  }
+
   /// obstará logiku po kliku na zpětné tlačítko.
   void onBackButtonTap() {
     if (state.currentScreenId == GoalScreen.id) {

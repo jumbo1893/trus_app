@@ -8,8 +8,8 @@ import 'package:trus_app/features/main/menu/widget/menu_tile.dart';
 import 'package:trus_app/features/membership/widgets/membership_tier_badge.dart';
 import 'package:trus_app/features/notification/push/screen/enabled_notifications_screen.dart';
 import 'package:trus_app/features/player/screens/view_player_screen.dart';
-import 'package:trus_app/features/user/screens/user_screen.dart';
 import 'package:trus_app/features/user/screens/view_user_screen.dart';
+import 'package:trus_app/features/team_administration/screens/team_administration_screen.dart';
 import 'package:trus_app/models/api/auth/app_team_api_model.dart';
 import 'package:trus_app/models/api/player/player_api_model.dart';
 import 'package:trus_app/theme/app_colors.dart';
@@ -29,6 +29,7 @@ class UpperSheetNavigationManager {
     PlayerApiModel? player,
     VoidCallback signOut,
     Function(PlayerApiModel) onPlayerSelected,
+    bool isTeamAdministrator,
   ) {
     final appColors = context.appColors;
 
@@ -96,11 +97,13 @@ class UpperSheetNavigationManager {
           title: const Text("Informace o appce"),
           onTap: () => onModalBottomSheetMenuTapped(InfoScreen.id),
         ),
-        MenuTile(
-          icon: Icons.manage_accounts,
-          title: const Text("Správa uživatelů"),
-          onTap: () => onModalBottomSheetMenuTapped(UserScreen.id),
-        ),
+        if (isTeamAdministrator)
+          MenuTile(
+            icon: Icons.admin_panel_settings_outlined,
+            title: const Text("Administrace týmu"),
+            onTap: () =>
+                onModalBottomSheetMenuTapped(TeamAdministrationScreen.id),
+          ),
         MenuTile(
           icon: Icons.delete_outline,
           iconColor: appColors.errorSolid,
