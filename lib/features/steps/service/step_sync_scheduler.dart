@@ -5,6 +5,7 @@ import 'package:trus_app/features/steps/repository/health_step_service.dart';
 import 'package:trus_app/features/steps/repository/step_api_service.dart';
 import 'package:trus_app/features/steps/repository/step_sync_preferences.dart';
 import 'package:trus_app/features/steps/repository/background_step_sync.dart';
+import 'package:trus_app/services/crash_reporting_service.dart';
 import 'package:workmanager/workmanager.dart';
 
 final stepSyncSchedulerProvider = Provider((ref) => StepSyncScheduler(ref));
@@ -57,12 +58,19 @@ class StepSyncScheduler {
         await disable();
         return;
       }
-      final today = (await _health.readLastDays(days: 1)).single;
+      final days = await _health.readLastDays(days: 1);
+      if (days.isEmpty) return;
+      final today = days.single;
       final lastCount = await _preferences.lastCount();
       if (!force && (today.stepCount - lastCount).abs() < 100) return;
       await api.sync([today]);
       await _preferences.setLastCount(today.stepCount);
-    } catch (_) {
+    } catch (error, stack) {
+      await CrashReportingService.recordError(
+        error,
+        stack,
+        reason: 'Foreground synchronizace kroků selhala',
+      );
       // Další foreground tick nebo WorkManager synchronizaci zopakuje.
     } finally {
       _running = false;

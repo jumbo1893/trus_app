@@ -62,16 +62,17 @@ dependencies:
   provider: ^6.1.1
   permission_handler: ^11.0.1
   shared_preferences: ^2.2.2
-  device_info_plus: ^9.1.2
+  device_info_plus: ^12.1.0
   cupertino_http: ^2.1.1
   url_launcher: ^6.2.4
   webview_flutter: ^4.9.0
   auto_size_text: ^3.0.0
   stomp_dart_client: ^2.0.0
-  health: ^13.1.4
+  health: ^13.3.1
   workmanager: ^0.10.9
   speech_to_text: ^7.4.0
   flutter_markdown_plus: ^1.0.12
+  firebase_crashlytics: ^5.0.1
 
 flutter_icons:
   android: true

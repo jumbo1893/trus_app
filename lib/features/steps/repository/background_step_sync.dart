@@ -11,6 +11,7 @@ import 'package:trus_app/features/steps/repository/health_step_service.dart';
 import 'package:trus_app/features/steps/repository/step_sync_preferences.dart';
 import 'package:trus_app/firebase_options.dart';
 import 'package:trus_app/models/api/step/step_models.dart';
+import 'package:trus_app/services/crash_reporting_service.dart';
 import 'package:workmanager/workmanager.dart';
 
 const stepBackgroundTask = 'com.jumbo.trus_app.steps.sync';
@@ -22,7 +23,17 @@ void stepBackgroundCallbackDispatcher() {
     await Firebase.initializeApp(
       options: DefaultFirebaseOptions.currentPlatform,
     );
-    return BackgroundStepSync().run();
+    CrashReportingService.initialize();
+    try {
+      return await BackgroundStepSync().run();
+    } catch (error, stack) {
+      await CrashReportingService.recordError(
+        error,
+        stack,
+        reason: 'Background synchronizace kroků selhala',
+      );
+      return false;
+    }
   });
 }
 
@@ -47,9 +58,11 @@ class BackgroundStepSync {
     }
 
     final days = await _health.readLastDays(days: 2);
+    if (days.isEmpty) return false;
     final response = await _send(user, teamId, true, days);
     if (response.statusCode < 200 || response.statusCode >= 300) return false;
-    await _preferences.setLastCount(days.last.stepCount);
+    final todayCount = _todayStepCount(days);
+    if (todayCount != null) await _preferences.setLastCount(todayCount);
     return true;
   }
 
@@ -76,4 +89,16 @@ class BackgroundStepSync {
       }),
     );
   }
+}
+
+int? _todayStepCount(List<StepSyncDay> days) {
+  final now = DateTime.now();
+  for (final day in days.reversed) {
+    if (day.date.year == now.year &&
+        day.date.month == now.month &&
+        day.date.day == now.day) {
+      return day.stepCount;
+    }
+  }
+  return null;
 }

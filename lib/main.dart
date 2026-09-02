@@ -8,6 +8,7 @@ import 'package:trus_app/common/widgets/loader.dart';
 import 'package:trus_app/features/appearance/controller/appearance_notifier.dart';
 import 'package:trus_app/firebase_options.dart';
 import 'package:trus_app/router.dart';
+import 'package:trus_app/services/crash_reporting_service.dart';
 import 'package:trus_app/services/push/notification_init_provider.dart';
 import 'package:trus_app/theme/app_theme.dart';
 import 'package:workmanager/workmanager.dart';
@@ -32,6 +33,7 @@ void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Workmanager().initialize(stepBackgroundCallbackDispatcher);
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+  CrashReportingService.initialize();
   final container = ProviderContainer();
 
   WidgetsBinding.instance.addObserver(

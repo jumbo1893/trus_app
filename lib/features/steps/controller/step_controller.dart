@@ -6,6 +6,7 @@ import 'package:trus_app/features/steps/state/step_state.dart';
 import 'package:trus_app/features/steps/service/step_sync_scheduler.dart';
 import 'package:trus_app/features/general/global_variables_controller.dart';
 import 'package:trus_app/models/api/step/step_models.dart';
+import 'package:trus_app/services/crash_reporting_service.dart';
 
 final stepControllerProvider =
     StateNotifierProvider.autoDispose<StepController, StepsState>((ref) {
@@ -26,6 +27,7 @@ class StepController extends SafeStateNotifier<StepsState> {
   }
 
   Future<void> load() async {
+    await CrashReportingService.log('steps.screen.load.begin');
     final consent = await AsyncValue.guard(api.getConsent);
     if (!mounted) return;
     safeSetState(state.copyWith(consent: consent));
@@ -51,7 +53,12 @@ class StepController extends SafeStateNotifier<StepsState> {
     bool granted;
     try {
       granted = await health.requestPermission();
-    } catch (_) {
+    } catch (error, stack) {
+      await CrashReportingService.recordError(
+        error,
+        stack,
+        reason: 'Žádost o HealthKit/Health Connect oprávnění selhala',
+      );
       if (mounted) {
         safeSetState(state.copyWith(consent: const AsyncValue.data(false)));
       }
@@ -117,6 +124,11 @@ class StepController extends SafeStateNotifier<StepsState> {
     if (state.syncing) return;
     safeSetState(state.copyWith(syncing: true));
     try {
+      await CrashReportingService.setKey(
+        'steps_sync_phase',
+        'permission_check',
+      );
+      await CrashReportingService.log('steps.sync.begin');
       if (!await health.hasReadPermission()) {
         await api.setConsent(false);
         await ref.read(stepSyncSchedulerProvider).disable();
@@ -126,12 +138,22 @@ class StepController extends SafeStateNotifier<StepsState> {
         return;
       }
       final days = await health.readLastDays();
+      await CrashReportingService.setKey('steps_sync_phase', 'backend_upload');
       await runUiWithResult(() => api.sync(days), showLoading: false);
-      await ref
-          .read(stepSyncSchedulerProvider)
-          .recordSyncedCount(days.last.stepCount);
+      final todayCount = _todayStepCount(days);
+      if (todayCount != null) {
+        await ref.read(stepSyncSchedulerProvider).recordSyncedCount(todayCount);
+      }
+      await CrashReportingService.setKey('steps_sync_phase', 'leaderboard');
       await loadLeaderboard();
+      await CrashReportingService.setKey('steps_sync_phase', 'done');
+      await CrashReportingService.log('steps.sync.done days=${days.length}');
     } catch (error, stack) {
+      await CrashReportingService.recordError(
+        error,
+        stack,
+        reason: 'Synchronizace kroků z obrazovky selhala',
+      );
       if (mounted) {
         safeSetState(
           state.copyWith(leaderboard: AsyncValue.error(error, stack)),
@@ -152,4 +174,16 @@ class StepController extends SafeStateNotifier<StepsState> {
 
   Future<StepHistoryData> loadHistory({int? userId, int days = 30}) =>
       api.getHistory(userId: userId, days: days);
+}
+
+int? _todayStepCount(List<StepSyncDay> days) {
+  final now = DateTime.now();
+  for (final day in days.reversed) {
+    if (day.date.year == now.year &&
+        day.date.month == now.month &&
+        day.date.day == now.day) {
+      return day.stepCount;
+    }
+  }
+  return null;
 }
