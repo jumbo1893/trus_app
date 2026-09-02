@@ -1,10 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:trus_app/features/achievement/screens/view_player_achievement_detail_screen.dart';
+import 'package:trus_app/features/achievement/widget/achievement_category_style.dart';
 import 'package:trus_app/features/main/controller/screen_notifier.dart';
 import 'package:trus_app/features/main/controller/screen_variables_notifier.dart';
+import 'package:trus_app/models/api/achievement/achievement_category.dart';
 import 'package:trus_app/models/api/achievement/achievement_player_detail.dart';
-import 'package:trus_app/models/api/achievement/achievement_rarity.dart';
 import 'package:trus_app/models/api/achievement/player_achievement_api_model.dart';
 import 'package:trus_app/theme/app_colors.dart';
 import 'package:trus_app/theme/app_widget_values.dart';
@@ -15,10 +16,8 @@ import '../../utils/utils.dart';
 class AchievementView extends ConsumerWidget {
   final AchievementPlayerDetail? achievementPlayerDetail;
 
-  const AchievementView({
-    Key? key,
-    required this.achievementPlayerDetail,
-  }) : super(key: key);
+  const AchievementView({Key? key, required this.achievementPlayerDetail})
+    : super(key: key);
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -35,7 +34,7 @@ class AchievementView extends ConsumerWidget {
       ...detail.notAccomplishedPlayerAchievements,
     ];
 
-    final groupedAchievements = _groupAchievementsByRarity(allAchievements);
+    final groupedAchievements = _groupAchievementsByCategory(allAchievements);
 
     final title =
         "Splněno ${castDoubleToPercentage(detail.successRate)} % achievementů";
@@ -71,24 +70,22 @@ class AchievementView extends ConsumerWidget {
           const SizedBox(height: 4),
           Text(
             subtitle,
-            style: textTheme.bodyMedium?.copyWith(
-              color: colors.textSecondary,
-            ),
+            style: textTheme.bodyMedium?.copyWith(color: colors.textSecondary),
           ),
           const SizedBox(height: 16),
           _AchievementProgressBar(
             progress: detail.totalCount == null || detail.totalCount == 0
                 ? 0
                 : detail.accomplishedPlayerAchievements.length /
-                detail.totalCount!,
+                      detail.totalCount!,
           ),
           const SizedBox(height: 18),
 
-          for (final rarity in AchievementRarity.values)
-            if ((groupedAchievements[rarity] ?? []).isNotEmpty) ...[
+          for (final category in AchievementCategory.values)
+            if ((groupedAchievements[category] ?? []).isNotEmpty) ...[
               _AchievementSection(
-                rarity: rarity,
-                achievements: groupedAchievements[rarity]!,
+                category: category,
+                achievements: groupedAchievements[category]!,
                 onTap: (achievement) {
                   ref
                       .read(screenVariablesNotifierProvider.notifier)
@@ -106,29 +103,48 @@ class AchievementView extends ConsumerWidget {
     );
   }
 
-  Map<AchievementRarity, List<PlayerAchievementApiModel>>
-  _groupAchievementsByRarity(
-      List<PlayerAchievementApiModel> achievements,
-      ) {
-    final result = <AchievementRarity, List<PlayerAchievementApiModel>>{
-      for (final rarity in AchievementRarity.values) rarity: [],
+  Map<AchievementCategory, List<PlayerAchievementApiModel>>
+  _groupAchievementsByCategory(List<PlayerAchievementApiModel> achievements) {
+    final result = <AchievementCategory, List<PlayerAchievementApiModel>>{
+      for (final category in AchievementCategory.values) category: [],
     };
 
     for (final achievement in achievements) {
-      result[achievement.achievement.rarity]!.add(achievement);
+      result[achievement.achievement.category]!.add(achievement);
+    }
+
+    for (final categoryAchievements in result.values) {
+      categoryAchievements.sort(_compareBySuccessRateAndName);
     }
 
     return result;
   }
+
+  int _compareBySuccessRateAndName(
+    PlayerAchievementApiModel first,
+    PlayerAchievementApiModel second,
+  ) {
+    final successRateComparison = second.achievement.teamSuccessRate.compareTo(
+      first.achievement.teamSuccessRate,
+    );
+
+    if (successRateComparison != 0) {
+      return successRateComparison;
+    }
+
+    return first.achievement.name.toLowerCase().compareTo(
+      second.achievement.name.toLowerCase(),
+    );
+  }
 }
 
 class _AchievementSection extends StatelessWidget {
-  final AchievementRarity rarity;
+  final AchievementCategory category;
   final List<PlayerAchievementApiModel> achievements;
   final ValueChanged<PlayerAchievementApiModel> onTap;
 
   const _AchievementSection({
-    required this.rarity,
+    required this.category,
     required this.achievements,
     required this.onTap,
   });
@@ -137,7 +153,7 @@ class _AchievementSection extends StatelessWidget {
   Widget build(BuildContext context) {
     final colors = context.appColors;
     final textTheme = Theme.of(context).textTheme;
-    final style = AchievementRarityStyle.fromRarity(rarity);
+    final categoryStyle = AchievementCategoryStyle.fromCategory(category);
 
     final accomplishedCount = achievements
         .where((achievement) => achievement.isAccomplished)
@@ -149,17 +165,24 @@ class _AchievementSection extends StatelessWidget {
         Row(
           children: [
             Container(
-              width: 9,
-              height: 9,
+              width: 28,
+              height: 28,
               decoration: BoxDecoration(
-                color: style.color,
-                shape: BoxShape.circle,
+                color: categoryStyle.color.withAlpha(
+                  Theme.of(context).brightness == Brightness.dark ? 48 : 24,
+                ),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Icon(
+                categoryStyle.icon,
+                color: categoryStyle.color,
+                size: 17,
               ),
             ),
             const SizedBox(width: 8),
             Expanded(
               child: Text(
-                rarity.title,
+                category.title,
                 style: textTheme.titleSmall?.copyWith(
                   color: colors.textPrimary,
                   fontWeight: FontWeight.w700,
@@ -188,11 +211,14 @@ class _AchievementSection extends StatelessWidget {
           ),
           itemBuilder: (context, index) {
             final achievement = achievements[index];
+            final rarityStyle = AchievementRarityStyle.fromRarity(
+              achievement.achievement.rarity,
+            );
 
             return _AchievementTile(
               achievement: achievement,
               accomplished: achievement.isAccomplished,
-              style: style,
+              style: rarityStyle,
               onTap: () => onTap(achievement),
             );
           },
@@ -242,9 +268,7 @@ class _AchievementTile extends StatelessWidget {
           decoration: BoxDecoration(
             color: backgroundColor,
             borderRadius: BorderRadius.circular(16),
-            border: Border.all(
-              color: borderColor,
-            ),
+            border: Border.all(color: borderColor),
           ),
           child: Padding(
             padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 8),
@@ -252,11 +276,7 @@ class _AchievementTile extends StatelessWidget {
               mainAxisSize: MainAxisSize.min,
               mainAxisAlignment: MainAxisAlignment.start,
               children: [
-                Icon(
-                  Icons.emoji_events_rounded,
-                  size: 30,
-                  color: iconColor,
-                ),
+                Icon(Icons.emoji_events_rounded, size: 30, color: iconColor),
                 const SizedBox(height: 6),
                 Flexible(
                   child: Text(
@@ -268,8 +288,9 @@ class _AchievementTile extends StatelessWidget {
                       fontSize: 11.5,
                       height: 1.2,
                       color: textColor,
-                      fontWeight:
-                      accomplished ? FontWeight.w600 : FontWeight.w500,
+                      fontWeight: accomplished
+                          ? FontWeight.w600
+                          : FontWeight.w500,
                     ),
                   ),
                 ),
@@ -285,9 +306,7 @@ class _AchievementTile extends StatelessWidget {
 class _AchievementProgressBar extends StatelessWidget {
   final double progress;
 
-  const _AchievementProgressBar({
-    required this.progress,
-  });
+  const _AchievementProgressBar({required this.progress});
 
   @override
   Widget build(BuildContext context) {

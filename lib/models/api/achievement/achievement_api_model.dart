@@ -1,4 +1,5 @@
 import 'package:trus_app/config.dart';
+import 'package:trus_app/models/api/achievement/achievement_category.dart';
 import 'package:trus_app/models/api/achievement/achievement_rarity.dart';
 import 'package:trus_app/models/api/interfaces/json_and_http_converter.dart';
 import 'package:trus_app/models/api/interfaces/model_to_string.dart';
@@ -12,6 +13,8 @@ class AchievementApiModel implements ModelToString, JsonAndHttpConverter {
   String? secondaryCondition;
   final bool manually;
 
+  final AchievementCategory category;
+
   final double teamSuccessRate;
 
   final AchievementRarity rarity;
@@ -24,6 +27,7 @@ class AchievementApiModel implements ModelToString, JsonAndHttpConverter {
     required this.onlyForPlayers,
     this.secondaryCondition,
     required this.manually,
+    this.category = AchievementCategory.general,
     this.teamSuccessRate = 1.0,
     this.rarity = AchievementRarity.common,
   });
@@ -38,20 +42,22 @@ class AchievementApiModel implements ModelToString, JsonAndHttpConverter {
       "onlyForPlayers": onlyForPlayers,
       "secondaryCondition": secondaryCondition,
       "manually": manually,
+      "category": category.toJson(),
       "teamSuccessRate": teamSuccessRate,
       "rarity": rarity.toJson(),
     };
   }
 
   AchievementApiModel.dummy()
-      : id = 0,
-        name = "",
-        code = "",
-        description = "",
-        onlyForPlayers = false,
-        manually = false,
-        teamSuccessRate = 1.0,
-        rarity = AchievementRarity.common;
+    : id = 0,
+      name = "",
+      code = "",
+      description = "",
+      onlyForPlayers = false,
+      manually = false,
+      category = AchievementCategory.general,
+      teamSuccessRate = 1.0,
+      rarity = AchievementRarity.common;
 
   factory AchievementApiModel.fromJson(Map<String, dynamic> json) {
     return AchievementApiModel(
@@ -62,6 +68,7 @@ class AchievementApiModel implements ModelToString, JsonAndHttpConverter {
       onlyForPlayers: json['onlyForPlayers'] ?? false,
       secondaryCondition: json['secondaryCondition'],
       manually: json["manually"] ?? false,
+      category: AchievementCategoryExtension.fromJson(json["category"]),
       teamSuccessRate: (json["teamSuccessRate"] as num?)?.toDouble() ?? 1.0,
       rarity: AchievementRarityExtension.fromJson(json["rarity"]),
     );
@@ -70,9 +77,9 @@ class AchievementApiModel implements ModelToString, JsonAndHttpConverter {
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
-          other is AchievementApiModel &&
-              runtimeType == other.runtimeType &&
-              id == other.id;
+      other is AchievementApiModel &&
+          runtimeType == other.runtimeType &&
+          id == other.id;
 
   @override
   int get hashCode => id.hashCode;
