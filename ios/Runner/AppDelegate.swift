@@ -2,6 +2,7 @@ import UIKit
 import Flutter
 import UserNotifications
 import FirebaseMessaging
+import workmanager_apple
 
 @UIApplicationMain
 @objc class AppDelegate: FlutterAppDelegate {
@@ -9,6 +10,15 @@ import FirebaseMessaging
     _ application: UIApplication,
     didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?
   ) -> Bool {
+    WorkmanagerPlugin.setPluginRegistrantCallback { registry in
+      GeneratedPluginRegistrant.register(with: registry)
+    }
+
+    WorkmanagerPlugin.registerLaunchHandlers()
+    WorkmanagerPlugin.registerPeriodicTask(
+      withIdentifier: "com.jumbo.trus_app.steps.sync"
+    )
+
     GeneratedPluginRegistrant.register(with: self)
 
     if #available(iOS 10.0, *) {
