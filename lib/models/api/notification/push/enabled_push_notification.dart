@@ -69,28 +69,30 @@ class EnabledPushNotification implements JsonAndHttpConverter, ModelToString {
 
   @override
   String listViewTitle() {
-      switch (type) {
-        case NotificationType.global:
-          return 'Chci dostávat upozornění';
-        case NotificationType.threeDaysBefore:
-          return 'Když jsou 3 dny do zápasu';
-        case NotificationType.oneDayBefore:
-          return 'Když je 24 hodin do zápasu';
-        case NotificationType.afterResult:
-          return 'Když je známý výsledek zápasu';
-        case NotificationType.refereeComment:
-          return 'Když nahraje rozhodčí komentář';
-        case NotificationType.beer:
-          return 'Když mi připíšou pivko';
-        case NotificationType.fine:
-          return 'Když dostanu pokutu';
-        case NotificationType.playerAchievement:
-          return 'Když dostanu achievement';
-        case NotificationType.appTeamAchievement:
-          return 'Když kdokoliv dostane achievement';
-        case NotificationType.unknown:
-          return 'Neznámá';
-      }
+    switch (type) {
+      case NotificationType.global:
+        return 'Chci dostávat upozornění';
+      case NotificationType.threeDaysBefore:
+        return 'Když jsou 3 dny do zápasu';
+      case NotificationType.oneDayBefore:
+        return 'Když je 24 hodin do zápasu';
+      case NotificationType.afterResult:
+        return 'Když je známý výsledek zápasu';
+      case NotificationType.refereeComment:
+        return 'Když nahraje rozhodčí komentář';
+      case NotificationType.beer:
+        return 'Když mi připíšou pivko';
+      case NotificationType.fine:
+        return 'Když dostanu pokutu';
+      case NotificationType.playerAchievement:
+        return 'Když dostanu achievement';
+      case NotificationType.achievementProgress:
+        return 'Když jsem blízko splnění achievementu';
+      case NotificationType.appTeamAchievement:
+        return 'Když kdokoliv dostane achievement';
+      case NotificationType.unknown:
+        return 'Neznámá';
+    }
   }
 
   @override

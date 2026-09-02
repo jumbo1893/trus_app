@@ -8,7 +8,8 @@ enum NotificationType {
   fine,
   appTeamAchievement,
   playerAchievement,
-  unknown
+  achievementProgress,
+  unknown,
 }
 
 /// Mapování serverových stringů <-> FE enum
@@ -38,6 +39,8 @@ NotificationType notificationTypeFromServer(Object? raw) {
       return NotificationType.appTeamAchievement;
     case 'PLAYER_ACHIEVEMENT':
       return NotificationType.playerAchievement;
+    case 'ACHIEVEMENT_PROGRESS':
+      return NotificationType.achievementProgress;
     default:
       return NotificationType.unknown;
   }
@@ -63,6 +66,8 @@ String notificationTypeToServer(NotificationType t) {
       return 'APP_TEAM_ACHIEVEMENT';
     case NotificationType.playerAchievement:
       return 'PLAYER_ACHIEVEMENT';
+    case NotificationType.achievementProgress:
+      return 'ACHIEVEMENT_PROGRESS';
     case NotificationType.unknown:
       return 'UNKNOWN';
   }
