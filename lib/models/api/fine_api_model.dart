@@ -8,6 +8,8 @@ class FineApiModel implements ModelToString, JsonAndHttpConverter, IEndpointId {
   final String name;
   final int amount;
   bool inactive;
+  final String? code;
+  final bool editable;
   static const endpointId = "fine_api_model";
 
   FineApiModel({
@@ -15,17 +17,21 @@ class FineApiModel implements ModelToString, JsonAndHttpConverter, IEndpointId {
     required this.amount,
     required this.inactive,
     this.id,
+    this.code,
+    this.editable = true,
   });
 
   FineApiModel.dummy()
-      : id = 0,
-        name = "neznámá pokuta",
-        amount = 0,
-        inactive = false;
+    : id = 0,
+      name = "neznámá pokuta",
+      amount = 0,
+      inactive = false,
+      code = null,
+      editable = true;
 
   @override
   String toString() {
-    return 'FineApiModel{id: $id, name: $name, amount: $amount}';
+    return 'FineApiModel{id: $id, code: $code, name: $name, amount: $amount}';
   }
 
   @override
@@ -35,6 +41,8 @@ class FineApiModel implements ModelToString, JsonAndHttpConverter, IEndpointId {
       "id": id,
       "amount": amount,
       "inactive": inactive,
+      "code": code,
+      "editable": editable,
     };
   }
 
@@ -45,6 +53,8 @@ class FineApiModel implements ModelToString, JsonAndHttpConverter, IEndpointId {
       name: json["name"] ?? "",
       id: json["id"] ?? 0,
       inactive: json["inactive"] ?? false,
+      code: json["code"],
+      editable: json["editable"] ?? true,
     );
   }
 
@@ -65,7 +75,7 @@ class FineApiModel implements ModelToString, JsonAndHttpConverter, IEndpointId {
 
   @override
   String listViewTitle() {
-    if(inactive) {
+    if (inactive) {
       return "$name( inactive)";
     }
     return name;

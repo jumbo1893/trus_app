@@ -10,16 +10,15 @@ import '../../../../models/api/receivedfine/received_fine_list.dart';
 import '../../../../models/api/receivedfine/received_fine_response.dart';
 import '../state/fine_player_state.dart';
 
-
-final finePlayerNotifier =
-StateNotifierProvider.autoDispose.family<FinePlayerNotifier, FinePlayerState, FinePlayerArgs>((ref, args) {
-  return FinePlayerNotifier(
-    ref: ref,
-    api: ref.read(fineMatchApiServiceProvider),
-    screenController: ref.read(screenVariablesNotifierProvider.notifier),
-    args: args
-  );
-});
+final finePlayerNotifier = StateNotifierProvider.autoDispose
+    .family<FinePlayerNotifier, FinePlayerState, FinePlayerArgs>((ref, args) {
+      return FinePlayerNotifier(
+        ref: ref,
+        api: ref.read(fineMatchApiServiceProvider),
+        screenController: ref.read(screenVariablesNotifierProvider.notifier),
+        args: args,
+      );
+    });
 
 class FinePlayerNotifier extends AppNotifier<FinePlayerState> {
   final FineMatchApiService api;
@@ -31,15 +30,13 @@ class FinePlayerNotifier extends AppNotifier<FinePlayerState> {
     required this.api,
     required this.screenController,
     required this.args,
-  }) : super(
-    ref, FinePlayerState.initial(),
-  ) {
-      Future.microtask(() => setupReceivedFines(args));
+  }) : super(ref, FinePlayerState.initial()) {
+    Future.microtask(() => setupReceivedFines(args));
   }
 
   Future<void> setupReceivedFines(FinePlayerArgs args) async {
     final setups = await runUiWithResult<List<ReceivedFineApiModel>>(
-          () => api.setupFinePlayer(args.playerId, args.matchId),
+      () => api.setupFinePlayer(args.playerId, args.matchId),
       showLoading: true,
       successSnack: null,
       loadingMessage: "Načítám pokuty…",
@@ -59,14 +56,15 @@ class FinePlayerNotifier extends AppNotifier<FinePlayerState> {
   // LISTVIEW / ADD BUILDER
   // ==========================================================
 
-
   void addNumber(int index) {
+    if (state.receivedFines[index].fine.inactive) return;
     final list = [...state.receivedFines];
     list[index].addNumber(true);
     state = state.copyWith(receivedFines: list);
   }
 
   void removeNumber(int index) {
+    if (state.receivedFines[index].fine.inactive) return;
     final list = [...state.receivedFines];
     list[index].removeNumber(true);
     state = state.copyWith(receivedFines: list);
@@ -87,7 +85,7 @@ class FinePlayerNotifier extends AppNotifier<FinePlayerState> {
     );
 
     final result = await runUiWithResult<ReceivedFineResponse>(
-          () => api.addFines(payload, false),
+      () => api.addFines(payload, false),
       showLoading: true,
       successResultSnack: true,
       loadingMessage: "Ukládám nové pokuty…",

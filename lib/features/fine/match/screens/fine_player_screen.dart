@@ -12,9 +12,8 @@ import '../../../../common/widgets/bar/bottom_bar.dart';
 class FinePlayerScreen extends CustomConsumerStatefulWidget {
   static const String id = "fine-player-screen";
 
-  const FinePlayerScreen({
-    Key? key,
-  }) : super(key: key, title: "Přidat pokutu hráči", name: id);
+  const FinePlayerScreen({Key? key})
+    : super(key: key, title: "Přidat pokutu hráči", name: id);
 
   @override
   ConsumerState<FinePlayerScreen> createState() => _FinePlayerScreenState();
@@ -52,6 +51,8 @@ class _FinePlayerScreenState extends ConsumerState<FinePlayerScreen> {
                   onAdd: (index) => notifier.addNumber(index),
                   onRemove: (index) => notifier.removeNumber(index),
                   goal: true,
+                  isEnabled: (index) =>
+                      !state.receivedFines[index].fine.inactive,
                 ),
               ),
             ),

@@ -8,44 +8,29 @@ import '../../../common/utils/field_validator.dart';
 import '../../../models/enum/crud.dart';
 import '../../general/notifier/base_crud_notifier.dart';
 
-final fineEditProvider =
-StateNotifierProvider.autoDispose
-    .family<FineEditNotifier, FineEditState, FineApiModel?>(
-      (ref, fine) {
-    return FineEditNotifier(
-      ref,
-      fine,
-      ref.read(fineApiServiceProvider),
-    );
-  },
-);
+final fineEditProvider = StateNotifierProvider.autoDispose
+    .family<FineEditNotifier, FineEditState, FineApiModel?>((ref, fine) {
+      return FineEditNotifier(ref, fine, ref.read(fineApiServiceProvider));
+    });
 
 final fineAddProvider =
-StateNotifierProvider.autoDispose<FineEditNotifier, FineEditState>((ref) {
-  return FineEditNotifier(
-    ref,
-    null,
-    ref.read(fineApiServiceProvider),
-  );
-});
+    StateNotifierProvider.autoDispose<FineEditNotifier, FineEditState>((ref) {
+      return FineEditNotifier(ref, null, ref.read(fineApiServiceProvider));
+    });
 
-
-class FineEditNotifier
-    extends BaseCrudNotifier<FineApiModel, FineEditState> {
+class FineEditNotifier extends BaseCrudNotifier<FineApiModel, FineEditState> {
   final FineApiService api;
 
-  FineEditNotifier(
-      Ref ref,
-      FineApiModel? model,
-      this.api,
-      ) : super(ref,
-    FineEditState(
-      name: model?.name ?? "",
-      amount: model?.amount.toString() ?? "0",
-      inactive: model?.inactive ?? false,
-      model: model,
-    ),
-  );
+  FineEditNotifier(Ref ref, FineApiModel? model, this.api)
+    : super(
+        ref,
+        FineEditState(
+          name: model?.name ?? "",
+          amount: model?.amount.toString() ?? "0",
+          inactive: model?.inactive ?? false,
+          model: model,
+        ),
+      );
 
   // ========= form setters =========
   void setName(String value) {
@@ -103,7 +88,9 @@ class FineEditNotifier
       id: state.model?.id,
       name: state.name,
       amount: int.parse(state.amount),
-      inactive:  state.inactive,
+      inactive: state.inactive,
+      code: state.model?.code,
+      editable: state.model?.editable ?? true,
     );
   }
 
@@ -121,18 +108,13 @@ class FineEditNotifier
   }
 
   bool validateAmountFields() {
-    String errorText =
-    validateAmountField(state.amount);
+    String errorText = validateAmountField(state.amount);
     state = state.copyWith(errors: {'amount': errorText});
     return errorText.isEmpty;
   }
 
   @override
-  FineEditState copyWithState({
-    Map<String, String>? errors,
-  }) {
-    return state.copyWith(
-      errors: errors,
-    );
+  FineEditState copyWithState({Map<String, String>? errors}) {
+    return state.copyWith(errors: errors);
   }
 }

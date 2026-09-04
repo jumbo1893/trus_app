@@ -11,6 +11,7 @@ class AddListBuilder extends StatelessWidget {
 
   final void Function(int index) onAdd;
   final void Function(int index) onRemove;
+  final bool Function(int index)? isEnabled;
 
   final void Function(int index)? onFirstAdd;
   final void Function(int index)? onFirstRemove;
@@ -23,6 +24,7 @@ class AddListBuilder extends StatelessWidget {
     required this.onAdd,
     required this.onRemove,
     required this.goal,
+    this.isEnabled,
     this.doubleListview = false,
     this.onFirstAdd,
     this.onFirstRemove,
@@ -41,18 +43,19 @@ class AddListBuilder extends StatelessWidget {
 
         return !doubleListview
             ? ListviewAddModel(
-          addToString: addToString,
-          onNumberAdded: () => onAdd(index),
-          onNumberRemoved: () => onRemove(index),
-          goal: goal,
-        )
+                addToString: addToString,
+                onNumberAdded: () => onAdd(index),
+                onNumberRemoved: () => onRemove(index),
+                goal: goal,
+                enabled: isEnabled?.call(index) ?? true,
+              )
             : ListviewAddModelDouble(
-          addToString: addToString,
-          onFirstNumberAdded: () => onFirstAdd?.call(index),
-          onFirstNumberRemoved: () => onFirstRemove?.call(index),
-          onSecondNumberAdded: () => onSecondAdd?.call(index),
-          onSecondNumberRemoved: () => onSecondRemove?.call(index),
-        );
+                addToString: addToString,
+                onFirstNumberAdded: () => onFirstAdd?.call(index),
+                onFirstNumberRemoved: () => onFirstRemove?.call(index),
+                onSecondNumberAdded: () => onSecondAdd?.call(index),
+                onSecondNumberRemoved: () => onSecondRemove?.call(index),
+              );
       },
     );
   }

@@ -9,6 +9,7 @@ class ListviewAddModel extends StatelessWidget {
   final bool goal;
   final VoidCallback onNumberAdded;
   final VoidCallback onNumberRemoved;
+  final bool enabled;
 
   const ListviewAddModel({
     super.key,
@@ -16,6 +17,7 @@ class ListviewAddModel extends StatelessWidget {
     required this.onNumberRemoved,
     this.goal = false,
     required this.addToString,
+    this.enabled = true,
   });
 
   @override
@@ -28,7 +30,6 @@ class ListviewAddModel extends StatelessWidget {
         color: context.appColors.cardBackground,
         borderRadius: AppWidgetValues.borderRadiusXl,
         boxShadow: AppWidgetValues.cardShadow,
-
       ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.center,
@@ -45,11 +46,17 @@ class ListviewAddModel extends StatelessWidget {
             ),
           ),
           SizedBox(width: 10),
-          _SingleStepperControl(
-            value: value,
-            onMinus: onNumberRemoved,
-            onPlus: onNumberAdded,
-          ),
+          if (enabled)
+            _SingleStepperControl(
+              value: value,
+              onMinus: onNumberRemoved,
+              onPlus: onNumberAdded,
+            )
+          else
+            const Tooltip(
+              message: "Historickou verzi pokuty nelze upravit",
+              child: Icon(Icons.lock_outline_rounded),
+            ),
         ],
       ),
     );
@@ -129,11 +136,7 @@ class _StepperButton extends StatelessWidget {
         child: SizedBox(
           width: 32,
           height: 32,
-          child: Icon(
-            icon,
-            color: color,
-            size: 20,
-          ),
+          child: Icon(icon, color: color, size: 20),
         ),
       ),
     );
