@@ -9,6 +9,7 @@ import 'package:trus_app/features/home/screens/rotating_stats_widget.dart';
 import 'package:trus_app/models/api/app_notice/app_notice.dart';
 import 'package:trus_app/models/api/home/home_setup.dart';
 import 'package:trus_app/services/permissions/authenticated_permissions_provider.dart';
+import 'package:trus_app/services/crash_reporting_service.dart';
 
 import '../../../common/widgets/football/football_match_box.dart';
 import '../../../common/widgets/home/random_fact_box.dart';
@@ -116,17 +117,25 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
     if (state != AppLifecycleState.resumed || !mounted) return;
-    _presentedParticipationMatchIds.clear();
-    ref.read(homeNotifierProvider.notifier).load().catchError((_) {});
+    // Permission dialogs also trigger resumed. Keep queued/presented prompts
+    // reserved for this screen's lifetime so they cannot stack up again.
+    ref.read(homeNotifierProvider.notifier).load(background: true);
   }
 
   void _enqueueSheet(Future<void> Function() showSheet) {
-    _sheetQueue = _sheetQueue.then<void>((_) {}, onError: (_, __) {}).then((
-      _,
-    ) async {
-      if (!mounted) return;
-      await showSheet();
-    });
+    _sheetQueue = _sheetQueue
+        .then<void>((_) {}, onError: (_, __) {})
+        .then((_) async {
+          if (!mounted) return;
+          await showSheet();
+        })
+        .catchError((Object error, StackTrace stack) async {
+          await CrashReportingService.recordError(
+            error,
+            stack,
+            reason: 'Home sheet failed',
+          );
+        });
   }
 
   @override

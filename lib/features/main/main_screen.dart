@@ -236,7 +236,10 @@ class _MainScreenState extends ConsumerState<MainScreen> {
               },
               onGo: () {
                 Navigator.of(context).pop();
-                PushNavigationHandler.navigate(ref, effect.payload);
+                PushNavigationHandler.navigate(
+                  PushNavigationRef(read: ref.read, invalidate: ref.invalidate),
+                  effect.payload,
+                );
               },
             );
             break;

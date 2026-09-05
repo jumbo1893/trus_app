@@ -1,6 +1,8 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:trus_app/features/achievement/state/achievement_view_state.dart';
 import 'package:trus_app/models/api/achievement/achievement_detail.dart';
+import 'package:trus_app/features/general/repository/api_result.dart';
+import 'package:trus_app/services/crash_reporting_service.dart';
 
 import '../../../common/widgets/notifier/loader/loading_state.dart';
 import '../../../models/enum/crud.dart';
@@ -13,18 +15,16 @@ import 'achievement_notifier.dart';
 final achievementViewProvider = StateNotifierProvider.autoDispose
     .family<AchievementEditNotifier, AchievementViewState, AchievementViewArgs>(
       (ref, args) {
-    return AchievementEditNotifier(
-      ref: ref,
-      repository: ref.read(achievementRepositoryProvider),
-      args: args,
+        return AchievementEditNotifier(
+          ref: ref,
+          repository: ref.read(achievementRepositoryProvider),
+          args: args,
+        );
+      },
     );
-  },
-);
-
 
 class AchievementEditNotifier
     extends BaseCrudNotifier<AchievementDetail, AchievementViewState> {
-
   final AchievementRepository repository;
   final AchievementViewArgs args;
 
@@ -32,22 +32,29 @@ class AchievementEditNotifier
     required Ref ref,
     required this.repository,
     required this.args,
-  }) : super(ref,
-    AchievementViewState.initial(),
-  ) {
+  }) : super(ref, AchievementViewState.initial()) {
     Future.microtask(_init);
   }
 
-  void _init() {
-    /// 1️⃣ pokud je detail přímo v args (např. z listu)
-    if (args.achievementDetail != null) {
-      _applyDetail(args.achievementDetail!);
-      return;
-    }
+  Future<void> _init() async {
+    if (!mounted) return;
+    try {
+      /// 1️⃣ pokud je detail přímo v args (např. z listu)
+      if (args.achievementDetail != null) {
+        _applyDetail(args.achievementDetail!);
+        return;
+      }
 
-    /// 2️⃣ detail podle playerAchievement
-    if (args.playerAchievement != null) {
-      _loadDetail(args.playerAchievement!.id);
+      /// 2️⃣ detail podle playerAchievement
+      if (args.playerAchievement != null) {
+        await _loadDetail(args.playerAchievement!.id);
+      }
+    } catch (error, stack) {
+      await CrashReportingService.recordError(
+        error,
+        stack,
+        reason: 'Achievement detail initialization failed',
+      );
     }
   }
 
@@ -61,15 +68,18 @@ class AchievementEditNotifier
     if (cached != null) {
       _applyDetail(cached);
     }
-    final result = await runUiWithResult<AchievementDetail>(
-          () => repository.fetchDetail(id),
+    // runUi displays request errors and returns a result instead of rethrowing
+    // them from a fire-and-forget initialization future.
+    final result = await runUi<AchievementDetail>(
+      () => repository.fetchDetail(id),
       showLoading: (cached == null),
       successSnack: null,
     );
     if (!mounted) return;
-    _applyDetail(result);
+    if (result is ApiSuccess<AchievementDetail>) {
+      _applyDetail(result.data);
+    }
   }
-
 
   /// =========================
   /// APPLY DETAIL → STATE
@@ -81,8 +91,9 @@ class AchievementEditNotifier
       accomplishedPlayers: model.accomplishedPlayers ?? "",
       secondaryCondition: model.achievement.secondaryCondition ?? "",
       successRate: model.getSuccessRate,
-      playerAchievementAccomplished:
-      model.isPlayerAchievementAccomplished ? "Ano" : "Ne",
+      playerAchievementAccomplished: model.isPlayerAchievementAccomplished
+          ? "Ano"
+          : "Ne",
       playerAchievementDetail: model.getPlayerAchievementDetail,
       playerAchievementMatch: model.getPlayerAchievementMatch,
       playerName: model.getPlayerAchievementName,
@@ -101,9 +112,7 @@ class AchievementEditNotifier
     Map<String, String>? errors,
     String? successMessage,
   }) {
-    return state.copyWith(
-      errors: errors,
-    );
+    return state.copyWith(errors: errors);
   }
 
   /// =========================

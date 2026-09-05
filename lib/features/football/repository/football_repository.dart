@@ -8,8 +8,7 @@ import '../../../models/api/football/detail/football_team_detail.dart';
 import '../../general/cache/cached_repository.dart';
 import '../../general/cache/memory_cache.dart';
 
-final footballRepositoryProvider =
-Provider<FootballRepository>((ref) {
+final footballRepositoryProvider = Provider<FootballRepository>((ref) {
   return FootballRepository(
     ref.read(footballApiServiceProvider),
     ref.read(memoryCacheProvider),
@@ -19,16 +18,12 @@ Provider<FootballRepository>((ref) {
 class FootballRepository extends CachedRepository {
   final FootballApiService api;
 
-  FootballRepository(
-      this.api,
-      MemoryCache cache,
-      ) : super(cache);
+  FootballRepository(this.api, MemoryCache cache) : super(cache);
 
   static const _listKey = 'football_match_list';
   static const _matchDetailKey = 'football_detail';
   static const _listTableKey = 'table_team_list';
   static const _teamDetailKey = 'football_team_detail';
-
 
   /// LIST
   List<FootballMatchApiModel>? getCachedList() {
@@ -61,6 +56,10 @@ class FootballRepository extends CachedRepository {
     final data = await api.getFootballMatchDetail(id);
     setCached(key(_matchDetailKey, id), data);
     return data;
+  }
+
+  void invalidateFootballMatchDetail(int id) {
+    invalidate(key(_matchDetailKey, id));
   }
 
   FootballTeamDetail? getCachedFootballTeamDetail(int teamId) {

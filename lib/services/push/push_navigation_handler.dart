@@ -16,8 +16,17 @@ import 'package:trus_app/features/match/repository/match_repository.dart';
 import 'package:trus_app/features/football/repository/football_repository.dart';
 import 'package:trus_app/models/api/notification/push/push_payload.dart';
 
+// Shared by Ref (notification service) and WidgetRef (in-app notification).
+// Preserve generic read types so invalid repository calls fail at compile time.
+class PushNavigationRef {
+  final T Function<T>(ProviderListenable<T> provider) read;
+  final void Function(ProviderOrFamily provider) invalidate;
+
+  const PushNavigationRef({required this.read, required this.invalidate});
+}
+
 class PushNavigationHandler {
-  static void navigate(var ref, PushPayload payload) {
+  static void navigate(PushNavigationRef ref, PushPayload payload) {
     if (!payload.hasNavigationTarget) return;
 
     final ui = ref.read(uiFeedbackProvider.notifier);
@@ -36,7 +45,7 @@ class PushNavigationHandler {
     }
   }
 
-  static void _navigateInternal(var ref, PushPayload payload) {
+  static void _navigateInternal(PushNavigationRef ref, PushPayload payload) {
     final screenNotifier = ref.read(screenNotifierProvider.notifier);
     final variables = ref.read(screenVariablesNotifierProvider.notifier);
 
@@ -50,11 +59,15 @@ class PushNavigationHandler {
 
       case MatchDetailScreen.id:
         if (payload.matchId != null) {
-          final args = MatchNotifierArgs.footballMatchDetailByMatchId(payload.matchId!);
+          final args = MatchNotifierArgs.footballMatchDetailByMatchId(
+            payload.matchId!,
+          );
 
           // Pushka často oznamuje nově změněná data. Nechceme proto použít
           // starý detail/statistiky z memory cache ani už běžící provider se stejnými args.
-          ref.read(matchRepositoryProvider).invalidateMatchDetailData(payload.matchId!);
+          ref
+              .read(matchRepositoryProvider)
+              .invalidateMatchDetailData(payload.matchId!);
           ref.invalidate(matchEditNotifierProvider(args));
 
           variables.setMatchId(payload.matchId!);
@@ -69,7 +82,8 @@ class PushNavigationHandler {
           );
 
           // Stejný důvod jako výše: po kliknutí na push chceme čerstvý detail.
-          ref.read(footballRepositoryProvider)
+          ref
+              .read(footballRepositoryProvider)
               .invalidateFootballMatchDetail(payload.footballMatchId!);
           ref.invalidate(matchEditNotifierProvider(args));
 
@@ -88,7 +102,9 @@ class PushNavigationHandler {
 
         final args = PlayerNotifierArgs.view(payload.playerId!);
 
-        ref.read(playerRepositoryProvider).invalidatePlayerSetup(payload.playerId!);
+        ref
+            .read(playerRepositoryProvider)
+            .invalidatePlayerSetup(payload.playerId!);
         ref.invalidate(playerEditNotifierProvider(args));
 
         variables.setPlayerId(payload.playerId!);

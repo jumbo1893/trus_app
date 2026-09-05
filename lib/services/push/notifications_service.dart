@@ -295,7 +295,10 @@ class NotificationsService {
     // U terminated stavu se inicializace push služby může dokončit ve stejném
     // frame jako vytvoření MainScreen. Navigaci proto odložíme za první frame.
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      PushNavigationHandler.navigate(ref, payload);
+      PushNavigationHandler.navigate(
+        PushNavigationRef(read: ref.read, invalidate: ref.invalidate),
+        payload,
+      );
     });
   }
 

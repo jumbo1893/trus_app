@@ -12,6 +12,7 @@ import 'package:trus_app/features/match_participation/repository/match_participa
 import 'package:trus_app/features/match_participation/screens/match_participation_screen.dart';
 import 'package:trus_app/models/api/app_notice/app_notice.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:trus_app/services/crash_reporting_service.dart';
 
 import '../../../models/api/football/football_match_api_model.dart';
 import '../../../models/api/home/home_setup.dart';
@@ -102,20 +103,43 @@ class HomeNotifier extends SafeStateNotifier<HomeState> {
     }
   }
 
-  Future<void> load() async {
+  Future<void>? _loadFuture;
+
+  Future<void> load({bool background = false}) {
+    return _loadFuture ??= _load(background: background).whenComplete(() {
+      _loadFuture = null;
+    });
+  }
+
+  Future<void> _load({required bool background}) async {
     final cached = homeRepository.getCachedSetup();
-    if (cached != null) {
+    if (cached != null && !state.setup.hasValue) {
       safeSetState(state.copyWith(setup: AsyncValue.data(cached)));
     }
 
-    final setup = await runUiWithResult<HomeSetup>(
-      () => homeRepository.fetchSetup(),
-      showLoading: (cached == null),
-      successSnack: null,
-    );
-    if (!mounted) return;
+    try {
+      final setup = background
+          ? await homeRepository.fetchSetup()
+          : await runUiWithResult<HomeSetup>(
+              () => homeRepository.fetchSetup(),
+              showLoading: (cached == null),
+              successSnack: null,
+            );
+      if (!mounted) return;
 
-    safeSetState(state.copyWith(setup: AsyncValue.data(setup)));
+      safeSetState(state.copyWith(setup: AsyncValue.data(setup)));
+    } catch (error, stack) {
+      // Automatic refresh keeps the current dashboard usable while offline.
+      // Manual loading already reports errors through runUiWithResult.
+      await CrashReportingService.recordError(
+        error,
+        stack,
+        reason: 'Home setup refresh failed (background: $background)',
+      );
+      if (mounted && !state.setup.hasValue) {
+        safeSetState(state.copyWith(setup: AsyncValue.error(error, stack)));
+      }
+    }
   }
 
   Future<void> loadChartPlayersIfNeeded() async {
@@ -276,6 +300,10 @@ class HomeNotifier extends SafeStateNotifier<HomeState> {
           .read(globalVariablesProvider.notifier)
           .setPlayer(detail.currentPlayer);
     }
+    // Finish any refresh started before the response was saved; its result
+    // may still contain the old prompt. Then fetch the confirmed response.
+    await _loadFuture;
+    if (!mounted) return;
     homeRepository.invalidateSetup();
     await load();
   }
