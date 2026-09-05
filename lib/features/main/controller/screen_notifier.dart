@@ -1,5 +1,9 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:trus_app/features/achievement/controller/achievement_filter_notifier.dart';
+import 'package:trus_app/features/achievement/screens/achievement_screen.dart';
+import 'package:trus_app/features/achievement/screens/view_achievement_detail_screen.dart';
+import 'package:trus_app/features/achievement/screens/view_player_achievement_detail_screen.dart';
 import 'package:trus_app/features/general/notifier/safe_state_notifier.dart';
 import 'package:trus_app/features/home/screens/home_screen.dart';
 import 'package:trus_app/features/main/controller/screen_variables_notifier.dart';
@@ -50,6 +54,7 @@ class ScreenNotifier extends SafeStateNotifier<ScreenState> {
   // ---- navigation ----
 
   void resetTo(String screenId) {
+    ref.read(achievementFilterNotifierProvider.notifier).clearAll();
     state = ScreenState.initial();
     if (screenId != HomeScreen.id) {
       changeByFragmentId(screenId);
@@ -121,6 +126,8 @@ class ScreenNotifier extends SafeStateNotifier<ScreenState> {
   }
 
   void _changeFragment(String screenId) {
+    _resetAchievementFiltersWhenLeavingFlow(state.currentScreenId, screenId);
+
     final idx = getFragmentNumberByFragmentId(screenId);
     final bottomIndex = _bottomIndexFor(screenId);
 
@@ -138,6 +145,31 @@ class ScreenNotifier extends SafeStateNotifier<ScreenState> {
       ),
     );
   }
+
+  void _resetAchievementFiltersWhenLeavingFlow(
+    String currentScreenId,
+    String nextScreenId,
+  ) {
+    final filterNotifier = ref.read(achievementFilterNotifierProvider.notifier);
+
+    if (_isAchievementListFlow(currentScreenId) &&
+        !_isAchievementListFlow(nextScreenId)) {
+      filterNotifier.clearListFilter();
+    }
+
+    if (_isPlayerAchievementFlow(currentScreenId) &&
+        !_isPlayerAchievementFlow(nextScreenId)) {
+      filterNotifier.clearPlayerFilter();
+    }
+  }
+
+  bool _isAchievementListFlow(String screenId) =>
+      screenId == AchievementScreen.id ||
+      screenId == ViewAchievementDetailScreen.id;
+
+  bool _isPlayerAchievementFlow(String screenId) =>
+      screenId == ViewPlayerScreen.id ||
+      screenId == ViewPlayerAchievementDetailScreen.id;
 
   String _titleFor(String screenId) {
     Widget widget = getFragmentByFragmentId(screenId);

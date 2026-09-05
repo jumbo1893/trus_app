@@ -5,8 +5,10 @@ import 'package:trus_app/models/api/interfaces/model_to_string.dart';
 import 'package:trus_app/models/helper/title_and_text.dart';
 
 import '../../main/state_back_condition.dart';
+import '../filter/statistics_filter.dart';
 
 class StatsState implements StateBackCondition, IListviewState {
+  final StatisticsFilter advancedFilter;
   final AsyncValue<List<ModelToString>> stats;
   final AsyncValue<TitleAndText?> overall;
   final String? filter;
@@ -20,6 +22,7 @@ class StatsState implements StateBackCondition, IListviewState {
   bool get isDetail => level != StatsLevel.root;
 
   StatsState({
+    this.advancedFilter = const StatisticsFilter(),
     required this.stats,
     required this.overall,
     required this.filter,
@@ -33,18 +36,20 @@ class StatsState implements StateBackCondition, IListviewState {
   });
 
   factory StatsState.initial(String api, bool matchOrPlayer) => StatsState(
-      stats: const AsyncValue.loading(),
-      overall: const AsyncValue.data(null),
-      filter: null,
-      orderDescending: true,
-      selectedModel: null,
-      selectedModelId: null,
-      selectedDetailedModelId: null,
-      api: api,
-      level: StatsLevel.root,
-      matchOrPlayer: matchOrPlayer);
+    stats: const AsyncValue.loading(),
+    overall: const AsyncValue.data(null),
+    filter: null,
+    orderDescending: true,
+    selectedModel: null,
+    selectedModelId: null,
+    selectedDetailedModelId: null,
+    api: api,
+    level: StatsLevel.root,
+    matchOrPlayer: matchOrPlayer,
+  );
 
   StatsState copyWith({
+    StatisticsFilter? advancedFilter,
     AsyncValue<List<ModelToString>>? stats,
     AsyncValue<TitleAndText?>? overall,
     String? filter,
@@ -56,16 +61,19 @@ class StatsState implements StateBackCondition, IListviewState {
     StatsLevel? level,
   }) {
     return StatsState(
-        stats: stats ?? this.stats,
-        overall: overall ?? this.overall,
-        filter: filter ?? this.filter,
-        orderDescending: orderDescending ?? this.orderDescending,
-        selectedModel: selectedModel ?? this.selectedModel,
-        selectedModelId: selectedModelId ?? this.selectedModelId,
-        selectedDetailedModelId: selectedDetailedModelId ?? this.selectedDetailedModelId,
-        api: api,
-        level: level ?? this.level,
-        matchOrPlayer: matchOrPlayer);
+      advancedFilter: advancedFilter ?? this.advancedFilter,
+      stats: stats ?? this.stats,
+      overall: overall ?? this.overall,
+      filter: filter ?? this.filter,
+      orderDescending: orderDescending ?? this.orderDescending,
+      selectedModel: selectedModel ?? this.selectedModel,
+      selectedModelId: selectedModelId ?? this.selectedModelId,
+      selectedDetailedModelId:
+          selectedDetailedModelId ?? this.selectedDetailedModelId,
+      api: api,
+      level: level ?? this.level,
+      matchOrPlayer: matchOrPlayer,
+    );
   }
 
   @override

@@ -1,7 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:trus_app/common/widgets/filter/app_search_filter_bar.dart';
+import 'package:trus_app/features/achievement/controller/achievement_filter_notifier.dart';
+import 'package:trus_app/features/achievement/filter/achievement_filter.dart';
+import 'package:trus_app/features/achievement/filter/achievement_filter_options.dart';
 import 'package:trus_app/features/achievement/screens/view_player_achievement_detail_screen.dart';
 import 'package:trus_app/features/achievement/widget/achievement_category_style.dart';
+import 'package:trus_app/features/achievement/widget/achievement_filter_sheet.dart';
 import 'package:trus_app/features/main/controller/screen_notifier.dart';
 import 'package:trus_app/features/main/controller/screen_variables_notifier.dart';
 import 'package:trus_app/models/api/achievement/achievement_category.dart';
@@ -13,28 +18,48 @@ import 'package:trus_app/theme/app_widget_values.dart';
 import '../../../features/achievement/widget/achievement_rarity_style.dart';
 import '../../utils/utils.dart';
 
-class AchievementView extends ConsumerWidget {
+class AchievementView extends ConsumerStatefulWidget {
+  final int playerId;
   final AchievementPlayerDetail? achievementPlayerDetail;
 
-  const AchievementView({Key? key, required this.achievementPlayerDetail})
-    : super(key: key);
+  const AchievementView({
+    Key? key,
+    required this.playerId,
+    required this.achievementPlayerDetail,
+  }) : super(key: key);
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    if (achievementPlayerDetail == null) {
+  ConsumerState<AchievementView> createState() => _AchievementViewState();
+}
+
+class _AchievementViewState extends ConsumerState<AchievementView> {
+  @override
+  Widget build(BuildContext context) {
+    if (widget.achievementPlayerDetail == null) {
       return const SizedBox.shrink();
     }
 
-    final detail = achievementPlayerDetail!;
+    final detail = widget.achievementPlayerDetail!;
     final colors = context.appColors;
     final textTheme = Theme.of(context).textTheme;
+    final filter = ref.watch(
+      achievementFilterNotifierProvider.select(
+        (state) => state.filterForPlayer(widget.playerId),
+      ),
+    );
+    final filterNotifier = ref.read(achievementFilterNotifierProvider.notifier);
 
     final allAchievements = [
       ...detail.accomplishedPlayerAchievements,
       ...detail.notAccomplishedPlayerAchievements,
     ];
 
-    final groupedAchievements = _groupAchievementsByCategory(allAchievements);
+    final filteredAchievements = allAchievements
+        .where((item) => filter.matches(item.achievement))
+        .toList();
+    final groupedAchievements = _groupAchievementsByCategory(
+      filteredAchievements,
+    );
 
     final title =
         "Splněno ${castDoubleToPercentage(detail.successRate)} % achievementů";
@@ -80,6 +105,30 @@ class AchievementView extends ConsumerWidget {
                       detail.totalCount!,
           ),
           const SizedBox(height: 18),
+          AppSearchFilterBar(
+            query: filter.query,
+            searchHint: 'Hledat podle názvu nebo podmínky',
+            activeFilterCount: filter.activeAdvancedFilterCount,
+            onQueryChanged: (query) => filterNotifier.setPlayerFilter(
+              widget.playerId,
+              filter.copyWith(query: query),
+            ),
+            onFilterPressed: () => _openFilters(filter),
+            onClear: filterNotifier.clearPlayerFilter,
+          ),
+          const SizedBox(height: 18),
+
+          if (filteredAchievements.isEmpty)
+            Padding(
+              padding: const EdgeInsets.symmetric(vertical: 24),
+              child: Center(
+                child: Text(
+                  'Žádné achievementy neodpovídají zvoleným filtrům.',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(color: colors.textSecondary),
+                ),
+              ),
+            ),
 
           for (final category in AchievementCategory.values)
             if ((groupedAchievements[category] ?? []).isNotEmpty) ...[
@@ -101,6 +150,20 @@ class AchievementView extends ConsumerWidget {
         ],
       ),
     );
+  }
+
+  Future<void> _openFilters(AchievementFilter filter) async {
+    final selected = await showAchievementFilterSheet(
+      context,
+      filter: filter,
+      options: const AchievementFilterOptions.empty(),
+      showPlayerFilter: false,
+    );
+    if (selected != null && mounted) {
+      ref
+          .read(achievementFilterNotifierProvider.notifier)
+          .setPlayerFilter(widget.playerId, selected);
+    }
   }
 
   Map<AchievementCategory, List<PlayerAchievementApiModel>>

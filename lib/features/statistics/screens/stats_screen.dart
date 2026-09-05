@@ -2,12 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:trus_app/theme/app_colors.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:trus_app/features/main/controller/screen_notifier.dart';
-import 'package:trus_app/features/season/controller/season_dropdown_notifier.dart';
 import 'package:trus_app/features/statistics/stat_args.dart';
 
 import '../../../common/utils/utils.dart';
 import '../../../common/widgets/animated_filter_panel.dart';
-import '../../../common/widgets/dropdown/custom_dropdown_sheet.dart';
 import '../../../common/widgets/loader.dart';
 import '../../home/screens/home_screen.dart';
 import '../controller/stats_notifier.dart';
@@ -62,22 +60,19 @@ class _StatsScreenState extends ConsumerState<StatsScreen> {
   @override
   Widget build(BuildContext context) {
     final stats = ref.watch(statsNotifierProvider(widget.statsArgs));
-    final seasonProvider =
-    seasonDropdownNotifierProvider(statisticsSeasonArgs);
 
-    ref.listen<StatsState>(
-      statsNotifierProvider(widget.statsArgs),
-          (_, next) {
-        next.stats.whenOrNull(
-          error: (e, st) => showErrorDialogFromError(
-            e,
-            st,
-                () => ref.read(screenNotifierProvider.notifier).changeFragment(HomeScreen.id),
-            context,
-          ),
-        );
-      },
-    );
+    ref.listen<StatsState>(statsNotifierProvider(widget.statsArgs), (_, next) {
+      next.stats.whenOrNull(
+        error: (e, st) => showErrorDialogFromError(
+          e,
+          st,
+          () => ref
+              .read(screenNotifierProvider.notifier)
+              .changeFragment(HomeScreen.id),
+          context,
+        ),
+      );
+    });
 
     return Scaffold(
       backgroundColor: context.appColors.backgroundPrimary,
@@ -89,14 +84,7 @@ class _StatsScreenState extends ConsumerState<StatsScreen> {
                 visible: _showFilters,
                 child: Padding(
                   padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
-                  child: StatisticsFilterBar(
-                    seasonDropdown: CustomDropdownSheet(
-                      hint: "Vyber sezonu",
-                      notifier: ref.read(seasonProvider.notifier),
-                      state: ref.watch(seasonProvider),
-                    ),
-                    statsArgs: widget.statsArgs,
-                  ),
+                  child: StatisticsFilterBar(statsArgs: widget.statsArgs),
                 ),
               ),
             const SizedBox(height: 16),

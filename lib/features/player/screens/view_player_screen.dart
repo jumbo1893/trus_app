@@ -21,9 +21,8 @@ import '../controller/player_edit_notifier.dart';
 class ViewPlayerScreen extends CustomConsumerStatefulWidget {
   static const String id = "view-player-screen";
 
-  const ViewPlayerScreen({
-    Key? key,
-  }) : super(key: key, title: "Zobrazení hráče", name: id);
+  const ViewPlayerScreen({Key? key})
+    : super(key: key, title: "Zobrazení hráče", name: id);
 
   @override
   ConsumerState<ViewPlayerScreen> createState() => _ViewPlayerScreenState();
@@ -39,13 +38,10 @@ class _ViewPlayerScreenState extends ConsumerState<ViewPlayerScreen>
         .where((e) => e.text.trim().isNotEmpty)
         .map(
           (e) => FormFieldWrapper(
-        label: e.title,
-        child: AppReadOnlyField(
-          value: e.text,
-          allowWrap: true,
-        ),
-      ),
-    )
+            label: e.title,
+            child: AppReadOnlyField(value: e.text, allowWrap: true),
+          ),
+        )
         .toList();
   }
 
@@ -58,17 +54,11 @@ class _ViewPlayerScreenState extends ConsumerState<ViewPlayerScreen>
         children: [
           FormFieldWrapper(
             label: first.title,
-            child: AppReadOnlyField(
-              value: first.text,
-              allowWrap: true,
-            ),
+            child: AppReadOnlyField(value: first.text, allowWrap: true),
           ),
           FormFieldWrapper(
             label: second.title,
-            child: AppReadOnlyField(
-              value: second.text,
-              allowWrap: true,
-            ),
+            child: AppReadOnlyField(value: second.text, allowWrap: true),
           ),
         ],
       );
@@ -92,7 +82,9 @@ class _ViewPlayerScreenState extends ConsumerState<ViewPlayerScreen>
       headerTitle: "${state.fan ? "fanoušek" : "hráč"}: ${state.name}",
       headerText: "Datum narození: ${dateTimeToString(state.birthdate)}",
       fields: [
-        if ((state.selectedFootballPlayer?.dropdownItem() ?? "").trim().isNotEmpty)
+        if ((state.selectedFootballPlayer?.dropdownItem() ?? "")
+            .trim()
+            .isNotEmpty)
           FormFieldWrapper(
             label: "Jméno hráče",
             child: AppReadOnlyField(
@@ -109,6 +101,7 @@ class _ViewPlayerScreenState extends ConsumerState<ViewPlayerScreen>
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16),
             child: AchievementView(
+              playerId: playerId,
               achievementPlayerDetail: state.achievementPlayerDetail,
             ),
           ),

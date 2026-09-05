@@ -13,6 +13,7 @@ class AchievementDetail implements JsonAndHttpConverter, ModelToString {
   double? successRate;
   PlayerAchievementApiModel? playerAchievement;
   String? accomplishedPlayers;
+  final Set<int> accomplishedPlayerIds;
 
   AchievementDetail({
     required this.achievement,
@@ -20,7 +21,8 @@ class AchievementDetail implements JsonAndHttpConverter, ModelToString {
     this.accomplishedCount,
     this.successRate,
     this.playerAchievement,
-    this.accomplishedPlayers
+    this.accomplishedPlayers,
+    this.accomplishedPlayerIds = const {},
   });
 
   bool get isPlayerAchievementAccomplished {
@@ -44,7 +46,8 @@ class AchievementDetail implements JsonAndHttpConverter, ModelToString {
   }
 
   AchievementDetail.dummy()
-      : achievement = AchievementApiModel.dummy();
+    : achievement = AchievementApiModel.dummy(),
+      accomplishedPlayerIds = const {};
 
   @override
   Map<String, dynamic> toJson() {
@@ -54,6 +57,7 @@ class AchievementDetail implements JsonAndHttpConverter, ModelToString {
       "accomplishedCount": accomplishedCount,
       "successRate": successRate,
       "playerAchievement": playerAchievement,
+      "accomplishedPlayerIds": accomplishedPlayerIds.toList(),
     };
   }
 
@@ -64,8 +68,14 @@ class AchievementDetail implements JsonAndHttpConverter, ModelToString {
       totalCount: json['totalCount'] ?? 0,
       accomplishedCount: json['accomplishedCount'] ?? 0,
       successRate: json['successRate'] ?? 0.0,
-      playerAchievement: json["playerAchievement"] != null ? PlayerAchievementApiModel.fromJson(json["playerAchievement"]) : null,
+      playerAchievement: json["playerAchievement"] != null
+          ? PlayerAchievementApiModel.fromJson(json["playerAchievement"])
+          : null,
       accomplishedPlayers: json['accomplishedPlayers'] ?? "",
+      accomplishedPlayerIds:
+          ((json['accomplishedPlayerIds'] as List<dynamic>?) ?? const [])
+              .map((id) => (id as num).toInt())
+              .toSet(),
     );
   }
 
