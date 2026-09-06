@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:trus_app/features/ai/widgets/match_report_card.dart';
 import 'package:trus_app/models/api/auth/app_team_api_model.dart';
 import 'package:trus_app/models/api/football/football_match_api_model.dart';
 import 'package:trus_app/models/api/helper/redirect/redirect_api_model.dart';
@@ -353,6 +354,20 @@ class FootballMatchBox extends StatelessWidget {
                   ),
                 ),
               ),
+          ],
+          if (!isNextMatch &&
+              match != null &&
+              match.id != null &&
+              (match.alreadyPlayed ||
+                  (match.homeGoalNumber != null &&
+                      match.awayGoalNumber != null)) &&
+              match.date.isBefore(DateTime.now())) ...[
+            const SizedBox(height: 14),
+            const Divider(),
+            MatchReportCard(
+              key: ValueKey('${appTeamApiModel?.id}-${match.id}'),
+              matchId: match.id!,
+            ),
           ],
         ],
       ),

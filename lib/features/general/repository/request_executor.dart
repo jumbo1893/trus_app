@@ -61,8 +61,9 @@ class RequestExecutor extends ResponseValidator {
   Future<T> _executeRequest<T extends dynamic>(
     Future<http.Response> Function(http.Client) request,
     T Function(dynamic) mapFunction,
-    bool secondTry,
-  ) async {
+    bool secondTry, {
+    bool queueOnFailure = true,
+  }) async {
     final client = getClient();
     dynamic response;
     // _requestQueue.add(() async => _executeRequest(request, mapFunction, false));
@@ -82,13 +83,18 @@ class RequestExecutor extends ResponseValidator {
 
         try {
           await _ensureReLogin();
-          return await _executeRequest(request, mapFunction, true);
+          return await _executeRequest(
+            request,
+            mapFunction,
+            true,
+            queueOnFailure: queueOnFailure,
+          );
         } finally {
           ui.hideSessionLoadingSheet();
         }
       }
       if (e is TimeoutException || e is http.ClientException) {
-        _enqueueRequest(request, mapFunction);
+        if (queueOnFailure) _enqueueRequest(request, mapFunction);
         throw ClientTimeoutException();
       } else {
         debugPrint(e.toString());
@@ -121,8 +127,9 @@ class RequestExecutor extends ResponseValidator {
   Future<T> executePostRequest<T>(
     Uri uri,
     T Function(dynamic) mapFunction,
-    Object body,
-  ) async {
+    Object body, {
+    bool queueOnFailure = true,
+  }) async {
     return await _executeRequest(
       (client) async {
         final headers = await _headerProvider.getHeaders();
@@ -131,6 +138,7 @@ class RequestExecutor extends ResponseValidator {
       },
       mapFunction,
       false,
+      queueOnFailure: queueOnFailure,
     );
   }
 
