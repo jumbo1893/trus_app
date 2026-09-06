@@ -6,6 +6,7 @@ class AppFilterMultiSelectionField<T> extends StatelessWidget {
   final String label;
   final String hint;
   final String searchHint;
+  final String? allLabel;
   final Set<T> values;
   final List<T> items;
   final String Function(T value) itemLabel;
@@ -16,6 +17,7 @@ class AppFilterMultiSelectionField<T> extends StatelessWidget {
     required this.label,
     required this.hint,
     required this.searchHint,
+    this.allLabel,
     required this.values,
     required this.items,
     required this.itemLabel,
@@ -23,7 +25,7 @@ class AppFilterMultiSelectionField<T> extends StatelessWidget {
   });
 
   Future<void> _openSelection(BuildContext context) async {
-    if (items.isEmpty) return;
+    if (items.isEmpty && allLabel == null) return;
 
     FocusManager.instance.primaryFocus?.unfocus();
     final selection = await showModalBottomSheet<Set<T>>(
@@ -34,6 +36,7 @@ class AppFilterMultiSelectionField<T> extends StatelessWidget {
       backgroundColor: Colors.transparent,
       builder: (_) => _FilterMultiSelectionSheet<T>(
         title: label,
+        allLabel: allLabel,
         searchHint: searchHint,
         selected: values,
         items: items,
@@ -115,6 +118,7 @@ class AppFilterMultiSelectionField<T> extends StatelessWidget {
 
 class _FilterMultiSelectionSheet<T> extends StatefulWidget {
   final String title;
+  final String? allLabel;
   final String searchHint;
   final Set<T> selected;
   final List<T> items;
@@ -122,6 +126,7 @@ class _FilterMultiSelectionSheet<T> extends StatefulWidget {
 
   const _FilterMultiSelectionSheet({
     required this.title,
+    this.allLabel,
     required this.searchHint,
     required this.selected,
     required this.items,
@@ -213,6 +218,12 @@ class _FilterMultiSelectionSheetState<T>
                   ),
                 ),
               ),
+              if (widget.allLabel != null)
+                CheckboxListTile(
+                  title: Text(widget.allLabel!),
+                  value: selected.isEmpty,
+                  onChanged: (_) => setState(selected.clear),
+                ),
               Expanded(
                 child: visibleItems.isEmpty
                     ? Center(

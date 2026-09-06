@@ -4,6 +4,36 @@ import 'package:trus_app/common/widgets/filter/app_filter_multi_selection_field.
 import 'package:trus_app/theme/app_theme.dart';
 
 void main() {
+  testWidgets('explicit all option clears a previous selection', (
+    tester,
+  ) async {
+    Set<int>? result;
+    await tester.pumpWidget(
+      MaterialApp(
+        theme: AppTheme.light(),
+        home: Scaffold(
+          body: AppFilterMultiSelectionField<int>(
+            label: 'Sezona',
+            hint: 'Všechny sezony',
+            allLabel: 'Všechny sezony',
+            searchHint: 'Hledat sezonu',
+            values: const {1},
+            items: const [1, 2],
+            itemLabel: (id) => 'Sezona $id',
+            onChanged: (value) => result = value,
+          ),
+        ),
+      ),
+    );
+    await tester.tap(find.text('Sezona 1'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Všechny sezony'));
+    await tester.tap(find.text('Použít výběr'));
+    await tester.pumpAndSettle();
+    expect(result, isEmpty);
+    expect(tester.testTextInput.isVisible, isFalse);
+  });
+
   testWidgets(
     'selection sheet does not focus search and returns multiple values',
     (tester) async {

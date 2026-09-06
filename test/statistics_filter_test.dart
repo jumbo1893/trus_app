@@ -10,6 +10,58 @@ import 'package:trus_app/models/api/season_api_model.dart';
 import 'package:trus_app/theme/app_theme.dart';
 
 void main() {
+  testWidgets(
+    'opponents merge accents, case and spaces and submit every original name',
+    (tester) async {
+      const variants = [
+        'Horní Dolní',
+        'Horni Dolni',
+        ' HORNÍ  DOLNÍ ',
+        'Horní Dolní',
+        'Jiný soupeř',
+      ];
+      StatisticsFilter? result;
+      await tester.pumpWidget(
+        MaterialApp(
+          theme: AppTheme.light(),
+          home: Scaffold(
+            body: SingleChildScrollView(
+              child: StatisticsFilterFields(
+                args: const StatsArgs(goalApi, false),
+                filter: const StatisticsFilter(opponentNames: {'Horni Dolni'}),
+                options: const StatisticsFilterOptions(
+                  seasons: [],
+                  players: [],
+                  opponents: variants,
+                  fines: [],
+                ),
+                onChanged: (value) => result = value,
+              ),
+            ),
+          ),
+        ),
+      );
+      await tester.tap(find.textContaining('DOLNÍ').first);
+      await tester.pumpAndSettle();
+      expect(find.byType(CheckboxListTile), findsNWidgets(2));
+      final checkboxes = tester.widgetList<CheckboxListTile>(
+        find.byType(CheckboxListTile),
+      );
+      expect(checkboxes.where((item) => item.value == true), hasLength(1));
+      await tester.tap(find.text('Použít výběr'));
+      await tester.pumpAndSettle();
+      expect(result?.opponentNames, {
+        'Horní Dolní',
+        'Horni Dolni',
+        ' HORNÍ  DOLNÍ ',
+      });
+      expect(
+        result?.toQueryParameters().values,
+        containsAll(['Horní Dolní', 'Horni Dolni', ' HORNÍ  DOLNÍ ']),
+      );
+    },
+  );
+
   test('empty selection sends no restrictions', () {
     expect(const StatisticsFilter().toQueryParameters(), isEmpty);
     expect(const StatisticsFilter().activeCount, 0);
@@ -75,9 +127,9 @@ void main() {
       await tester.pumpWidget(
         ProviderScope(
           overrides: [
-            statisticsFilterOptionsProvider(
-              args,
-            ).overrideWith((ref) async => options),
+            statisticsFilterOptionsProvider.overrideWith(
+              (ref, args) async => options,
+            ),
           ],
           child: MaterialApp(
             theme: AppTheme.light(),

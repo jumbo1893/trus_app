@@ -10,6 +10,10 @@ import 'package:trus_app/features/statistics/stat_args.dart';
 import 'package:trus_app/models/api/attendance/attendance_detailed_response.dart';
 import 'package:trus_app/models/api/interfaces/detailed_response_model.dart';
 import 'package:trus_app/models/api/season_api_model.dart';
+import 'package:trus_app/models/api/goal/goal_detailed_model.dart';
+import 'package:trus_app/models/api/goal/goal_detailed_response.dart';
+import 'package:trus_app/models/api/match/match_api_model.dart';
+import 'package:trus_app/models/api/player/player_api_model.dart';
 
 class _Api implements StatsApiService {
   final requests =
@@ -47,6 +51,80 @@ DetailedResponseModel _response(int players) => AttendanceDetailedResponse(
 );
 
 void main() {
+  test(
+    'options use season-scoped results and all seasons remove the restriction',
+    () async {
+      final api = _Api();
+      final container = ProviderContainer(
+        overrides: [
+          statsApiServiceProvider.overrideWithValue(api),
+          statisticsSeasonsProvider.overrideWith(
+            (ref) async => <SeasonApiModel>[],
+          ),
+        ],
+      );
+      addTearDown(container.dispose);
+      for (final matchStats in [false, true]) {
+        for (final seasonIds in [
+          <int>{2020},
+          <int>{},
+        ]) {
+          final provider = statisticsFilterOptionsProvider(
+            StatsArgs(goalApi, matchStats, seasonIds: seasonIds),
+          );
+          final subscription = container.listen(provider, (_, __) {});
+          final result = container.read(provider.future);
+          expect(api.requests.last.filters.seasonIds, seasonIds);
+          final names = seasonIds.isEmpty
+              ? ['Horní Dolní', 'Soupeř 2020']
+              : ['Soupeř 2020'];
+          api.requests.last.result.complete(
+            GoalDetailedResponse(
+              playersCount: names.length,
+              matchesCount: names.length,
+              totalGoals: 2,
+              totalAssists: 0,
+              goalList: [
+                for (var i = 0; i < names.length; i++)
+                  GoalDetailedModel(
+                    goalNumber: 1,
+                    assistNumber: 0,
+                    player: matchStats
+                        ? PlayerApiModel(
+                            id: i + 1,
+                            name: names[i],
+                            birthday: DateTime(1990),
+                            fan: true,
+                            active: false,
+                          )
+                        : null,
+                    match: matchStats
+                        ? null
+                        : MatchApiModel(
+                            id: i + 1,
+                            name: names[i],
+                            date: DateTime(2020),
+                            seasonId: 2020,
+                            home: true,
+                            playerIdList: [],
+                          ),
+                  ),
+              ],
+            ),
+          );
+          final options = await result;
+          expect(
+            matchStats
+                ? options.players.map((p) => p.name).toList()
+                : options.opponents,
+            names,
+          );
+          subscription.close();
+        }
+      }
+    },
+  );
+
   testWidgets(
     'search debounces and an old response cannot overwrite newer filters',
     (tester) async {

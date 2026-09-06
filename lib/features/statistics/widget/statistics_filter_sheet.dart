@@ -18,15 +18,32 @@ Future<StatisticsFilter?> showStatisticsFilterSheet(
   resetValue: const StatisticsFilter(),
   builder: (context, draft, onChanged) => Consumer(
     builder: (context, ref, _) => ref
-        .watch(statisticsFilterOptionsProvider(args))
+        .watch(
+          statisticsFilterOptionsProvider(
+            StatsArgs(
+              args.api,
+              args.matchOrPlayer,
+              seasonIds: draft.seasonIds,
+              fineIds: draft.fineIds,
+            ),
+          ),
+        )
         .when(
           loading: () => const Center(child: CircularProgressIndicator()),
           error: (_, __) => Column(
             children: [
               const Text('Volby filtrů se nepodařilo načíst.'),
               TextButton(
-                onPressed: () =>
-                    ref.invalidate(statisticsFilterOptionsProvider(args)),
+                onPressed: () => ref.invalidate(
+                  statisticsFilterOptionsProvider(
+                    StatsArgs(
+                      args.api,
+                      args.matchOrPlayer,
+                      seasonIds: draft.seasonIds,
+                      fineIds: draft.fineIds,
+                    ),
+                  ),
+                ),
                 child: const Text('Zkusit znovu'),
               ),
             ],
@@ -55,67 +72,83 @@ class StatisticsFilterFields extends StatelessWidget {
   });
 
   @override
-  Widget build(BuildContext context) => Column(
-    children: [
-      AppFilterMultiSelectionField<int>(
-        label: 'Sezona',
-        hint: 'Všechny sezony',
-        searchHint: 'Hledat sezonu',
-        values: filter.seasonIds,
-        items: options.seasons.map((s) => s.id).whereType<int>().toList(),
-        itemLabel: (id) => options.seasons.firstWhere((s) => s.id == id).name,
-        onChanged: (ids) => onChanged(filter.copyWith(seasonIds: ids)),
-      ),
-      const SizedBox(height: 20),
-      if (args.matchOrPlayer)
+  Widget build(BuildContext context) {
+    final opponents = options.opponentGroups;
+    return Column(
+      children: [
         AppFilterMultiSelectionField<int>(
-          label: 'Hráči a fanoušci',
-          hint: 'Všichni hráči a fanoušci',
-          searchHint: 'Hledat hráče nebo fanouška',
-          values: filter.playerIds,
-          items: options.players.map((p) => p.id).whereType<int>().toList(),
-          itemLabel: (id) {
-            final player = options.players.firstWhere((p) => p.id == id);
-            return '${player.name} · ${player.fan ? 'fanoušek' : 'hráč'}';
-          },
-          onChanged: (ids) => onChanged(filter.copyWith(playerIds: ids)),
-        )
-      else
-        AppFilterMultiSelectionField<String>(
-          label: 'Soupeři',
-          hint: 'Všichni soupeři (napříč sezonami)',
-          searchHint: 'Hledat soupeře',
-          values: filter.opponentNames,
-          items: options.opponents,
-          itemLabel: (name) => name,
-          onChanged: (names) =>
-              onChanged(filter.copyWith(opponentNames: names)),
+          label: 'Sezona',
+          hint: 'Všechny sezony',
+          allLabel: 'Všechny sezony',
+          searchHint: 'Hledat sezonu',
+          values: filter.seasonIds,
+          items: options.seasons.map((s) => s.id).whereType<int>().toList(),
+          itemLabel: (id) => options.seasons.firstWhere((s) => s.id == id).name,
+          onChanged: (ids) => onChanged(
+            filter.copyWith(seasonIds: ids, playerIds: {}, opponentNames: {}),
+          ),
         ),
-      if (args.api == receivedFineApi) ...[
         const SizedBox(height: 20),
-        AppFilterMultiSelectionField<int>(
-          label: 'Pokuty',
-          hint: 'Všechny pokuty',
-          searchHint: 'Hledat pokutu',
-          values: filter.fineIds,
-          items: options.fines.map((f) => f.id).whereType<int>().toList(),
-          itemLabel: (id) {
-            final fine = options.fines.firstWhere((f) => f.id == id);
-            return '${fine.name} · ${fine.amount} Kč${fine.inactive ? ' (historická)' : ''}';
-          },
-          onChanged: (ids) => onChanged(filter.copyWith(fineIds: ids)),
+        if (args.matchOrPlayer)
+          AppFilterMultiSelectionField<int>(
+            label: 'Hráči a fanoušci',
+            hint: 'Všichni hráči a fanoušci',
+            searchHint: 'Hledat hráče nebo fanouška',
+            values: filter.playerIds,
+            items: options.players.map((p) => p.id).whereType<int>().toList(),
+            itemLabel: (id) {
+              final player = options.players.firstWhere((p) => p.id == id);
+              return '${player.name} · ${player.fan ? 'fanoušek' : 'hráč'}';
+            },
+            onChanged: (ids) => onChanged(filter.copyWith(playerIds: ids)),
+          )
+        else
+          AppFilterMultiSelectionField<String>(
+            label: 'Soupeři',
+            hint: 'Všichni soupeři',
+            searchHint: 'Hledat soupeře',
+            values: filter.opponentNames
+                .map(StatisticsFilterOptions.opponentKey)
+                .toSet(),
+            items: opponents.keys.toList()..sort(),
+            itemLabel: (key) =>
+                StatisticsFilterOptions.opponentLabel(opponents[key] ?? {key}),
+            onChanged: (names) => onChanged(
+              filter.copyWith(
+                opponentNames: {
+                  for (final key in names) ...opponents[key] ?? {key},
+                },
+              ),
+            ),
+          ),
+        if (args.api == receivedFineApi) ...[
+          const SizedBox(height: 20),
+          AppFilterMultiSelectionField<int>(
+            label: 'Pokuty',
+            hint: 'Všechny pokuty',
+            searchHint: 'Hledat pokutu',
+            values: filter.fineIds,
+            items: options.fines.map((f) => f.id).whereType<int>().toList(),
+            itemLabel: (id) {
+              final fine = options.fines.firstWhere((f) => f.id == id);
+              return '${fine.name} · ${fine.amount} Kč${fine.inactive ? ' (historická)' : ''}';
+            },
+            onChanged: (ids) => onChanged(
+              filter.copyWith(fineIds: ids, playerIds: {}, opponentNames: {}),
+            ),
+          ),
+        ],
+        const SizedBox(height: 20),
+        Material(
+          color: Colors.transparent,
+          child: SwitchListTile(
+            contentPadding: EdgeInsets.zero,
+            title: const Text('Řadit sestupně'),
+            value: filter.descending,
+            onChanged: (value) => onChanged(filter.copyWith(descending: value)),
+          ),
         ),
       ],
-      const SizedBox(height: 20),
-      Material(
-        color: Colors.transparent,
-        child: SwitchListTile(
-          contentPadding: EdgeInsets.zero,
-          title: const Text('Řadit sestupně'),
-          value: filter.descending,
-          onChanged: (value) => onChanged(filter.copyWith(descending: value)),
-        ),
-      ),
-    ],
-  );
+    );
+  }
 }

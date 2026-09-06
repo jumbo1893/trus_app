@@ -1,6 +1,11 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:trus_app/common/utils/search_text.dart';
 import 'package:trus_app/config.dart';
-import 'package:trus_app/features/player/repository/player_repository.dart';
+import 'package:trus_app/models/api/attendance/attendance_detailed_model.dart';
+import 'package:trus_app/models/api/beer/beer_detailed_model.dart';
+import 'package:trus_app/models/api/goal/goal_detailed_model.dart';
+import 'package:trus_app/models/api/receivedfine/received_fine_detailed_model.dart';
+import 'statistics_filter.dart';
 import 'package:trus_app/features/season/repository/season_api_service.dart';
 import 'package:trus_app/features/statistics/repository/stats_api_service.dart';
 import 'package:trus_app/features/statistics/stat_args.dart';
@@ -15,31 +20,45 @@ final statisticsSeasonsProvider = FutureProvider.autoDispose(
 final statisticsFilterOptionsProvider = FutureProvider.autoDispose
     .family<StatisticsFilterOptions, StatsArgs>((ref, args) async {
       final seasons = ref.watch(statisticsSeasonsProvider.future);
-      final repository = ref.read(playerRepositoryProvider);
-      final cachedPlayers = repository.getCachedList();
-      final players = args.matchOrPlayer
-          ? (cachedPlayers == null
-                ? repository.fetchList()
-                : Future.value(cachedPlayers))
-          : Future.value(<PlayerApiModel>[]);
-      final opponents = args.matchOrPlayer
-          ? Future.value(<String>[])
-          : ref.read(statsApiServiceProvider).getOpponents();
+      final statistics = ref
+          .read(statsApiServiceProvider)
+          .getDetailedStats(
+            null,
+            null,
+            null,
+            !args.matchOrPlayer,
+            null,
+            null,
+            args.api,
+            advancedFilter: StatisticsFilter(
+              seasonIds: args.seasonIds,
+              fineIds: args.fineIds,
+            ),
+          );
       final fines = args.api == receivedFineApi
           ? ref.read(statsApiServiceProvider).getFineOptions()
           : Future.value(<FineApiModel>[]);
-      final results = await Future.wait<Object>([
-        seasons,
-        players,
-        opponents,
-        fines,
-      ]);
+      final results = await Future.wait<Object>([seasons, fines, statistics]);
+      final players = <int, PlayerApiModel>{};
+      final opponents = <String>{};
+      final response = await statistics;
+      for (final row in response.modelList()) {
+        final (player, match) = switch (row) {
+          BeerDetailedModel r => (r.player, r.match),
+          GoalDetailedModel r => (r.player, r.match),
+          ReceivedFineDetailedModel r => (r.player, r.match),
+          AttendanceDetailedModel r => (r.player, r.match),
+          _ => (null, null),
+        };
+        if (player?.id != null) players[player!.id!] = player;
+        if (match != null) opponents.add(match.name);
+      }
       return StatisticsFilterOptions(
         seasons: results[0] as List<SeasonApiModel>,
-        players: [...results[1] as List<PlayerApiModel>]
+        players: players.values.toList()
           ..sort((a, b) => a.name.compareTo(b.name)),
-        opponents: results[2] as List<String>,
-        fines: [...results[3] as List<FineApiModel>]
+        opponents: opponents.toList()..sort(),
+        fines: [...results[1] as List<FineApiModel>]
           ..sort((a, b) => a.name.compareTo(b.name)),
       );
     });
@@ -55,4 +74,30 @@ class StatisticsFilterOptions {
     required this.opponents,
     required this.fines,
   });
+
+  /// Keep original names for exact API matching, but expose one choice per name.
+  Map<String, Set<String>> get opponentGroups {
+    final groups = <String, Set<String>>{};
+    for (final name in opponents) {
+      final key = opponentKey(name);
+      if (key.isNotEmpty) (groups[key] ??= <String>{}).add(name);
+    }
+    return groups;
+  }
+
+  static String opponentKey(String name) => normalizeSearchText(
+    name,
+  ).replaceAll(RegExp(r'[\u0300-\u036f]'), '').replaceAll(RegExp(r'\s+'), ' ');
+
+  static String opponentLabel(Iterable<String> names) {
+    final labels =
+        names
+            .map((name) => name.trim().replaceAll(RegExp(r'\s+'), ' '))
+            .toList()
+          ..sort();
+    return labels.firstWhere(
+      (name) => normalizeSearchText(name) != name.toLowerCase(),
+      orElse: () => labels.first,
+    );
+  }
 }
