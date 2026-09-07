@@ -1,15 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:trus_app/theme/app_colors.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:trus_app/features/main/controller/screen_notifier.dart';
 import 'package:trus_app/features/statistics/stat_args.dart';
 
-import '../../../common/utils/utils.dart';
 import '../../../common/widgets/animated_filter_panel.dart';
 import '../../../common/widgets/loader.dart';
-import '../../home/screens/home_screen.dart';
 import '../controller/stats_notifier.dart';
-import '../state/stats_state.dart';
 import '../widget/statistics_filter_bar.dart';
 import 'new_statistics_view.dart';
 
@@ -61,24 +57,22 @@ class _StatsScreenState extends ConsumerState<StatsScreen> {
   Widget build(BuildContext context) {
     final stats = ref.watch(statsNotifierProvider(widget.statsArgs));
 
-    ref.listen<StatsState>(statsNotifierProvider(widget.statsArgs), (_, next) {
-      next.stats.whenOrNull(
-        error: (e, st) => showErrorDialogFromError(
-          e,
-          st,
-          () => ref
-              .read(screenNotifierProvider.notifier)
-              .changeFragment(HomeScreen.id),
-          context,
-        ),
-      );
-    });
-
     return Scaffold(
       backgroundColor: context.appColors.backgroundPrimary,
       body: SafeArea(
         child: Column(
           children: [
+            if (stats.isDetail)
+              Align(
+                alignment: Alignment.centerLeft,
+                child: TextButton.icon(
+                  onPressed: () => ref
+                      .read(statsNotifierProvider(widget.statsArgs).notifier)
+                      .applyFilters(stats.advancedFilter),
+                  icon: const Icon(Icons.arrow_back),
+                  label: const Text('Zpět na souhrn'),
+                ),
+              ),
             if (!stats.isDetail)
               AnimatedFilterPanel(
                 visible: _showFilters,
@@ -91,7 +85,22 @@ class _StatsScreenState extends ConsumerState<StatsScreen> {
             Expanded(
               child: stats.stats.when(
                 loading: () => const Loader(),
-                error: (_, __) => const SizedBox(),
+                error: (_, __) => Center(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const Text('Statistiky se nepodařilo načíst.'),
+                      TextButton(
+                        onPressed: () => ref
+                            .read(
+                              statsNotifierProvider(widget.statsArgs).notifier,
+                            )
+                            .applyFilters(stats.advancedFilter),
+                        child: const Text('Zkusit znovu'),
+                      ),
+                    ],
+                  ),
+                ),
                 data: (_) => Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 16),
                   child: NewStatisticsView(

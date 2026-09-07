@@ -1,10 +1,11 @@
+import '../../main/controller/navigation_guard.dart';
 import 'dart:math';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:trus_app/features/beer/lines/new_player_lines_calculator.dart';
 import 'package:trus_app/features/beer/state/beer_state.dart';
 import 'package:trus_app/features/general/notifier/app_notifier.dart';
-import 'package:trus_app/features/home/screens/home_screen.dart';
+
 import 'package:trus_app/features/main/controller/screen_variables_notifier.dart';
 import 'package:trus_app/models/api/beer/beer_list.dart';
 import 'package:trus_app/models/api/beer/beer_no_match.dart';
@@ -22,11 +23,8 @@ import '../repository/beer_api_service.dart';
 
 final beerNotifierProvider =
     StateNotifierProvider.autoDispose<BeerNotifier, BeerState>((ref) {
-  return BeerNotifier(
-    beerApi: ref.read(beerApiServiceProvider),
-    ref: ref,
-  );
-});
+      return BeerNotifier(beerApi: ref.read(beerApiServiceProvider), ref: ref);
+    });
 
 class BeerNotifier extends AppNotifier<BeerState> {
   final BeerApiService beerApi;
@@ -34,28 +32,27 @@ class BeerNotifier extends AppNotifier<BeerState> {
   static const _seasonArgs = SeasonArgs(false, true, true);
 
   bool _initialized = false;
+  SeasonApiModel? _selectedSeason;
+  bool _changingContext = false;
   bool _suppressSeasonListen = false;
 
-  BeerNotifier({
-    required this.beerApi,
-    required Ref ref,
-  }) : super(ref, BeerState.initial()) {
+  BeerNotifier({required this.beerApi, required Ref ref})
+    : super(ref, BeerState.initial()) {
     // ✅ posloucháme sezonu uvnitř notifieru
-    ref.listen<DropdownState>(
-      seasonDropdownNotifierProvider(_seasonArgs),
-      (_, next) {
-        if (_suppressSeasonListen) return;
+    ref.listen<DropdownState>(seasonDropdownNotifierProvider(_seasonArgs), (
+      _,
+      next,
+    ) {
+      if (_suppressSeasonListen) return;
 
-        final season = next.getSelected() as SeasonApiModel?;
-        if (season?.id == null) return;
+      final season = next.getSelected() as SeasonApiModel?;
+      if (season?.id == null) return;
 
-        // guard proti loopu: když je stejná sezóna, nic nedělej
-        //if (state.selectedSeason?.id == season!.id) return;
+      // guard proti loopu: když je stejná sezóna, nic nedělej
+      //if (state.selectedSeason?.id == season!.id) return;
 
-        Future.microtask(() =>  selectSeason(season!));
-      },
-      fireImmediately: false,
-    );
+      Future.microtask(() => selectSeason(season!));
+    }, fireImmediately: false);
   }
 
   // ==========================================================
@@ -68,19 +65,63 @@ class BeerNotifier extends AppNotifier<BeerState> {
     final pickedSeason = dropdown.getSelected() as SeasonApiModel?;
 
     // 3) první setup: matchId když existuje, jinak seasonId
-    final setup = await runUiWithResult<BeerSetupResponse>(
-          () => beerApi.setupBeers(
-        (matchId != null && matchId > 0) ? matchId : null,
-        (matchId == null || matchId <= 0) ? pickedSeason?.id : null,
-      ),
-      showLoading: true,
-      successSnack: null,
-      loadingMessage: "Načítám pivka…",
-    );
-    _applySetup(setup);
+    state = state.copyWith(matches: const AsyncValue.loading());
+    try {
+      final setup = await runUiWithResult<BeerSetupResponse>(
+        () => beerApi.setupBeers(
+          (matchId != null && matchId > 0) ? matchId : null,
+          (matchId == null || matchId <= 0) ? pickedSeason?.id : null,
+        ),
+        loadingMessage: 'Načítám zápis piv…',
+      );
+      if (mounted) _applySetup(setup);
+    } catch (error, stack) {
+      _initialized = false;
+      if (mounted)
+        state = state.copyWith(matches: AsyncValue.error(error, stack));
+    }
+  }
+
+  bool _refreshing = false;
+  Future<void> refreshOnResume() async {
+    final matchId = state.selectedMatch?.id;
+    if (!_initialized ||
+        state.matches.isLoading ||
+        matchId == null ||
+        _refreshing ||
+        _changingContext ||
+        _saveFuture != null)
+      return;
+    if (state.hasChanges) {
+      ui.showSnack(
+        'Máš neuložené změny. Zápis zůstal zachovaný.',
+        duration: const Duration(seconds: 4),
+      );
+      return;
+    }
+    _refreshing = true;
+    try {
+      final setup = await runUiWithResult<BeerSetupResponse>(
+        () => beerApi.setupBeers(matchId, null),
+        loadingMessage: 'Aktualizuji zápis piv…',
+      );
+      if (mounted && state.selectedMatch?.id == matchId && !state.hasChanges) {
+        _applySetup(setup);
+      }
+    } catch (_) {
+      /* Keep existing data; the request reports its error. */
+    } finally {
+      _refreshing = false;
+    }
   }
 
   void _applySetup(BeerSetupResponse setup) {
+    _selectedSeason = setup.season;
+    if (setup.match != null) {
+      ref.read(screenVariablesNotifierProvider.notifier).setMatch(setup.match!);
+    } else {
+      ref.read(screenVariablesNotifierProvider.notifier).setMatchId(-1);
+    }
     _suppressSeasonListen = true;
     try {
       ref
@@ -96,6 +137,7 @@ class BeerNotifier extends AppNotifier<BeerState> {
 
     state = state.copyWith(
       selectedMatch: setup.match,
+      clearSelectedMatch: setup.match == null,
       matches: AsyncValue.data(setup.matchList),
       beers: setup.beerList,
       initialBeerValues: initialValues,
@@ -108,30 +150,73 @@ class BeerNotifier extends AppNotifier<BeerState> {
   // ==========================================================
   // DROPDOWNS
   // ==========================================================
+  void _restoreSeason() {
+    if (_selectedSeason == null) return;
+    _suppressSeasonListen = true;
+    try {
+      ref
+          .read(seasonDropdownNotifierProvider(_seasonArgs).notifier)
+          .selectDropdown(_selectedSeason!);
+    } finally {
+      _suppressSeasonListen = false;
+    }
+  }
+
   Future<void> selectSeason(SeasonApiModel season) async {
-    final setup = await runUiWithResult<BeerSetupResponse>(
-            () => beerApi.setupBeers(
-          null,
-          season.id,
-        ),
-        showLoading: true,
-        successSnack: null,
-        loadingMessage: "Načítám sezony…",
+    if (season.id == _selectedSeason?.id) return;
+    if (_changingContext) {
+      _restoreSeason();
+      return;
+    }
+    _changingContext = true;
+    try {
+      if (!await _confirmContextChange()) {
+        _restoreSeason();
+        return;
+      }
+      final setup = await runUiWithResult<BeerSetupResponse>(
+        () => beerApi.setupBeers(null, season.id),
+        loadingMessage: 'Načítám sezonu…',
       );
-      _applySetup(setup);
+      if (mounted) _applySetup(setup);
+    } catch (_) {
+      if (mounted) _restoreSeason();
+    } finally {
+      _changingContext = false;
+    }
   }
 
   Future<void> selectMatch(MatchApiModel match) async {
-    final setup = await runUiWithResult<BeerSetupResponse>(
-          () => beerApi.setupBeers(
-            match.id,
-            null,
-      ),
-      showLoading: true,
-      successSnack: null,
-      loadingMessage: "Načítám zápas…",
-    );
-    _applySetup(setup);
+    if (match.id == state.selectedMatch?.id || _changingContext) return;
+    _changingContext = true;
+    try {
+      if (!await _confirmContextChange()) return;
+      final setup = await runUiWithResult<BeerSetupResponse>(
+        () => beerApi.setupBeers(match.id, null),
+        loadingMessage: 'Načítám zápas…',
+      );
+      if (mounted) _applySetup(setup);
+    } catch (_) {
+      /* Keep the current match and data on failure. */
+    } finally {
+      _changingContext = false;
+    }
+  }
+
+  Future<bool> _confirmContextChange() async {
+    if (!state.hasChanges) return true;
+    final guard = ref.read(navigationGuardProvider).guard;
+    return guard != null ? await guard() : false;
+  }
+
+  void discardChanges() {
+    for (var i = 0; i < state.beers.length; i++) {
+      final values = state.initialBeerValues[i].split('|');
+      state.beers[i].beerNumber = int.parse(values[0]);
+      state.beers[i].liquorNumber = int.parse(values[1]);
+    }
+    state = state.copyWith(beers: [...state.beers]);
+    _initPlayerLinesFromBeers();
   }
 
   // ==========================================================
@@ -149,7 +234,7 @@ class BeerNotifier extends AppNotifier<BeerState> {
     if (index < 0 || index >= list.length) return;
 
     // ✅ inkrementální změna čárek
-    if(newLineCoordinates != null) {
+    if (newLineCoordinates != null) {
       if (index < _playerLinesList.length) {
         if (beer) {
           _playerLinesList[index].addAllBeerPositions(newLineCoordinates);
@@ -184,7 +269,11 @@ class BeerNotifier extends AppNotifier<BeerState> {
   // ==========================================================
   // CONFIRM
   // ==========================================================
-  Future<void> changeBeers() async {
+  Future<void>? _saveFuture;
+  Future<void> changeBeers() =>
+      _saveFuture ??= _saveBeers().whenComplete(() => _saveFuture = null);
+
+  Future<void> _saveBeers() async {
     if (!state.hasChanges) return;
 
     final matchId = state.selectedMatch?.id;
@@ -193,20 +282,23 @@ class BeerNotifier extends AppNotifier<BeerState> {
       return;
     }
 
+    final savedValues = state.beers
+        .map((b) => '${b.beerNumber}|${b.liquorNumber}')
+        .toList();
     final payload = BeerList(
       matchId: matchId,
       beerList: _toBeerNoMatchList(state.beers),
     );
 
-    final result = await runUiWithResult<BeerMultiAddResponse>(
-          () => beerApi.addBeers(payload),
+    await runUiWithResult<BeerMultiAddResponse>(
+      () => beerApi.addBeers(payload),
       showLoading: true,
-      successResultSnack: true,
+      successSnack: 'Zápis piv byl uložen',
       loadingMessage: "Ukládám…",
     );
 
-    ref.read(screenVariablesNotifierProvider.notifier).setMatch(state.selectedMatch!);
-    changeFragment(HomeScreen.id);
+    if (!mounted) return;
+    state = state.copyWith(initialBeerValues: savedValues);
   }
 
   List<BeerNoMatch> _toBeerNoMatchList(List<BeerNoMatchWithPlayer> list) {
@@ -232,11 +324,11 @@ class BeerNotifier extends AppNotifier<BeerState> {
   List<PlayerLines> get playerLinesList => _playerLinesList;
 
   List<double> randLine() => [
-        _random.nextDouble(),
-        _random.nextDouble(),
-        _random.nextDouble(),
-        _random.nextDouble(),
-      ];
+    _random.nextDouble(),
+    _random.nextDouble(),
+    _random.nextDouble(),
+    _random.nextDouble(),
+  ];
 
   NewPlayerLinesCalculator? getPlayerLinesCalculator(bool beer) {
     int playerIndex = state.playerIndex;
@@ -245,7 +337,12 @@ class BeerNotifier extends AppNotifier<BeerState> {
       return null;
     }
     return NewPlayerLinesCalculator(
-        randLine(), beer, beer? state.beers[playerIndex].beerNumber : state.beers[playerIndex].liquorNumber);
+      randLine(),
+      beer,
+      beer
+          ? state.beers[playerIndex].beerNumber
+          : state.beers[playerIndex].liquorNumber,
+    );
   }
 
   void _initPlayerLinesFromBeers() {

@@ -1,62 +1,79 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:trus_app/common/widgets/notifier/listview/model_to_string_listview.dart';
-import 'package:trus_app/features/football/controller/current_season_notifier.dart';
-import 'package:trus_app/features/football/controller/footbal_stats_notifier.dart';
-
-import '../../../../common/widgets/notifier/dropdown/custom_dropdown.dart';
-import '../../../../common/widgets/screen/custom_consumer_stateful_widget.dart';
+import '../../../common/utils/search_text.dart';
+import '../../../common/widgets/notifier/listview/model_to_string_listview.dart';
+import '../../../common/widgets/screen/custom_consumer_stateful_widget.dart';
+import '../../statistics/widget/statistics_dropdown_filter_bar.dart';
+import '../controller/current_season_notifier.dart';
+import '../controller/footbal_stats_notifier.dart';
+import '../../../models/enum/spinner_options.dart';
 
 class FootballStatsScreen extends CustomConsumerStatefulWidget {
-  static const String id = "football-stats-screen";
-
-  const FootballStatsScreen({
-    Key? key,
-  }) : super(key: key, title: "Statistika z PKFL", name: id);
-
+  static const String id = 'football-stats-screen';
+  const FootballStatsScreen({super.key})
+    : super(title: 'Ligové statistiky hráčů', name: id);
   @override
   ConsumerState<FootballStatsScreen> createState() =>
       _FootballStatsScreenState();
 }
 
-class _FootballStatsScreenState
-    extends ConsumerState<FootballStatsScreen> {
+class _FootballStatsScreenState extends ConsumerState<FootballStatsScreen> {
+  String _query = '';
   @override
   Widget build(BuildContext context) {
-    final size = MediaQuery.of(context).size;
-    const double padding = 8.0;
+    final state = ref.watch(footballStatsNotifierProvider);
+    final query = normalizeSearchText(_query);
     return Scaffold(
       body: Column(
         children: [
-            Row(
-              children: [
-                SizedBox(
-                  width: size.width / 2 - padding,
-                  child: CustomDropdown(
-                    hint: "Vyber sezonu",
-                    notifier: ref.read(currentSeasonNotifierProvider.notifier),
-                    state: ref.watch(currentSeasonNotifierProvider),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
+            child: StatisticsDropdownFilterBar(
+              query: _query,
+              searchHint: 'Hledat hráče',
+              onQueryChanged: (value) => setState(() => _query = value),
+              fields: (ref) {
+                final seasons = ref.watch(currentSeasonNotifierProvider);
+                final stats = ref.watch(footballStatsNotifierProvider);
+                return [
+                  StatisticsDropdownFilter(
+                    label: 'Sezona',
+                    items: seasons.dropdownItems,
+                    selected: seasons.selected,
+                    onChanged: ref
+                        .read(currentSeasonNotifierProvider.notifier)
+                        .selectDropdown,
                   ),
-                ),
-                SizedBox(
-                  width: size.width / 2 - padding,
-                  child: CustomDropdown(
-                    hint: "Vyber možnost",
-                    notifier: ref.read(footballStatsNotifierProvider.notifier),
-                    state: ref.watch(footballStatsNotifierProvider),
+                  StatisticsDropdownFilter(
+                    label: 'Statistika',
+                    items: const AsyncValue.data(SpinnerOption.values),
+                    selected: stats.selectedText ?? SpinnerOption.values.first,
+                    onChanged: ref
+                        .read(footballStatsNotifierProvider.notifier)
+                        .selectDropdown,
                   ),
-                ),
-              ],
+                ];
+              },
             ),
+          ),
           Expanded(
             child: ModelToStringListview(
-                state: ref.watch(footballStatsNotifierProvider),
-                notifier: null,),
-          )
+              state: state.copyWith(
+                stats: state.stats.whenData(
+                  (items) => items
+                      .where(
+                        (item) => normalizeSearchText(
+                          '${item.listViewTitle()} ${item.toStringForListView()}',
+                        ).contains(query),
+                      )
+                      .toList(),
+                ),
+              ),
+              notifier: null,
+            ),
+          ),
         ],
       ),
     );
   }
 }
-
-

@@ -39,13 +39,19 @@ class NotificationsService {
   static bool _platformPermissionsRequested = false;
   static Future<void>? _initializationInFlight;
 
-  static Future<void> initialize(Ref ref) {
-    return _initializationInFlight ??= _initialize(ref).whenComplete(() {
-      _initializationInFlight = null;
-    });
+  static Future<void> initialize(Ref ref, {bool requestPermissions = true}) {
+    return _initializationInFlight ??=
+        _initialize(ref, requestPermissions: requestPermissions).whenComplete(
+          () {
+            _initializationInFlight = null;
+          },
+        );
   }
 
-  static Future<void> _initialize(Ref ref) async {
+  static Future<void> _initialize(
+    Ref ref, {
+    required bool requestPermissions,
+  }) async {
     await _d('init_start', ref, {
       'firebaseProjectId': DefaultFirebaseOptions.currentPlatform.projectId,
       'firebaseAppId': DefaultFirebaseOptions.currentPlatform.appId,
@@ -54,7 +60,7 @@ class NotificationsService {
     });
 
     await _registerBackgroundHandlerOnce(ref);
-    await _requestPlatformPermissionsIfNeeded(ref);
+    if (requestPermissions) await _requestPlatformPermissionsIfNeeded(ref);
     await _initLocalNotificationsOnce(ref);
 
     await syncCurrentTokenWithBackend(ref);
@@ -194,7 +200,11 @@ class NotificationsService {
         AndroidInitializationSettings('@mipmap/ic_launcher');
 
     const DarwinInitializationSettings iosInitSettings =
-        DarwinInitializationSettings();
+        DarwinInitializationSettings(
+          requestAlertPermission: false,
+          requestBadgePermission: false,
+          requestSoundPermission: false,
+        );
 
     const InitializationSettings initSettings = InitializationSettings(
       android: androidInitSettings,

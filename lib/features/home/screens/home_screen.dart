@@ -44,7 +44,11 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
       homeNotifierProvider.select((state) => state.appNotice),
       (_, next) {
         final notice = next.asData?.value;
-        if (notice == null || !_presentedNoticeIds.add(notice.id)) return;
+        if (notice == null ||
+            notice.dismissible ||
+            !_presentedNoticeIds.add(notice.id)) {
+          return;
+        }
 
         WidgetsBinding.instance.addPostFrameCallback((_) {
           if (!mounted) return;
@@ -151,7 +155,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
     final state = ref.watch(homeNotifierProvider);
     final notifier = ref.read(homeNotifierProvider.notifier);
     final appTeam = ref.read(globalVariablesControllerProvider).appTeam;
-
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final titleImagePath = isDark
         ? 'images/nazev_background_dark.png'
@@ -167,14 +170,32 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
           physics: const AlwaysScrollableScrollPhysics(),
           padding: const EdgeInsets.fromLTRB(0, 8, 0, 24),
           children: [
+            if (state.refreshFailed && state.setup.hasValue)
+              Card(
+                child: ListTile(
+                  leading: const Icon(Icons.cloud_off_outlined),
+                  title: const Text('Zobrazuji poslední načtená data'),
+                  subtitle: const Text(
+                    'Aktualizace se nepodařila. Zkontroluj připojení.',
+                  ),
+                  trailing: TextButton(
+                    onPressed: notifier.load,
+                    child: const Text('Obnovit'),
+                  ),
+                ),
+              ),
             state.setup.when(
               data: (setup) {
                 return Column(
                   crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
-                    Image.asset(titleImagePath, height: 76, width: 331),
+                    Image.asset(
+                      titleImagePath,
+                      key: const ValueKey('home_logo'),
+                      height: 76,
+                      width: 331,
+                    ),
                     const SizedBox(height: sectionSpacing),
-
                     FootballMatchBox(
                       isNextMatch: true,
                       dashboardMatch: setup.nextMatch,
@@ -205,6 +226,29 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
                     ),
                     const SizedBox(height: sectionSpacing),
 
+                    if (state.appNotice.asData?.value case final notice?)
+                      if (notice.dismissible &&
+                          !_presentedNoticeIds.contains(notice.id))
+                        Card(
+                          child: ListTile(
+                            leading: const Icon(Icons.campaign_outlined),
+                            title: Text(notice.title),
+                            subtitle: const Text('Novinky v aplikaci'),
+                            trailing: const Icon(Icons.chevron_right),
+                            onTap: () async {
+                              await AppNoticeBottomSheet.show(
+                                context,
+                                notice: notice,
+                                onAction: notifier.onAppNoticeAction,
+                              );
+                              if (!mounted) return;
+                              setState(
+                                () => _presentedNoticeIds.add(notice.id),
+                              );
+                              await notifier.markAppNoticeShown(notice.id);
+                            },
+                          ),
+                        ),
                     BirthdayText(nextBirthdayText: setup.nextBirthday),
                     const SizedBox(height: sectionSpacing),
 
@@ -220,21 +264,39 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
                   ],
                 );
               },
-              loading: () => const _HomePlaceholder(),
-              error: (_, __) => const _HomePlaceholder(),
+              loading: () => const Padding(
+                padding: EdgeInsets.all(48),
+                child: Center(child: CircularProgressIndicator()),
+              ),
+              error: (_, __) => Padding(
+                padding: const EdgeInsets.all(24),
+                child: Column(
+                  children: [
+                    const Icon(Icons.cloud_off_outlined, size: 48),
+                    const SizedBox(height: 16),
+                    Text(
+                      'Přehled se nepodařilo načíst',
+                      style: Theme.of(context).textTheme.titleLarge,
+                      textAlign: TextAlign.center,
+                    ),
+                    const SizedBox(height: 8),
+                    const Text(
+                      'Zkontroluj připojení a zkus to znovu.',
+                      textAlign: TextAlign.center,
+                    ),
+                    const SizedBox(height: 16),
+                    FilledButton.icon(
+                      onPressed: notifier.load,
+                      icon: const Icon(Icons.refresh),
+                      label: const Text('Zkusit znovu'),
+                    ),
+                  ],
+                ),
+              ),
             ),
           ],
         ),
       ),
     );
-  }
-}
-
-class _HomePlaceholder extends StatelessWidget {
-  const _HomePlaceholder();
-
-  @override
-  Widget build(BuildContext context) {
-    return const SizedBox(height: 600, child: Center(child: Text("")));
   }
 }

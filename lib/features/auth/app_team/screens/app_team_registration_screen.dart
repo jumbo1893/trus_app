@@ -83,7 +83,7 @@ class _AppTeamRegistrationScreen
             columns: [
               const SizedBox(height: 16),
               Text(
-                'Jak chceš začít?',
+                '2 ze 2 · Tvůj tým',
                 style: Theme.of(context).textTheme.headlineSmall,
                 textAlign: TextAlign.center,
               ),

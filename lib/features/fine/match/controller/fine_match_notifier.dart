@@ -16,12 +16,12 @@ import '../screens/multiple_fine_players_screen.dart';
 
 final fineMatchNotifierProvider =
     StateNotifierProvider.autoDispose<FineMatchNotifier, FineMatchState>((ref) {
-  return FineMatchNotifier(
-    fineApi: ref.read(fineMatchApiServiceProvider),
-    screenController: ref.read(screenVariablesNotifierProvider.notifier),
-    ref: ref,
-  );
-});
+      return FineMatchNotifier(
+        fineApi: ref.read(fineMatchApiServiceProvider),
+        screenController: ref.read(screenVariablesNotifierProvider.notifier),
+        ref: ref,
+      );
+    });
 
 class FineMatchNotifier extends AppNotifier<FineMatchState> {
   final FineMatchApiService fineApi;
@@ -38,20 +38,19 @@ class FineMatchNotifier extends AppNotifier<FineMatchState> {
     required Ref ref,
   }) : super(ref, FineMatchState.initial()) {
     // ✅ posloucháme sezonu uvnitř notifieru (stejně jako MatchNotifier)
-    ref.listen<DropdownState>(
-      seasonDropdownNotifierProvider(_seasonArgs),
-      (_, next) {
-        if (_suppressSeasonListen) return;
+    ref.listen<DropdownState>(seasonDropdownNotifierProvider(_seasonArgs), (
+      _,
+      next,
+    ) {
+      if (_suppressSeasonListen) return;
 
-        final season = next.getSelected() as SeasonApiModel?;
-        if (season?.id == null) return;
+      final season = next.getSelected() as SeasonApiModel?;
+      if (season?.id == null) return;
 
-        // guard proti loopu, ale spíš jen pro případ, že by někdo kliknul na dropdown a vybral stejnou sezonu, což by bylo zbytečné reloadovat
-        //if (state.selectedSeason?.id == season!.id) return;
-        Future.microtask(() => selectSeason(season!));
-      },
-      fireImmediately: false,
-    );
+      // guard proti loopu, ale spíš jen pro případ, že by někdo kliknul na dropdown a vybral stejnou sezonu, což by bylo zbytečné reloadovat
+      //if (state.selectedSeason?.id == season!.id) return;
+      Future.microtask(() => selectSeason(season!));
+    }, fireImmediately: false);
   }
 
   // ==========================================================
@@ -61,23 +60,27 @@ class FineMatchNotifier extends AppNotifier<FineMatchState> {
     if (_initialized) return;
     _initialized = true;
 
-      // 2) vyber sezonu z dropdownu (už může být loaded), fallback na "current"
-      final dropdown = ref.read(seasonDropdownNotifierProvider(_seasonArgs));
-      final pickedSeason = dropdown.getSelected() as SeasonApiModel?;
-      // 3) první setup: matchId když existuje, jinak seasonId
-      final setup = await runUiWithResult<ReceivedFineSetup>(
-                () => fineApi.setupFineMatch(
-                  (matchId != null && matchId > 0) ? matchId : null,
-                  (matchId == null || matchId <= 0) ? pickedSeason?.id : null,
-                ),
-            showLoading: true,
-            successSnack: null,
-          );
-      _applySetup(setup);
-
+    // 2) vyber sezonu z dropdownu (už může být loaded), fallback na "current"
+    final dropdown = ref.read(seasonDropdownNotifierProvider(_seasonArgs));
+    final pickedSeason = dropdown.getSelected() as SeasonApiModel?;
+    // 3) první setup: matchId když existuje, jinak seasonId
+    final setup = await runUiWithResult<ReceivedFineSetup>(
+      () => fineApi.setupFineMatch(
+        (matchId != null && matchId > 0) ? matchId : null,
+        (matchId == null || matchId <= 0) ? pickedSeason?.id : null,
+      ),
+      showLoading: true,
+      successSnack: null,
+    );
+    _applySetup(setup);
   }
 
   void _applySetup(ReceivedFineSetup setup) {
+    if (setup.match != null) {
+      screenController.setMatch(setup.match!);
+    } else {
+      screenController.setMatchId(-1);
+    }
     _suppressSeasonListen = true;
     try {
       ref
@@ -89,13 +92,11 @@ class FineMatchNotifier extends AppNotifier<FineMatchState> {
 
     state = state.copyWith(
       selectedMatch: setup.match,
+      clearSelectedMatch: setup.match == null,
       matches: AsyncValue.data(setup.matchList),
       otherPlayers: setup.otherPlayers,
       playersInMatch: setup.playersInMatch,
-      allPlayers: [
-        ...setup.playersInMatch,
-        ...setup.otherPlayers,
-      ],
+      allPlayers: [...setup.playersInMatch, ...setup.otherPlayers],
       playerFineSummaryByPlayerId: setup.playerFineSummaryByPlayerId,
       checkedPlayers: [],
       multiCheck: false,
@@ -107,10 +108,7 @@ class FineMatchNotifier extends AppNotifier<FineMatchState> {
   // ==========================================================
   Future<void> selectSeason(SeasonApiModel season) async {
     final setup = await runUiWithResult<ReceivedFineSetup>(
-          () => fineApi.setupFineMatch(
-            null,
-            season.id,
-      ),
+      () => fineApi.setupFineMatch(null, season.id),
       showLoading: true,
       successSnack: null,
     );
@@ -118,14 +116,9 @@ class FineMatchNotifier extends AppNotifier<FineMatchState> {
   }
 
   Future<void> selectMatch(MatchApiModel match) async {
-    state = state.copyWith(
-      selectedMatch: match,
-    );
+    state = state.copyWith(selectedMatch: match);
     final setup = await runUiWithResult<ReceivedFineSetup>(
-          () => fineApi.setupFineMatch(
-            match.id,
-            null,
-      ),
+      () => fineApi.setupFineMatch(match.id, null),
       showLoading: true,
       successSnack: null,
     );
@@ -153,7 +146,7 @@ class FineMatchNotifier extends AppNotifier<FineMatchState> {
 
   List<int> getCheckedPlayerIdList() {
     List<int> playerIds = [];
-    for(PlayerApiModel player in state.checkedPlayers) {
+    for (PlayerApiModel player in state.checkedPlayers) {
       playerIds.add(player.id!);
     }
     return playerIds;
@@ -172,10 +165,9 @@ class FineMatchNotifier extends AppNotifier<FineMatchState> {
   }
 
   void confirmSelection() {
-    if(state.checkedPlayers.isEmpty) {
+    if (state.checkedPlayers.isEmpty) {
       ui.showSnack("Musí být označen aspoň jeden hráč!");
-    }
-    else {
+    } else {
       screenController.setMatch(state.selectedMatch!);
       screenController.setPlayerIdList(getCheckedPlayerIdList());
       changeFragment(MultipleFinePlayersScreen.id);
@@ -190,5 +182,4 @@ class FineMatchNotifier extends AppNotifier<FineMatchState> {
     cleanCheckPlayers();
     state = state.copyWith(multiCheck: multi);
   }
-
 }

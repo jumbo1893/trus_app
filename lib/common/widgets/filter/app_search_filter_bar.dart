@@ -9,6 +9,7 @@ class AppSearchFilterBar extends StatefulWidget {
   final VoidCallback onFilterPressed;
   final VoidCallback onClear;
   final int activeFilterCount;
+  final List<Widget> activeFilters;
 
   const AppSearchFilterBar({
     super.key,
@@ -18,6 +19,7 @@ class AppSearchFilterBar extends StatefulWidget {
     required this.onFilterPressed,
     required this.onClear,
     required this.activeFilterCount,
+    this.activeFilters = const [],
   });
 
   @override
@@ -137,6 +139,17 @@ class _AppSearchFilterBarState extends State<AppSearchFilterBar> {
               ],
             ],
           ),
+          if (widget.activeFilters.isNotEmpty) ...[
+            const SizedBox(height: 8),
+            Align(
+              alignment: Alignment.centerLeft,
+              child: Wrap(
+                spacing: 6,
+                runSpacing: 4,
+                children: widget.activeFilters,
+              ),
+            ),
+          ],
         ],
       ),
     );

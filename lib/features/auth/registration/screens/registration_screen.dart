@@ -43,7 +43,14 @@ class _RegistrationScreen extends ConsumerState<RegistrationScreen> {
         loadingScreen: null,
         columns: [
           const SizedBox(height: 30),
-          const Text("Zadej e-mail, heslo a přezdívku."),
+          Text(
+            '1 ze 2 · Tvůj účet',
+            style: Theme.of(context).textTheme.titleMedium,
+          ),
+          const SizedBox(height: 8),
+          const Text(
+            "Zadej e-mail, heslo a přezdívku. V dalším kroku si vybereš tým.",
+          ),
           const SizedBox(height: 15),
           RowTextFieldStream(
             key: const ValueKey('email_text_field'),
@@ -53,6 +60,9 @@ class _RegistrationScreen extends ConsumerState<RegistrationScreen> {
             padding: padding,
             stringControllerMixin: controller,
             hashKey: controller.emailKey(),
+            keyboardType: TextInputType.emailAddress,
+            autofillHints: const [AutofillHints.email],
+            textInputAction: TextInputAction.next,
             showLabel: false,
           ),
           RowTextFieldStream(
@@ -64,6 +74,8 @@ class _RegistrationScreen extends ConsumerState<RegistrationScreen> {
             password: true,
             stringControllerMixin: controller,
             hashKey: controller.passwordKey(),
+            autofillHints: const [AutofillHints.newPassword],
+            textInputAction: TextInputAction.next,
             showLabel: false,
           ),
           RowTextFieldStream(
@@ -77,7 +89,7 @@ class _RegistrationScreen extends ConsumerState<RegistrationScreen> {
             showLabel: false,
           ),
           CustomButton(
-            text: "Pokračuj",
+            text: "Pokračovat k výběru týmu",
             onPressed: () async => decideIfNavigateToAppTeamRegistrationScreen(
               await controller.sendEmailAndPassword(),
             ),

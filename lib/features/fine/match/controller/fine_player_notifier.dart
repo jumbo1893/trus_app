@@ -2,7 +2,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:trus_app/features/fine/match/fine_player_args.dart';
 import 'package:trus_app/features/fine/match/repository/fine_match_api_service.dart';
 import 'package:trus_app/features/general/notifier/app_notifier.dart';
-import 'package:trus_app/features/home/screens/home_screen.dart';
+import '../screens/fine_match_screen.dart';
+import 'fine_match_notifier.dart';
 import 'package:trus_app/features/main/controller/screen_variables_notifier.dart';
 
 import '../../../../models/api/receivedfine/received_fine_api_model.dart';
@@ -74,7 +75,7 @@ class FinePlayerNotifier extends AppNotifier<FinePlayerState> {
   // CONFIRM
   // ==========================================================
 
-  void changeFines() async {
+  Future<void> changeFines() async {
     if (!state.hasChanges) return;
 
     final payload = ReceivedFineList(
@@ -84,13 +85,18 @@ class FinePlayerNotifier extends AppNotifier<FinePlayerState> {
       playerIdList: null,
     );
 
-    final result = await runUiWithResult<ReceivedFineResponse>(
+    await runUiWithResult<ReceivedFineResponse>(
       () => api.addFines(payload, false),
       showLoading: true,
       successResultSnack: true,
       loadingMessage: "Ukládám nové pokuty…",
     );
 
-    changeFragment(HomeScreen.id);
+    if (!mounted) return;
+    ref
+        .read(screenVariablesNotifierProvider.notifier)
+        .setMatchId(state.matchId);
+    ref.invalidate(fineMatchNotifierProvider);
+    changeFragment(FineMatchScreen.id);
   }
 }

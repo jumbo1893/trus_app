@@ -8,6 +8,8 @@ import 'package:trus_app/features/auth/repository/auth_repository.dart';
 import 'package:trus_app/features/general/global_variables_controller.dart';
 import 'package:trus_app/features/general/notifier/global_variables_notifier.dart';
 import 'package:trus_app/theme/app_theme.dart';
+import 'package:trus_app/models/api/auth/user_api_model.dart';
+import 'package:trus_app/features/main/main_screen.dart';
 
 class _FakeAuthRepository implements AuthRepository {
   @override
@@ -40,7 +42,10 @@ class _FakeAuthLoginController extends AuthLoginController {
   }
 
   @override
-  Future<LoginRedirect> sendEmailAndPassword() async => LoginRedirect.ok;
+  Future<LoginRedirect> sendEmailAndPassword() async {
+    loadedUser = UserApiModel(name: 'Hráč', mail: 'hrac@example.cz');
+    return LoginRedirect.ok;
+  }
 }
 
 void main() {
@@ -68,15 +73,22 @@ void main() {
     });
 
     final authController = _FakeAuthLoginController();
+    final navigatorKey = GlobalKey<NavigatorState>();
 
     await tester.pumpWidget(
       ProviderScope(
         overrides: [
-          authLoginControllerProvider.overrideWithValue(
-            authController,
-          ),
+          authLoginControllerProvider.overrideWithValue(authController),
         ],
-        child: MaterialApp(theme: AppTheme.light(), home: const LoginScreen()),
+        child: MaterialApp(
+          navigatorKey: navigatorKey,
+          theme: AppTheme.light(),
+          home: const LoginScreen(),
+          routes: {
+            MainScreen.routeName: (_) =>
+                const Scaffold(body: Text('Domov po přihlášení')),
+          },
+        ),
       ),
     );
     await tester.pump();
@@ -134,6 +146,11 @@ void main() {
       'password': 'tajne-heslo',
     });
     expect(_lastFinishAutofillValue(textInputCalls), isFalse);
+
+    await tester.pumpAndSettle();
+    expect(find.text('Domov po přihlášení'), findsOneWidget);
+    navigatorKey.currentState!.pop();
+    await tester.pumpAndSettle();
 
     await tester.tap(find.text('Zapamatovat heslo'));
     await tester.pump();

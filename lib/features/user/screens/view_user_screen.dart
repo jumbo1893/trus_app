@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:trus_app/features/user/controller/view_user_notifier.dart';
 import 'package:trus_app/features/membership/widgets/membership_info.dart';
+import 'package:trus_app/features/main/controller/main_notifier.dart';
 
 import '../../../common/widgets/bar/action_button_item.dart';
 import '../../../common/widgets/dropdown/custom_dropdown_sheet.dart';
@@ -63,6 +64,46 @@ class _ViewUserScreenState extends ConsumerState<ViewUserScreen> {
           type: ActionButtonType.primary,
         ),
       ],
+      extraSections: [
+        AccountDeletionOptions(
+          onDelete: () =>
+              ref.read(mainNotifierProvider.notifier).onDeleteAccountTapped(),
+        ),
+      ],
     );
   }
+}
+
+class AccountDeletionOptions extends StatelessWidget {
+  final VoidCallback onDelete;
+
+  const AccountDeletionOptions({super.key, required this.onDelete});
+
+  @override
+  Widget build(BuildContext context) => Padding(
+    padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
+    child: Card(
+      clipBehavior: Clip.antiAlias,
+      child: ExpansionTile(
+        key: const PageStorageKey('account-more-options'),
+        leading: const Icon(Icons.more_horiz),
+        title: const Text('Další možnosti účtu'),
+        children: [
+          ListTile(
+            key: const ValueKey('delete_account_button'),
+            leading: Icon(
+              Icons.delete_outline,
+              color: Theme.of(context).colorScheme.error,
+            ),
+            title: Text(
+              'Smazat účet',
+              style: TextStyle(color: Theme.of(context).colorScheme.error),
+            ),
+            subtitle: const Text('Trvale odstraní účet a jeho data.'),
+            onTap: onDelete,
+          ),
+        ],
+      ),
+    ),
+  );
 }

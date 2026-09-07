@@ -18,7 +18,6 @@ import 'app_menu_bottom_sheet.dart';
 
 class UpperSheetNavigationManager {
   final BuildContext context;
-  static const String deleteAccount = "DELETE_ACCOUNT";
   final AppTeamApiModel? appTeamApiModel;
 
   UpperSheetNavigationManager(this.context, this.appTeamApiModel);
@@ -51,7 +50,7 @@ class UpperSheetNavigationManager {
         const MenuSectionLabel(text: "PROFIL"),
         MenuTile(
           icon: Icons.notifications,
-          title: const Text("Oznámení"),
+          title: const Text("Nastavení upozornění"),
           onTap: () =>
               onModalBottomSheetMenuTapped(EnabledNotificationsScreen.id),
         ),
@@ -75,6 +74,13 @@ class UpperSheetNavigationManager {
               onModalBottomSheetMenuTapped(ViewPlayerScreen.id);
             },
           ),
+        if (isTeamAdministrator)
+          MenuTile(
+            icon: Icons.admin_panel_settings_outlined,
+            title: const Text("Administrace týmu"),
+            onTap: () =>
+                onModalBottomSheetMenuTapped(TeamAdministrationScreen.id),
+          ),
         const MenuSectionLabel(text: "FOOTBAR"),
         MenuTile(
           icon: Icons.link,
@@ -96,19 +102,6 @@ class UpperSheetNavigationManager {
           icon: Icons.info,
           title: const Text("Informace o appce"),
           onTap: () => onModalBottomSheetMenuTapped(InfoScreen.id),
-        ),
-        if (isTeamAdministrator)
-          MenuTile(
-            icon: Icons.admin_panel_settings_outlined,
-            title: const Text("Administrace týmu"),
-            onTap: () =>
-                onModalBottomSheetMenuTapped(TeamAdministrationScreen.id),
-          ),
-        MenuTile(
-          icon: Icons.delete_outline,
-          iconColor: appColors.errorSolid,
-          title: const Text("Smazat účet"),
-          onTap: () => onModalBottomSheetMenuTapped(deleteAccount),
         ),
       ],
     );

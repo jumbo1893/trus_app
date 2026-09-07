@@ -74,9 +74,11 @@ void main() {
       repository.pending!.completeError(StateError('offline'));
       await Future.wait([first, second]);
       expect(container.read(homeNotifierProvider).setup, same(before));
+      expect(container.read(homeNotifierProvider).refreshFailed, isTrue);
       expect(container.read(uiFeedbackProvider).effects, effects);
       repository.pending = null;
       await notifier.load(background: true);
+      expect(container.read(homeNotifierProvider).refreshFailed, isFalse);
       expect(repository.requests, count + 2);
     },
   );

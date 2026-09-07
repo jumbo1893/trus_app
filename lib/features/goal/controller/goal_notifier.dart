@@ -14,12 +14,12 @@ import '../../main/back_action.dart';
 
 final goalNotifierProvider =
     StateNotifierProvider.autoDispose<GoalNotifier, GoalState>((ref) {
-  return GoalNotifier(
-    ref: ref,
-    api: ref.read(goalApiServiceProvider),
-    screenController: ref.read(screenVariablesNotifierProvider.notifier),
-  );
-});
+      return GoalNotifier(
+        ref: ref,
+        api: ref.read(goalApiServiceProvider),
+        screenController: ref.read(screenVariablesNotifierProvider.notifier),
+      );
+    });
 
 class GoalNotifier extends AppNotifier<GoalState> implements BackAction {
   final GoalApiService api;
@@ -38,7 +38,10 @@ class GoalNotifier extends AppNotifier<GoalState> implements BackAction {
       successSnack: null,
     );
     state = state.copyWith(
-        setups: setups, screen: GoalScreens.addGoals, matchId: matchId);
+      setups: setups,
+      screen: GoalScreens.addGoals,
+      matchId: matchId,
+    );
   }
 
   // ==========================================================
@@ -89,11 +92,12 @@ class GoalNotifier extends AppNotifier<GoalState> implements BackAction {
       goalList: goals,
       rewriteToFines: state.rewriteToFines,
     );
-    final result = await runUiWithResult<GoalMultiAddResponse>(
+    await runUiWithResult<GoalMultiAddResponse>(
       () => api.addMultipleGoals(payload),
       showLoading: true,
-      successResultSnack: true
+      successSnack: null,
     );
+    ui.showSnack('Góly a asistence jsou uložené');
     changeFragment(HomeScreen.id);
   }
 
@@ -113,9 +117,7 @@ class GoalNotifier extends AppNotifier<GoalState> implements BackAction {
 
   @override
   void backToRoot() {
-    state = state.copyWith(
-      screen: GoalScreens.addGoals,
-    );
+    state = state.copyWith(screen: GoalScreens.addGoals);
   }
 
   @override

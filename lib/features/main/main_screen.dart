@@ -1,3 +1,7 @@
+import 'widget/navigation_shell.dart';
+import '../ai/screens/ai_assistant_screen.dart';
+import 'controller/navigation_guard.dart';
+import '../beer/controller/beer_notifier.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:trus_app/common/widgets/bottomsheet/fine_stats_detail_bottom_sheet.dart';
@@ -24,7 +28,7 @@ import '../../common/widgets/confirmation_dialog.dart';
 import '../../models/api/player/player_api_model.dart';
 import '../../services/push/push_navigation_handler.dart';
 import '../auth/controller/auth_controller.dart';
-import '../ai/screens/ai_assistant_screen.dart';
+
 import '../beer/screens/beer_simple_screen.dart';
 import '../general/error/api_executor.dart';
 import '../home/screens/home_screen.dart';
@@ -55,10 +59,15 @@ class _MainScreenState extends ConsumerState<MainScreen> {
   late final ProviderSubscription<int> _pageSub;
   late final ProviderSubscription<UiFeedbackState> _uiSub;
   bool _loadingSheetVisible = false;
+  late final VoidCallback _unregisterNavigationGuard;
 
   @override
   void initState() {
     super.initState();
+    _unregisterNavigationGuard = ref
+        .read(navigationGuardProvider)
+        .register(_confirmLeave);
+
     final appTeam = ref.read(globalVariablesControllerProvider).appTeam;
     ref.read(stepSyncSchedulerProvider).startForegroundMonitoring();
 
@@ -122,6 +131,7 @@ class _MainScreenState extends ConsumerState<MainScreen> {
 
     // ať skočíš i na start (pokud currentPageIndex != 0 nebo chceš jistotu):
     WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted || !pageController.hasClients) return;
       final idx = ref.read(screenNotifierProvider).currentPageIndex;
       pageController.jumpToPage(idx);
     });
@@ -149,6 +159,12 @@ class _MainScreenState extends ConsumerState<MainScreen> {
               SnackBar(
                 content: Text(effect.message),
                 duration: effect.duration,
+                action: effect.actionLabel != null && effect.onAction != null
+                    ? SnackBarAction(
+                        label: effect.actionLabel!,
+                        onPressed: effect.onAction!,
+                      )
+                    : null,
                 behavior: SnackBarBehavior.floating,
               ),
             );
@@ -250,6 +266,8 @@ class _MainScreenState extends ConsumerState<MainScreen> {
 
   @override
   void dispose() {
+    _unregisterNavigationGuard();
+    pageController.dispose();
     _mainSub.close();
     _pageSub.close();
     _uiSub.close();
@@ -349,10 +367,55 @@ class _MainScreenState extends ConsumerState<MainScreen> {
     );
   }
 
+  Future<bool> _confirmLeave() async {
+    if (ref.read(screenNotifierProvider).currentScreenId !=
+            BeerSimpleScreen.id ||
+        !ref.read(beerNotifierProvider).hasChanges)
+      return true;
+    final choice = await showDialog<String>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Neuložené změny'),
+        content: const Text(
+          'V zápisu piv máš neuložené změny. Chceš je před odchodem uložit?',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, 'stay'),
+            child: const Text('Zůstat'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(context, 'discard'),
+            child: const Text('Zahodit'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(context, 'save'),
+            child: const Text('Uložit'),
+          ),
+        ],
+      ),
+    );
+    if (!mounted) return false;
+    if (choice == 'discard') {
+      ref.read(beerNotifierProvider.notifier).discardChanges();
+      return true;
+    }
+    if (choice != 'save') return false;
+    try {
+      await ref.read(beerNotifierProvider.notifier).changeBeers();
+      return !ref.read(beerNotifierProvider).hasChanges;
+    } catch (_) {
+      return false;
+    }
+  }
+
   void _handleBack() {
     final handler = ref.read(backHandlerProvider);
 
-    if (handler != null && handler.onBack()) {
+    if (ref.read(screenNotifierProvider).currentScreenId !=
+            BeerSimpleScreen.id &&
+        handler != null &&
+        handler.onBack()) {
       return;
     }
 
@@ -365,10 +428,14 @@ class _MainScreenState extends ConsumerState<MainScreen> {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
     final screenState = ref.watch(screenNotifierProvider);
-    final state = ref.watch(mainNotifierProvider);
+    final mainState = ref.watch(mainNotifierProvider);
     final notifier = ref.read(mainNotifierProvider.notifier);
     final screenNotifier = ref.read(screenNotifierProvider.notifier);
     final uiState = ref.watch(uiFeedbackProvider);
+    final teamName = ref.watch(globalVariablesControllerProvider).appTeam?.name;
+    final pageTitle = screenState.currentScreenId == HomeScreen.id
+        ? 'Přehled'
+        : screenState.appBarTitleText;
 
     return Stack(
       children: [
@@ -384,92 +451,30 @@ class _MainScreenState extends ConsumerState<MainScreen> {
             onPopInvokedWithResult: (didPop, result) {
               if (!didPop) _handleBack();
             },
-            child: Scaffold(
-              resizeToAvoidBottomInset:
-                  screenState.currentScreenId == AiAssistantScreen.id,
-              appBar: AppBar(
-                leading: screenState.backButtonVisible
-                    ? BackButton(
-                        onPressed: () {
-                          _handleBack();
-                        },
-                      )
-                    : null,
-                title: screenState.showPlayerStatsTitle
-                    ? state.playerStats.when(
-                        data: (stats) => PlayerStatsAppBarText(stats: stats),
-                        loading: () => const SizedBox.shrink(),
-                        error: (_, __) => const SizedBox.shrink(),
-                      )
-                    : FittedBox(
-                        fit: BoxFit.scaleDown,
-                        child: Text(screenState.appBarTitleText),
-                      ),
-                actions: [
-                  IconButton(
-                    key: const ValueKey('account_button'),
-                    onPressed: notifier.onUpperMenuTapped,
-                    icon: const Icon(Icons.manage_accounts),
-                  ),
-                  IconButton(
-                    key: const ValueKey('trusbot_button'),
-                    tooltip: 'Otevřít TrusBot',
-                    onPressed: () {
-                      if (screenState.currentScreenId != AiAssistantScreen.id) {
-                        screenNotifier.changeByFragmentId(AiAssistantScreen.id);
-                      }
-                    },
-                    icon: const Text('💩', style: TextStyle(fontSize: 21)),
-                  ),
-                  IconButton(
-                    key: const ValueKey('notifications_button'),
-                    onPressed: () => screenNotifier.changeByFragmentId(
-                      NotificationScreen.id,
-                    ),
-                    icon: const Icon(Icons.notifications),
-                  ),
-                ],
-              ),
-              body: PageView(
+            child: NavigationShell(
+              screenId: screenState.currentScreenId,
+              title: pageTitle,
+              titleWidget: screenState.showPlayerStatsTitle
+                  ? mainState.playerStats.when(
+                      data: (stats) => PlayerStatsAppBarText(stats: stats),
+                      loading: () => Text(pageTitle),
+                      error: (_, __) => Text(pageTitle),
+                    )
+                  : null,
+              teamName: teamName,
+              selectedIndex: screenState.selectedBottomSheetIndex,
+              onBack: _handleBack,
+              onHome: () => screenNotifier.changeByFragmentId(HomeScreen.id),
+              onAccount: notifier.onUpperMenuTapped,
+              onAi: () =>
+                  screenNotifier.changeByFragmentId(AiAssistantScreen.id),
+              onNotifications: () =>
+                  screenNotifier.changeByFragmentId(NotificationScreen.id),
+              onDestination: notifier.onBottomMenuTapped,
+              child: PageView(
                 controller: pageController,
                 physics: const NeverScrollableScrollPhysics(),
                 children: widgetList,
-              ),
-              floatingActionButton:
-                  screenState.currentScreenId == AiAssistantScreen.id &&
-                      MediaQuery.viewInsetsOf(context).bottom > 0
-                  ? null
-                  : FloatingActionButton(
-                      onPressed: () => screenNotifier.changeByFragmentId(
-                        BeerSimpleScreen.id,
-                      ),
-                      key: const ValueKey('beer_button'),
-                      child: const Icon(Icons.sports_bar_outlined),
-                    ),
-              floatingActionButtonLocation:
-                  FloatingActionButtonLocation.centerDocked,
-              bottomNavigationBar: BottomNavigationBar(
-                items: [
-                  const BottomNavigationBarItem(
-                    icon: Icon(Icons.home, key: ValueKey('home_button')),
-                    label: "Přehled",
-                  ),
-                  const BottomNavigationBarItem(
-                    icon: Icon(Icons.savings, key: ValueKey('fine_button')),
-                    label: "Pokuty",
-                  ),
-                  BottomNavigationBarItem(label: "", icon: Container()),
-                  const BottomNavigationBarItem(
-                    icon: Icon(Icons.equalizer, key: ValueKey('stats_button')),
-                    label: "Statistiky",
-                  ),
-                  const BottomNavigationBarItem(
-                    icon: Icon(Icons.menu, key: ValueKey('menu_button')),
-                    label: "Menu",
-                  ),
-                ],
-                currentIndex: screenState.selectedBottomSheetIndex,
-                onTap: notifier.onBottomMenuTapped,
               ),
             ),
           ),

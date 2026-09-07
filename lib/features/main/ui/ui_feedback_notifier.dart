@@ -9,9 +9,9 @@ import 'ui_effect.dart';
 import 'ui_feedback_state.dart';
 
 final uiFeedbackProvider =
-StateNotifierProvider<UiFeedbackNotifier, UiFeedbackState>((ref) {
-  return UiFeedbackNotifier();
-});
+    StateNotifierProvider<UiFeedbackNotifier, UiFeedbackState>((ref) {
+      return UiFeedbackNotifier();
+    });
 
 class UiFeedbackNotifier extends StateNotifier<UiFeedbackState> {
   UiFeedbackNotifier() : super(UiFeedbackState.initial());
@@ -39,8 +39,10 @@ class UiFeedbackNotifier extends StateNotifier<UiFeedbackState> {
       return;
     }
 
-    final lastMessage =
-    _active.values.lastWhere((m) => m != null, orElse: () => null);
+    final lastMessage = _active.values.lastWhere(
+      (m) => m != null,
+      orElse: () => null,
+    );
     state = state.copyWith(isLoading: true, loadingMessage: lastMessage);
   }
 
@@ -56,8 +58,22 @@ class UiFeedbackNotifier extends StateNotifier<UiFeedbackState> {
   }
 
   // convenience:
-  void showSnack(String message, {Duration duration = const Duration(seconds: 1)}) {
+  void showSnack(
+    String message, {
+    Duration duration = const Duration(seconds: 1),
+  }) {
     emit(UiSnack(message, duration: duration));
+  }
+
+  void showNextAction(String message, String label, VoidCallback action) {
+    emit(
+      UiSnack(
+        message,
+        duration: const Duration(seconds: 8),
+        actionLabel: label,
+        onAction: action,
+      ),
+    );
   }
 
   void showErrorDialog(String message, {String title = "Chyba"}) {
@@ -76,11 +92,19 @@ class UiFeedbackNotifier extends StateNotifier<UiFeedbackState> {
     emit(UiSimpleSheet(title, message));
   }
 
-  void showStatsBottomSheet(String title, String subtitle, List<ModelToString> items) {
+  void showStatsBottomSheet(
+    String title,
+    String subtitle,
+    List<ModelToString> items,
+  ) {
     emit(UiStatsBottomSheet(title, subtitle, items));
   }
 
-  void showFineStatsBottomSheet(String title, String subtitle, ReceivedFineStatsDetailResponse response) {
+  void showFineStatsBottomSheet(
+    String title,
+    String subtitle,
+    ReceivedFineStatsDetailResponse response,
+  ) {
     emit(UiFineStatsBottomSheet(title, subtitle, response));
   }
 
@@ -101,5 +125,4 @@ class UiFeedbackNotifier extends StateNotifier<UiFeedbackState> {
     _sessionLoadingSheetVisible = false;
     emit(const UiHideLoadingSheet());
   }
-
 }

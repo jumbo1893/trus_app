@@ -1,3 +1,5 @@
+import 'package:flutter/foundation.dart';
+import '../filter/shared_statistics_season.dart';
 import 'dart:async';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:trus_app/common/widgets/notifier/listview/i_listview_notifier.dart';
@@ -45,6 +47,20 @@ class StatsNotifier extends AppNotifier<StatsState>
     required String api,
     required bool matchOrPlayer,
   }) : super(ref, StatsState.initial(api, matchOrPlayer)) {
+    ref.listen<Set<int>?>(statisticsSeasonSelectionProvider, (_, next) {
+      if (next == null || !_initialized) return;
+      Future.microtask(() {
+        if (!mounted) return;
+        final seasons = ref.read(statisticsSeasonSelectionProvider);
+        if (seasons != null &&
+            !setEquals(seasons, state.advancedFilter.seasonIds)) {
+          applyFilters(
+            state.advancedFilter.copyWith(seasonIds: seasons),
+            shareSeason: false,
+          );
+        }
+      });
+    });
     ref.listen<AsyncValue<List<SeasonApiModel>>>(
       statisticsSeasonsProvider,
       (_, next) => next.when(
@@ -61,7 +77,13 @@ class StatsNotifier extends AppNotifier<StatsState>
           Future.microtask(() {
             if (!mounted) return;
             final id = seasons.isEmpty ? null : returnCurrentSeason(seasons).id;
-            applyFilters(StatisticsFilter(seasonIds: {if (id != null) id}));
+            applyFilters(
+              StatisticsFilter(
+                seasonIds:
+                    ref.read(statisticsSeasonSelectionProvider) ??
+                    {if (id != null) id},
+              ),
+            );
           });
         },
       ),
@@ -319,7 +341,15 @@ class StatsNotifier extends AppNotifier<StatsState>
     applyFilters(const StatisticsFilter());
   }
 
-  void applyFilters(StatisticsFilter filters) {
+  void applyFilters(StatisticsFilter filters, {bool shareSeason = true}) {
+    if (shareSeason &&
+        !setEquals(
+          ref.read(statisticsSeasonSelectionProvider),
+          filters.seasonIds,
+        )) {
+      ref.read(statisticsSeasonSelectionProvider.notifier).state =
+          Set.unmodifiable(filters.seasonIds);
+    }
     _searchDebounce?.cancel();
     state = state.copyWith(
       advancedFilter: filters,

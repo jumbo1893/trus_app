@@ -1,3 +1,4 @@
+import '../../../fine/match/screens/fine_match_screen.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:trus_app/features/football/repository/football_repository.dart';
 import 'package:trus_app/features/general/global_variables_controller.dart';
@@ -578,6 +579,13 @@ class MatchEditNotifier extends BaseCrudNotifier<MatchApiModel, MatchEditState>
           changeFragment(GoalScreen.id);
         } else {
           changeFragment(HomeScreen.id);
+          if (crud != Crud.delete && model?.id != null) {
+            final savedMatch = model!;
+            ui.showNextAction('Účastníci jsou uložení', 'Zapsat pokuty', () {
+              screenVariablesNotifier.setMatch(savedMatch);
+              changeFragment(FineMatchScreen.id);
+            });
+          }
         }
       },
     );

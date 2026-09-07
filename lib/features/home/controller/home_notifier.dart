@@ -15,7 +15,6 @@ import 'package:url_launcher/url_launcher.dart';
 import 'package:trus_app/services/crash_reporting_service.dart';
 
 import '../../../models/api/football/football_match_api_model.dart';
-import '../../../models/api/home/home_setup.dart';
 import '../../../models/api/player/player_api_model.dart';
 import '../../../models/api/participation/match_participation_detail.dart';
 import '../../../models/api/participation/match_participation_status.dart';
@@ -118,24 +117,21 @@ class HomeNotifier extends SafeStateNotifier<HomeState> {
     }
 
     try {
-      final setup = background
-          ? await homeRepository.fetchSetup()
-          : await runUiWithResult<HomeSetup>(
-              () => homeRepository.fetchSetup(),
-              showLoading: (cached == null),
-              successSnack: null,
-            );
+      final setup = await homeRepository.fetchSetup();
       if (!mounted) return;
 
-      safeSetState(state.copyWith(setup: AsyncValue.data(setup)));
+      safeSetState(
+        state.copyWith(setup: AsyncValue.data(setup), refreshFailed: false),
+      );
     } catch (error, stack) {
       // Automatic refresh keeps the current dashboard usable while offline.
-      // Manual loading already reports errors through runUiWithResult.
+      // The dashboard presents a persistent inline retry or stale-data notice.
       await CrashReportingService.recordError(
         error,
         stack,
         reason: 'Home setup refresh failed (background: $background)',
       );
+      if (mounted) safeSetState(state.copyWith(refreshFailed: true));
       if (mounted && !state.setup.hasValue) {
         safeSetState(state.copyWith(setup: AsyncValue.error(error, stack)));
       }
@@ -333,7 +329,9 @@ class HomeNotifier extends SafeStateNotifier<HomeState> {
         await authRepository.setUserPlayerId(player);
         // po změně playera přetáhnout home setup z API:
         final setup = await homeRepository.fetchSetup();
-        safeSetState(state.copyWith(setup: AsyncValue.data(setup)));
+        safeSetState(
+          state.copyWith(setup: AsyncValue.data(setup), refreshFailed: false),
+        );
       },
       loadingMessage: "Přepínám hráče…",
       showLoading: true,

@@ -57,6 +57,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
         password: password,
         shouldSave: _rememberPassword,
       );
+      if (mounted) chooseRouteNameByWidget(redirect, controller.loadedUser);
     }
   }
 

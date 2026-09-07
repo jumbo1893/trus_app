@@ -11,7 +11,14 @@ sealed class UiEffect {
 class UiSnack extends UiEffect {
   final String message;
   final Duration duration;
-  const UiSnack(this.message, {this.duration = const Duration(seconds: 1)});
+  final String? actionLabel;
+  final VoidCallback? onAction;
+  const UiSnack(
+    this.message, {
+    this.duration = const Duration(seconds: 1),
+    this.actionLabel,
+    this.onAction,
+  });
 }
 
 class UiErrorDialog extends UiEffect {

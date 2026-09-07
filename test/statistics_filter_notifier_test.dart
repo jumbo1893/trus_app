@@ -1,3 +1,7 @@
+import 'package:flutter/material.dart';
+import 'package:trus_app/features/statistics/widget/statistics_filter_bar.dart';
+import 'package:trus_app/theme/app_theme.dart';
+import 'package:trus_app/features/statistics/filter/shared_statistics_season.dart';
 import 'dart:async';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -51,6 +55,105 @@ DetailedResponseModel _response(int players) => AttendanceDetailedResponse(
 );
 
 void main() {
+  testWidgets(
+    'default season is visible and deleting its chip clears the shared season',
+    (tester) async {
+      final api = _Api();
+      final container = ProviderContainer(
+        overrides: [
+          statsApiServiceProvider.overrideWithValue(api),
+          statisticsSeasonsProvider.overrideWith(
+            (ref) async => [
+              SeasonApiModel(
+                id: 42,
+                name: 'Sezona 2026',
+                fromDate: DateTime(2020),
+                toDate: DateTime(2030),
+              ),
+            ],
+          ),
+        ],
+      );
+      addTearDown(container.dispose);
+      await tester.binding.setSurfaceSize(const Size(320, 700));
+      addTearDown(() => tester.binding.setSurfaceSize(null));
+      await tester.pumpWidget(
+        UncontrolledProviderScope(
+          container: container,
+          child: MaterialApp(
+            theme: AppTheme.light(),
+            home: const Scaffold(
+              body: StatisticsFilterBar(statsArgs: StatsArgs(beerApi, false)),
+            ),
+          ),
+        ),
+      );
+      await tester.pump();
+      expect(find.widgetWithText(InputChip, 'Sezona 2026'), findsOneWidget);
+      expect(container.read(statisticsSeasonSelectionProvider), {42});
+      await tester.tap(find.byTooltip('Zrušit: Sezona 2026'));
+      await tester.pump();
+      expect(find.byType(InputChip), findsNothing);
+      expect(container.read(statisticsSeasonSelectionProvider), isEmpty);
+      expect(tester.takeException(), isNull);
+    },
+  );
+
+  testWidgets(
+    'season is shared by existing and newly opened tabs while other filters stay local',
+    (tester) async {
+      final api = _Api();
+      final container = ProviderContainer(
+        overrides: [
+          statsApiServiceProvider.overrideWithValue(api),
+          statisticsSeasonsProvider.overrideWith(
+            (ref) async => <SeasonApiModel>[],
+          ),
+        ],
+      );
+      addTearDown(container.dispose);
+      final beers = statsNotifierProvider(const StatsArgs(beerApi, false));
+      final goals = statsNotifierProvider(const StatsArgs(goalApi, true));
+      container.listen(beers, (_, __) {});
+      container.listen(goals, (_, __) {});
+      await tester.pump();
+      container
+          .read(goals.notifier)
+          .applyFilters(
+            const StatisticsFilter(
+              seasonIds: {42},
+              playerIds: {7},
+              descending: false,
+            ),
+          );
+      await tester.pump();
+      expect(container.read(beers).advancedFilter.seasonIds, {42});
+      expect(container.read(beers).advancedFilter.playerIds, isEmpty);
+      expect(container.read(beers).advancedFilter.descending, isTrue);
+      final fines = statsNotifierProvider(
+        const StatsArgs(receivedFineApi, false),
+      );
+      container.listen(fines, (_, __) {});
+      await tester.pump();
+      expect(container.read(fines).advancedFilter.seasonIds, {42});
+      container
+          .read(beers.notifier)
+          .applyFilters(const StatisticsFilter(seasonIds: {9, 10}));
+      await tester.pump();
+      expect(container.read(goals).advancedFilter.seasonIds, {9, 10});
+      expect(container.read(goals).advancedFilter.playerIds, {7});
+      expect(container.read(goals).advancedFilter.descending, isFalse);
+      container.read(beers.notifier).clearFilter();
+      await tester.pump();
+      expect(container.read(statisticsSeasonSelectionProvider), isEmpty);
+      expect(container.read(goals).advancedFilter.seasonIds, isEmpty);
+      container.refresh(fines);
+      await tester.pump(const Duration(milliseconds: 1));
+      expect(container.read(fines).advancedFilter.seasonIds, isEmpty);
+      expect(tester.takeException(), isNull);
+    },
+  );
+
   test(
     'options use season-scoped results and all seasons remove the restriction',
     () async {

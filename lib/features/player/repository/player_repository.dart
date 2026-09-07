@@ -7,8 +7,7 @@ import 'package:trus_app/models/api/player/stats/player_stats.dart';
 import '../../general/cache/cached_repository.dart';
 import '../../general/cache/memory_cache.dart';
 
-final playerRepositoryProvider =
-Provider<PlayerRepository>((ref) {
+final playerRepositoryProvider = Provider<PlayerRepository>((ref) {
   return PlayerRepository(
     ref.read(playerApiServiceProvider),
     ref.read(memoryCacheProvider),
@@ -18,15 +17,11 @@ Provider<PlayerRepository>((ref) {
 class PlayerRepository extends CachedRepository {
   final PlayerApiService api;
 
-  PlayerRepository(
-      this.api,
-      MemoryCache cache,
-      ) : super(cache);
+  PlayerRepository(this.api, MemoryCache cache) : super(cache);
 
   static const _listKey = 'player_list';
   static const _setupKey = 'player_setup';
   static const _statsKey = 'player_stats';
-
 
   /// LIST
   List<PlayerApiModel>? getCachedList() {
@@ -50,13 +45,17 @@ class PlayerRepository extends CachedRepository {
     return data;
   }
 
-  PlayerStats? getCachedPlayerStats(int id) {
-    return getCached<PlayerStats>(key(_statsKey, id));
+  String _playerStatsKey(int playerId, int appTeamId) {
+    return key(_statsKey, '$appTeamId-$playerId');
   }
 
-  Future<PlayerStats> fetchPlayerStats(int id) async {
-    final data = await api.getPlayerStats(id);
-    setCached(key(_statsKey, id), data);
+  PlayerStats? getCachedPlayerStats(int playerId, int appTeamId) {
+    return getCached<PlayerStats>(_playerStatsKey(playerId, appTeamId));
+  }
+
+  Future<PlayerStats> fetchPlayerStats(int playerId, int appTeamId) async {
+    final data = await api.getPlayerStats(playerId);
+    setCached(_playerStatsKey(playerId, appTeamId), data);
     return data;
   }
 
@@ -64,8 +63,8 @@ class PlayerRepository extends CachedRepository {
     invalidate(key(_setupKey, id));
   }
 
-  void invalidatePlayerStats(int id) {
-    invalidate(key(_statsKey, id));
+  void invalidatePlayerStats(int playerId, int appTeamId) {
+    invalidate(_playerStatsKey(playerId, appTeamId));
   }
 
   void invalidateList() {

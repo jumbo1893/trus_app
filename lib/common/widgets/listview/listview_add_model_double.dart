@@ -5,6 +5,7 @@ import '../../../models/api/interfaces/add_to_string.dart';
 
 class ListviewAddModelDouble extends StatelessWidget {
   final AddToString addToString;
+  final bool compact;
 
   final VoidCallback onFirstNumberAdded;
   final VoidCallback onFirstNumberRemoved;
@@ -13,6 +14,7 @@ class ListviewAddModelDouble extends StatelessWidget {
 
   const ListviewAddModelDouble({
     super.key,
+    this.compact = false,
     required this.onFirstNumberAdded,
     required this.onFirstNumberRemoved,
     required this.onSecondNumberAdded,
@@ -22,6 +24,7 @@ class ListviewAddModelDouble extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    if (compact) return _buildCompact(context);
     final firstValue = addToString.numberToString(true);
     final secondValue = addToString.numberToString(false);
 
@@ -72,6 +75,67 @@ class ListviewAddModelDouble extends StatelessWidget {
       ),
     );
   }
+
+  Widget _buildCompact(BuildContext context) {
+    final player = addToString.toStringForListView();
+    Widget counter(bool beer) => Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Tooltip(
+          message: beer ? 'Piva' : 'Tvrdý alkohol',
+          child: Icon(beer ? Icons.sports_bar : Icons.liquor, size: 18),
+        ),
+        IconButton(
+          tooltip: '$player · ${beer ? 'ubrat pivo' : 'ubrat panáka'}',
+          onPressed: beer ? onFirstNumberRemoved : onSecondNumberRemoved,
+          constraints: const BoxConstraints.tightFor(width: 44, height: 44),
+          style: IconButton.styleFrom(
+            tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+          ),
+          padding: EdgeInsets.zero,
+          icon: const Icon(Icons.remove, size: 20),
+        ),
+        ConstrainedBox(
+          constraints: const BoxConstraints(minWidth: 20),
+          child: Text(
+            addToString.numberToString(beer),
+            textAlign: TextAlign.center,
+            style: Theme.of(context).textTheme.titleMedium,
+          ),
+        ),
+        IconButton(
+          tooltip: '$player · ${beer ? 'přidat pivo' : 'přidat panáka'}',
+          onPressed: beer ? onFirstNumberAdded : onSecondNumberAdded,
+          constraints: const BoxConstraints.tightFor(width: 44, height: 44),
+          style: IconButton.styleFrom(
+            tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+          ),
+          padding: EdgeInsets.zero,
+          icon: const Icon(Icons.add, size: 20),
+        ),
+      ],
+    );
+    return Material(
+      color: context.appColors.cardBackground,
+      borderRadius: BorderRadius.circular(12),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(player, style: Theme.of(context).textTheme.titleMedium),
+            Wrap(
+              spacing: 4,
+              runSpacing: 4,
+              alignment: WrapAlignment.spaceBetween,
+              children: [counter(true), counter(false)],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
 }
 
 class _DoubleCounterRow extends StatelessWidget {
@@ -108,11 +172,7 @@ class _DoubleCounterRow extends StatelessWidget {
               color: context.appColors.cardBackground,
               borderRadius: BorderRadius.circular(12),
             ),
-            child: Icon(
-              icon,
-              color: iconColor,
-              size: 18,
-            ),
+            child: Icon(icon, color: iconColor, size: 18),
           ),
           const SizedBox(width: 10),
           Expanded(
@@ -175,11 +235,7 @@ class _MiniStepperButton extends StatelessWidget {
         child: SizedBox(
           width: 34,
           height: 34,
-          child: Icon(
-            icon,
-            color: color,
-            size: 20,
-          ),
+          child: Icon(icon, color: color, size: 20),
         ),
       ),
     );

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'section_screen.dart';
 import 'package:trus_app/features/ai/screens/ai_assistant_screen.dart';
 import 'package:trus_app/features/achievement/screens/achievement_screen.dart';
 import 'package:trus_app/features/appearance/screens/appearance_screen.dart';
@@ -195,6 +196,10 @@ final List<Widget> _widgetList = [
   //52
   const TeamAdministrationScreen(),
   //53
+  const SectionScreen(section: 'matches-hub', title: 'Zápasy'),
+  const SectionScreen(section: 'entries-hub', title: 'Zápisy'),
+  const SectionScreen(section: 'statistics-hub', title: 'Statistiky'),
+  const SectionScreen(section: 'more-hub', title: 'Více'),
 ];
 
 List<Widget> get widgetList => _widgetList;

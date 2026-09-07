@@ -1,5 +1,5 @@
+import 'package:trus_app/common/widgets/match_context_header.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/rendering.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:trus_app/common/widgets/filter_card.dart';
 import 'package:trus_app/features/fine/match/controller/fine_match_notifier.dart';
@@ -18,18 +18,17 @@ import '../../../../common/widgets/toggle_mode.dart';
 class FineMatchScreen extends CustomConsumerStatefulWidget {
   static const String id = "fine-match-screen";
 
-  const FineMatchScreen({
-    Key? key,
-  }) : super(key: key, title: "Přidání pokut", name: id);
+  const FineMatchScreen({Key? key})
+    : super(key: key, title: "Zápis pokut", name: id);
 
   @override
   ConsumerState<FineMatchScreen> createState() => _FineMatchScreenState();
 }
 
 class _FineMatchScreenState extends ConsumerState<FineMatchScreen> {
-  bool _initDone = false;
+  FineMatchNotifier? _initializedNotifier;
   late final ScrollController _scrollController;
-  bool _showFilters = true;
+  bool _showFilters = false;
 
   @override
   void initState() {
@@ -46,10 +45,6 @@ class _FineMatchScreenState extends ConsumerState<FineMatchScreen> {
     if (_showFilters && offset > 40) {
       setState(() {
         _showFilters = false;
-      });
-    } else if (!_showFilters && offset <= 12) {
-      setState(() {
-        _showFilters = true;
       });
     }
   }
@@ -68,13 +63,16 @@ class _FineMatchScreenState extends ConsumerState<FineMatchScreen> {
     final state = ref.watch(fineMatchNotifierProvider);
     final notifier = ref.read(fineMatchNotifierProvider.notifier);
 
-    final seasonProvider =
-    seasonDropdownNotifierProvider(const SeasonArgs(false, true, true));
+    final seasonProvider = seasonDropdownNotifierProvider(
+      const SeasonArgs(false, true, true),
+    );
 
-    if (!_initDone) {
-      _initDone = true;
+    if (_initializedNotifier != notifier) {
+      _initializedNotifier = notifier;
       WidgetsBinding.instance.addPostFrameCallback((_) {
-        notifier.init(matchId: sc.matchId);
+        if (mounted && _initializedNotifier == notifier) {
+          notifier.init(matchId: sc.matchId);
+        }
       });
     }
 
@@ -82,6 +80,13 @@ class _FineMatchScreenState extends ConsumerState<FineMatchScreen> {
       body: SafeArea(
         child: Column(
           children: [
+            MatchContextHeader(
+              match: state.selectedMatch,
+              onChange: () {
+                if (_scrollController.hasClients) _scrollController.jumpTo(0);
+                setState(() => _showFilters = !_showFilters);
+              },
+            ),
             AnimatedFilterPanel(
               visible: _showFilters,
               child: Padding(
@@ -91,7 +96,9 @@ class _FineMatchScreenState extends ConsumerState<FineMatchScreen> {
                     children: [
                       state.matches.when(
                         loading: () => const SizedBox(height: 72),
-                        error: (_, __) => const SizedBox.shrink(),
+                        error: (_, __) => const Text(
+                          'Zápasy se nepodařilo načíst. Vrať se a zkus zápis otevřít znovu.',
+                        ),
                         data: (matches) => MatchDropdownSheet(
                           hint: "Vyber zápas",
                           matches: matches,
@@ -106,17 +113,20 @@ class _FineMatchScreenState extends ConsumerState<FineMatchScreen> {
                         state: ref.watch(seasonProvider),
                       ),
                       const SizedBox(height: 12),
-                      ToggleMode(
-                        firstLabel: "Jeden hráč",
-                        firstIcon: Icons.person,
-                        secondLabel: "Více hráčů",
-                        secondIcon: Icons.checklist_rounded,
-                        secondChoice: state.multiCheck,
-                        onChanged: notifier.switchScreen,
-                      ),
                     ],
                   ),
                 ),
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
+              child: ToggleMode(
+                firstLabel: "Jeden hráč",
+                firstIcon: Icons.person,
+                secondLabel: "Více hráčů",
+                secondIcon: Icons.checklist_rounded,
+                secondChoice: state.multiCheck,
+                onChanged: notifier.switchScreen,
               ),
             ),
             Expanded(
@@ -133,7 +143,8 @@ class _FineMatchScreenState extends ConsumerState<FineMatchScreen> {
                       .map((player) => player.id)
                       .whereType<int>()
                       .toSet(),
-                  playerFineSummaryByPlayerId: state.playerFineSummaryByPlayerId,
+                  playerFineSummaryByPlayerId:
+                      state.playerFineSummaryByPlayerId,
                 ),
               ),
             ),
@@ -142,14 +153,14 @@ class _FineMatchScreenState extends ConsumerState<FineMatchScreen> {
       ),
       bottomNavigationBar: state.multiCheck
           ? FineMatchActionBar(
-        compact: !_showFilters,
-        selectedCount: state.checkedPlayers.length,
-        onSelectAll: notifier.selectAllPlayers,
-        onSelectPlaying: notifier.selectPlayingPlayers,
-        onSelectNotPlaying: notifier.selectNotPlayingPlayers,
-        onConfirm: notifier.confirmSelection,
-        onClearSelection: notifier.cleanCheckPlayers,
-      )
+              compact: !_showFilters,
+              selectedCount: state.checkedPlayers.length,
+              onSelectAll: notifier.selectAllPlayers,
+              onSelectPlaying: notifier.selectPlayingPlayers,
+              onSelectNotPlaying: notifier.selectNotPlayingPlayers,
+              onConfirm: notifier.confirmSelection,
+              onClearSelection: notifier.cleanCheckPlayers,
+            )
           : null,
     );
   }

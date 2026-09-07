@@ -195,7 +195,7 @@ class _EmptyListState extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Center(
-      child: Padding(
+      child: SingleChildScrollView(
         padding: const EdgeInsets.all(24),
         child: Container(
           padding: const EdgeInsets.symmetric(

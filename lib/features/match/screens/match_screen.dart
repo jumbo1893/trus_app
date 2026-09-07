@@ -19,17 +19,16 @@ import '../widget/match_list_tile.dart';
 class MatchScreen extends CustomConsumerWidget {
   static const String id = "match-screen";
 
-  const MatchScreen({
-    Key? key,
-  }) : super(key: key, title: "Zápasy", name: id);
+  const MatchScreen({Key? key}) : super(key: key, title: "Zápasy", name: id);
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     const horizontalPadding = 16.0;
     const sectionSpacing = 16.0;
 
-    final seasonProvider =
-    seasonDropdownNotifierProvider(const SeasonArgs(false, true, true));
+    final seasonProvider = seasonDropdownNotifierProvider(
+      const SeasonArgs(false, true, true),
+    );
 
     return Scaffold(
       backgroundColor: context.appColors.backgroundPrimary,
@@ -38,7 +37,9 @@ class MatchScreen extends CustomConsumerWidget {
           children: [
             const SizedBox(height: 8),
             Padding(
-              padding: const EdgeInsets.symmetric(horizontal: horizontalPadding),
+              padding: const EdgeInsets.symmetric(
+                horizontal: horizontalPadding,
+              ),
               child: FilterCard(
                 child: CustomDropdownSheet(
                   hint: "Vyber sezonu",
@@ -50,7 +51,9 @@ class MatchScreen extends CustomConsumerWidget {
             const SizedBox(height: sectionSpacing),
             Expanded(
               child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: horizontalPadding),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: horizontalPadding,
+                ),
                 child: ModelToStringListview(
                   storageKey: id,
                   state: ref.watch(matchNotifierProvider),
@@ -69,11 +72,14 @@ class MatchScreen extends CustomConsumerWidget {
         ),
       ),
       floatingActionButton: FloatingActionButton(
+        tooltip: 'Přidat zápas',
         onPressed: () {
           ref
               .read(screenVariablesNotifierProvider.notifier)
               .setMatchNotifierArgs(const MatchNotifierArgs.add());
-          ref.read(screenNotifierProvider.notifier).changeFragment(AddMatchScreen.id);
+          ref
+              .read(screenNotifierProvider.notifier)
+              .changeFragment(AddMatchScreen.id);
         },
         elevation: 4.0,
         child: const Icon(Icons.add),

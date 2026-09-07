@@ -6,6 +6,7 @@ import '../listview/listview_add_model_double.dart';
 class AddListBuilderDouble extends StatelessWidget {
   final List<AddToString> items;
   final ScrollController? scrollController;
+  final bool compact;
 
   final void Function(int index) onBeerAdd;
   final void Function(int index) onBeerRemove;
@@ -15,6 +16,7 @@ class AddListBuilderDouble extends StatelessWidget {
   const AddListBuilderDouble({
     super.key,
     this.scrollController,
+    this.compact = false,
     required this.items,
     required this.onBeerAdd,
     required this.onBeerRemove,
@@ -26,14 +28,15 @@ class AddListBuilderDouble extends StatelessWidget {
   Widget build(BuildContext context) {
     return ListView.separated(
       controller: scrollController,
-      padding: const EdgeInsets.only(bottom: 120),
+      padding: EdgeInsets.only(bottom: compact ? 12 : 120),
       itemCount: items.length,
-      separatorBuilder: (_, __) => const SizedBox(height: 10),
+      separatorBuilder: (_, __) => SizedBox(height: compact ? 6 : 10),
       itemBuilder: (context, index) {
         final addToString = items[index];
 
         return ListviewAddModelDouble(
           addToString: addToString,
+          compact: compact,
           onFirstNumberAdded: () => onBeerAdd(index),
           onFirstNumberRemoved: () => onBeerRemove(index),
           onSecondNumberAdded: () => onLiquorAdd(index),

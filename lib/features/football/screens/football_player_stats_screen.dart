@@ -1,46 +1,70 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:trus_app/features/football/controller/football_player_dropdown_notifier.dart';
-import 'package:trus_app/features/football/controller/football_player_stats_notifier.dart';
-
-import '../../../../common/widgets/notifier/dropdown/custom_dropdown.dart';
+import '../../../common/utils/search_text.dart';
 import '../../../common/widgets/notifier/listview/model_to_string_listview.dart';
-import '../../../common/widgets/screen/custom_consumer_widget.dart';
+import '../../../common/widgets/screen/custom_consumer_stateful_widget.dart';
+import '../../statistics/widget/statistics_dropdown_filter_bar.dart';
+import '../controller/football_player_dropdown_notifier.dart';
+import '../controller/football_player_stats_notifier.dart';
 
-class FootballPlayerStatsScreen extends CustomConsumerWidget {
-  static const String id = "football-player-stats-screen";
-
-  const FootballPlayerStatsScreen({
-    Key? key,
-  }) : super(key: key, title: "Hráčské statistiky", name: id);
-
+class FootballPlayerStatsScreen extends CustomConsumerStatefulWidget {
+  static const String id = 'football-player-stats-screen';
+  const FootballPlayerStatsScreen({super.key})
+    : super(title: 'Ligové zajímavosti', name: id);
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final size = MediaQuery
-        .of(context)
-        .size;
-    const double padding = 8.0;
+  ConsumerState<FootballPlayerStatsScreen> createState() =>
+      _FootballPlayerStatsScreenState();
+}
+
+class _FootballPlayerStatsScreenState
+    extends ConsumerState<FootballPlayerStatsScreen> {
+  String _query = '';
+  @override
+  Widget build(BuildContext context) {
+    final state = ref.watch(footballPlayerStatsNotifierProvider);
+    final query = normalizeSearchText(_query);
     return Scaffold(
       body: Column(
         children: [
-          Row(
-            children: [
-              SizedBox(
-                width: size.width / 2 - padding,
-                child: CustomDropdown(
-                  hint: "Vyber hráče",
-                  notifier: ref.read(
-                      footballPlayerDropdownNotifierProvider.notifier),
-                  state: ref.watch(footballPlayerDropdownNotifierProvider),
-                ),
-              ),
-            ],
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
+            child: StatisticsDropdownFilterBar(
+              query: _query,
+              searchHint: 'Hledat zajímavost',
+              onQueryChanged: (value) => setState(() => _query = value),
+              fields: (ref) {
+                final players = ref.watch(
+                  footballPlayerDropdownNotifierProvider,
+                );
+                return [
+                  StatisticsDropdownFilter(
+                    label: 'Hráč',
+                    items: players.dropdownItems,
+                    selected: players.selected,
+                    onChanged: ref
+                        .read(footballPlayerDropdownNotifierProvider.notifier)
+                        .selectDropdown,
+                  ),
+                ];
+              },
+            ),
           ),
           Expanded(
             child: ModelToStringListview(
-              state: ref.watch(footballPlayerStatsNotifierProvider),
-              notifier: null,),
-          )
+              state: state.copyWith(
+                stats: state.stats.whenData(
+                  (items) => items
+                      .where(
+                        (item) => normalizeSearchText(
+                          '${item.listViewTitle()} ${item.toStringForListView()}',
+                        ).contains(query),
+                      )
+                      .toList(),
+                ),
+              ),
+              notifier: null,
+            ),
+          ),
         ],
       ),
     );

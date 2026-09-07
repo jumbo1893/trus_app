@@ -1,3 +1,6 @@
+import '../../statistics/statistics_navigation.dart';
+import '../navigation_sections.dart';
+import 'navigation_guard.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:trus_app/features/achievement/controller/achievement_filter_notifier.dart';
@@ -11,11 +14,10 @@ import 'package:trus_app/models/api/helper/redirect/redirect.dart';
 
 import '../../../models/api/helper/redirect/redirect_api_model.dart';
 import '../../beer/screens/beer_simple_screen.dart';
-import '../../fine/match/screens/fine_match_screen.dart';
 import '../../general/app_bar_title.dart';
 import '../../general/global_variables_controller.dart';
 import '../../general/screen_name.dart';
-import '../../goal/screen/goal_screen.dart';
+
 import '../../match/match_notifier_args.dart';
 import '../../match/screens/add_match_screen.dart';
 import '../../match/screens/match_detail_screen.dart';
@@ -35,10 +37,8 @@ class ScreenNotifier extends SafeStateNotifier<ScreenState> {
   ScreenNotifier({ref}) : super(ref, ScreenState.initial());
 
   int _bottomIndexFor(String screenId) {
-    if (screenId == HomeScreen.id) return 0;
-    if (screenId == FineMatchScreen.id) return 1;
-    if (statisticScreenList.contains(screenId)) return 3;
-    return 2;
+    final index = sectionIds.indexOf(screenId);
+    return index >= 0 ? index : state.selectedBottomSheetIndex;
   }
 
   //screen
@@ -57,23 +57,57 @@ class ScreenNotifier extends SafeStateNotifier<ScreenState> {
     ref.read(achievementFilterNotifierProvider.notifier).clearAll();
     state = ScreenState.initial();
     if (screenId != HomeScreen.id) {
-      changeByFragmentId(screenId);
+      addScreenIdToBackButtonList(screenId);
+      manageBackButton(screenId);
+      _changeFragment(screenId);
     }
   }
 
   /// obstará logiku po kliku na zpětné tlačítko.
-  void onBackButtonTap() {
-    if (state.currentScreenId == GoalScreen.id) {
-      final list = List<String>.from(state.backButtonFragmentList);
-      if (list.isNotEmpty) list.removeLast();
-      state = state.copyWith(backButtonFragmentList: list);
-      changeByFragmentId(HomeScreen.id);
+  Future<void> onBackButtonTap() async {
+    if (isMainSection(state.currentScreenId) &&
+        state.currentScreenId != HomeScreen.id) {
+      await changeByFragmentId(HomeScreen.id);
       return;
     }
+    if (ref.read(navigationGuardProvider).guard != null && !await _mayLeave())
+      return;
     changeByBackButton();
   }
 
-  void changeByFragmentId(String screenId) {
+  bool _checkingNavigation = false;
+  Future<bool> _mayLeave() async {
+    if (_checkingNavigation) return false;
+    final guard = ref.read(navigationGuardProvider).guard;
+    if (guard == null) return true;
+    _checkingNavigation = true;
+    try {
+      return await guard();
+    } finally {
+      _checkingNavigation = false;
+    }
+  }
+
+  Future<void> changeByFragmentId(String screenId) async {
+    final selection = statisticsSelectionForRoute(screenId);
+    if (selection != null) screenId = 'statistics-hub';
+    if (screenId == state.currentScreenId) {
+      if (selection != null)
+        ref.read(statisticsSelectionProvider.notifier).state = selection;
+      return;
+    }
+    if (ref.read(navigationGuardProvider).guard != null && !await _mayLeave())
+      return;
+    if (selection != null)
+      ref.read(statisticsSelectionProvider.notifier).state = selection;
+    if (isMainSection(screenId)) {
+      state = state.copyWith(
+        backButtonFragmentList: [],
+        backButtonVisible: false,
+      );
+      _changeFragment(screenId);
+      return;
+    }
     if (state.currentScreenId == AddPlayerScreen.id &&
         screenId != AddPlayerScreen.id &&
         ref.read(pendingParticipationProvider) != null) {
@@ -106,7 +140,11 @@ class ScreenNotifier extends SafeStateNotifier<ScreenState> {
     List<String> backButtonFragmentList = List<String>.from(
       state.backButtonFragmentList,
     );
-    backButtonFragmentList.add(screenId);
+    if (backButtonFragmentList.isEmpty) {
+      backButtonFragmentList.add(state.currentScreenId);
+    }
+    if (backButtonFragmentList.last != screenId)
+      backButtonFragmentList.add(screenId);
     state = state.copyWith(backButtonFragmentList: backButtonFragmentList);
   }
 
@@ -114,7 +152,7 @@ class ScreenNotifier extends SafeStateNotifier<ScreenState> {
     List<String> backButtonFragmentList = List<String>.from(
       state.backButtonFragmentList,
     );
-    if (screenId == HomeScreen.id) {
+    if (isMainSection(screenId)) {
       backButtonFragmentList.clear();
       state = state.copyWith(backButtonFragmentList: backButtonFragmentList);
     }

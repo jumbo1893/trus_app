@@ -1,21 +1,21 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:trus_app/features/auth/repository/auth_repository.dart';
 import 'package:trus_app/features/general/notifier/safe_state_notifier.dart';
-import 'package:trus_app/features/home/screens/home_screen.dart';
+
 import 'package:trus_app/features/main/controller/screen_notifier.dart';
 import 'package:trus_app/features/main/state/main_state.dart';
 import 'package:trus_app/features/player/repository/player_repository.dart';
 
 import '../../../models/api/player/stats/player_stats.dart';
 import '../../../services/ws/player_update_service.dart';
-import '../../fine/match/screens/fine_match_screen.dart';
+import '../navigation_sections.dart';
 import '../../general/notifier/global_variables_notifier.dart';
 import '../main_ui_event_type.dart';
 import '../widget/main_ui_event.dart';
-import '../menu/bottom_sheet_navigation_manager.dart';
 
-final mainNotifierProvider =
-StateNotifierProvider<MainNotifier, MainState>((ref) {
+final mainNotifierProvider = StateNotifierProvider<MainNotifier, MainState>((
+  ref,
+) {
   return MainNotifier(
     ref: ref,
     repository: ref.read(playerRepositoryProvider),
@@ -26,7 +26,10 @@ StateNotifierProvider<MainNotifier, MainState>((ref) {
 class MainNotifier extends SafeStateNotifier<MainState> {
   final PlayerRepository repository;
   final AuthRepository authRepository;
-  final PlayerUpdatesService _ws = PlayerUpdatesService();
+  final PlayerUpdatesService _ws;
+
+  int? _currentPlayerId;
+  int? _currentAppTeamId;
 
   int _uiEventId = 0;
 
@@ -34,12 +37,14 @@ class MainNotifier extends SafeStateNotifier<MainState> {
     ref,
     required this.repository,
     required this.authRepository,
-  }) : super(ref, MainState.initial()) {
+    PlayerUpdatesService? playerUpdatesService,
+  }) : _ws = playerUpdatesService ?? PlayerUpdatesService(),
+       super(ref, MainState.initial()) {
     _init();
 
-    ref.listen<int?>(
-      globalVariablesProvider.select((s) => s.player?.id),
-          (prev, next) => Future.microtask(() => _setupForPlayer(next)),
+    ref.listen<(int?, int?)>(
+      globalVariablesProvider.select((s) => (s.player?.id, s.appTeam?.id)),
+      (prev, next) => Future.microtask(() => _setupForPlayer(next.$1, next.$2)),
       fireImmediately: true,
     );
 
@@ -51,9 +56,7 @@ class MainNotifier extends SafeStateNotifier<MainState> {
   void _init() {
     String? user = authRepository.getCurrentUserName();
     if (user != null) {
-      state = state.copyWith(
-        userName: "píč $user",
-      );
+      state = state.copyWith(userName: "píč $user");
     }
   }
 
@@ -62,40 +65,41 @@ class MainNotifier extends SafeStateNotifier<MainState> {
 
     safeSetState(
       state.copyWith(
-        uiEvent: MainUiEvent(
-          type: type,
-          id: _uiEventId,
-        ),
+        uiEvent: MainUiEvent(type: type, id: _uiEventId),
       ),
     );
   }
 
-  Future<void> _setupForPlayer(int? playerId) async {
-    if (playerId == null) {
-      safeSetState(state.copyWith(
-        currentPlayerId: null,
-        wsConnected: false,
-        playerStats: const AsyncValue.loading(),
-      ));
+  Future<void> _setupForPlayer(int? playerId, int? appTeamId) async {
+    if (playerId == null || appTeamId == null) {
+      _currentPlayerId = null;
+      _currentAppTeamId = null;
+      safeSetState(
+        state.copyWith(
+          currentPlayerId: null,
+          wsConnected: false,
+          playerStats: const AsyncValue.loading(),
+        ),
+      );
       _ws.disconnect();
       return;
     }
 
-    if (state.currentPlayerId == playerId) return;
+    if (_currentPlayerId == playerId && _currentAppTeamId == appTeamId) return;
 
     _ws.disconnect();
+    _currentPlayerId = playerId;
+    _currentAppTeamId = appTeamId;
 
-    safeSetState(state.copyWith(
-      currentPlayerId: playerId,
-      wsConnected: false,
-    ));
+    safeSetState(state.copyWith(currentPlayerId: playerId, wsConnected: false));
 
-    await loadPlayerStats(playerId);
-    _subscribePlayerStatsUpdates(playerId);
+    await loadPlayerStats(playerId, appTeamId);
+    if (!_isCurrentContext(playerId, appTeamId)) return;
+    _subscribePlayerStatsUpdates(playerId, appTeamId);
   }
 
-  Future<void> loadPlayerStats(int playerId) async {
-    final cached = repository.getCachedPlayerStats(playerId);
+  Future<void> loadPlayerStats(int playerId, int appTeamId) async {
+    final cached = repository.getCachedPlayerStats(playerId, appTeamId);
     if (cached != null) {
       safeSetState(state.copyWith(playerStats: AsyncValue.data(cached)));
     } else {
@@ -103,25 +107,26 @@ class MainNotifier extends SafeStateNotifier<MainState> {
     }
 
     final result = await AsyncValue.guard(
-          () => runUiWithResult<PlayerStats>(
-            () => repository.fetchPlayerStats(playerId),
+      () => runUiWithResult<PlayerStats>(
+        () => repository.fetchPlayerStats(playerId, appTeamId),
         showLoading: cached == null,
         successSnack: null,
       ),
     );
 
-    if (!mounted) return;
+    if (!mounted || !_isCurrentContext(playerId, appTeamId)) return;
 
     safeSetState(state.copyWith(playerStats: result));
   }
 
-  void _subscribePlayerStatsUpdates(int playerId) {
+  void _subscribePlayerStatsUpdates(int playerId, int appTeamId) {
     _ws.connect(
       playerId: playerId,
+      appTeamId: appTeamId,
       onUpdate: (PlayerStats stats) {
         if (!mounted) return;
 
-        if (state.currentPlayerId != playerId) return;
+        if (!_isCurrentContext(playerId, appTeamId)) return;
 
         safeSetState(
           state.copyWith(
@@ -130,19 +135,25 @@ class MainNotifier extends SafeStateNotifier<MainState> {
           ),
         );
       },
+      onConnected: () {
+        if (mounted && _isCurrentContext(playerId, appTeamId)) {
+          safeSetState(state.copyWith(wsConnected: true));
+        }
+      },
+      onDisconnected: () {
+        if (mounted && _isCurrentContext(playerId, appTeamId)) {
+          safeSetState(state.copyWith(wsConnected: false));
+        }
+      },
     );
-
-    safeSetState(state.copyWith(wsConnected: true));
   }
+
+  bool _isCurrentContext(int playerId, int appTeamId) =>
+      _currentPlayerId == playerId && _currentAppTeamId == appTeamId;
 
   void onModalBottomSheetMenuTapped(String id) {
     clearUi();
-
-    if (id == BottomSheetNavigationManager.deleteAccount) {
-      onDeleteAccountTapped();
-    } else {
-      ref.read(screenNotifierProvider.notifier).changeByFragmentId(id);
-    }
+    ref.read(screenNotifierProvider.notifier).changeByFragmentId(id);
   }
 
   void clearUi() {
@@ -180,23 +191,8 @@ class MainNotifier extends SafeStateNotifier<MainState> {
   void onBottomMenuTapped(int index) {
     final screenNotifier = ref.read(screenNotifierProvider.notifier);
 
-    switch (index) {
-      case 0:
-        screenNotifier.changeByFragmentId(HomeScreen.id);
-        break;
-      case 1:
-        screenNotifier.changeByFragmentId(FineMatchScreen.id);
-        break;
-      case 2:
-        break;
-      case 3:
-        onStatsTapped();
-        break;
-      case 4:
-        onMenuTapped();
-        break;
-      default:
-        screenNotifier.changeByFragmentId(HomeScreen.id);
+    if (index >= 0 && index < sectionIds.length) {
+      screenNotifier.changeByFragmentId(sectionIds[index]);
     }
   }
 }
