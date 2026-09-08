@@ -10,9 +10,7 @@ import '../../../../common/widgets/screen/custom_consumer_stateful_widget.dart';
 class FootballTableScreen extends CustomConsumerStatefulWidget {
   static const String id = "pkfl-table-screen";
 
-  const FootballTableScreen({
-    super.key,
-  }) : super(title: "Tabulka", name: id);
+  const FootballTableScreen({super.key}) : super(title: "Tabulka", name: id);
 
   @override
   ConsumerState<FootballTableScreen> createState() =>
@@ -26,6 +24,7 @@ class _FootballTableScreenState extends ConsumerState<FootballTableScreen> {
       body: Padding(
         padding: const EdgeInsets.only(top: 8.0),
         child: ModelToStringListview(
+          onRetry: () => ref.invalidate(footballTableNotifier),
           state: ref.watch(footballTableNotifier),
           notifier: ref.read(footballTableNotifier.notifier),
           itemBuilder: (context, item, onTap, _, itemCount) {

@@ -3,7 +3,6 @@ import 'package:trus_app/theme/app_colors.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:trus_app/common/widgets/home/birthday_text.dart';
 import 'package:trus_app/features/app_notice/widgets/app_notice_bottom_sheet.dart';
-import 'package:trus_app/features/match_participation/widgets/participation_response_bottom_sheet.dart';
 import 'package:trus_app/features/general/global_variables_controller.dart';
 import 'package:trus_app/features/home/screens/rotating_stats_widget.dart';
 import 'package:trus_app/models/api/app_notice/app_notice.dart';
@@ -30,7 +29,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
     with WidgetsBindingObserver {
   static const double sectionSpacing = 16;
   final Set<int> _presentedNoticeIds = {};
-  final Set<int> _presentedParticipationMatchIds = {};
   late final ProviderSubscription<AsyncValue<AppNotice?>> _noticeSubscription;
   late final ProviderSubscription<AsyncValue<HomeSetup>> _setupSubscription;
   Future<void> _sheetQueue = Future.value();
@@ -77,42 +75,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
             );
           });
         }
-
-        final prompt = next.asData?.value.participationPrompt;
-        final matchId = prompt?.footballMatch.id;
-        if (prompt == null ||
-            matchId == null ||
-            !_presentedParticipationMatchIds.add(matchId)) {
-          return;
-        }
-        WidgetsBinding.instance.addPostFrameCallback((_) {
-          if (!mounted) return;
-          _enqueueSheet(() async {
-            final choice = await ParticipationResponseBottomSheet.show(
-              context,
-              footballMatch: prompt.footballMatch,
-              currentPlayer: prompt.currentPlayer,
-              eligiblePlayers: prompt.eligiblePlayers,
-              reconsideration: prompt.reconsideration,
-            );
-            if (choice == null || !mounted) return;
-            final notifier = ref.read(homeNotifierProvider.notifier);
-            if (choice.createNewPlayer) {
-              notifier.startNewPlayerParticipation(
-                prompt.footballMatch,
-                choice.status,
-                comment: choice.comment,
-              );
-            } else {
-              await notifier.respondToParticipation(
-                prompt.footballMatch,
-                choice.status,
-                player: choice.player,
-                comment: choice.comment,
-              );
-            }
-          });
-        });
       },
       fireImmediately: true,
     );
@@ -196,35 +158,49 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
                       width: 331,
                     ),
                     const SizedBox(height: sectionSpacing),
-                    FootballMatchBox(
-                      isNextMatch: true,
-                      dashboardMatch: setup.nextMatch,
-                      appTeamApiModel: appTeam,
-                      onAddPlayers: notifier.onButtonAddPlayersClick,
-                      onAddGoals: notifier.onButtonAddGoalsClick,
-                      onAddBeer: notifier.onButtonAddBeerClick,
-                      onAddFine: notifier.onButtonAddFineClick,
-                      onDetailMatch: notifier.onButtonDetailMatchClick,
-                      onParticipation: notifier.onParticipationClick,
-                      onCommonMatches: notifier.onCommonMatchesClick,
-                      onRedirect: notifier.onRedirect,
-                    ),
-                    const SizedBox(height: sectionSpacing),
-
-                    FootballMatchBox(
-                      isNextMatch: false,
-                      dashboardMatch: setup.lastMatch,
-                      appTeamApiModel: appTeam,
-                      onAddPlayers: notifier.onButtonAddPlayersClick,
-                      onAddGoals: notifier.onButtonAddGoalsClick,
-                      onAddBeer: notifier.onButtonAddBeerClick,
-                      onAddFine: notifier.onButtonAddFineClick,
-                      onDetailMatch: notifier.onButtonDetailMatchClick,
-                      onParticipation: notifier.onParticipationClick,
-                      onCommonMatches: notifier.onCommonMatchesClick,
-                      onRedirect: notifier.onRedirect,
-                    ),
-                    const SizedBox(height: sectionSpacing),
+                    for (final isNext
+                        in setup.lastMatch?.needsEntry == true
+                            ? [false, true]
+                            : [true, false]) ...[
+                      if (!isNext && setup.lastMatch?.needsEntry == true)
+                        Padding(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 16,
+                            vertical: 8,
+                          ),
+                          child: Text(
+                            'Dokončit zápis posledního zápasu',
+                            style: Theme.of(context).textTheme.titleMedium,
+                          ),
+                        ),
+                      FootballMatchBox(
+                        isNextMatch: isNext,
+                        dashboardMatch: isNext
+                            ? setup.nextMatch
+                            : setup.lastMatch,
+                        appTeamApiModel: appTeam,
+                        onAddPlayers: notifier.onButtonAddPlayersClick,
+                        onAddGoals: notifier.onButtonAddGoalsClick,
+                        onAddBeer: notifier.onButtonAddBeerClick,
+                        onAddFine: notifier.onButtonAddFineClick,
+                        onDetailMatch: notifier.onButtonDetailMatchClick,
+                        onParticipation: notifier.onParticipationClick,
+                        onCommonMatches: notifier.onCommonMatchesClick,
+                        onRedirect: notifier.onRedirect,
+                      ),
+                      const SizedBox(height: sectionSpacing),
+                    ],
+                    if (setup.participationPrompt case final prompt?)
+                      Card(
+                        child: ListTile(
+                          leading: const Icon(Icons.how_to_reg_outlined),
+                          title: const Text('Potvrď účast na příštím zápase'),
+                          trailing: const Icon(Icons.chevron_right),
+                          onTap: () => notifier.onParticipationClick(
+                            prompt.footballMatch,
+                          ),
+                        ),
+                      ),
 
                     if (state.appNotice.asData?.value case final notice?)
                       if (notice.dismissible &&

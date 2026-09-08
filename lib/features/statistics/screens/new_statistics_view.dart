@@ -24,8 +24,9 @@ class NewStatisticsView extends ConsumerWidget {
     final state = ref.watch(statsNotifierProvider(statsArgs));
     final notifier = ref.read(statsNotifierProvider(statsArgs).notifier);
 
-    final listViewNotifier = (statsArgs.api == receivedFineApi) ? ((state
-        .level == StatsLevel.detail2) ? null : notifier) : state.isDetail
+    final listViewNotifier = (statsArgs.api == receivedFineApi)
+        ? ((state.level == StatsLevel.detail2) ? null : notifier)
+        : state.isDetail
         ? null
         : notifier;
 
@@ -85,6 +86,7 @@ class NewStatisticsView extends ConsumerWidget {
           child: ModelToStringListview(
             state: state,
             notifier: listViewNotifier,
+            onRetry: () => notifier.applyFilters(state.advancedFilter),
             scrollController: scrollController,
           ),
         ),

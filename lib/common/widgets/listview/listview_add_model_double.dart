@@ -6,6 +6,7 @@ import '../../../models/api/interfaces/add_to_string.dart';
 class ListviewAddModelDouble extends StatelessWidget {
   final AddToString addToString;
   final bool compact;
+  final String? changeLabel;
 
   final VoidCallback onFirstNumberAdded;
   final VoidCallback onFirstNumberRemoved;
@@ -15,6 +16,7 @@ class ListviewAddModelDouble extends StatelessWidget {
   const ListviewAddModelDouble({
     super.key,
     this.compact = false,
+    this.changeLabel,
     required this.onFirstNumberAdded,
     required this.onFirstNumberRemoved,
     required this.onSecondNumberAdded,
@@ -96,11 +98,14 @@ class ListviewAddModelDouble extends StatelessWidget {
           icon: const Icon(Icons.remove, size: 20),
         ),
         ConstrainedBox(
-          constraints: const BoxConstraints(minWidth: 20),
-          child: Text(
-            addToString.numberToString(beer),
-            textAlign: TextAlign.center,
-            style: Theme.of(context).textTheme.titleMedium,
+          constraints: const BoxConstraints.tightFor(width: 24),
+          child: FittedBox(
+            fit: BoxFit.scaleDown,
+            child: Text(
+              addToString.numberToString(beer),
+              textAlign: TextAlign.center,
+              style: Theme.of(context).textTheme.titleMedium,
+            ),
           ),
         ),
         IconButton(
@@ -124,7 +129,29 @@ class ListviewAddModelDouble extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(player, style: Theme.of(context).textTheme.titleMedium),
+            Row(
+              children: [
+                Expanded(
+                  child: Text(
+                    player,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: Theme.of(context).textTheme.titleMedium,
+                  ),
+                ),
+                if (changeLabel != null) ...[
+                  const SizedBox(width: 8),
+                  Flexible(
+                    child: Text(
+                      changeLabel!,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: Theme.of(context).textTheme.labelMedium,
+                    ),
+                  ),
+                ],
+              ],
+            ),
             Wrap(
               spacing: 4,
               runSpacing: 4,

@@ -1,3 +1,4 @@
+import '../../common/widgets/entry_draft_scope.dart';
 import 'widget/navigation_shell.dart';
 import '../ai/screens/ai_assistant_screen.dart';
 import 'controller/navigation_guard.dart';
@@ -368,6 +369,10 @@ class _MainScreenState extends ConsumerState<MainScreen> {
   }
 
   Future<bool> _confirmLeave() async {
+    final session = ref.read(
+      entrySessionsProvider,
+    )[ref.read(screenNotifierProvider).currentScreenId];
+    if (session != null) return session.confirmLeave();
     if (ref.read(screenNotifierProvider).currentScreenId !=
             BeerSimpleScreen.id ||
         !ref.read(beerNotifierProvider).hasChanges)

@@ -1,3 +1,4 @@
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -86,6 +87,7 @@ void main() {
   late ProviderContainer container;
   late _Beers api;
   setUp(() async {
+    SharedPreferences.setMockInitialValues({'userEmail': 'test@example.test'});
     api = _Beers();
     container = ProviderContainer(
       overrides: [
@@ -130,9 +132,15 @@ void main() {
       expect(tester.takeException(), isNull);
       expect(find.text('Změnit'), findsOneWidget);
       expect(find.byType(BottomAppBar), findsNothing);
+      final counterPosition = tester.getCenter(find.byIcon(Icons.add).first);
       container.read(beerNotifierProvider.notifier).addNumber(0, true, null);
       await tester.pumpAndSettle();
       expect(find.textContaining('Neuložené změny'), findsOneWidget);
+      expect(tester.getCenter(find.byIcon(Icons.add).first), counterPosition);
+      container.read(beerNotifierProvider.notifier).removeNumber(0, true);
+      await tester.pumpAndSettle();
+      expect(tester.getCenter(find.byIcon(Icons.add).first), counterPosition);
+      expect(find.text('Vrátit'), findsNothing);
       await capturePreview(tester, 'beer-entry');
       container.read(beerNotifierProvider.notifier).toggleMode(true);
       await tester.pump();
@@ -212,3 +220,4 @@ void main() {
     expect(container.read(beerNotifierProvider).beers.single.beerNumber, 2);
   });
 }
+

@@ -1,3 +1,4 @@
+import '../../../common/widgets/entry_draft_scope.dart';
 import 'package:trus_app/common/widgets/match_context_header.dart';
 import '../../main/controller/screen_notifier.dart';
 import 'package:flutter/material.dart';
@@ -119,127 +120,162 @@ class _BeerSimpleScreenState extends ConsumerState<BeerSimpleScreen>
 
     final modeToggle = _buildModeToggle(context, state, notifier);
 
-    return Scaffold(
-      backgroundColor: context.appColors.backgroundPrimary,
-      body: SafeArea(
-        child: Column(
-          children: [
-            MatchContextHeader(
-              match: state.selectedMatch,
-              hasChanges: state.hasChanges,
-              onChange: () {
-                if (_scrollController.hasClients) _scrollController.jumpTo(0);
-                setState(() => _showFilters = !_showFilters);
-              },
-            ),
-            AnimatedFilterPanel(
-              visible: _showFilters,
-              child: Padding(
-                padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
-                child: FilterCard(
-                  child: Column(
-                    children: [
-                      state.matches.when(
-                        loading: () => const SizedBox(height: 72),
-                        error: (_, __) => const Text(
-                          'Zápasy se nepodařilo načíst. Vrať se a zkus zápis otevřít znovu.',
+    return EntryDraftScope(
+      key: ValueKey(notifier.draftId),
+      screenId: BeerSimpleScreen.id,
+      draftId: notifier.draftId,
+      loaded: state.selectedMatch != null && state.matches.hasValue,
+      values: notifier.draftValues,
+      baseline: notifier.draftBaseline,
+      labels: {
+        for (final b in state.beers) ...{
+          '${b.player.id}:b': '${b.player.name} · piva',
+          '${b.player.id}:l': '${b.player.name} · panáky',
+        },
+      },
+      hasChanges: () => ref.read(beerNotifierProvider).hasChanges,
+      restore: notifier.restoreDraft,
+      save: notifier.changeBeers,
+      child: Scaffold(
+        backgroundColor: context.appColors.backgroundPrimary,
+        body: SafeArea(
+          child: Column(
+            children: [
+              MatchContextHeader(
+                match: state.selectedMatch,
+                hasChanges: false,
+                onChange: () {
+                  if (_scrollController.hasClients) _scrollController.jumpTo(0);
+                  setState(() => _showFilters = !_showFilters);
+                },
+              ),
+              AnimatedFilterPanel(
+                visible: _showFilters,
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
+                  child: FilterCard(
+                    child: Column(
+                      children: [
+                        state.matches.when(
+                          loading: () => const SizedBox(height: 72),
+                          error: (_, __) => const Text(
+                            'Zápasy se nepodařilo načíst. Vrať se a zkus zápis otevřít znovu.',
+                          ),
+                          data: (matches) => MatchDropdownSheet(
+                            hint: "Vyber zápas",
+                            matches: matches,
+                            selected: state.selectedMatch,
+                            onSelected: notifier.selectMatch,
+                          ),
                         ),
-                        data: (matches) => MatchDropdownSheet(
-                          hint: "Vyber zápas",
-                          matches: matches,
-                          selected: state.selectedMatch,
-                          onSelected: notifier.selectMatch,
+                        const SizedBox(height: 12),
+                        CustomDropdownSheet(
+                          hint: "Vyber sezonu",
+                          notifier: ref.read(seasonProvider.notifier),
+                          state: ref.watch(seasonProvider),
                         ),
-                      ),
-                      const SizedBox(height: 12),
-                      CustomDropdownSheet(
-                        hint: "Vyber sezonu",
-                        notifier: ref.read(seasonProvider.notifier),
-                        state: ref.watch(seasonProvider),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
                 ),
               ),
-            ),
 
-            Padding(
-              padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
-              child: modeToggle,
-            ),
+              Padding(
+                padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
+                child: modeToggle,
+              ),
 
-            Expanded(
-              child: state.matches.hasError
-                  ? Center(
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          const Text('Zápis se nepodařilo načíst.'),
-                          const SizedBox(height: 12),
-                          FilledButton.icon(
-                            onPressed: () => notifier.init(matchId: sc.matchId),
-                            icon: const Icon(Icons.refresh),
-                            label: const Text('Zkusit znovu'),
-                          ),
-                        ],
-                      ),
-                    )
-                  : state.matches.hasValue && state.beers.isEmpty
-                  ? Center(
-                      child: Padding(
-                        padding: const EdgeInsets.all(24),
+              Expanded(
+                child: state.matches.hasError
+                    ? Center(
                         child: Column(
                           mainAxisSize: MainAxisSize.min,
                           children: [
-                            const Icon(Icons.group_outlined, size: 40),
+                            const Text('Zápis se nepodařilo načíst.'),
                             const SizedBox(height: 12),
-                            Text(
-                              state.selectedMatch == null
-                                  ? 'V této sezoně zatím není vybraný zápas.'
-                                  : 'Pro tento zápas zatím nejsou k dispozici hráči.',
-                              textAlign: TextAlign.center,
-                            ),
-                            const SizedBox(height: 12),
-                            TextButton(
-                              onPressed: () => ref
-                                  .read(screenNotifierProvider.notifier)
-                                  .changeByFragmentId('matches-hub'),
-                              child: const Text('Přejít na zápasy'),
+                            FilledButton.icon(
+                              onPressed: () =>
+                                  notifier.init(matchId: sc.matchId),
+                              icon: const Icon(Icons.refresh),
+                              label: const Text('Zkusit znovu'),
                             ),
                           ],
                         ),
+                      )
+                    : state.matches.hasValue && state.beers.isEmpty
+                    ? Center(
+                        child: Padding(
+                          padding: const EdgeInsets.all(24),
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              const Icon(Icons.group_outlined, size: 40),
+                              const SizedBox(height: 12),
+                              Text(
+                                state.selectedMatch == null
+                                    ? 'V této sezoně zatím není vybraný zápas.'
+                                    : 'Pro tento zápas zatím nejsou k dispozici hráči.',
+                                textAlign: TextAlign.center,
+                              ),
+                              const SizedBox(height: 12),
+                              TextButton(
+                                onPressed: () => ref
+                                    .read(screenNotifierProvider.notifier)
+                                    .changeByFragmentId('matches-hub'),
+                                child: const Text('Přejít na zápasy'),
+                              ),
+                            ],
+                          ),
+                        ),
+                      )
+                    : !state.drawMode
+                    ? Padding(
+                        padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
+                        child: AddListBuilderDouble(
+                          compact: true,
+                          changeLabel: (i) {
+                            final b = state.beers[i];
+                            final base = notifier.draftBaseline;
+                            final beer =
+                                b.beerNumber - (base['${b.player.id}:b'] ?? 0);
+                            final liquor =
+                                b.liquorNumber -
+                                (base['${b.player.id}:l'] ?? 0);
+                            if (beer == 0 && liquor == 0) return null;
+                            return [
+                              if (beer != 0) '${beer > 0 ? '+' : ''}$beer piva',
+                              if (liquor != 0)
+                                '${liquor > 0 ? '+' : ''}$liquor panáky',
+                            ].join(' · ');
+                          },
+                          scrollController: _scrollController,
+                          items: state.beers,
+                          onBeerAdd: (i) => notifier.addNumber(i, true, null),
+                          onBeerRemove: (i) => notifier.removeNumber(i, true),
+                          onLiquorAdd: (i) =>
+                              notifier.addNumber(i, false, null),
+                          onLiquorRemove: (i) =>
+                              notifier.removeNumber(i, false),
+                        ),
+                      )
+                    : const Padding(
+                        padding: EdgeInsets.fromLTRB(12, 8, 12, 0),
+                        child: BeerPaintScreen(),
                       ),
-                    )
-                  : !state.drawMode
-                  ? Padding(
-                      padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
-                      child: AddListBuilderDouble(
-                        compact: true,
-                        scrollController: _scrollController,
-                        items: state.beers,
-                        onBeerAdd: (i) => notifier.addNumber(i, true, null),
-                        onBeerRemove: (i) => notifier.removeNumber(i, true),
-                        onLiquorAdd: (i) => notifier.addNumber(i, false, null),
-                        onLiquorRemove: (i) => notifier.removeNumber(i, false),
-                      ),
-                    )
-                  : const Padding(
-                      padding: EdgeInsets.fromLTRB(12, 8, 12, 0),
-                      child: BeerPaintScreen(),
-                    ),
-            ),
-          ],
+              ),
+            ],
+          ),
         ),
-      ),
-      bottomNavigationBar: BottomBar(
-        enabled: state.hasChanges,
-        onConfirm: () async {
-          try {
-            await notifier.changeBeers();
-          } catch (_) {
-            /* Error is shown by the notifier. */
-          }
-        },
+        bottomNavigationBar: BottomBar(
+          enabled: state.hasChanges,
+          onConfirm: () async {
+            try {
+              await notifier.changeBeers();
+            } catch (_) {
+              /* Error is shown by the notifier. */
+            }
+          },
+        ),
       ),
     );
   }

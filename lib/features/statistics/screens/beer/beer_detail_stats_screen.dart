@@ -108,6 +108,8 @@ class _BeerDetailStatsScreenState extends ConsumerState<BeerDetailStatsScreen> {
                       ),
                     ),
                     notifier: null,
+                    onRetry: () =>
+                        ref.invalidate(beerDetailStatsNotifierProvider),
                   ),
           ),
         ],

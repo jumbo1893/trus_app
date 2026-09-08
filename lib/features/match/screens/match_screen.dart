@@ -55,6 +55,7 @@ class MatchScreen extends CustomConsumerWidget {
                   horizontal: horizontalPadding,
                 ),
                 child: ModelToStringListview(
+                  onRetry: () => ref.invalidate(seasonProvider),
                   storageKey: id,
                   state: ref.watch(matchNotifierProvider),
                   notifier: ref.read(matchNotifierProvider.notifier),

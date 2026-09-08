@@ -7,6 +7,7 @@ class AddListBuilderDouble extends StatelessWidget {
   final List<AddToString> items;
   final ScrollController? scrollController;
   final bool compact;
+  final String? Function(int)? changeLabel;
 
   final void Function(int index) onBeerAdd;
   final void Function(int index) onBeerRemove;
@@ -17,6 +18,7 @@ class AddListBuilderDouble extends StatelessWidget {
     super.key,
     this.scrollController,
     this.compact = false,
+    this.changeLabel,
     required this.items,
     required this.onBeerAdd,
     required this.onBeerRemove,
@@ -37,6 +39,7 @@ class AddListBuilderDouble extends StatelessWidget {
         return ListviewAddModelDouble(
           addToString: addToString,
           compact: compact,
+          changeLabel: changeLabel?.call(index),
           onFirstNumberAdded: () => onBeerAdd(index),
           onFirstNumberRemoved: () => onBeerRemove(index),
           onSecondNumberAdded: () => onLiquorAdd(index),

@@ -1,3 +1,5 @@
+import '../repository/step_api_service.dart';
+import '../../../common/widgets/load_failure.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
@@ -8,6 +10,11 @@ import 'package:trus_app/features/steps/screens/step_history_sheet.dart';
 import 'package:trus_app/features/steps/state/step_state.dart';
 import 'package:trus_app/models/api/step/step_models.dart';
 import 'package:trus_app/theme/app_colors.dart';
+
+final _myStepUserProvider = FutureProvider.autoDispose<int>(
+  (ref) async =>
+      (await ref.watch(stepApiServiceProvider).getHistory(days: 1)).userId,
+);
 
 class StepScreen extends CustomConsumerStatefulWidget {
   static const String id = 'step-screen';
@@ -95,29 +102,6 @@ class _LeaderboardView extends StatelessWidget {
       physics: const AlwaysScrollableScrollPhysics(),
       padding: const EdgeInsets.fromLTRB(16, 12, 16, 28),
       children: [
-        Card(
-          child: SwitchListTile.adaptive(
-            value: true,
-            onChanged: (enabled) {
-              if (!enabled) controller.revokeConsent();
-            },
-            secondary: const Icon(Icons.directions_walk_rounded),
-            title: const Text('Sdílet moje kroky s týmem'),
-            subtitle: Text(
-              state.syncing
-                  ? 'Právě synchronizuji posledních 30 dní…'
-                  : 'Aktualizace proběhne při otevření této sekce.',
-            ),
-          ),
-        ),
-        const SizedBox(height: 10),
-        OutlinedButton.icon(
-          onPressed: () =>
-              StepHistorySheet.show(context, controller: controller),
-          icon: const Icon(Icons.history_rounded),
-          label: const Text('Moje historie kroků'),
-        ),
-        const SizedBox(height: 14),
         SingleChildScrollView(
           scrollDirection: Axis.horizontal,
           child: SegmentedButton<StepPeriod>(
@@ -140,6 +124,8 @@ class _LeaderboardView extends StatelessWidget {
           ),
         ),
         const SizedBox(height: 18),
+        _MyStepsCard(state: state),
+        const SizedBox(height: 12),
         Text(
           'Pořadí týmu',
           style: Theme.of(
@@ -173,6 +159,30 @@ class _LeaderboardView extends StatelessWidget {
             ),
           ),
         ),
+        const SizedBox(height: 20),
+        Card(
+          child: SwitchListTile.adaptive(
+            value: true,
+            onChanged: (enabled) {
+              if (!enabled) controller.revokeConsent();
+            },
+            secondary: const Icon(Icons.directions_walk_rounded),
+            title: const Text('Sdílet moje kroky s týmem'),
+            subtitle: Text(
+              state.syncing
+                  ? 'Právě synchronizuji posledních 30 dní…'
+                  : 'Aktualizace proběhne při otevření této sekce.',
+            ),
+          ),
+        ),
+        const SizedBox(height: 10),
+        OutlinedButton.icon(
+          onPressed: () =>
+              StepHistorySheet.show(context, controller: controller),
+          icon: const Icon(Icons.history_rounded),
+          label: const Text('Moje historie kroků'),
+        ),
+        const SizedBox(height: 14),
       ],
     ),
   );
@@ -470,4 +480,47 @@ class _ErrorView extends StatelessWidget {
       ),
     ),
   );
+}
+
+class _MyStepsCard extends ConsumerWidget {
+  final StepsState state;
+  const _MyStepsCard({required this.state});
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    return ref
+        .watch(_myStepUserProvider)
+        .when(
+          loading: () => const LinearProgressIndicator(),
+          error: (_, __) => LoadFailure(
+            message: 'Vlastní výsledek se nepodařilo načíst.',
+            onRetry: () => ref.invalidate(_myStepUserProvider),
+          ),
+          data: (userId) {
+            final entries = StepSortConfig.defaults[state.period]!.sort(
+              state.leaderboard.valueOrNull?.entries ?? [],
+            );
+            final index = entries.indexWhere((entry) => entry.userId == userId);
+            if (index < 0)
+              return const Card(
+                child: ListTile(
+                  title: Text('Moje kroky'),
+                  subtitle: Text('Pro toto období zatím nemáš načtené kroky.'),
+                ),
+              );
+            final own = entries[index];
+            return Card(
+              child: ListTile(
+                leading: const Icon(Icons.directions_walk),
+                title: Text(
+                  '${NumberFormat.decimalPattern('cs_CZ').format(own.stepCount)} kroků',
+                  style: Theme.of(context).textTheme.titleLarge,
+                ),
+                subtitle: Text(
+                  'Moje kroky · ${index + 1}. místo z ${entries.length}${state.period == StepPeriod.allTime ? ' podle průměru za den' : ''}',
+                ),
+              ),
+            );
+          },
+        );
+  }
 }

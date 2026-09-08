@@ -63,6 +63,8 @@ class _FootballPlayerStatsScreenState
                 ),
               ),
               notifier: null,
+              onRetry: () =>
+                  ref.invalidate(footballPlayerStatsNotifierProvider),
             ),
           ),
         ],

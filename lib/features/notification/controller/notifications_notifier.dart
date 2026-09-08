@@ -41,6 +41,8 @@ class NotificationsNotifier extends SafeStateNotifier<NotificationListState> {
     );
   }
 
+  Future<void> reload() => _loadNotifications();
+
   Future<void> nextPage() async {
     state = state.copyWith(pageNumber: state.pageNumber + 1);
     await _loadNotifications();

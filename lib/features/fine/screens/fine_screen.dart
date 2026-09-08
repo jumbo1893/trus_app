@@ -10,26 +10,27 @@ import '../../../common/widgets/screen/custom_consumer_widget.dart';
 class FineScreen extends CustomConsumerWidget {
   static const String id = "fine-screen";
 
-  const FineScreen({
-    Key? key,
-  }) : super(key: key, title: "Pokuty", name: id);
+  const FineScreen({Key? key}) : super(key: key, title: "Pokuty", name: id);
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     return Scaffold(
-        body: Padding(
-          padding: const EdgeInsets.only(top: 8.0),
-          child: ModelToStringListview(
-              state: ref.watch(fineNotifierProvider),
-              notifier: ref.read(fineNotifierProvider.notifier)),
+      body: Padding(
+        padding: const EdgeInsets.only(top: 8.0),
+        child: ModelToStringListview(
+          onRetry: () => ref.invalidate(fineNotifierProvider),
+          state: ref.watch(fineNotifierProvider),
+          notifier: ref.read(fineNotifierProvider.notifier),
         ),
-        floatingActionButton: FloatingActionButton(
-          key: const ValueKey('add_fine_floating_button'),
-          onPressed: () => ref
-              .read(screenNotifierProvider.notifier)
-              .changeFragment(AddFineScreen.id),
-          elevation: 4.0,
-          child: const Icon(Icons.add),
-        ));
+      ),
+      floatingActionButton: FloatingActionButton(
+        key: const ValueKey('add_fine_floating_button'),
+        onPressed: () => ref
+            .read(screenNotifierProvider.notifier)
+            .changeFragment(AddFineScreen.id),
+        elevation: 4.0,
+        child: const Icon(Icons.add),
+      ),
+    );
   }
 }

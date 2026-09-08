@@ -1,3 +1,4 @@
+import '../../../common/widgets/entry_draft_scope.dart';
 import '../../main/controller/navigation_guard.dart';
 import 'dart:math';
 
@@ -28,6 +29,31 @@ final beerNotifierProvider =
 
 class BeerNotifier extends AppNotifier<BeerState> {
   final BeerApiService beerApi;
+  String get draftId => 'beer:${state.selectedMatch?.id}';
+  Map<String, int> get draftValues => {
+    for (final b in state.beers) ...{
+      '${b.player.id}:b': b.beerNumber,
+      '${b.player.id}:l': b.liquorNumber,
+    },
+  };
+  Map<String, int> get draftBaseline => {
+    for (var i = 0; i < state.beers.length; i++) ...{
+      '${state.beers[i].player.id}:b': int.parse(
+        state.initialBeerValues[i].split('|')[0],
+      ),
+      '${state.beers[i].player.id}:l': int.parse(
+        state.initialBeerValues[i].split('|')[1],
+      ),
+    },
+  };
+  void restoreDraft(Map<String, int> values) {
+    for (final b in state.beers) {
+      b.beerNumber = values['${b.player.id}:b'] ?? b.beerNumber;
+      b.liquorNumber = values['${b.player.id}:l'] ?? b.liquorNumber;
+    }
+    state = state.copyWith(beers: [...state.beers]);
+    _initPlayerLinesFromBeers();
+  }
 
   static const _seasonArgs = SeasonArgs(false, true, true);
 
@@ -253,6 +279,7 @@ class BeerNotifier extends AppNotifier<BeerState> {
     if (index < 0 || index >= list.length) return;
 
     // změna dat
+    if (list[index].number(beer) == 0) return;
     list[index].removeNumber(beer);
     state = state.copyWith(beers: list);
 
@@ -299,6 +326,7 @@ class BeerNotifier extends AppNotifier<BeerState> {
 
     if (!mounted) return;
     state = state.copyWith(initialBeerValues: savedValues);
+    await clearEntryDraft(ref, draftId);
   }
 
   List<BeerNoMatch> _toBeerNoMatchList(List<BeerNoMatchWithPlayer> list) {

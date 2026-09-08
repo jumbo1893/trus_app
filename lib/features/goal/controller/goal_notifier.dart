@@ -1,3 +1,5 @@
+import 'package:flutter/foundation.dart';
+import '../../../common/widgets/entry_draft_scope.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:trus_app/features/general/notifier/app_notifier.dart';
 import 'package:trus_app/features/goal/goal_screens.dart';
@@ -23,6 +25,28 @@ final goalNotifierProvider =
 
 class GoalNotifier extends AppNotifier<GoalState> implements BackAction {
   final GoalApiService api;
+  Map<String, int> _baseline = {};
+  String get draftId => 'goals:${state.matchId}';
+  Map<String, int> get draftValues => {
+    for (final g in state.setups) ...{
+      '${g.player.id}:g': g.goalNumber,
+      '${g.player.id}:a': g.assistNumber,
+    },
+    'rewrite': state.rewriteToFines ? 1 : 0,
+  };
+  Map<String, int> get draftBaseline => {..._baseline};
+  bool get hasChanges => !mapEquals(draftValues, _baseline);
+  void restoreDraft(Map<String, int> values) {
+    for (final g in state.setups) {
+      g.goalNumber = values['${g.player.id}:g'] ?? g.goalNumber;
+      g.assistNumber = values['${g.player.id}:a'] ?? g.assistNumber;
+    }
+    state = state.copyWith(
+      setups: [...state.setups],
+      rewriteToFines: (values['rewrite'] ?? 1) != 0,
+    );
+  }
+
   final ScreenVariablesNotifier screenController;
 
   GoalNotifier({
@@ -37,7 +61,15 @@ class GoalNotifier extends AppNotifier<GoalState> implements BackAction {
       showLoading: true,
       successSnack: null,
     );
+    _baseline = {
+      for (final g in setups) ...{
+        '${g.player.id}:g': g.goalNumber,
+        '${g.player.id}:a': g.assistNumber,
+      },
+      'rewrite': 1,
+    };
     state = state.copyWith(
+      rewriteToFines: true,
       setups: setups,
       screen: GoalScreens.addGoals,
       matchId: matchId,
@@ -84,7 +116,7 @@ class GoalNotifier extends AppNotifier<GoalState> implements BackAction {
   // CONFIRM
   // ==========================================================
 
-  void changeGoals() async {
+  Future<void> changeGoals({bool navigate = true}) async {
     final goals = _buildGoalModels();
 
     final payload = GoalListMultiAdd(
@@ -97,8 +129,16 @@ class GoalNotifier extends AppNotifier<GoalState> implements BackAction {
       showLoading: true,
       successSnack: null,
     );
-    ui.showSnack('Góly a asistence jsou uložené');
-    changeFragment(HomeScreen.id);
+    if (!mounted) return;
+    _baseline = draftValues;
+    state = state.copyWith(setups: [...state.setups]);
+    await clearEntryDraft(ref, draftId);
+    ui.showSnack(
+      state.rewriteToFines
+          ? 'Góly a asistence uloženy. Pokuty za góly a hattricky byly přepočítány.'
+          : 'Góly a asistence jsou uložené',
+    );
+    if (mounted && navigate) changeFragment(HomeScreen.id);
   }
 
   List<GoalApiModel> _buildGoalModels() {

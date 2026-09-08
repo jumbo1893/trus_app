@@ -11,22 +11,20 @@ import '../../../common/widgets/screen/custom_consumer_widget.dart';
 class FootballFixturesScreen extends CustomConsumerWidget {
   static const String id = "football-fixtures-screen";
 
-  const FootballFixturesScreen({
-    super.key,
-  }) : super(title: "Program zápasů", name: id);
+  const FootballFixturesScreen({super.key})
+    : super(title: "Program zápasů", name: id);
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final userTeamId = ref.watch(
-      globalVariablesProvider.select(
-            (state) => state.appTeam?.team.id,
-      ),
+      globalVariablesProvider.select((state) => state.appTeam?.team.id),
     );
 
     return Scaffold(
       body: Padding(
         padding: const EdgeInsets.only(top: 8.0),
         child: ModelToStringListview(
+          onRetry: () => ref.invalidate(footballFixturesNotifier),
           state: ref.watch(footballFixturesNotifier),
           notifier: ref.read(footballFixturesNotifier.notifier),
           itemBuilder: (context, item, onTap, _, __) {

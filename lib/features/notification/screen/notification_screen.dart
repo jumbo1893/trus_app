@@ -17,7 +17,10 @@ class NotificationScreen extends CustomConsumerWidget {
     return Scaffold(
       body: Padding(
         padding: const EdgeInsets.only(top: 8.0),
-        child: NotificationListBuilder(notificationsList: state.notifications),
+        child: NotificationListBuilder(
+          notificationsList: state.notifications,
+          onRetry: notifier.reload,
+        ),
       ),
       floatingActionButton: Column(
         mainAxisAlignment: MainAxisAlignment.end,

@@ -21,11 +21,15 @@ class TableTeamDetailMatchesScreen extends CustomConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final teamId = ref.watch(screenVariablesNotifierProvider).tableTeam.id!;
     final state = ref.watch(footballTableTeamDetailNotifierProvider(teamId));
-    final notifier = ref.read(footballTableTeamDetailNotifierProvider(teamId).notifier);
+    final notifier = ref.read(
+      footballTableTeamDetailNotifierProvider(teamId).notifier,
+    );
 
     return Padding(
       padding: const EdgeInsets.only(top: 8.0),
       child: ModelToStringListview(
+        onRetry: () =>
+            ref.invalidate(footballTableTeamDetailNotifierProvider(teamId)),
         state: state,
         notifier: null,
       ),

@@ -10,26 +10,27 @@ import '../controller/season_notifier.dart';
 class SeasonScreen extends CustomConsumerWidget {
   static const String id = "season-screen";
 
-  const SeasonScreen({
-    Key? key,
-  }) : super(key: key, title: "Sezony", name: id);
+  const SeasonScreen({Key? key}) : super(key: key, title: "Sezony", name: id);
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-      return Scaffold(
-          body: Padding(
-            padding: const EdgeInsets.only(top: 8.0),
-            child: ModelToStringListview(
-              state: ref.watch(seasonNotifierProvider),
-              notifier: ref.read(seasonNotifierProvider.notifier)),
-          ),
-          floatingActionButton: FloatingActionButton(
-            key: const ValueKey('add_season_floating_button'),
-            onPressed: () => ref
-                .read(screenNotifierProvider.notifier)
-                .changeFragment(AddSeasonScreen.id),
-            elevation: 4.0,
-            child: const Icon(Icons.add),
-          ));
+    return Scaffold(
+      body: Padding(
+        padding: const EdgeInsets.only(top: 8.0),
+        child: ModelToStringListview(
+          onRetry: () => ref.invalidate(seasonNotifierProvider),
+          state: ref.watch(seasonNotifierProvider),
+          notifier: ref.read(seasonNotifierProvider.notifier),
+        ),
+      ),
+      floatingActionButton: FloatingActionButton(
+        key: const ValueKey('add_season_floating_button'),
+        onPressed: () => ref
+            .read(screenNotifierProvider.notifier)
+            .changeFragment(AddSeasonScreen.id),
+        elevation: 4.0,
+        child: const Icon(Icons.add),
+      ),
+    );
   }
 }

@@ -1,3 +1,4 @@
+import '../../../../common/widgets/entry_draft_scope.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:trus_app/features/fine/match/fine_player_args.dart';
 import 'package:trus_app/features/fine/match/repository/fine_match_api_service.dart';
@@ -53,6 +54,23 @@ class FinePlayerNotifier extends AppNotifier<FinePlayerState> {
     );
   }
 
+  String get draftId => "fine:${args.matchId}:${args.playerId}";
+  Map<String, int> get draftValues => {
+    for (final f in state.receivedFines) '${f.fine.id}': f.fineNumber,
+  };
+  Map<String, int> get draftBaseline => {
+    for (var i = 0; i < state.receivedFines.length; i++)
+      '${state.receivedFines[i].fine.id}': int.parse(
+        state.initialFineValues[i],
+      ),
+  };
+  void restoreDraft(Map<String, int> values) {
+    for (final f in state.receivedFines) {
+      if (!f.fine.inactive && values.containsKey('${f.fine.id}'))
+        f.fineNumber = values['${f.fine.id}']!;
+    }
+    state = state.copyWith(receivedFines: [...state.receivedFines]);
+  }
   // ==========================================================
   // LISTVIEW / ADD BUILDER
   // ==========================================================
@@ -75,7 +93,7 @@ class FinePlayerNotifier extends AppNotifier<FinePlayerState> {
   // CONFIRM
   // ==========================================================
 
-  Future<void> changeFines() async {
+  Future<void> changeFines({bool navigate = true}) async {
     if (!state.hasChanges) return;
 
     final payload = ReceivedFineList(
@@ -93,10 +111,18 @@ class FinePlayerNotifier extends AppNotifier<FinePlayerState> {
     );
 
     if (!mounted) return;
+    state = state.copyWith(
+      initialFineValues: state.receivedFines
+          .map((f) => f.numberToString(true))
+          .toList(),
+    );
+    await clearEntryDraft(ref, draftId);
+    if (!mounted) return;
+    ref.invalidate(fineMatchNotifierProvider);
+    if (!navigate) return;
     ref
         .read(screenVariablesNotifierProvider.notifier)
         .setMatchId(state.matchId);
-    ref.invalidate(fineMatchNotifierProvider);
     changeFragment(FineMatchScreen.id);
   }
 }

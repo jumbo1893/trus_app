@@ -70,6 +70,7 @@ class _FootballStatsScreenState extends ConsumerState<FootballStatsScreen> {
                 ),
               ),
               notifier: null,
+              onRetry: () => ref.invalidate(footballStatsNotifierProvider),
             ),
           ),
         ],

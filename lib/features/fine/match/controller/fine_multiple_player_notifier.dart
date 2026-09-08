@@ -1,3 +1,4 @@
+import '../../../../common/widgets/entry_draft_scope.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:trus_app/features/fine/match/repository/fine_match_api_service.dart';
 import 'package:trus_app/features/fine/repository/fine_api_service.dart';
@@ -80,17 +81,37 @@ class FineMultiplePlayerNotifier extends AppNotifier<FineMultiplePlayerState> {
     return returnList;
   }
 
+  String get draftId =>
+      "fine-multiple:${args.matchId}:${([...args.playerIdList]..sort()).join(',')}";
+  Map<String, int> get draftValues => {
+    for (final f in state.receivedFines) '${f.fine.id}': f.fineNumber,
+  };
+  Map<String, int> get draftBaseline => {
+    for (var i = 0; i < state.receivedFines.length; i++)
+      '${state.receivedFines[i].fine.id}': int.parse(
+        state.initialFineValues[i],
+      ),
+  };
+  void restoreDraft(Map<String, int> values) {
+    for (final f in state.receivedFines) {
+      if (!f.fine.inactive && values.containsKey('${f.fine.id}'))
+        f.fineNumber = values['${f.fine.id}']!;
+    }
+    state = state.copyWith(receivedFines: [...state.receivedFines]);
+  }
   // ==========================================================
   // LISTVIEW / ADD BUILDER
   // ==========================================================
 
   void addNumber(int index) {
+    if (state.receivedFines[index].fine.inactive) return;
     final list = [...state.receivedFines];
     list[index].addNumber(true);
     state = state.copyWith(receivedFines: list);
   }
 
   void removeNumber(int index) {
+    if (state.receivedFines[index].fine.inactive) return;
     final list = [...state.receivedFines];
     list[index].removeNumber(true);
     state = state.copyWith(receivedFines: list);
@@ -100,7 +121,7 @@ class FineMultiplePlayerNotifier extends AppNotifier<FineMultiplePlayerState> {
   // CONFIRM
   // ==========================================================
 
-  Future<void> changeFines() async {
+  Future<void> changeFines({bool navigate = true}) async {
     if (!state.hasChanges) return;
     final payload = ReceivedFineList(
       matchId: state.matchId,
@@ -116,10 +137,18 @@ class FineMultiplePlayerNotifier extends AppNotifier<FineMultiplePlayerState> {
       loadingMessage: "Ukládám nové pokuty…",
     );
     if (!mounted) return;
+    state = state.copyWith(
+      initialFineValues: state.receivedFines
+          .map((f) => f.numberToString(true))
+          .toList(),
+    );
+    await clearEntryDraft(ref, draftId);
+    if (!mounted) return;
+    ref.invalidate(fineMatchNotifierProvider);
+    if (!navigate) return;
     ref
         .read(screenVariablesNotifierProvider.notifier)
         .setMatchId(state.matchId);
-    ref.invalidate(fineMatchNotifierProvider);
     changeFragment(FineMatchScreen.id);
   }
 }

@@ -20,14 +20,12 @@ class PlayerScreen extends CustomConsumerWidget {
       body: Padding(
         padding: const EdgeInsets.only(top: 8.0),
         child: ModelToStringListview(
+          onRetry: () => ref.invalidate(playerNotifierProvider),
           storageKey: id,
           state: ref.watch(playerNotifierProvider),
           notifier: ref.read(playerNotifierProvider.notifier),
           itemBuilder: (context, item, onTap, _, _) {
-            return PlayerListTile(
-              player: item as PlayerApiModel,
-              onTap: onTap,
-            );
+            return PlayerListTile(player: item as PlayerApiModel, onTap: onTap);
           },
         ),
       ),

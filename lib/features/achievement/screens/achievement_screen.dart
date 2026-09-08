@@ -1,3 +1,4 @@
+import '../../../common/widgets/load_failure.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:trus_app/common/widgets/loader.dart';
@@ -39,7 +40,9 @@ class _AchievementScreenState extends ConsumerState<AchievementScreen> {
         padding: const EdgeInsets.only(top: 8.0),
         child: state.achievements.when(
           loading: () => const Center(child: Loader()),
-          error: (_, __) => const SizedBox.shrink(),
+          error: (_, __) => LoadFailure(
+            onRetry: () => ref.invalidate(achievementNotifierProvider),
+          ),
           data: (achievements) {
             if (achievements.isEmpty) {
               return Center(

@@ -8,9 +8,7 @@ import '../../main/controller/screen_variables_notifier.dart';
 import '../controller/edit/match_edit_notifier.dart';
 
 class FootballMutualMatchesScreen extends ConsumerStatefulWidget {
-  const FootballMutualMatchesScreen({
-    Key? key,
-  }) : super(key: key);
+  const FootballMutualMatchesScreen({Key? key}) : super(key: key);
 
   @override
   ConsumerState<FootballMutualMatchesScreen> createState() =>
@@ -37,12 +35,14 @@ class _FootballMutualMatchesScreenState
           padding: const EdgeInsets.symmetric(horizontal: 16),
           child: HeaderCard(
             title: 'Vzájemné zápasy',
-            text: 'Bilance V/R/P $aggregateMatches, celkové skóre $aggregateScore',
+            text:
+                'Bilance V/R/P $aggregateMatches, celkové skóre $aggregateScore',
           ),
         ),
         AppWidgetValues.field,
         Expanded(
           child: ModelToStringListview(
+            onRetry: () => ref.invalidate(matchEditNotifierProvider(arg)),
             state: footballState,
             notifier: notifier,
           ),

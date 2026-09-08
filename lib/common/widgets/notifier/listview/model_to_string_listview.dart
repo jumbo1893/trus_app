@@ -1,3 +1,4 @@
+import '../../load_failure.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:trus_app/common/widgets/notifier/listview/i_listview_notifier.dart';
@@ -8,17 +9,19 @@ import '../../../../theme/app_colors.dart';
 import '../../../../theme/app_widget_values.dart';
 import '../../loader.dart';
 
-typedef ModelToStringItemBuilder = Widget Function(
-    BuildContext context,
-    dynamic item,
-    VoidCallback? onTap,
-    int index,
-    int itemCount,
+typedef ModelToStringItemBuilder =
+    Widget Function(
+      BuildContext context,
+      dynamic item,
+      VoidCallback? onTap,
+      int index,
+      int itemCount,
     );
 
 class ModelToStringListview extends ConsumerStatefulWidget {
   final IListviewState state;
   final IListviewNotifier? notifier;
+  final VoidCallback? onRetry;
   final String emptyListText;
   final String emptyListTitle;
   final String? storageKey;
@@ -29,23 +32,23 @@ class ModelToStringListview extends ConsumerStatefulWidget {
     super.key,
     required this.state,
     required this.notifier,
+    this.onRetry,
     this.emptyListText = "Zatím tu nic není",
-    this.emptyListTitle = "Po změně sezony se záznamy objeví zde",
+    this.emptyListTitle = "Žádné výsledky",
     this.storageKey,
     this.scrollController,
     this.itemBuilder,
   }) : assert(
-  storageKey == null || scrollController == null,
-  'Použij buď storageKey, nebo scrollController, ne obojí současně.',
-  );
+         storageKey == null || scrollController == null,
+         'Použij buď storageKey, nebo scrollController, ne obojí současně.',
+       );
 
   @override
   ConsumerState<ModelToStringListview> createState() =>
       _ModelToStringListviewState();
 }
 
-class _ModelToStringListviewState
-    extends ConsumerState<ModelToStringListview> {
+class _ModelToStringListviewState extends ConsumerState<ModelToStringListview> {
   late final ScrollController _internalScrollController;
 
   bool _scrollRestored = false;
@@ -90,10 +93,9 @@ class _ModelToStringListviewState
       return;
     }
 
-    ref.read(screenNotifierProvider.notifier).saveScrollOffset(
-      widget.storageKey!,
-      _controller.offset,
-    );
+    ref
+        .read(screenNotifierProvider.notifier)
+        .saveScrollOffset(widget.storageKey!, _controller.offset);
   }
 
   void _restoreScrollOffsetIfNeeded() {
@@ -113,9 +115,7 @@ class _ModelToStringListviewState
       if (savedOffset != null) {
         final maxOffset = _controller.position.maxScrollExtent;
 
-        _controller.jumpTo(
-          savedOffset.clamp(0.0, maxOffset).toDouble(),
-        );
+        _controller.jumpTo(savedOffset.clamp(0.0, maxOffset).toDouble());
       }
 
       _scrollRestored = true;
@@ -136,10 +136,8 @@ class _ModelToStringListviewState
   @override
   Widget build(BuildContext context) {
     return widget.state.getListViewItems().when(
-      loading: () => const Center(
-        child: Loader(),
-      ),
-      error: (_, __) => const SizedBox.shrink(),
+      loading: () => const Center(child: Loader()),
+      error: (_, __) => LoadFailure(onRetry: widget.onRetry),
       data: (modelList) {
         if (modelList.isEmpty) {
           return _EmptyListState(
@@ -172,10 +170,7 @@ class _ModelToStringListviewState
               );
             }
 
-            return _DefaultModelListTile(
-              item: item,
-              onTap: onTap,
-            );
+            return _DefaultModelListTile(item: item, onTap: onTap);
           },
         );
       },
@@ -187,10 +182,7 @@ class _EmptyListState extends StatelessWidget {
   final String title;
   final String text;
 
-  const _EmptyListState({
-    required this.title,
-    required this.text,
-  });
+  const _EmptyListState({required this.title, required this.text});
 
   @override
   Widget build(BuildContext context) {
@@ -198,10 +190,7 @@ class _EmptyListState extends StatelessWidget {
       child: SingleChildScrollView(
         padding: const EdgeInsets.all(24),
         child: Container(
-          padding: const EdgeInsets.symmetric(
-            horizontal: 20,
-            vertical: 24,
-          ),
+          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
           decoration: BoxDecoration(
             color: context.appColors.cardBackground,
             borderRadius: AppWidgetValues.borderRadiusXl,
@@ -246,10 +235,7 @@ class _DefaultModelListTile extends StatelessWidget {
   final dynamic item;
   final VoidCallback? onTap;
 
-  const _DefaultModelListTile({
-    required this.item,
-    required this.onTap,
-  });
+  const _DefaultModelListTile({required this.item, required this.onTap});
 
   @override
   Widget build(BuildContext context) {

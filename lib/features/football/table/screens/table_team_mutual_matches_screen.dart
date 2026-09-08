@@ -7,10 +7,7 @@ import '../../../../common/widgets/notifier/listview/model_to_string_listview.da
 import '../controller/football_table_team_detail_notifier.dart';
 
 class TableTeamMutualMatchesScreen extends ConsumerStatefulWidget {
-
-  const TableTeamMutualMatchesScreen({
-    Key? key,
-  }) : super(key: key);
+  const TableTeamMutualMatchesScreen({Key? key}) : super(key: key);
 
   @override
   ConsumerState<TableTeamMutualMatchesScreen> createState() =>
@@ -23,17 +20,15 @@ class _TableTeamMutualMatchesScreenState
   Widget build(BuildContext context) {
     final teamId = ref.watch(screenVariablesNotifierProvider).tableTeam.id!;
     final state = ref.watch(footballTableTeamDetailNotifierProvider(teamId));
-    final notifier = ref.read(footballTableTeamDetailNotifierProvider(teamId).notifier);
+    final notifier = ref.read(
+      footballTableTeamDetailNotifierProvider(teamId).notifier,
+    );
     return Padding(
       padding: const EdgeInsets.all(8.0),
       child: Column(
         children: [
           Padding(
-            padding: const EdgeInsets.only(
-              bottom: 8,
-              left: 8,
-              right: 8,
-            ),
+            padding: const EdgeInsets.only(bottom: 8, left: 8, right: 8),
             child: Container(
               decoration: BoxDecoration(
                 border: Border(
@@ -43,10 +38,10 @@ class _TableTeamMutualMatchesScreenState
               child: ListTile(
                 title: Padding(
                   padding: const EdgeInsets.only(bottom: 16),
-                  child: Text(state.aggregateMatches  == ""
-                      ? "Žádné vzájemné zápasy"
-                      :
-                  "Bilance zápasů V/R/P: ${state.aggregateMatches}",
+                  child: Text(
+                    state.aggregateMatches == ""
+                        ? "Žádné vzájemné zápasy"
+                        : "Bilance zápasů V/R/P: ${state.aggregateMatches}",
                     style: const TextStyle(
                       fontWeight: FontWeight.bold,
                       fontSize: 18,
@@ -57,17 +52,19 @@ class _TableTeamMutualMatchesScreenState
                   state.aggregateScore == ""
                       ? ""
                       : "Celkové skóre: ${state.aggregateScore}",
-                  style: TextStyle(
-                    color: context.appColors.textPrimary,
-                  ),
+                  style: TextStyle(color: context.appColors.textPrimary),
                 ),
               ),
             ),
           ),
           Expanded(
             child: ModelToStringListview(
-                state: state,
-                notifier: notifier),
+              onRetry: () => ref.invalidate(
+                footballTableTeamDetailNotifierProvider(teamId),
+              ),
+              state: state,
+              notifier: notifier,
+            ),
           ),
         ],
       ),
