@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:trus_app/common/utils/search_text.dart';
 import 'package:trus_app/config.dart';
@@ -101,3 +102,74 @@ class StatisticsFilterOptions {
     );
   }
 }
+
+// These providers are read only after opening their corresponding selector.
+final statisticsFineOptionsProvider =
+    FutureProvider.autoDispose<List<FineApiModel>>((ref) async {
+      var alive = true;
+      ref.onDispose(() => alive = false);
+      final link = ref.keepAlive();
+      final timer = Timer(const Duration(minutes: 2), link.close);
+      ref.onDispose(timer.cancel);
+      final rows = await ref.read(statsApiServiceProvider).getFineOptions();
+      if (alive)
+        ref.read(statisticsFineLabelsProvider.notifier).state = {
+          for (final f in rows)
+            if (f.id != null) f.id!: f.name,
+        };
+      return rows;
+    });
+final statisticsPlayerLabelsProvider = StateProvider<Map<int, String>>(
+  (ref) => {},
+);
+final statisticsFineLabelsProvider = StateProvider<Map<int, String>>(
+  (ref) => {},
+);
+final statisticsContextOptionsProvider = FutureProvider.autoDispose
+    .family<StatisticsFilterOptions, StatsArgs>((ref, args) async {
+      var alive = true;
+      ref.onDispose(() => alive = false);
+      final link = ref.keepAlive();
+      final timer = Timer(const Duration(minutes: 2), link.close);
+      ref.onDispose(timer.cancel);
+      final response = await ref
+          .read(statsApiServiceProvider)
+          .getDetailedStats(
+            null,
+            null,
+            null,
+            !args.matchOrPlayer,
+            null,
+            null,
+            args.api,
+            advancedFilter: StatisticsFilter(
+              seasonIds: args.seasonIds,
+              fineIds: args.fineIds,
+            ),
+          );
+      final players = <int, PlayerApiModel>{};
+      final opponents = <String>{};
+      for (final row in response.modelList()) {
+        final (player, match) = switch (row) {
+          BeerDetailedModel r => (r.player, r.match),
+          GoalDetailedModel r => (r.player, r.match),
+          ReceivedFineDetailedModel r => (r.player, r.match),
+          AttendanceDetailedModel r => (r.player, r.match),
+          _ => (null, null),
+        };
+        if (player?.id != null) players[player!.id!] = player;
+        if (match != null) opponents.add(match.name);
+      }
+      if (alive)
+        ref.read(statisticsPlayerLabelsProvider.notifier).state = {
+          ...ref.read(statisticsPlayerLabelsProvider),
+          for (final p in players.values) p.id!: p.name,
+        };
+      return StatisticsFilterOptions(
+        seasons: const [],
+        fines: const [],
+        players: players.values.toList()
+          ..sort((a, b) => a.name.compareTo(b.name)),
+        opponents: opponents.toList()..sort(),
+      );
+    });

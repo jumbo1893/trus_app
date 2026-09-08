@@ -1,5 +1,6 @@
+import '../../../common/widgets/scroll_drag_forwarder.dart';
+import '../../../theme/app_colors.dart';
 import 'package:flutter/material.dart';
-import 'package:trus_app/theme/app_colors.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:trus_app/common/widgets/notifier/listview/model_to_string_listview.dart';
 import 'package:trus_app/config.dart';
@@ -40,43 +41,51 @@ class NewStatisticsView extends ConsumerWidget {
               return const SizedBox.shrink();
             }
 
-            return Padding(
-              padding: const EdgeInsets.only(bottom: 14),
-              child: Container(
-                width: double.infinity,
-                padding: const EdgeInsets.fromLTRB(18, 18, 18, 18),
-                decoration: BoxDecoration(
+            return ScrollDragForwarder(
+              key: const ValueKey('statistics-overall'),
+              controller: scrollController,
+              child: Padding(
+                padding: const EdgeInsets.only(bottom: 12),
+                child: Material(
                   color: context.appColors.cardBackground,
-                  borderRadius: BorderRadius.circular(22),
-                  boxShadow: [
-                    BoxShadow(
-                      blurRadius: 12,
-                      offset: const Offset(0, 6),
-                      color: context.appColors.shadow.withAlpha(31),
+                  borderRadius: BorderRadius.circular(18),
+                  clipBehavior: Clip.antiAlias,
+                  child: ListTile(
+                    dense: true,
+                    contentPadding: const EdgeInsets.symmetric(
+                      horizontal: 14,
+                      vertical: 4,
                     ),
-                  ],
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      value.title,
-                      style: TextStyle(
-                        fontWeight: FontWeight.w700,
-                        fontSize: 17,
-                        color: context.appColors.textPrimary,
-                      ),
-                    ),
-                    const SizedBox(height: 10),
-                    Text(
+                    title: Text(
                       value.text,
-                      style: TextStyle(
-                        fontSize: 15,
-                        color: context.appColors.textSecondary,
-                        height: 1.45,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: Theme.of(context).textTheme.bodyMedium,
+                    ),
+                    subtitle: state.lastUpdated == null
+                        ? null
+                        : Text(
+                            'Aktualizováno ${TimeOfDay.fromDateTime(state.lastUpdated!).format(context)}',
+                          ),
+                    trailing: IconButton(
+                      tooltip: 'Obnovit statistiky',
+                      icon: const Icon(Icons.refresh),
+                      onPressed: notifier.refresh,
+                    ),
+                    onTap: () => showDialog<void>(
+                      context: context,
+                      builder: (context) => AlertDialog(
+                        title: Text(value.title),
+                        content: SingleChildScrollView(child: Text(value.text)),
+                        actions: [
+                          TextButton(
+                            onPressed: () => Navigator.pop(context),
+                            child: const Text('Zavřít'),
+                          ),
+                        ],
                       ),
                     ),
-                  ],
+                  ),
                 ),
               ),
             );
@@ -84,10 +93,22 @@ class NewStatisticsView extends ConsumerWidget {
         ),
         Expanded(
           child: ModelToStringListview(
+            onRefresh: notifier.refresh,
+            bottomPadding: 16,
             state: state,
             notifier: listViewNotifier,
             onRetry: () => notifier.applyFilters(state.advancedFilter),
             scrollController: scrollController,
+            emptyListTitle:
+                state.advancedFilter.activeCount > 0 ||
+                    (state.filter?.trim().isNotEmpty ?? false)
+                ? 'Filtrům neodpovídají žádné výsledky'
+                : 'Zatím žádná data',
+            emptyListText:
+                state.advancedFilter.activeCount > 0 ||
+                    (state.filter?.trim().isNotEmpty ?? false)
+                ? 'Změň filtry nebo vymaž hledání.'
+                : 'Výsledky se objeví po prvním zápisu.',
           ),
         ),
       ],

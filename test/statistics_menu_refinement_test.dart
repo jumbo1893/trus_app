@@ -1,3 +1,6 @@
+import 'package:trus_app/features/statistics/screens/beer/beer_detail_stats_screen.dart';
+import 'package:trus_app/models/api/stats/player_stats.dart';
+import 'package:trus_app/models/api/player/player_api_model.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -48,7 +51,15 @@ class _BeerApi implements BeerApiService {
   @override
   Future<List<Stats>> getBeerStats(int? seasonId) async {
     requests.add(seasonId!);
-    return [Stats(dropdownText: 'Piva', playerStats: [])];
+    return [
+      Stats(
+        dropdownText: 'Max počet piv',
+        playerStats: List.generate(
+          40,
+          (i) => PlayerStats(player: PlayerApiModel.dummy(), text: '$i piv'),
+        ),
+      ),
+    ];
   }
 
   @override
@@ -119,7 +130,7 @@ void main() {
       expect(find.text('Hráči'), findsOneWidget);
       expect(find.text('Zajímavosti'), findsOneWidget);
       await capturePreview(tester, 'league-statistics');
-      await tester.tap(find.textContaining(RegExp(r'^Filtry(?: \(\d+\))?$')));
+      await tester.tap(find.byTooltip(RegExp(r'^Filtry \(\d+\)$')));
       await tester.pumpAndSettle();
       expect(find.text('Sezona'), findsOneWidget);
       expect(find.text('Statistika'), findsOneWidget);
@@ -132,7 +143,7 @@ void main() {
       await tester.tap(find.byTooltip('Zavřít'));
       await tester.pumpAndSettle();
       expect(api.requestedSeasons, [true]);
-      await tester.tap(find.textContaining(RegExp(r'^Filtry(?: \(\d+\))?$')));
+      await tester.tap(find.byTooltip(RegExp(r'^Filtry \(\d+\)$')));
       await tester.pumpAndSettle();
       await tester.tap(fields.first);
       await tester.pumpAndSettle();
@@ -158,13 +169,78 @@ void main() {
       expect(container.read(statisticsSeasonSelectionProvider), {42});
       await tester.tap(find.text('Zajímavosti'));
       await tester.pumpAndSettle();
-      await tester.tap(find.textContaining(RegExp(r'^Filtry(?: \(\d+\))?$')));
+      await tester.tap(find.byTooltip(RegExp(r'^Filtry \(\d+\)$')));
       await tester.pumpAndSettle();
       expect(find.text('Hráč'), findsOneWidget);
       expect(find.text('Sezona'), findsNothing);
       // Identically named players must remain distinct options.
       await tester.tap(find.byType(DropdownButtonFormField<DropdownItem>));
       await tester.pumpAndSettle();
+      expect(tester.takeException(), isNull);
+    },
+  );
+  testWidgets(
+    'beer detail loads latest selected season and collapses filters while scrolling',
+    (tester) async {
+      final api = _BeerApi();
+      final container = ProviderContainer(
+        overrides: [
+          beerApiServiceProvider.overrideWithValue(api),
+          statisticsSeasonSelectionProvider.overrideWith((ref) => {9, 10, 42}),
+          statisticsSeasonsProvider.overrideWith(
+            (ref) async => [
+              SeasonApiModel(
+                id: 42,
+                name: 'Starší',
+                fromDate: DateTime(2023),
+                toDate: DateTime(2024),
+              ),
+              SeasonApiModel(
+                id: 9,
+                name: 'Nejnovější',
+                fromDate: DateTime(2026),
+                toDate: DateTime(2027),
+              ),
+              SeasonApiModel(
+                id: 10,
+                name: 'Prostřední',
+                fromDate: DateTime(2025),
+                toDate: DateTime(2026),
+              ),
+            ],
+          ),
+        ],
+      );
+      addTearDown(container.dispose);
+      await tester.pumpWidget(
+        UncontrolledProviderScope(
+          container: container,
+          child: MaterialApp(
+            theme: previewTheme(),
+            home: const BeerDetailStatsScreen(),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+      expect(api.requests, [9]);
+      await tester.tap(find.byTooltip(RegExp(r'^Filtry \(\d+\)$')));
+      await tester.pumpAndSettle();
+      expect(
+        find.textContaining('Zde lze vybrat jednu sezonu'),
+        findsOneWidget,
+      );
+      expect(
+        find.byType(DropdownButtonFormField<DropdownItem>),
+        findsNWidgets(2),
+      );
+      expect(find.byType(LinearProgressIndicator), findsNothing);
+      await tester.tap(find.byTooltip('Zavřít'));
+      await tester.pumpAndSettle();
+      await tester.drag(find.byType(ListView).last, const Offset(0, -400));
+      await tester.pumpAndSettle();
+      expect(find.byType(TextField), findsNothing);
+      expect(find.text('Filtry'), findsOneWidget);
+      expect(find.text('Nejnovější'), findsOneWidget);
       expect(tester.takeException(), isNull);
     },
   );
@@ -176,28 +252,56 @@ void main() {
         overrides: [
           beerApiServiceProvider.overrideWithValue(api),
           statisticsSeasonsProvider.overrideWith(
-            (ref) async => <SeasonApiModel>[],
+            (ref) async => [
+              SeasonApiModel(
+                id: 42,
+                name: 'Starší',
+                fromDate: DateTime(2023),
+                toDate: DateTime(2024),
+              ),
+              SeasonApiModel(
+                id: 9,
+                name: 'Nejnovější',
+                fromDate: DateTime(2026),
+                toDate: DateTime(2027),
+              ),
+              SeasonApiModel(
+                id: 10,
+                name: 'Prostřední',
+                fromDate: DateTime(2025),
+                toDate: DateTime(2026),
+              ),
+            ],
           ),
           statisticsSeasonSelectionProvider.overrideWith((ref) => {42}),
         ],
       );
       addTearDown(container.dispose);
       container.listen(beerDetailStatsNotifierProvider, (_, __) {});
-      await tester.pump();
+      await tester.pumpAndSettle();
       expect(api.requests, [42]);
       container.read(statisticsSeasonSelectionProvider.notifier).state = {
         9,
         10,
+        42,
       };
-      await tester.pump();
-      expect(api.requests, [42]);
-      expect(container.read(statisticsSeasonSelectionProvider), {9, 10});
+      await tester.pumpAndSettle();
+      expect(api.requests, [42, 9]);
+      expect(container.read(beerDetailSeasonProvider), 9);
+      expect(container.read(statisticsSeasonSelectionProvider), {9, 10, 42});
+      expect(
+        container
+            .read(beerDetailStatsNotifierProvider)
+            .selectedText
+            ?.dropdownItem(),
+        'Max počet piv',
+      );
       container.read(statisticsSeasonSelectionProvider.notifier).state = {10};
-      await tester.pump();
-      expect(api.requests, [42, 10]);
+      await tester.pumpAndSettle();
+      expect(api.requests, [42, 9, 10]);
       container.read(statisticsSeasonSelectionProvider.notifier).state = {};
-      await tester.pump();
-      expect(api.requests, [42, 10, allSeasonId]);
+      await tester.pumpAndSettle();
+      expect(api.requests, [42, 9, 10, allSeasonId]);
       expect(tester.takeException(), isNull);
     },
   );

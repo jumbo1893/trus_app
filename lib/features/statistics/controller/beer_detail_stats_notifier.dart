@@ -13,6 +13,23 @@ import '../../../models/api/interfaces/model_to_string.dart';
 import '../../../models/api/stats/stats.dart';
 import '../state/beer_detail_stats_state.dart';
 
+// Beer details accept one season; keep the overview's multi-selection intact.
+final beerDetailSeasonProvider = Provider<int?>((ref) {
+  final ids = ref.watch(statisticsSeasonSelectionProvider);
+  if (ids != null && ids.isEmpty) return allSeasonId;
+  if (ids?.length == 1) return ids!.single;
+  final seasons = ref.watch(statisticsSeasonsProvider).valueOrNull;
+  if (seasons == null) return null;
+  if (ids == null)
+    return seasons.isEmpty ? allSeasonId : returnCurrentSeason(seasons).id;
+  final selected = seasons.where((s) => ids.contains(s.id)).toList()
+    ..sort((a, b) {
+      final byDate = b.fromDate.compareTo(a.fromDate);
+      return byDate != 0 ? byDate : b.toDate.compareTo(a.toDate);
+    });
+  return selected.isEmpty ? null : selected.first.id;
+});
+
 final beerDetailStatsNotifierProvider =
     StateNotifierProvider<BeerDetailStatsNotifier, BeerDetailStatsState>((ref) {
       return BeerDetailStatsNotifier(
@@ -29,37 +46,24 @@ class BeerDetailStatsNotifier extends AppNotifier<BeerDetailStatsState>
 
   BeerDetailStatsNotifier({required Ref ref, required this.beerApiService})
     : super(ref, BeerDetailStatsState.initial()) {
-    ref.listen<Set<int>?>(statisticsSeasonSelectionProvider, (_, next) {
+    ref.listen<int?>(beerDetailSeasonProvider, (_, next) {
       Future.microtask(_loadSelectedSeason);
-    });
-    ref.listen<AsyncValue<List<SeasonApiModel>>>(statisticsSeasonsProvider, (
-      _,
-      next,
-    ) {
-      next.whenData((seasons) {
-        Future.microtask(() {
-          if (!mounted) return;
-          if (ref.read(statisticsSeasonSelectionProvider) == null) {
-            final id = seasons.isEmpty ? null : returnCurrentSeason(seasons).id;
-            ref.read(statisticsSeasonSelectionProvider.notifier).state = {
-              if (id != null) id,
-            };
-          }
-          _loadSelectedSeason();
-        });
-      });
     }, fireImmediately: true);
+  }
+
+  Future<void> refresh() async {
+    final seasonId = ref.read(beerDetailSeasonProvider);
+    if (seasonId != null) await _loadBeerStats(seasonId);
   }
 
   void _loadSelectedSeason() {
     if (!mounted) return;
-    final ids = ref.read(statisticsSeasonSelectionProvider);
-    if (ids == null || ids.length > 1) {
+    final seasonId = ref.read(beerDetailSeasonProvider);
+    if (seasonId == null) {
       _generation++;
       _lastSeason = null;
       return;
     }
-    final seasonId = ids.isEmpty ? allSeasonId : ids.single;
     if (_lastSeason == seasonId) return;
     _lastSeason = seasonId;
     _loadBeerStats(seasonId);

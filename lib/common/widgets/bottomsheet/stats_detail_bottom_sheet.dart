@@ -21,11 +21,11 @@ class StatsDetailBottomSheet extends StatelessWidget {
   });
 
   static Future<void> show(
-      BuildContext context, {
-        required String title,
-        required String subtitle,
-        required List<ModelToString> items,
-      }) {
+    BuildContext context, {
+    required String title,
+    required String subtitle,
+    required List<ModelToString> items,
+  }) {
     return showModalBottomSheet<void>(
       context: context,
       isScrollControlled: true,
@@ -63,9 +63,7 @@ class StatsDetailBottomSheet extends StatelessWidget {
       _ => 0.80,
     };
 
-    final initialSize = preferredInitialSize
-        .clamp(0.38, 0.94)
-        .toDouble();
+    final initialSize = preferredInitialSize.clamp(0.38, 0.94).toDouble();
 
     return Padding(
       padding: EdgeInsets.fromLTRB(8, 0, 8, bottomSpacing),
@@ -117,35 +115,28 @@ class _StatsSheetContent extends StatelessWidget {
       child: Column(
         children: [
           const SizedBox(height: 10),
-          _SheetHandle(
-            color: colors.textMuted.withAlpha(60),
-          ),
+          _SheetHandle(color: colors.textMuted.withAlpha(60)),
           const SizedBox(height: 14),
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16),
-            child: _StatsHeader(
-              title: title,
-              subtitle: subtitle,
-              type: type,
-            ),
+            child: _StatsHeader(title: title, subtitle: subtitle, type: type),
           ),
           const SizedBox(height: 10),
           Expanded(
             child: items.isEmpty
                 ? const _EmptyStatsContent()
                 : ListView.separated(
-              controller: scrollController,
-              padding: const EdgeInsets.fromLTRB(16, 4, 16, 20),
-              itemCount: items.length,
-              separatorBuilder: (_, __) => Divider(
-                height: 1,
-                indent: 56,
-                color: colors.textMuted.withAlpha(30),
-              ),
-              itemBuilder: (_, index) => _StatsDetailRow(
-                item: items[index],
-              ),
-            ),
+                    controller: scrollController,
+                    padding: const EdgeInsets.fromLTRB(16, 4, 16, 20),
+                    itemCount: items.length,
+                    separatorBuilder: (_, __) => Divider(
+                      height: 1,
+                      indent: 56,
+                      color: colors.textMuted.withAlpha(30),
+                    ),
+                    itemBuilder: (_, index) =>
+                        _StatsDetailRow(item: items[index]),
+                  ),
           ),
         ],
       ),
@@ -178,6 +169,11 @@ class _StatsHeader extends StatelessWidget {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          IconButton(
+            tooltip: 'Zpět na přehled',
+            onPressed: () => Navigator.of(context).pop(),
+            icon: const Icon(Icons.arrow_back),
+          ),
           Container(
             width: 46,
             height: 46,
@@ -185,11 +181,7 @@ class _StatsHeader extends StatelessWidget {
               color: colors.accent.withAlpha(28),
               borderRadius: BorderRadius.circular(15),
             ),
-            child: Icon(
-              type.icon,
-              color: colors.accent,
-              size: 24,
-            ),
+            child: Icon(type.icon, color: colors.accent, size: 24),
           ),
           const SizedBox(width: 12),
           Expanded(
@@ -238,9 +230,7 @@ class _StatsHeader extends StatelessWidget {
 class _StatsDetailRow extends StatelessWidget {
   final ModelToString item;
 
-  const _StatsDetailRow({
-    required this.item,
-  });
+  const _StatsDetailRow({required this.item});
 
   @override
   Widget build(BuildContext context) {
@@ -274,9 +264,7 @@ class _StatsDetailRow extends StatelessWidget {
                     spacing: 7,
                     runSpacing: 7,
                     children: metrics
-                        .map(
-                          (metric) => _MetricChip(metric: metric),
-                    )
+                        .map((metric) => _MetricChip(metric: metric))
                         .toList(),
                   ),
                 ],
@@ -393,9 +381,7 @@ class _StatsDetailRow extends StatelessWidget {
 class _RowIcon extends StatelessWidget {
   final _StatsDisplayType type;
 
-  const _RowIcon({
-    required this.type,
-  });
+  const _RowIcon({required this.type});
 
   @override
   Widget build(BuildContext context) {
@@ -408,11 +394,7 @@ class _RowIcon extends StatelessWidget {
         color: colors.backgroundSecondary,
         borderRadius: BorderRadius.circular(14),
       ),
-      child: Icon(
-        type.icon,
-        color: colors.accent,
-        size: 21,
-      ),
+      child: Icon(type.icon, color: colors.accent, size: 21),
     );
   }
 }
@@ -420,26 +402,22 @@ class _RowIcon extends StatelessWidget {
 class _MetricChip extends StatelessWidget {
   final _MetricData metric;
 
-  const _MetricChip({
-    required this.metric,
-  });
+  const _MetricChip({required this.metric});
 
   @override
   Widget build(BuildContext context) {
     final colors = context.appColors;
 
-    final foregroundColor =
-    metric.isZero ? colors.textTertiary : colors.textSecondary;
+    final foregroundColor = metric.isZero
+        ? colors.textTertiary
+        : colors.textSecondary;
 
     final backgroundColor = metric.isZero
         ? colors.backgroundSecondary.withAlpha(110)
         : colors.backgroundSecondary;
 
     return Container(
-      padding: const EdgeInsets.symmetric(
-        horizontal: 9,
-        vertical: 6,
-      ),
+      padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 6),
       decoration: BoxDecoration(
         color: backgroundColor,
         borderRadius: BorderRadius.circular(999),
@@ -447,11 +425,7 @@ class _MetricChip extends StatelessWidget {
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(
-            metric.icon,
-            color: foregroundColor,
-            size: 14,
-          ),
+          Icon(metric.icon, color: foregroundColor, size: 14),
           const SizedBox(width: 5),
           Text(
             metric.text,
@@ -475,24 +449,17 @@ class _EmptyStatsContent extends StatelessWidget {
     final colors = context.appColors;
 
     return Center(
-      child: Padding(
+      child: SingleChildScrollView(
         padding: const EdgeInsets.all(24),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(
-              Icons.inbox_outlined,
-              color: colors.textMuted,
-              size: 34,
-            ),
+            Icon(Icons.inbox_outlined, color: colors.textMuted, size: 34),
             const SizedBox(height: 10),
             Text(
               'Nejsou k dispozici žádná data.',
               textAlign: TextAlign.center,
-              style: TextStyle(
-                color: colors.textSecondary,
-                fontSize: 14,
-              ),
+              style: TextStyle(color: colors.textSecondary, fontSize: 14),
             ),
           ],
         ),
@@ -504,9 +471,7 @@ class _EmptyStatsContent extends StatelessWidget {
 class _SheetHandle extends StatelessWidget {
   final Color color;
 
-  const _SheetHandle({
-    required this.color,
-  });
+  const _SheetHandle({required this.color});
 
   @override
   Widget build(BuildContext context) {
@@ -534,34 +499,16 @@ class _MetricData {
 }
 
 enum _StatsDisplayType {
-  beer(
-    icon: Icons.sports_bar_rounded,
-    label: 'PIVA A PANÁKY',
-  ),
-  goal(
-    icon: Icons.sports_soccer_rounded,
-    label: 'GÓLY A ASISTENCE',
-  ),
-  fine(
-    icon: Icons.receipt_long_rounded,
-    label: 'POKUTY',
-  ),
-  attendance(
-    icon: Icons.people_rounded,
-    label: 'ÚČAST',
-  ),
-  generic(
-    icon: Icons.bar_chart_rounded,
-    label: 'STATISTIKY',
-  );
+  beer(icon: Icons.sports_bar_rounded, label: 'PIVA A PANÁKY'),
+  goal(icon: Icons.sports_soccer_rounded, label: 'GÓLY A ASISTENCE'),
+  fine(icon: Icons.receipt_long_rounded, label: 'POKUTY'),
+  attendance(icon: Icons.people_rounded, label: 'ÚČAST'),
+  generic(icon: Icons.bar_chart_rounded, label: 'STATISTIKY');
 
   final IconData icon;
   final String label;
 
-  const _StatsDisplayType({
-    required this.icon,
-    required this.label,
-  });
+  const _StatsDisplayType({required this.icon, required this.label});
 
   factory _StatsDisplayType.fromItems(List<ModelToString> items) {
     if (items.isEmpty) {

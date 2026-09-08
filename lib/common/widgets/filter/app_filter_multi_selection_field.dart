@@ -3,6 +3,7 @@ import 'package:trus_app/common/utils/search_text.dart';
 import 'package:trus_app/theme/app_colors.dart';
 
 class AppFilterMultiSelectionField<T> extends StatelessWidget {
+  final Future<List<T>> Function()? loadItems;
   final String label;
   final String hint;
   final String searchHint;
@@ -14,6 +15,7 @@ class AppFilterMultiSelectionField<T> extends StatelessWidget {
 
   const AppFilterMultiSelectionField({
     super.key,
+    this.loadItems,
     required this.label,
     required this.hint,
     required this.searchHint,
@@ -25,7 +27,7 @@ class AppFilterMultiSelectionField<T> extends StatelessWidget {
   });
 
   Future<void> _openSelection(BuildContext context) async {
-    if (items.isEmpty && allLabel == null) return;
+    if (items.isEmpty && allLabel == null && loadItems == null) return;
 
     FocusManager.instance.primaryFocus?.unfocus();
     final selection = await showModalBottomSheet<Set<T>>(
@@ -34,14 +36,26 @@ class AppFilterMultiSelectionField<T> extends StatelessWidget {
       useSafeArea: true,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
-      builder: (_) => _FilterMultiSelectionSheet<T>(
-        title: label,
-        allLabel: allLabel,
-        searchHint: searchHint,
-        selected: values,
-        items: items,
-        itemLabel: itemLabel,
-      ),
+      builder: (_) => loadItems == null
+          ? _FilterMultiSelectionSheet<T>(
+              title: label,
+              allLabel: allLabel,
+              searchHint: searchHint,
+              selected: values,
+              items: items,
+              itemLabel: itemLabel,
+            )
+          : _LazyFilterSelection<T>(
+              load: loadItems!,
+              builder: (loaded) => _FilterMultiSelectionSheet<T>(
+                title: label,
+                allLabel: allLabel ?? hint,
+                searchHint: searchHint,
+                selected: values,
+                items: {...loaded, ...values}.toList(),
+                itemLabel: itemLabel,
+              ),
+            ),
     );
     if (selection != null && context.mounted) {
       onChanged(Set.unmodifiable(selection));
@@ -284,4 +298,68 @@ class _FilterMultiSelectionSheetState<T>
       ),
     );
   }
+}
+
+class _LazyFilterSelection<T> extends StatefulWidget {
+  final Future<List<T>> Function() load;
+  final Widget Function(List<T>) builder;
+  const _LazyFilterSelection({required this.load, required this.builder});
+  @override
+  State<_LazyFilterSelection<T>> createState() =>
+      _LazyFilterSelectionState<T>();
+}
+
+class _LazyFilterSelectionState<T> extends State<_LazyFilterSelection<T>> {
+  late Future<List<T>> pending;
+  @override
+  void initState() {
+    super.initState();
+    pending = Future.sync(widget.load);
+  }
+
+  @override
+  Widget build(BuildContext context) => FutureBuilder<List<T>>(
+    future: pending,
+    builder: (context, snapshot) {
+      if (snapshot.hasData) return widget.builder(snapshot.data!);
+      return FractionallySizedBox(
+        heightFactor: 0.6,
+        child: Material(
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(26)),
+          child: SafeArea(
+            child: Column(
+              children: [
+                Align(
+                  alignment: Alignment.centerRight,
+                  child: IconButton(
+                    tooltip: 'Zavřít',
+                    onPressed: () => Navigator.pop(context),
+                    icon: const Icon(Icons.close),
+                  ),
+                ),
+                Expanded(
+                  child: Center(
+                    child: snapshot.hasError
+                        ? Column(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              const Text('Možnosti se nepodařilo načíst.'),
+                              TextButton(
+                                onPressed: () => setState(() {
+                                  pending = Future.sync(widget.load);
+                                }),
+                                child: const Text('Zkusit znovu'),
+                              ),
+                            ],
+                          )
+                        : const CircularProgressIndicator(),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      );
+    },
+  );
 }

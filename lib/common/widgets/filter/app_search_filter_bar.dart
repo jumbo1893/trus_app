@@ -3,6 +3,7 @@ import 'package:trus_app/theme/app_colors.dart';
 import 'package:trus_app/theme/app_widget_values.dart';
 
 class AppSearchFilterBar extends StatefulWidget {
+  final bool dense;
   final String query;
   final String searchHint;
   final ValueChanged<String> onQueryChanged;
@@ -13,6 +14,7 @@ class AppSearchFilterBar extends StatefulWidget {
 
   const AppSearchFilterBar({
     super.key,
+    this.dense = false,
     required this.query,
     required this.searchHint,
     required this.onQueryChanged,
@@ -62,7 +64,7 @@ class _AppSearchFilterBarState extends State<AppSearchFilterBar> {
         _localQuery.trim().isNotEmpty || widget.activeFilterCount > 0;
 
     return Container(
-      padding: const EdgeInsets.all(12),
+      padding: EdgeInsets.all(widget.dense ? 4 : 12),
       decoration: BoxDecoration(
         color: colors.cardBackground,
         borderRadius: AppWidgetValues.borderRadiusMd,
@@ -100,6 +102,12 @@ class _AppSearchFilterBarState extends State<AppSearchFilterBar> {
                     ),
                   ),
                 ),
+                if (widget.dense)
+                  IconButton(
+                    tooltip: 'Filtry (${widget.activeFilterCount})',
+                    onPressed: widget.onFilterPressed,
+                    icon: const Icon(Icons.tune),
+                  ),
                 if (_localQuery.isNotEmpty)
                   IconButton(
                     tooltip: 'Vymazat hledání',
@@ -116,38 +124,59 @@ class _AppSearchFilterBarState extends State<AppSearchFilterBar> {
               ],
             ),
           ),
-          const SizedBox(height: 9),
-          Row(
-            children: [
-              Expanded(
-                child: OutlinedButton.icon(
-                  onPressed: widget.onFilterPressed,
-                  icon: const Icon(Icons.tune_rounded, size: 19),
-                  label: Text(
-                    widget.activeFilterCount == 0
-                        ? 'Filtry'
-                        : 'Filtry (${widget.activeFilterCount})',
+          if (!widget.dense) ...[
+            const SizedBox(height: 9),
+            Row(
+              children: [
+                Expanded(
+                  child: OutlinedButton.icon(
+                    onPressed: widget.onFilterPressed,
+                    icon: const Icon(Icons.tune_rounded, size: 19),
+                    label: Text(
+                      widget.activeFilterCount == 0
+                          ? 'Filtry'
+                          : 'Filtry (${widget.activeFilterCount})',
+                    ),
                   ),
                 ),
-              ),
-              if (hasFilters) ...[
-                const SizedBox(width: 8),
-                TextButton(
-                  onPressed: widget.onClear,
-                  child: const Text('Zrušit filtry'),
-                ),
+                if (hasFilters) ...[
+                  const SizedBox(width: 8),
+                  TextButton(
+                    onPressed: widget.onClear,
+                    child: const Text('Zrušit filtry'),
+                  ),
+                ],
               ],
-            ],
-          ),
+            ),
+          ],
           if (widget.activeFilters.isNotEmpty) ...[
             const SizedBox(height: 8),
             Align(
               alignment: Alignment.centerLeft,
-              child: Wrap(
-                spacing: 6,
-                runSpacing: 4,
-                children: widget.activeFilters,
-              ),
+              child: widget.dense
+                  ? SingleChildScrollView(
+                      scrollDirection: Axis.horizontal,
+                      child: Row(
+                        children: [
+                          ...widget.activeFilters.map(
+                            (chip) => Padding(
+                              padding: const EdgeInsets.only(right: 6),
+                              child: chip,
+                            ),
+                          ),
+                          if (hasFilters)
+                            TextButton(
+                              onPressed: widget.onClear,
+                              child: const Text('Zrušit filtry'),
+                            ),
+                        ],
+                      ),
+                    )
+                  : Wrap(
+                      spacing: 6,
+                      runSpacing: 4,
+                      children: widget.activeFilters,
+                    ),
             ),
           ],
         ],

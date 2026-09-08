@@ -9,43 +9,55 @@ import '../../../common/widgets/notifier/dropdown/dropdown_state.dart';
 import '../../../models/helper/title_and_text.dart';
 
 final footballPlayerStatsNotifierProvider =
-    StateNotifierProvider<FootballPlayerStatsNotifier, ModelToStringState>(
-        (ref) {
-  return FootballPlayerStatsNotifier(
-    ref: ref,
-    footballApiService: ref.read(footballApiServiceProvider),
-  );
-});
+    StateNotifierProvider<FootballPlayerStatsNotifier, ModelToStringState>((
+      ref,
+    ) {
+      return FootballPlayerStatsNotifier(
+        ref: ref,
+        footballApiService: ref.read(footballApiServiceProvider),
+      );
+    });
 
 class FootballPlayerStatsNotifier extends AppNotifier<ModelToStringState> {
+  int _generation = 0;
   final FootballApiService footballApiService;
 
   FootballPlayerStatsNotifier({
     required Ref ref,
     required this.footballApiService,
   }) : super(ref, ModelToStringState.initial()) {
-    ref.listen<DropdownState>(footballPlayerDropdownNotifierProvider,
-        (_, next) {
+    ref.listen<DropdownState>(footballPlayerDropdownNotifierProvider, (
+      _,
+      next,
+    ) {
       FootballPlayerApiModel? player = next.selected as FootballPlayerApiModel?;
       if (player != null) {
-        Future.microtask(() =>  _loadPlayerFacts(player.id!));
+        Future.microtask(() => _loadPlayerFacts(player.id!));
       }
     }, fireImmediately: true);
   }
 
+  Future<void> refresh() async {
+    final player =
+        ref.read(footballPlayerDropdownNotifierProvider).selected
+            as FootballPlayerApiModel?;
+    if (player?.id != null) await _loadPlayerFacts(player!.id!);
+  }
+
   Future<void> _loadPlayerFacts(int playerId) async {
-    state = state.copyWith(
-      stats: const AsyncValue.loading(),
-    );
-    final response = await runUiWithResult<List<TitleAndText>>(
-      () => footballApiService.getPlayerFacts(
-        playerId,
-      ),
-      showLoading: false,
-      successSnack: null,
-    );
-    state = state.copyWith(
-      stats: AsyncValue.data(response),
-    );
+    final generation = ++_generation;
+    state = state.copyWith(stats: const AsyncValue.loading());
+    try {
+      final response = await runUiWithResult<List<TitleAndText>>(
+        () => footballApiService.getPlayerFacts(playerId),
+        showLoading: false,
+        successSnack: null,
+      );
+      if (!mounted || generation != _generation) return;
+      state = state.copyWith(stats: AsyncValue.data(response));
+    } catch (error, stack) {
+      if (mounted && generation == _generation)
+        state = state.copyWith(stats: AsyncValue.error(error, stack));
+    }
   }
 }

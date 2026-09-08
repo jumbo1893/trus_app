@@ -65,20 +65,47 @@ class _AchievementScreenState extends ConsumerState<AchievementScreen> {
             final groupedAchievements = _groupAchievements(
               filteredAchievements,
             );
-            final options = ref
-                .watch(achievementFilterOptionsProvider)
-                .maybeWhen(
-                  data: (value) => value,
-                  orElse: () => const AchievementFilterOptions.empty(),
-                );
+            const options = AchievementFilterOptions.empty();
+            final labels = ref.watch(achievementPlayerLabelsProvider);
+            Widget chip(String text, AchievementFilter next) => InputChip(
+              label: Text(text),
+              onDeleted: () => filterNotifier.setListFilter(next),
+            );
 
-            return ListView(
-              key: const PageStorageKey(AchievementScreen.id),
-              padding: const EdgeInsets.only(bottom: 100),
+            return Column(
               children: [
                 Padding(
                   padding: const EdgeInsets.fromLTRB(4, 0, 4, 8),
                   child: AppSearchFilterBar(
+                    dense: true,
+                    activeFilters: [
+                      for (final category in filter.categories)
+                        chip(
+                          category.title,
+                          filter.copyWith(
+                            categories: {...filter.categories}
+                              ..remove(category),
+                          ),
+                        ),
+                      for (final id in filter.accomplishedPlayerIds)
+                        chip(
+                          labels[id] ?? 'Hráč $id',
+                          filter.copyWith(
+                            accomplishedPlayerIds: {
+                              ...filter.accomplishedPlayerIds,
+                            }..remove(id),
+                          ),
+                        ),
+                      if (filter.minimumSuccessRate > 0 ||
+                          filter.maximumSuccessRate < 1)
+                        chip(
+                          'Úspěšnost ${(filter.minimumSuccessRate * 100).round()}–${(filter.maximumSuccessRate * 100).round()} %',
+                          filter.copyWith(
+                            minimumSuccessRate: 0,
+                            maximumSuccessRate: 1,
+                          ),
+                        ),
+                    ],
                     query: filter.query,
                     searchHint: 'Hledat podle názvu nebo podmínky',
                     activeFilterCount: filter.activeAdvancedFilterCount,
@@ -89,34 +116,49 @@ class _AchievementScreenState extends ConsumerState<AchievementScreen> {
                     onClear: filterNotifier.clearListFilter,
                   ),
                 ),
-                if (filteredAchievements.isEmpty)
-                  Padding(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 20,
-                      vertical: 42,
-                    ),
-                    child: Text(
-                      'Žádné achievementy neodpovídají zvoleným filtrům.',
-                      textAlign: TextAlign.center,
-                      style: TextStyle(color: context.appColors.textSecondary),
+                Expanded(
+                  child: RefreshIndicator(
+                    onRefresh: notifier.refresh,
+                    child: ListView(
+                      key: const PageStorageKey(AchievementScreen.id),
+                      physics: const AlwaysScrollableScrollPhysics(),
+                      padding: const EdgeInsets.only(bottom: 20),
+                      children: [
+                        if (filteredAchievements.isEmpty)
+                          Padding(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 20,
+                              vertical: 42,
+                            ),
+                            child: Text(
+                              'Žádné achievementy neodpovídají zvoleným filtrům.',
+                              textAlign: TextAlign.center,
+                              style: TextStyle(
+                                color: context.appColors.textSecondary,
+                              ),
+                            ),
+                          ),
+                        for (final category in AchievementCategory.values)
+                          if (groupedAchievements[category]!.isNotEmpty) ...[
+                            _AchievementCategoryHeader(
+                              category: category,
+                              count: groupedAchievements[category]!.length,
+                            ),
+                            for (final achievement
+                                in groupedAchievements[category]!) ...[
+                              AchievementListTile(
+                                detail: achievement,
+                                onTap: () =>
+                                    notifier.selectListviewItem(achievement),
+                              ),
+                              const SizedBox(height: 12),
+                            ],
+                            const SizedBox(height: 10),
+                          ],
+                      ],
                     ),
                   ),
-                for (final category in AchievementCategory.values)
-                  if (groupedAchievements[category]!.isNotEmpty) ...[
-                    _AchievementCategoryHeader(
-                      category: category,
-                      count: groupedAchievements[category]!.length,
-                    ),
-                    for (final achievement
-                        in groupedAchievements[category]!) ...[
-                      AchievementListTile(
-                        detail: achievement,
-                        onTap: () => notifier.selectListviewItem(achievement),
-                      ),
-                      const SizedBox(height: 12),
-                    ],
-                    const SizedBox(height: 10),
-                  ],
+                ),
               ],
             );
           },

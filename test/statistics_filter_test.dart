@@ -127,8 +127,8 @@ void main() {
       await tester.pumpWidget(
         ProviderScope(
           overrides: [
-            statisticsFilterOptionsProvider.overrideWith(
-              (ref, args) async => options,
+            statisticsSeasonsProvider.overrideWith(
+              (ref) async => options.seasons,
             ),
           ],
           child: MaterialApp(

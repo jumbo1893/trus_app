@@ -10,24 +10,28 @@ import 'package:trus_app/models/api/interfaces/model_to_string.dart';
 import '../screens/view_achievement_detail_screen.dart';
 
 final achievementNotifierProvider =
-StateNotifierProvider.autoDispose<AchievementNotifier, AchievementListState>((ref) {
-  return AchievementNotifier(
-    ref,
-    ref.read(achievementRepositoryProvider),
-    ref.read(screenVariablesNotifierProvider.notifier),
-  );
-});
+    StateNotifierProvider.autoDispose<
+      AchievementNotifier,
+      AchievementListState
+    >((ref) {
+      return AchievementNotifier(
+        ref,
+        ref.read(achievementRepositoryProvider),
+        ref.read(screenVariablesNotifierProvider.notifier),
+      );
+    });
 
 class AchievementNotifier extends SafeStateNotifier<AchievementListState>
     implements IListviewNotifier {
-
   final AchievementRepository repository;
   final ScreenVariablesNotifier screenController;
 
   AchievementNotifier(Ref ref, this.repository, this.screenController)
-      : super(ref, AchievementListState.initial()) {
+    : super(ref, AchievementListState.initial()) {
     Future.microtask(() => _loadAchievements());
   }
+
+  Future<void> refresh() => _loadAchievements();
 
   Future<void> _loadAchievements() async {
     final cached = repository.getCachedList();
@@ -39,7 +43,7 @@ class AchievementNotifier extends SafeStateNotifier<AchievementListState>
 
     await guardSet<List<AchievementDetail>>(
       action: () => runUiWithResult<List<AchievementDetail>>(
-            () => repository.fetchList(),
+        () => repository.fetchList(),
         showLoading: false,
         successSnack: null,
       ),
@@ -49,9 +53,7 @@ class AchievementNotifier extends SafeStateNotifier<AchievementListState>
 
   @override
   void selectListviewItem(ModelToString model) {
-    state = state.copyWith(
-      selectedAchievement: model as AchievementDetail,
-    );
+    state = state.copyWith(selectedAchievement: model as AchievementDetail);
 
     screenController.setAchievementDetail(model);
     changeFragment(ViewAchievementDetailScreen.id);

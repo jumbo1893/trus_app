@@ -17,11 +17,11 @@ class FineStatsDetailBottomSheet extends StatelessWidget {
   });
 
   static Future<void> show(
-      BuildContext context, {
-        required String title,
-        required String subtitle,
-        required ReceivedFineStatsDetailResponse response,
-      }) {
+    BuildContext context, {
+    required String title,
+    required String subtitle,
+    required ReceivedFineStatsDetailResponse response,
+  }) {
     return showModalBottomSheet<void>(
       context: context,
       isScrollControlled: true,
@@ -98,10 +98,7 @@ class _FineSheetContent extends StatelessWidget {
             const SizedBox(height: 14),
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16),
-              child: _FineStatsHeader(
-                title: title,
-                subtitle: subtitle,
-              ),
+              child: _FineStatsHeader(title: title, subtitle: subtitle),
             ),
             const SizedBox(height: 12),
             Padding(
@@ -134,11 +131,7 @@ class _FineSheetContent extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 8),
-            Expanded(
-              child: TabBarView(
-                children: _buildTabs(response),
-              ),
-            ),
+            Expanded(child: TabBarView(children: _buildTabs(response))),
           ],
         ),
       ),
@@ -163,10 +156,7 @@ class _FineStatsHeader extends StatelessWidget {
   final String title;
   final String subtitle;
 
-  const _FineStatsHeader({
-    required this.title,
-    required this.subtitle,
-  });
+  const _FineStatsHeader({required this.title, required this.subtitle});
 
   @override
   Widget build(BuildContext context) {
@@ -182,6 +172,11 @@ class _FineStatsHeader extends StatelessWidget {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          IconButton(
+            tooltip: 'Zpět na přehled',
+            onPressed: () => Navigator.of(context).pop(),
+            icon: const Icon(Icons.arrow_back),
+          ),
           Container(
             width: 46,
             height: 46,
@@ -257,11 +252,13 @@ class _PlayersTab extends StatelessWidget {
           totalCount: item.totalCount,
           totalAmount: item.totalAmount,
           children: item.fines
-              .map((fine) => _DetailLine(
-            title: fine.fine.name,
-            subtitle: '${fine.count}× · ${fine.fine.amount} Kč / ks',
-            trailing: '${fine.totalAmount} Kč',
-          ))
+              .map(
+                (fine) => _DetailLine(
+                  title: fine.fine.name,
+                  subtitle: '${fine.count}× · ${fine.fine.amount} Kč / ks',
+                  trailing: '${fine.totalAmount} Kč',
+                ),
+              )
               .toList(),
         );
       },
@@ -288,11 +285,13 @@ class _MatchesTab extends StatelessWidget {
           totalCount: item.totalCount,
           totalAmount: item.totalAmount,
           children: item.fines
-              .map((fine) => _DetailLine(
-            title: fine.fine.name,
-            subtitle: '${fine.count}× · ${fine.fine.amount} Kč / ks',
-            trailing: '${fine.totalAmount} Kč',
-          ))
+              .map(
+                (fine) => _DetailLine(
+                  title: fine.fine.name,
+                  subtitle: '${fine.count}× · ${fine.fine.amount} Kč / ks',
+                  trailing: '${fine.totalAmount} Kč',
+                ),
+              )
               .toList(),
         );
       },
@@ -319,11 +318,13 @@ class _FinesByPlayersTab extends StatelessWidget {
           totalCount: item.totalCount,
           totalAmount: item.totalAmount,
           children: item.players
-              .map((player) => _DetailLine(
-            title: player.player.name,
-            subtitle: '${player.count}×',
-            trailing: '${player.totalAmount} Kč',
-          ))
+              .map(
+                (player) => _DetailLine(
+                  title: player.player.name,
+                  subtitle: '${player.count}×',
+                  trailing: '${player.totalAmount} Kč',
+                ),
+              )
               .toList(),
         );
       },
@@ -350,11 +351,14 @@ class _FinesByMatchesTab extends StatelessWidget {
           totalCount: item.totalCount,
           totalAmount: item.totalAmount,
           children: item.matches
-              .map((match) => _DetailLine(
-            title: match.match.name,
-            subtitle: '${dateTimeToString(match.match.date)} · ${match.count}×',
-            trailing: '${match.totalAmount} Kč',
-          ))
+              .map(
+                (match) => _DetailLine(
+                  title: match.match.name,
+                  subtitle:
+                      '${dateTimeToString(match.match.date)} · ${match.count}×',
+                  trailing: '${match.totalAmount} Kč',
+                ),
+              )
               .toList(),
         );
       },
@@ -366,10 +370,7 @@ class _FineList extends StatelessWidget {
   final int itemCount;
   final Widget Function(int index) itemBuilder;
 
-  const _FineList({
-    required this.itemCount,
-    required this.itemBuilder,
-  });
+  const _FineList({required this.itemCount, required this.itemBuilder});
 
   @override
   Widget build(BuildContext context) {
@@ -500,10 +501,7 @@ class _DetailLine extends StatelessWidget {
                 const SizedBox(height: 2),
                 Text(
                   subtitle,
-                  style: TextStyle(
-                    color: colors.textSecondary,
-                    fontSize: 12,
-                  ),
+                  style: TextStyle(color: colors.textSecondary, fontSize: 12),
                 ),
               ],
             ),
@@ -526,10 +524,7 @@ class _SummaryChip extends StatelessWidget {
   final String text;
   final bool emphasized;
 
-  const _SummaryChip({
-    required this.text,
-    this.emphasized = false,
-  });
+  const _SummaryChip({required this.text, this.emphasized = false});
 
   @override
   Widget build(BuildContext context) {
@@ -565,7 +560,11 @@ class _EmptyFineContent extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(Icons.receipt_long_outlined, color: colors.textMuted, size: 34),
+            Icon(
+              Icons.receipt_long_outlined,
+              color: colors.textMuted,
+              size: 34,
+            ),
             const SizedBox(height: 10),
             Text(
               'Nejsou k dispozici žádné pokuty.',

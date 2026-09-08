@@ -22,10 +22,17 @@ class StatisticsDropdownFilter {
 /// Uses the same search bar and apply/cancel filter sheet as team statistics.
 class StatisticsDropdownFilterBar extends ConsumerWidget {
   final List<StatisticsDropdownFilter> Function(WidgetRef) fields;
+  final String? scopeLabel, helpText;
+  final bool compact;
+  final Future<void> Function()? onRefresh;
   final String query, searchHint;
   final ValueChanged<String> onQueryChanged;
   const StatisticsDropdownFilterBar({
     super.key,
+    this.scopeLabel,
+    this.helpText,
+    this.compact = false,
+    this.onRefresh,
     required this.fields,
     required this.query,
     required this.searchHint,
@@ -49,94 +56,150 @@ class StatisticsDropdownFilterBar extends ConsumerWidget {
         field.selected != null &&
         !(field.selected is SeasonApiModel &&
             (field.selected as SeasonApiModel).id == allSeasonId);
-    return AppSearchFilterBar(
-      query: query,
-      searchHint: searchHint,
-      onQueryChanged: onQueryChanged,
-      activeFilterCount: current
-          .where((f) => visible(f) && f.selected != resetFor(f))
-          .length,
-      activeFilters: [
-        for (final field in current.where(visible))
-          InputChip(
-            label: Text(field.selected!.dropdownItem()),
-            onDeleted:
-                field.selected != resetFor(field) && resetFor(field) != null
-                ? () => field.onChanged(resetFor(field)!)
-                : null,
-            deleteButtonTooltipMessage: 'Zrušit: ${field.label}',
-          ),
-      ],
-      onClear: () {
-        onQueryChanged('');
-        for (final field in current) {
-          final options = field.items.asData?.value;
-          if (options != null && options.isNotEmpty) {
-            field.onChanged(resetFor(field)!);
-          }
-        }
-      },
-      onFilterPressed: () async {
-        FocusManager.instance.primaryFocus?.unfocus();
-        final result = await AppFilterBottomSheet.show<List<DropdownItem?>>(
-          context,
-          title: 'Filtrovat statistiky',
-          initialValue: current.map((f) => f.selected).toList(),
-          resetValue: current.map(resetFor).toList(),
-          builder: (context, draft, change) => Consumer(
-            builder: (context, sheetRef, _) {
-              final live = fields(sheetRef);
-              return Column(
-                children: [
-                  for (var i = 0; i < live.length; i++)
-                    Padding(
-                      padding: const EdgeInsets.only(bottom: 20),
-                      child: live[i].items.when(
-                        loading: () => const LinearProgressIndicator(),
-                        error: (_, __) => Text(
-                          '${live[i].label}: volby se nepodařilo načíst.',
+    Future<void> openFilters() async {
+      FocusManager.instance.primaryFocus?.unfocus();
+      final result = await AppFilterBottomSheet.show<List<DropdownItem?>>(
+        context,
+        title: 'Filtrovat statistiky',
+        initialValue: current.map((f) => f.selected).toList(),
+        resetValue: current.map(resetFor).toList(),
+        builder: (context, draft, change) => Consumer(
+          builder: (context, sheetRef, _) {
+            final live = fields(sheetRef);
+            return Column(
+              children: [
+                if (helpText != null)
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: 16),
+                    child: Text(helpText!),
+                  ),
+                for (var i = 0; i < live.length; i++)
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: 20),
+                    child: live[i].items.when(
+                      loading: () => const LinearProgressIndicator(),
+                      error: (_, __) =>
+                          Text('${live[i].label}: volby se nepodařilo načíst.'),
+                      data: (items) => DropdownButtonFormField<DropdownItem>(
+                        key: ValueKey(
+                          '${live[i].label}-${draft[i] ?? live[i].selected}',
                         ),
-                        data: (items) => DropdownButtonFormField<DropdownItem>(
-                          key: ValueKey('${live[i].label}-${draft[i]}'),
-                          initialValue: items.any((item) => item == draft[i])
-                              ? draft[i]
-                              : null,
-                          isExpanded: true,
-                          decoration: InputDecoration(labelText: live[i].label),
-                          items: [
-                            for (final item in items)
-                              DropdownMenuItem(
-                                value: item,
-                                child: Text(
-                                  item.dropdownItem(),
-                                  overflow: TextOverflow.ellipsis,
-                                ),
+                        initialValue:
+                            items.any(
+                              (item) => item == (draft[i] ?? live[i].selected),
+                            )
+                            ? (draft[i] ?? live[i].selected)
+                            : null,
+                        isExpanded: true,
+                        decoration: InputDecoration(labelText: live[i].label),
+                        items: [
+                          for (final item in items)
+                            DropdownMenuItem(
+                              value: item,
+                              child: Text(
+                                item.dropdownItem(),
+                                overflow: TextOverflow.ellipsis,
                               ),
-                          ],
-                          onChanged: (value) {
-                            final next = [...draft];
-                            next[i] = value;
-                            change(next);
-                          },
-                        ),
+                            ),
+                        ],
+                        onChanged: (value) {
+                          final next = [...draft];
+                          next[i] = value;
+                          change(next);
+                        },
                       ),
                     ),
-                ],
-              );
-            },
-          ),
-        );
-        if (!context.mounted || result == null) return;
-        final latest = fields(ref);
-        for (var i = 0; i < latest.length; i++) {
-          final match = latest[i].items.asData?.value
-              .where((item) => item == result[i])
-              .firstOrNull;
-          if (match != null && latest[i].selected != match) {
-            latest[i].onChanged(match);
-          }
+                  ),
+              ],
+            );
+          },
+        ),
+      );
+      if (!context.mounted || result == null) return;
+      final latest = fields(ref);
+      for (var i = 0; i < latest.length; i++) {
+        final match = latest[i].items.asData?.value
+            .where((item) => item == result[i])
+            .firstOrNull;
+        if (match != null && latest[i].selected != match) {
+          latest[i].onChanged(match);
         }
-      },
+      }
+    }
+
+    if (compact)
+      return Row(
+        children: [
+          Expanded(
+            child: Text(
+              current.firstOrNull?.selected?.dropdownItem() ?? 'Sezona',
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+            ),
+          ),
+          TextButton.icon(
+            onPressed: openFilters,
+            icon: const Icon(Icons.tune, size: 18),
+            label: const Text('Filtry'),
+          ),
+          if (onRefresh != null)
+            IconButton(
+              tooltip: 'Obnovit statistiky',
+              onPressed: onRefresh,
+              icon: const Icon(Icons.refresh),
+            ),
+        ],
+      );
+    return Column(
+      children: [
+        if (scopeLabel != null)
+          Row(
+            children: [
+              Expanded(
+                child: Text(
+                  scopeLabel!,
+                  style: Theme.of(context).textTheme.labelSmall,
+                ),
+              ),
+              if (onRefresh != null)
+                IconButton(
+                  tooltip: 'Obnovit statistiky',
+                  onPressed: onRefresh,
+                  icon: const Icon(Icons.refresh),
+                ),
+            ],
+          ),
+        AppSearchFilterBar(
+          dense: true,
+          query: query,
+          searchHint: searchHint,
+          onQueryChanged: onQueryChanged,
+          activeFilterCount: current
+              .where((f) => visible(f) && f.selected != resetFor(f))
+              .length,
+          activeFilters: [
+            for (final field in current.where(visible))
+              InputChip(
+                label: Text(field.selected!.dropdownItem()),
+                onDeleted:
+                    field.selected != resetFor(field) && resetFor(field) != null
+                    ? () => field.onChanged(resetFor(field)!)
+                    : null,
+                deleteButtonTooltipMessage: 'Zrušit: ${field.label}',
+              ),
+          ],
+          onClear: () {
+            onQueryChanged('');
+            for (final field in current) {
+              final options = field.items.asData?.value;
+              if (options != null && options.isNotEmpty) {
+                field.onChanged(resetFor(field)!);
+              }
+            }
+          },
+          onFilterPressed: openFilters,
+        ),
+      ],
     );
   }
 }

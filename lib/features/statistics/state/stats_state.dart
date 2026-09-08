@@ -8,6 +8,7 @@ import '../../main/state_back_condition.dart';
 import '../filter/statistics_filter.dart';
 
 class StatsState implements StateBackCondition, IListviewState {
+  final DateTime? lastUpdated;
   final StatisticsFilter advancedFilter;
   final AsyncValue<List<ModelToString>> stats;
   final AsyncValue<TitleAndText?> overall;
@@ -22,6 +23,7 @@ class StatsState implements StateBackCondition, IListviewState {
   bool get isDetail => level != StatsLevel.root;
 
   StatsState({
+    this.lastUpdated,
     this.advancedFilter = const StatisticsFilter(),
     required this.stats,
     required this.overall,
@@ -49,6 +51,7 @@ class StatsState implements StateBackCondition, IListviewState {
   );
 
   StatsState copyWith({
+    DateTime? lastUpdated,
     StatisticsFilter? advancedFilter,
     AsyncValue<List<ModelToString>>? stats,
     AsyncValue<TitleAndText?>? overall,
@@ -61,6 +64,7 @@ class StatsState implements StateBackCondition, IListviewState {
     StatsLevel? level,
   }) {
     return StatsState(
+      lastUpdated: lastUpdated ?? this.lastUpdated,
       advancedFilter: advancedFilter ?? this.advancedFilter,
       stats: stats ?? this.stats,
       overall: overall ?? this.overall,

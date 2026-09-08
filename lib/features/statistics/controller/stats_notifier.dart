@@ -91,6 +91,16 @@ class StatsNotifier extends AppNotifier<StatsState>
     );
   }
 
+  Future<void> refresh() async {
+    _searchDebounce?.cancel();
+    if (!_initialized) {
+      ref.invalidate(statisticsSeasonsProvider);
+      await ref.read(statisticsSeasonsProvider.future);
+      return;
+    }
+    await _loadRootStats();
+  }
+
   Future<void> _loadRootStats() async {
     final generation = ++_requestGeneration;
     state = state.copyWith(
@@ -312,6 +322,7 @@ class StatsNotifier extends AppNotifier<StatsState>
       text: response.overallStats(),
     );
     state = state.copyWith(
+      lastUpdated: DateTime.now(),
       stats: AsyncValue.data(models),
       overall: AsyncValue.data(titleAndText),
     );

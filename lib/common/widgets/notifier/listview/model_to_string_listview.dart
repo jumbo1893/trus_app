@@ -21,6 +21,8 @@ typedef ModelToStringItemBuilder =
 class ModelToStringListview extends ConsumerStatefulWidget {
   final IListviewState state;
   final IListviewNotifier? notifier;
+  final Future<void> Function()? onRefresh;
+  final double bottomPadding;
   final VoidCallback? onRetry;
   final String emptyListText;
   final String emptyListTitle;
@@ -33,6 +35,8 @@ class ModelToStringListview extends ConsumerStatefulWidget {
     required this.state,
     required this.notifier,
     this.onRetry,
+    this.onRefresh,
+    this.bottomPadding = 100,
     this.emptyListText = "Zatím tu nic není",
     this.emptyListTitle = "Žádné výsledky",
     this.storageKey,
@@ -135,7 +139,7 @@ class _ModelToStringListviewState extends ConsumerState<ModelToStringListview> {
 
   @override
   Widget build(BuildContext context) {
-    return widget.state.getListViewItems().when(
+    final content = widget.state.getListViewItems().when(
       loading: () => const Center(child: Loader()),
       error: (_, __) => LoadFailure(onRetry: widget.onRetry),
       data: (modelList) {
@@ -150,7 +154,10 @@ class _ModelToStringListviewState extends ConsumerState<ModelToStringListview> {
 
         return ListView.separated(
           controller: _controller,
-          padding: const EdgeInsets.only(bottom: 100),
+          physics: widget.onRefresh == null
+              ? null
+              : const AlwaysScrollableScrollPhysics(),
+          padding: EdgeInsets.only(bottom: widget.bottomPadding),
           itemCount: modelList.length,
           separatorBuilder: (_, __) => const SizedBox(height: 12),
           itemBuilder: (context, index) {
@@ -174,6 +181,22 @@ class _ModelToStringListviewState extends ConsumerState<ModelToStringListview> {
           },
         );
       },
+    );
+    if (widget.onRefresh == null) return content;
+    final hasRows =
+        widget.state.getListViewItems().valueOrNull?.isNotEmpty ?? false;
+    return RefreshIndicator(
+      onRefresh: widget.onRefresh!,
+      child: hasRows
+          ? content
+          : LayoutBuilder(
+              builder: (context, constraints) => ListView(
+                physics: const AlwaysScrollableScrollPhysics(),
+                children: [
+                  SizedBox(height: constraints.maxHeight, child: content),
+                ],
+              ),
+            ),
     );
   }
 }

@@ -27,8 +27,12 @@ class _FootballStatsScreenState extends ConsumerState<FootballStatsScreen> {
       body: Column(
         children: [
           Padding(
-            padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
+            padding: const EdgeInsets.fromLTRB(12, 4, 12, 4),
             child: StatisticsDropdownFilterBar(
+              scopeLabel: 'Liga · vlastní ligové období',
+              onRefresh: ref
+                  .read(footballStatsNotifierProvider.notifier)
+                  .refresh,
               query: _query,
               searchHint: 'Hledat hráče',
               onQueryChanged: (value) => setState(() => _query = value),
@@ -58,6 +62,17 @@ class _FootballStatsScreenState extends ConsumerState<FootballStatsScreen> {
           ),
           Expanded(
             child: ModelToStringListview(
+              bottomPadding: 16,
+              onRefresh: ref
+                  .read(footballStatsNotifierProvider.notifier)
+                  .refresh,
+              emptyListTitle: query.isNotEmpty
+                  ? 'Hledání neodpovídají žádné výsledky'
+                  : 'Pro toto období nejsou data',
+              emptyListText: query.isNotEmpty
+                  ? 'Zkus jiné jméno nebo vymaž hledání.'
+                  : 'Zkus změnit období nebo obnovit přehled.',
+
               state: state.copyWith(
                 stats: state.stats.whenData(
                   (items) => items

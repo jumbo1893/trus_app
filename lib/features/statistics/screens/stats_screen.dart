@@ -3,7 +3,6 @@ import 'package:trus_app/theme/app_colors.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:trus_app/features/statistics/stat_args.dart';
 
-import '../../../common/widgets/animated_filter_panel.dart';
 import '../../../common/widgets/loader.dart';
 import '../controller/stats_notifier.dart';
 import '../widget/statistics_filter_bar.dart';
@@ -74,14 +73,14 @@ class _StatsScreenState extends ConsumerState<StatsScreen> {
                 ),
               ),
             if (!stats.isDetail)
-              AnimatedFilterPanel(
-                visible: _showFilters,
-                child: Padding(
-                  padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
-                  child: StatisticsFilterBar(statsArgs: widget.statsArgs),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 12),
+                child: StatisticsFilterBar(
+                  statsArgs: widget.statsArgs,
+                  compact: !_showFilters,
                 ),
               ),
-            const SizedBox(height: 16),
+            const SizedBox(height: 4),
             Expanded(
               child: stats.stats.when(
                 loading: () => const Loader(),

@@ -1,10 +1,11 @@
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../controller/achievement_filter_options_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:trus_app/common/widgets/filter/app_filter_bottom_sheet.dart';
 import 'package:trus_app/common/widgets/filter/app_filter_multi_selection_field.dart';
 import 'package:trus_app/features/achievement/filter/achievement_filter.dart';
 import 'package:trus_app/features/achievement/filter/achievement_filter_options.dart';
 import 'package:trus_app/models/api/achievement/achievement_category.dart';
-import 'package:trus_app/models/api/player/player_api_model.dart';
 import 'package:trus_app/theme/app_colors.dart';
 
 Future<AchievementFilter?> showAchievementFilterSheet(
@@ -27,7 +28,7 @@ Future<AchievementFilter?> showAchievementFilterSheet(
   );
 }
 
-class _AchievementFilterFields extends StatelessWidget {
+class _AchievementFilterFields extends ConsumerWidget {
   final AchievementFilter filter;
   final AchievementFilterOptions options;
   final bool showPlayerFilter;
@@ -41,11 +42,8 @@ class _AchievementFilterFields extends StatelessWidget {
   });
 
   @override
-  Widget build(BuildContext context) {
-    final selectedPlayers = _selectedPlayers(
-      options.players,
-      filter.accomplishedPlayerIds,
-    );
+  Widget build(BuildContext context, WidgetRef ref) {
+    var players = options.players;
     final minimumPercent = (filter.minimumSuccessRate * 100).round();
     final maximumPercent = (filter.maximumSuccessRate * 100).round();
 
@@ -64,24 +62,27 @@ class _AchievementFilterFields extends StatelessWidget {
         ),
         if (showPlayerFilter) ...[
           const SizedBox(height: 20),
-          AppFilterMultiSelectionField<PlayerApiModel>(
+          AppFilterMultiSelectionField<int>(
             label: 'Splnil hráč nebo fanoušek',
-            hint: options.players.isEmpty
-                ? 'Hráče se nepodařilo načíst'
-                : 'Všichni hráči a fanoušci',
+            hint: 'Všichni hráči a fanoušci',
             searchHint: 'Hledat hráče nebo fanouška',
-            values: selectedPlayers,
-            items: options.players,
-            itemLabel: (player) =>
-                '${player.name} · ${player.fan ? 'fanoušek' : 'hráč'}',
-            onChanged: (players) => onChanged(
-              filter.copyWith(
-                accomplishedPlayerIds: players
-                    .where((player) => player.id != null)
-                    .map<int>((player) => player.id!)
-                    .toSet(),
-              ),
-            ),
+            values: filter.accomplishedPlayerIds,
+            items: players.map((p) => p.id).whereType<int>().toList(),
+            loadItems: () async {
+              if (players.isEmpty) {
+                ref.invalidate(achievementFilterOptionsProvider);
+                players = (await ref.read(
+                  achievementFilterOptionsProvider.future,
+                )).players;
+              }
+              return players.map((p) => p.id).whereType<int>().toList();
+            },
+            itemLabel: (id) =>
+                players.where((p) => p.id == id).firstOrNull?.name ??
+                ref.read(achievementPlayerLabelsProvider)[id] ??
+                'Hráč $id',
+            onChanged: (ids) =>
+                onChanged(filter.copyWith(accomplishedPlayerIds: ids)),
           ),
         ],
         const SizedBox(height: 22),
@@ -124,9 +125,4 @@ class _AchievementFilterFields extends StatelessWidget {
       ],
     );
   }
-
-  Set<PlayerApiModel> _selectedPlayers(
-    List<PlayerApiModel> players,
-    Set<int> ids,
-  ) => players.where((player) => ids.contains(player.id)).toSet();
 }

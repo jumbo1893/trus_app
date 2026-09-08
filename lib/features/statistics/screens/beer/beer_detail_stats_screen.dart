@@ -21,22 +21,49 @@ class BeerDetailStatsScreen extends CustomConsumerStatefulWidget {
 
 class _BeerDetailStatsScreenState extends ConsumerState<BeerDetailStatsScreen> {
   String _query = '';
+  final _scrollController = ScrollController();
+  bool _showFilters = true;
+  @override
+  void initState() {
+    super.initState();
+    _scrollController.addListener(_handleScroll);
+  }
+
+  void _handleScroll() {
+    final offset = _scrollController.offset;
+    if (_showFilters && offset > 40)
+      setState(() => _showFilters = false);
+    else if (!_showFilters && offset <= 12)
+      setState(() => _showFilters = true);
+  }
+
+  @override
+  void dispose() {
+    _scrollController.dispose();
+    super.dispose();
+  }
+
   @override
   Widget build(BuildContext context) {
     final state = ref.watch(beerDetailStatsNotifierProvider);
-    final selectedSeasons = ref.watch(statisticsSeasonSelectionProvider);
     final query = normalizeSearchText(_query);
     return Scaffold(
       body: Column(
         children: [
           Padding(
-            padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
+            padding: const EdgeInsets.fromLTRB(12, 4, 12, 4),
             child: StatisticsDropdownFilterBar(
+              compact: !_showFilters,
+              helpText:
+                  'Zde lze vybrat jednu sezonu nebo všechny sezony. Při přechodu z více sezon se zobrazí nejnovější ze zvolených.',
+              onRefresh: ref
+                  .read(beerDetailStatsNotifierProvider.notifier)
+                  .refresh,
               query: _query,
               searchHint: 'Hledat hráče',
               onQueryChanged: (value) => setState(() => _query = value),
               fields: (ref) {
-                final ids = ref.watch(statisticsSeasonSelectionProvider);
+                final seasonId = ref.watch(beerDetailSeasonProvider);
                 final options = ref
                     .watch(statisticsSeasonsProvider)
                     .whenData(
@@ -50,11 +77,6 @@ class _BeerDetailStatsScreenState extends ConsumerState<BeerDetailStatsScreen> {
                         ...seasons,
                       ],
                     );
-                final seasonId = ids == null || ids.length > 1
-                    ? null
-                    : ids.isEmpty
-                    ? allSeasonId
-                    : ids.single;
                 final detail = ref.watch(beerDetailStatsNotifierProvider);
                 return [
                   StatisticsDropdownFilter(
@@ -85,32 +107,33 @@ class _BeerDetailStatsScreenState extends ConsumerState<BeerDetailStatsScreen> {
             ),
           ),
           Expanded(
-            child: (selectedSeasons?.length ?? 0) > 1
-                ? const Center(
-                    child: Padding(
-                      padding: EdgeInsets.all(24),
-                      child: Text(
-                        'Podrobný přehled piv podporuje jednu sezonu nebo všechny sezony. Vyber je ve filtru.',
-                        textAlign: TextAlign.center,
-                      ),
-                    ),
-                  )
-                : ModelToStringListview(
-                    state: state.copyWith(
-                      stats: state.stats.whenData(
-                        (items) => items
-                            .where(
-                              (item) => normalizeSearchText(
-                                '${item.listViewTitle()} ${item.toStringForListView()}',
-                              ).contains(query),
-                            )
-                            .toList(),
-                      ),
-                    ),
-                    notifier: null,
-                    onRetry: () =>
-                        ref.invalidate(beerDetailStatsNotifierProvider),
-                  ),
+            child: ModelToStringListview(
+              scrollController: _scrollController,
+              bottomPadding: 16,
+              onRefresh: ref
+                  .read(beerDetailStatsNotifierProvider.notifier)
+                  .refresh,
+              emptyListTitle: query.isNotEmpty
+                  ? 'Hledání neodpovídají žádné výsledky'
+                  : 'Pro toto období nejsou data',
+              emptyListText: query.isNotEmpty
+                  ? 'Zkus jiné jméno nebo vymaž hledání.'
+                  : 'Zkus změnit období nebo obnovit přehled.',
+
+              state: state.copyWith(
+                stats: state.stats.whenData(
+                  (items) => items
+                      .where(
+                        (item) => normalizeSearchText(
+                          '${item.listViewTitle()} ${item.toStringForListView()}',
+                        ).contains(query),
+                      )
+                      .toList(),
+                ),
+              ),
+              notifier: null,
+              onRetry: () => ref.invalidate(beerDetailStatsNotifierProvider),
+            ),
           ),
         ],
       ),

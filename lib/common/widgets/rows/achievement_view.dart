@@ -106,6 +106,35 @@ class _AchievementViewState extends ConsumerState<AchievementView> {
           ),
           const SizedBox(height: 18),
           AppSearchFilterBar(
+            dense: true,
+            activeFilters: [
+              for (final category in filter.categories)
+                InputChip(
+                  label: Text(category.title),
+                  deleteButtonTooltipMessage: 'Zrušit: ${category.title}',
+                  onDeleted: () => filterNotifier.setPlayerFilter(
+                    widget.playerId,
+                    filter.copyWith(
+                      categories: {...filter.categories}..remove(category),
+                    ),
+                  ),
+                ),
+              if (filter.minimumSuccessRate > 0 ||
+                  filter.maximumSuccessRate < 1)
+                InputChip(
+                  label: Text(
+                    'Úspěšnost ${(filter.minimumSuccessRate * 100).round()}–${(filter.maximumSuccessRate * 100).round()} %',
+                  ),
+                  deleteButtonTooltipMessage: 'Zrušit filtr úspěšnosti',
+                  onDeleted: () => filterNotifier.setPlayerFilter(
+                    widget.playerId,
+                    filter.copyWith(
+                      minimumSuccessRate: 0,
+                      maximumSuccessRate: 1,
+                    ),
+                  ),
+                ),
+            ],
             query: filter.query,
             searchHint: 'Hledat podle názvu nebo podmínky',
             activeFilterCount: filter.activeAdvancedFilterCount,
