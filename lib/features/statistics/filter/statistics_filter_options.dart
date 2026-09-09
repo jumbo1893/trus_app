@@ -15,7 +15,9 @@ import 'package:trus_app/models/api/player/player_api_model.dart';
 import 'package:trus_app/models/api/season_api_model.dart';
 
 final statisticsSeasonsProvider = FutureProvider.autoDispose(
-  (ref) => ref.read(seasonApiServiceProvider).getSeasons(false, true, false),
+  (ref) => ref
+      .read(seasonApiServiceProvider)
+      .getSeasons(false, true, false, playedOnly: true),
 );
 
 final statisticsFilterOptionsProvider = FutureProvider.autoDispose

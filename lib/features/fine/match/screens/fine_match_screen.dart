@@ -64,7 +64,7 @@ class _FineMatchScreenState extends ConsumerState<FineMatchScreen> {
     final notifier = ref.read(fineMatchNotifierProvider.notifier);
 
     final seasonProvider = seasonDropdownNotifierProvider(
-      const SeasonArgs(false, true, true),
+      const SeasonArgs(false, true, true, playedOnly: true),
     );
 
     if (_initializedNotifier != notifier) {

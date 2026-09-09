@@ -27,7 +27,7 @@ class BaseFormScreen extends StatelessWidget {
     required this.actions,
     this.extraSections = const [],
     this.scrollController,
-    this.padding = const EdgeInsets.only(bottom: 100),
+    this.padding = const EdgeInsets.only(bottom: 16),
     this.useSafeArea = true,
     this.floatingActionButton,
   });
@@ -36,7 +36,13 @@ class BaseFormScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final content = ListView(
       controller: scrollController,
-      padding: padding,
+      padding: padding.add(
+        EdgeInsets.only(
+          bottom: floatingActionButton == null
+              ? 0
+              : 56 + kFloatingActionButtonMargin,
+        ),
+      ),
       children: [
         AppWidgetValues.field,
         Padding(

@@ -44,7 +44,7 @@ class _TeamAdministrationScreenState
         await ref.read(teamAdministrationProvider.future);
       },
       child: ListView(
-        padding: const EdgeInsets.fromLTRB(16, 16, 16, 100),
+        padding: const EdgeInsets.all(16),
         children: [
           Text(
             administration.teamName,

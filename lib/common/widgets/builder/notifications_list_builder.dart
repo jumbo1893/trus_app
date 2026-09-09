@@ -28,7 +28,7 @@ class NotificationListBuilder<T> extends ConsumerWidget {
 
         return ListView.separated(
           shrinkWrap: true,
-          padding: const EdgeInsets.fromLTRB(16, 8, 16, 100),
+          padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
           itemCount: modelList.length,
           separatorBuilder: (_, __) => const SizedBox(height: 12),
           itemBuilder: (context, index) {

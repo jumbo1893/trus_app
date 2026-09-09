@@ -14,13 +14,8 @@ class FormCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return Card(
       margin: const EdgeInsets.symmetric(horizontal: 16),
-      child: Card(
-        /*width: double.infinity,
+      child: Padding(
         padding: AppWidgetValues.cardPadding,
-        decoration: BoxDecoration(
-          borderRadius: AppWidgetValues.borderRadiusXl,
-          boxShadow: AppWidgetValues.cardShadow,
-        ),*/
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [

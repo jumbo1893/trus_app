@@ -27,7 +27,7 @@ class MatchScreen extends CustomConsumerWidget {
     const sectionSpacing = 16.0;
 
     final seasonProvider = seasonDropdownNotifierProvider(
-      const SeasonArgs(false, true, true),
+      const SeasonArgs(false, true, true, playedOnly: true),
     );
 
     return Scaffold(

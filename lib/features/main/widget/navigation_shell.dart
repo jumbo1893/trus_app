@@ -44,11 +44,19 @@ class NavigationShell extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  titleWidget ??
-                      Text(title, maxLines: 1, overflow: TextOverflow.ellipsis),
-                  if (isRoot && teamName != null)
+                  Text(
+                    isRoot ? teamName ?? title : title,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  if (isRoot &&
+                      titleWidget != null &&
+                      MediaQuery.sizeOf(context).width >= 360 &&
+                      MediaQuery.textScalerOf(context).scale(1) <= 1.3)
+                    titleWidget!,
+                  if (isRoot && titleWidget == null && teamName != null)
                     Text(
-                      teamName!,
+                      title,
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                       style: Theme.of(context).textTheme.labelMedium,

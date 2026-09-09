@@ -201,7 +201,7 @@ void main() {
     expect(
       container
           .read(
-            seasonDropdownNotifierProvider(const SeasonArgs(false, true, true)),
+            seasonDropdownNotifierProvider(const SeasonArgs(false, true, true, playedOnly: true)),
           )
           .selected,
       season,

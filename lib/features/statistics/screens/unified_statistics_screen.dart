@@ -18,6 +18,9 @@ class _UnifiedStatisticsScreenState
     extends ConsumerState<UnifiedStatisticsScreen> {
   final _subscriptions = <String, ProviderSubscription<dynamic>>{};
   final _views = <StatisticsCategory, int>{};
+  final _categoryKeys = {
+    for (final category in StatisticsCategory.values) category: GlobalKey(),
+  };
   void _retain(StatisticsSelection selection) {
     final args = selection.args;
     if (args != null) {
@@ -27,6 +30,17 @@ class _UnifiedStatisticsScreenState
       );
     }
     _views[selection.category] = selection.view;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      final context = _categoryKeys[selection.category]?.currentContext;
+      if (context != null) {
+        Scrollable.ensureVisible(
+          context,
+          alignment: 0.5,
+          duration: const Duration(milliseconds: 180),
+        );
+      }
+    });
   }
 
   @override
@@ -72,6 +86,7 @@ class _UnifiedStatisticsScreenState
             children: [
               for (final entry in StatisticsCategory.values)
                 Padding(
+                  key: _categoryKeys[entry],
                   padding: const EdgeInsets.only(right: 8),
                   child: ChoiceChip(
                     label: Text(

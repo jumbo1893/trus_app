@@ -55,7 +55,7 @@ class BeerNotifier extends AppNotifier<BeerState> {
     _initPlayerLinesFromBeers();
   }
 
-  static const _seasonArgs = SeasonArgs(false, true, true);
+  static const _seasonArgs = SeasonArgs(false, true, true, playedOnly: true);
 
   bool _initialized = false;
   SeasonApiModel? _selectedSeason;

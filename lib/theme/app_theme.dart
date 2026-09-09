@@ -34,21 +34,23 @@ class AppTheme {
     required Brightness brightness,
     required SystemUiOverlayStyle overlayStyle,
   }) {
-    final colorScheme = ColorScheme.fromSeed(
-      seedColor: appColors.accent,
-      brightness: brightness,
-    ).copyWith(
-      primary: appColors.accent,
-      secondary: appColors.accent,
-      surface: appColors.cardBackground,
-      onSurface: appColors.textPrimary,
-      error: appColors.errorForeground,
-      onError: appColors.cardBackground,
-      surfaceContainer: appColors.cardBackground,
-      surfaceContainerHigh: appColors.backgroundSecondary,
-      outline: appColors.border,
-      onPrimary: brightness == Brightness.dark ? Colors.black : Colors.white,
-    );
+    final colorScheme =
+        ColorScheme.fromSeed(
+          seedColor: appColors.accent,
+          brightness: brightness,
+        ).copyWith(
+          primary: appColors.accent,
+          secondary: appColors.accent,
+          surface: appColors.cardBackground,
+          onSurface: appColors.textPrimary,
+          error: appColors.errorForeground,
+          onError: appColors.cardBackground,
+          surfaceContainer: appColors.cardBackground,
+          surfaceContainerHigh: appColors.backgroundSecondary,
+          outline: appColors.border,
+          onPrimary: appColors.buttonForeground,
+          onSecondary: appColors.buttonForeground,
+        );
 
     final base = ThemeData(
       useMaterial3: true,
@@ -61,9 +63,7 @@ class AppTheme {
     return base.copyWith(
       cardColor: appColors.cardBackground,
 
-      iconTheme: base.iconTheme.copyWith(
-        color: appColors.accent,
-      ),
+      iconTheme: base.iconTheme.copyWith(color: appColors.textSecondary),
 
       textTheme: base.textTheme.copyWith(
         titleLarge: TextStyle(
@@ -76,25 +76,15 @@ class AppTheme {
           fontWeight: FontWeight.w600,
           color: appColors.textPrimary,
         ),
-        bodyLarge: TextStyle(
-          fontSize: 14,
-          color: appColors.textSecondary,
-        ),
-        bodyMedium: TextStyle(
-          fontSize: 13,
-          color: appColors.textSecondary,
-        ),
-        bodySmall: TextStyle(
-          fontSize: 12,
-          color: appColors.textMuted,
-        ),
+        bodyLarge: TextStyle(fontSize: 14, color: appColors.textSecondary),
+        bodyMedium: TextStyle(fontSize: 13, color: appColors.textSecondary),
+        bodySmall: TextStyle(fontSize: 12, color: appColors.textMuted),
         labelMedium: TextStyle(
           fontSize: 13,
           fontWeight: FontWeight.w600,
           color: appColors.textSecondary,
         ),
       ),
-
 
       cardTheme: CardThemeData(
         color: appColors.cardBackground,
@@ -111,10 +101,7 @@ class AppTheme {
         unselectedLabelColor: appColors.textMuted,
         indicatorColor: appColors.accent,
         dividerColor: Colors.transparent,
-        labelStyle: const TextStyle(
-          fontWeight: FontWeight.w600,
-          fontSize: 14,
-        ),
+        labelStyle: const TextStyle(fontWeight: FontWeight.w600, fontSize: 14),
         unselectedLabelStyle: const TextStyle(
           fontWeight: FontWeight.w500,
           fontSize: 14,
@@ -145,7 +132,10 @@ class AppTheme {
         labelStyle: TextStyle(color: appColors.textSecondary),
         hintStyle: TextStyle(color: appColors.textMuted),
         errorStyle: TextStyle(color: appColors.errorForeground),
-        contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: 14,
+          vertical: 14,
+        ),
         border: OutlineInputBorder(
           borderRadius: AppWidgetValues.borderRadiusMd,
           borderSide: BorderSide.none,
@@ -156,24 +146,15 @@ class AppTheme {
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: AppWidgetValues.borderRadiusMd,
-          borderSide: BorderSide(
-            color: appColors.accent,
-            width: 1.4,
-          ),
+          borderSide: BorderSide(color: appColors.accent, width: 1.4),
         ),
         errorBorder: OutlineInputBorder(
           borderRadius: AppWidgetValues.borderRadiusMd,
-          borderSide: BorderSide(
-            color: appColors.errorForeground,
-            width: 1.2,
-          ),
+          borderSide: BorderSide(color: appColors.errorForeground, width: 1.2),
         ),
         focusedErrorBorder: OutlineInputBorder(
           borderRadius: AppWidgetValues.borderRadiusMd,
-          borderSide: BorderSide(
-            color: appColors.errorForeground,
-            width: 1.4,
-          ),
+          borderSide: BorderSide(color: appColors.errorForeground, width: 1.4),
         ),
       ),
 
@@ -186,9 +167,17 @@ class AppTheme {
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(18),
           ),
-          textStyle: const TextStyle(
-            fontWeight: FontWeight.w600,
-            fontSize: 15,
+          textStyle: const TextStyle(fontWeight: FontWeight.w600, fontSize: 15),
+        ),
+      ),
+
+      filledButtonTheme: FilledButtonThemeData(
+        style: FilledButton.styleFrom(
+          minimumSize: const Size(48, 48),
+          backgroundColor: appColors.accent,
+          foregroundColor: appColors.buttonForeground,
+          shape: RoundedRectangleBorder(
+            borderRadius: AppWidgetValues.borderRadiusMd,
           ),
         ),
       ),
@@ -201,10 +190,7 @@ class AppTheme {
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(18),
           ),
-          textStyle: const TextStyle(
-            fontWeight: FontWeight.w600,
-            fontSize: 15,
-          ),
+          textStyle: const TextStyle(fontWeight: FontWeight.w600, fontSize: 15),
         ),
       ),
 
@@ -234,11 +220,8 @@ class AppTheme {
 
       textButtonTheme: TextButtonThemeData(
         style: TextButton.styleFrom(
-          foregroundColor: appColors.accent,
-          textStyle: const TextStyle(
-            fontWeight: FontWeight.w600,
-            fontSize: 12,
-          ),
+          foregroundColor: appColors.fieldTextAccent,
+          textStyle: const TextStyle(fontWeight: FontWeight.w600, fontSize: 12),
         ),
       ),
 
@@ -271,19 +254,17 @@ class AppTheme {
         actionTextColor: appColors.accent,
         behavior: SnackBarBehavior.floating,
         elevation: 6,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(16),
-        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       ),
 
       switchTheme: SwitchThemeData(
         thumbColor: WidgetStateProperty.resolveWith(
-              (states) => states.contains(WidgetState.selected)
+          (states) => states.contains(WidgetState.selected)
               ? appColors.buttonForeground
               : appColors.textMuted,
         ),
         trackColor: WidgetStateProperty.resolveWith(
-              (states) => states.contains(WidgetState.selected)
+          (states) => states.contains(WidgetState.selected)
               ? appColors.accent
               : appColors.disabled.withValues(alpha: 0.35),
         ),
@@ -291,7 +272,7 @@ class AppTheme {
 
       radioTheme: RadioThemeData(
         fillColor: WidgetStateProperty.resolveWith(
-              (states) => states.contains(WidgetState.selected)
+          (states) => states.contains(WidgetState.selected)
               ? appColors.accent
               : appColors.textMuted,
         ),
@@ -299,7 +280,7 @@ class AppTheme {
 
       checkboxTheme: CheckboxThemeData(
         fillColor: WidgetStateProperty.resolveWith(
-              (states) => states.contains(WidgetState.selected)
+          (states) => states.contains(WidgetState.selected)
               ? appColors.accent
               : Colors.transparent,
         ),
@@ -313,9 +294,7 @@ class AppTheme {
         circularTrackColor: appColors.backgroundSecondary,
       ),
 
-      dividerTheme: DividerThemeData(
-        color: appColors.disabled.withAlpha(50),
-      ),
+      dividerTheme: DividerThemeData(color: appColors.disabled.withAlpha(50)),
       dividerColor: appColors.disabled.withAlpha(50),
     );
   }

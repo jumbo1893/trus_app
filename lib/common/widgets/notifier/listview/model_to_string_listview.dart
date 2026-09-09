@@ -36,7 +36,7 @@ class ModelToStringListview extends ConsumerStatefulWidget {
     required this.notifier,
     this.onRetry,
     this.onRefresh,
-    this.bottomPadding = 100,
+    this.bottomPadding = 16,
     this.emptyListText = "Zatím tu nic není",
     this.emptyListTitle = "Žádné výsledky",
     this.storageKey,
@@ -157,9 +157,15 @@ class _ModelToStringListviewState extends ConsumerState<ModelToStringListview> {
           physics: widget.onRefresh == null
               ? null
               : const AlwaysScrollableScrollPhysics(),
-          padding: EdgeInsets.only(bottom: widget.bottomPadding),
+          padding: EdgeInsets.only(
+            bottom:
+                widget.bottomPadding +
+                (Scaffold.maybeOf(context)?.widget.floatingActionButton == null
+                    ? 0
+                    : 56 + kFloatingActionButtonMargin),
+          ),
           itemCount: modelList.length,
-          separatorBuilder: (_, __) => const SizedBox(height: 12),
+          separatorBuilder: (_, __) => const SizedBox(height: 6),
           itemBuilder: (context, index) {
             final item = modelList[index];
 
@@ -216,8 +222,10 @@ class _EmptyListState extends StatelessWidget {
           padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
           decoration: BoxDecoration(
             color: context.appColors.cardBackground,
-            borderRadius: AppWidgetValues.borderRadiusXl,
-            boxShadow: AppWidgetValues.cardShadow,
+            borderRadius: AppWidgetValues.borderRadiusMd,
+            border: Border.all(
+              color: context.appColors.border.withValues(alpha: 0.5),
+            ),
           ),
           child: Column(
             mainAxisSize: MainAxisSize.min,
@@ -264,16 +272,18 @@ class _DefaultModelListTile extends StatelessWidget {
   Widget build(BuildContext context) {
     return Material(
       color: context.appColors.cardBackground,
-      borderRadius: AppWidgetValues.borderRadiusXl,
+      borderRadius: AppWidgetValues.borderRadiusMd,
       child: InkWell(
-        borderRadius: AppWidgetValues.borderRadiusXl,
+        borderRadius: AppWidgetValues.borderRadiusMd,
         onTap: onTap,
         child: Container(
-          padding: const EdgeInsets.fromLTRB(18, 18, 16, 18),
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
           decoration: BoxDecoration(
             color: context.appColors.cardBackground,
-            borderRadius: AppWidgetValues.borderRadiusXl,
-            boxShadow: AppWidgetValues.cardShadow,
+            borderRadius: AppWidgetValues.borderRadiusMd,
+            border: Border.all(
+              color: context.appColors.border.withValues(alpha: 0.5),
+            ),
           ),
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -291,7 +301,7 @@ class _DefaultModelListTile extends StatelessWidget {
                         color: context.appColors.textPrimary,
                       ),
                     ),
-                    const SizedBox(height: 12),
+                    const SizedBox(height: 6),
                     Text(
                       item.toStringForListView(),
                       style: TextStyle(

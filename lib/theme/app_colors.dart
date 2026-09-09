@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 class AppColors extends ThemeExtension<AppColors> {
   final Color accent;
   final Color accentSoft;
+
   /// Original orange used by older screens; kept separate so light mode does not visually change.
   final Color legacyAccent;
   final Color legacyAccentDark;
@@ -155,7 +156,7 @@ class AppColors extends ThemeExtension<AppColors> {
       appBarHighlight: appBarHighlight ?? this.appBarHighlight,
       appBarTopTint: appBarTopTint ?? this.appBarTopTint,
       appBarCollapsedBackground:
-      appBarCollapsedBackground ?? this.appBarCollapsedBackground,
+          appBarCollapsedBackground ?? this.appBarCollapsedBackground,
     );
   }
 
@@ -167,8 +168,16 @@ class AppColors extends ThemeExtension<AppColors> {
       accent: Color.lerp(accent, other.accent, t)!,
       accentSoft: Color.lerp(accentSoft, other.accentSoft, t)!,
       legacyAccent: Color.lerp(legacyAccent, other.legacyAccent, t)!,
-      legacyAccentDark: Color.lerp(legacyAccentDark, other.legacyAccentDark, t)!,
-      buttonForeground: Color.lerp(buttonForeground, other.buttonForeground, t)!,
+      legacyAccentDark: Color.lerp(
+        legacyAccentDark,
+        other.legacyAccentDark,
+        t,
+      )!,
+      buttonForeground: Color.lerp(
+        buttonForeground,
+        other.buttonForeground,
+        t,
+      )!,
       fieldTextAccent: Color.lerp(fieldTextAccent, other.fieldTextAccent, t)!,
       shadow: Color.lerp(shadow, other.shadow, t)!,
       border: Color.lerp(border, other.border, t)!,
@@ -176,8 +185,16 @@ class AppColors extends ThemeExtension<AppColors> {
       warningSolid: Color.lerp(warningSolid, other.warningSolid, t)!,
       errorSolid: Color.lerp(errorSolid, other.errorSolid, t)!,
       infoSolid: Color.lerp(infoSolid, other.infoSolid, t)!,
-      backgroundPrimary: Color.lerp(backgroundPrimary, other.backgroundPrimary, t)!,
-      backgroundSecondary: Color.lerp(backgroundSecondary, other.backgroundSecondary, t)!,
+      backgroundPrimary: Color.lerp(
+        backgroundPrimary,
+        other.backgroundPrimary,
+        t,
+      )!,
+      backgroundSecondary: Color.lerp(
+        backgroundSecondary,
+        other.backgroundSecondary,
+        t,
+      )!,
       cardBackground: Color.lerp(cardBackground, other.cardBackground, t)!,
       textPrimary: Color.lerp(textPrimary, other.textPrimary, t)!,
       textSecondary: Color.lerp(textSecondary, other.textSecondary, t)!,
@@ -186,13 +203,33 @@ class AppColors extends ThemeExtension<AppColors> {
       disabled: Color.lerp(disabled, other.disabled, t)!,
       infoBackground: Color.lerp(infoBackground, other.infoBackground, t)!,
       infoForeground: Color.lerp(infoForeground, other.infoForeground, t)!,
-      warningBackground: Color.lerp(warningBackground, other.warningBackground, t)!,
-      warningForeground: Color.lerp(warningForeground, other.warningForeground, t)!,
+      warningBackground: Color.lerp(
+        warningBackground,
+        other.warningBackground,
+        t,
+      )!,
+      warningForeground: Color.lerp(
+        warningForeground,
+        other.warningForeground,
+        t,
+      )!,
       errorBackground: Color.lerp(errorBackground, other.errorBackground, t)!,
       errorForeground: Color.lerp(errorForeground, other.errorForeground, t)!,
-      successBackground: Color.lerp(successBackground, other.successBackground, t)!,
-      successForeground: Color.lerp(successForeground, other.successForeground, t)!,
-      overlayBackground: Color.lerp(overlayBackground, other.overlayBackground, t)!,
+      successBackground: Color.lerp(
+        successBackground,
+        other.successBackground,
+        t,
+      )!,
+      successForeground: Color.lerp(
+        successForeground,
+        other.successForeground,
+        t,
+      )!,
+      overlayBackground: Color.lerp(
+        overlayBackground,
+        other.overlayBackground,
+        t,
+      )!,
       navSelected: Color.lerp(navSelected, other.navSelected, t)!,
       navUnselected: Color.lerp(navUnselected, other.navUnselected, t)!,
       appBarHighlight: Color.lerp(appBarHighlight, other.appBarHighlight, t)!,
@@ -211,7 +248,7 @@ class AppColors extends ThemeExtension<AppColors> {
     legacyAccent: Color(0xFFFF8303),
     legacyAccentDark: Color(0xFFEE8303),
     buttonForeground: Colors.black,
-    fieldTextAccent: Colors.indigo,
+    fieldTextAccent: Color(0xFF9A4D00),
     shadow: Colors.black,
     border: Color(0xFFE5E7EB),
     successSolid: Colors.green,
@@ -248,7 +285,7 @@ class AppColors extends ThemeExtension<AppColors> {
     legacyAccent: Color(0xFFFF8303),
     legacyAccentDark: Color(0xFFEE8303),
     buttonForeground: Colors.black,
-    fieldTextAccent: Color(0xFF93C5FD),
+    fieldTextAccent: Color(0xFFFBBF24),
     shadow: Colors.black,
     border: Color(0xFF334155),
     successSolid: Color(0xFF4ADE80),

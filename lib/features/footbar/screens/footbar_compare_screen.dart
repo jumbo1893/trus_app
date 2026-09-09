@@ -30,7 +30,7 @@ class _FootbarCompareScreenState extends ConsumerState<FootbarCompareScreen> {
     final state = ref.watch(footbarCompareNotifierProvider);
 
     final seasonProvider =
-    seasonDropdownNotifierProvider(const SeasonArgs(false, true, true));
+    seasonDropdownNotifierProvider(const SeasonArgs(false, true, true, playedOnly: true));
 
     return Padding(
       padding: const EdgeInsets.only(bottom: 20.0),

@@ -27,7 +27,7 @@ final footbarCompareNotifierProvider = StateNotifierProvider.autoDispose<
 class FootbarCompareNotifier extends AppNotifier<FootbarCompareState> {
   final FootbarApiService footbarApi;
 
-  static const _seasonArgs = SeasonArgs(false, true, true);
+  static const _seasonArgs = SeasonArgs(false, true, true, playedOnly: true);
 
   bool _suppressSeasonListen = false;
 

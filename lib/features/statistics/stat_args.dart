@@ -1,7 +1,7 @@
 import 'package:flutter/foundation.dart';
 import '../season/season_args.dart';
 
-const statisticsSeasonArgs = SeasonArgs(false, true, true);
+const statisticsSeasonArgs = SeasonArgs(false, true, true, playedOnly: true);
 
 class StatsArgs {
   final String api;

@@ -30,7 +30,7 @@ class AddListBuilderDouble extends StatelessWidget {
   Widget build(BuildContext context) {
     return ListView.separated(
       controller: scrollController,
-      padding: EdgeInsets.only(bottom: compact ? 12 : 120),
+      padding: EdgeInsets.only(bottom: compact ? 12 : 16),
       itemCount: items.length,
       separatorBuilder: (_, __) => SizedBox(height: compact ? 6 : 10),
       itemBuilder: (context, index) {

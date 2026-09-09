@@ -6,20 +6,29 @@ import 'package:trus_app/features/season/season_args.dart';
 import '../../../models/api/interfaces/json_and_http_converter.dart';
 import '../../../models/api/season_api_model.dart';
 
-final seasonApiServiceProvider =
-    Provider<SeasonApiService>((ref) => SeasonApiService(ref));
+final seasonApiServiceProvider = Provider<SeasonApiService>(
+  (ref) => SeasonApiService(ref),
+);
 
 class SeasonApiService extends CrudApiService {
   SeasonApiService(super.ref);
 
-
-  Future<List<SeasonApiModel>> getSeasons(bool automaticSeason, bool otherSeason, bool allSeason) async {
+  Future<List<SeasonApiModel>> getSeasons(
+    bool automaticSeason,
+    bool otherSeason,
+    bool allSeason, {
+    bool playedOnly = false,
+  }) async {
     final queryParameters = {
       'allSeason': allSeason.toString(),
       'otherSeason': otherSeason.toString(),
       'automaticSeason': automaticSeason.toString(),
+      'playedOnly': playedOnly.toString(),
     };
-    final decodedBody = await getModels<JsonAndHttpConverter>(seasonApi, queryParameters);
+    final decodedBody = await getModels<JsonAndHttpConverter>(
+      seasonApi,
+      queryParameters,
+    );
     return decodedBody.map((model) => model as SeasonApiModel).toList();
   }
 
@@ -28,8 +37,12 @@ class SeasonApiService extends CrudApiService {
       'allSeason': args.allSeason.toString(),
       'otherSeason': args.otherSeason.toString(),
       'automaticSeason': args.automaticSeason.toString(),
+      'playedOnly': args.playedOnly.toString(),
     };
-    final decodedBody = await getModels<JsonAndHttpConverter>(seasonApi, queryParameters);
+    final decodedBody = await getModels<JsonAndHttpConverter>(
+      seasonApi,
+      queryParameters,
+    );
     return decodedBody.map((model) => model as SeasonApiModel).toList();
   }
 

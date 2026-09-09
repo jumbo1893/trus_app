@@ -9,6 +9,7 @@ import '../../../common/widgets/loader.dart';
 import '../controller/stats_notifier.dart';
 import '../stat_args.dart';
 import '../stats_level.dart';
+import '../widget/statistics_data_row.dart';
 
 class NewStatisticsView extends ConsumerWidget {
   final StatsArgs statsArgs;
@@ -31,87 +32,94 @@ class NewStatisticsView extends ConsumerWidget {
         ? null
         : notifier;
 
-    return Column(
-      children: [
-        state.overall.when(
-          loading: () => const Loader(),
-          error: (_, __) => const SizedBox(),
-          data: (value) {
-            if (value == null || value.text.isEmpty) {
-              return const SizedBox.shrink();
-            }
+    return LayoutBuilder(
+      builder: (context, constraints) => Column(
+        children: [
+          if (constraints.maxHeight >= 220)
+            state.overall.when(
+              loading: () => const Loader(),
+              error: (_, __) => const SizedBox(),
+              data: (value) {
+                if (value == null || value.text.isEmpty) {
+                  return const SizedBox.shrink();
+                }
 
-            return ScrollDragForwarder(
-              key: const ValueKey('statistics-overall'),
-              controller: scrollController,
-              child: Padding(
-                padding: const EdgeInsets.only(bottom: 12),
-                child: Material(
-                  color: context.appColors.cardBackground,
-                  borderRadius: BorderRadius.circular(18),
-                  clipBehavior: Clip.antiAlias,
-                  child: ListTile(
-                    dense: true,
-                    contentPadding: const EdgeInsets.symmetric(
-                      horizontal: 14,
-                      vertical: 4,
-                    ),
-                    title: Text(
-                      value.text,
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                      style: Theme.of(context).textTheme.bodyMedium,
-                    ),
-                    subtitle: state.lastUpdated == null
-                        ? null
-                        : Text(
-                            'Aktualizováno ${TimeOfDay.fromDateTime(state.lastUpdated!).format(context)}',
+                return ScrollDragForwarder(
+                  key: const ValueKey('statistics-overall'),
+                  controller: scrollController,
+                  child: Padding(
+                    padding: const EdgeInsets.only(bottom: 12),
+                    child: Material(
+                      color: context.appColors.cardBackground,
+                      borderRadius: BorderRadius.circular(18),
+                      clipBehavior: Clip.antiAlias,
+                      child: ListTile(
+                        dense: true,
+                        contentPadding: const EdgeInsets.symmetric(
+                          horizontal: 14,
+                          vertical: 4,
+                        ),
+                        title: Text(
+                          value.text,
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                          style: Theme.of(context).textTheme.bodyMedium,
+                        ),
+                        subtitle: state.lastUpdated == null
+                            ? null
+                            : Text(
+                                'Aktualizováno ${TimeOfDay.fromDateTime(state.lastUpdated!).format(context)}',
+                              ),
+                        trailing: IconButton(
+                          tooltip: 'Obnovit statistiky',
+                          icon: const Icon(Icons.refresh),
+                          onPressed: notifier.refresh,
+                        ),
+                        onTap: () => showDialog<void>(
+                          context: context,
+                          builder: (context) => AlertDialog(
+                            title: Text(value.title),
+                            content: SingleChildScrollView(
+                              child: Text(value.text),
+                            ),
+                            actions: [
+                              TextButton(
+                                onPressed: () => Navigator.pop(context),
+                                child: const Text('Zavřít'),
+                              ),
+                            ],
                           ),
-                    trailing: IconButton(
-                      tooltip: 'Obnovit statistiky',
-                      icon: const Icon(Icons.refresh),
-                      onPressed: notifier.refresh,
-                    ),
-                    onTap: () => showDialog<void>(
-                      context: context,
-                      builder: (context) => AlertDialog(
-                        title: Text(value.title),
-                        content: SingleChildScrollView(child: Text(value.text)),
-                        actions: [
-                          TextButton(
-                            onPressed: () => Navigator.pop(context),
-                            child: const Text('Zavřít'),
-                          ),
-                        ],
+                        ),
                       ),
                     ),
                   ),
-                ),
-              ),
-            );
-          },
-        ),
-        Expanded(
-          child: ModelToStringListview(
-            onRefresh: notifier.refresh,
-            bottomPadding: 16,
-            state: state,
-            notifier: listViewNotifier,
-            onRetry: () => notifier.applyFilters(state.advancedFilter),
-            scrollController: scrollController,
-            emptyListTitle:
-                state.advancedFilter.activeCount > 0 ||
-                    (state.filter?.trim().isNotEmpty ?? false)
-                ? 'Filtrům neodpovídají žádné výsledky'
-                : 'Zatím žádná data',
-            emptyListText:
-                state.advancedFilter.activeCount > 0 ||
-                    (state.filter?.trim().isNotEmpty ?? false)
-                ? 'Změň filtry nebo vymaž hledání.'
-                : 'Výsledky se objeví po prvním zápisu.',
+                );
+              },
+            ),
+          Expanded(
+            child: ModelToStringListview(
+              onRefresh: notifier.refresh,
+              bottomPadding: 16,
+              state: state,
+              notifier: listViewNotifier,
+              onRetry: () => notifier.applyFilters(state.advancedFilter),
+              scrollController: scrollController,
+              itemBuilder: (context, item, onTap, index, count) =>
+                  StatisticsDataRow(item: item, onTap: onTap),
+              emptyListTitle:
+                  state.advancedFilter.activeCount > 0 ||
+                      (state.filter?.trim().isNotEmpty ?? false)
+                  ? 'Filtrům neodpovídají žádné výsledky'
+                  : 'Zatím žádná data',
+              emptyListText:
+                  state.advancedFilter.activeCount > 0 ||
+                      (state.filter?.trim().isNotEmpty ?? false)
+                  ? 'Změň filtry nebo vymaž hledání.'
+                  : 'Výsledky se objeví po prvním zápisu.',
+            ),
           ),
-        ),
-      ],
+        ],
+      ),
     );
   }
 }

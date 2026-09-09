@@ -115,7 +115,7 @@ class _BeerSimpleScreenState extends ConsumerState<BeerSimpleScreen>
     }
 
     final seasonProvider = seasonDropdownNotifierProvider(
-      const SeasonArgs(false, true, true),
+      const SeasonArgs(false, true, true, playedOnly: true),
     );
 
     final modeToggle = _buildModeToggle(context, state, notifier);
@@ -184,6 +184,23 @@ class _BeerSimpleScreenState extends ConsumerState<BeerSimpleScreen>
                 padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
                 child: modeToggle,
               ),
+
+              if (!state.drawMode)
+                const Padding(
+                  padding: EdgeInsets.fromLTRB(16, 6, 16, 0),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.end,
+                    children: [
+                      Icon(Icons.sports_bar_outlined, size: 16),
+                      SizedBox(width: 4),
+                      Text('Piva'),
+                      SizedBox(width: 16),
+                      Icon(Icons.liquor_outlined, size: 16),
+                      SizedBox(width: 4),
+                      Text('Panáky'),
+                    ],
+                  ),
+                ),
 
               Expanded(
                 child: state.matches.hasError

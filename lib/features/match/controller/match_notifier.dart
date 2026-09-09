@@ -33,7 +33,7 @@ class MatchNotifier extends SafeStateNotifier<MatchListState>
       this.repository,
       this.screenController,
       ) : super(ref, MatchListState.initial()) {
-    ref.listen<DropdownState>(seasonDropdownNotifierProvider(const SeasonArgs(false, true, true)), (_, next) {
+    ref.listen<DropdownState>(seasonDropdownNotifierProvider(const SeasonArgs(false, true, true, playedOnly: true)), (_, next) {
       SeasonApiModel? season = next.selected as SeasonApiModel?;
       if (season != null) {
         Future.microtask(() => _loadMatches(season.id!));

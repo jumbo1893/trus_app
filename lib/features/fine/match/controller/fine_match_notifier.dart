@@ -27,7 +27,7 @@ class FineMatchNotifier extends AppNotifier<FineMatchState> {
   final FineMatchApiService fineApi;
   final ScreenVariablesNotifier screenController;
 
-  static const _seasonArgs = SeasonArgs(false, true, true);
+  static const _seasonArgs = SeasonArgs(false, true, true, playedOnly: true);
 
   bool _initialized = false;
   bool _suppressSeasonListen = false;
