@@ -87,7 +87,7 @@ class _EditPlayerScreenState extends ConsumerState<EditPlayerScreen> {
       ],
       actions: [
         ActionButtonItem(
-          label: "Uložit",
+          label: "Uložit hráče",
           onPressed: () => notifier.submitCrud(Crud.update),
           type: ActionButtonType.primary,
         ),

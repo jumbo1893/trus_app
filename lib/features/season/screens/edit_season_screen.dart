@@ -65,7 +65,7 @@ class _EditSeasonScreenState extends ConsumerState<EditSeasonScreen> {
       ],
       actions: [
         ActionButtonItem(
-          label: "Uložit",
+          label: "Uložit sezonu",
           onPressed: () => notifier.submitCrud(Crud.update),
           type: ActionButtonType.primary,
         ),

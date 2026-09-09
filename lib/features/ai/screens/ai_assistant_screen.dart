@@ -34,6 +34,22 @@ class _AiAssistantScreenState extends ConsumerState<AiAssistantScreen> {
   bool _isListening = false;
   String? _speechLocaleId;
   String _dictationPrefix = '';
+  bool _hasNewMessages = false;
+  int _scrollGeneration = 0;
+
+  bool get _nearBottom =>
+      !_scrollController.hasClients ||
+      _scrollController.position.extentAfter <= 80;
+
+  @override
+  void initState() {
+    super.initState();
+    _scrollController.addListener(_handleScroll);
+  }
+
+  void _handleScroll() {
+    if (_hasNewMessages && _nearBottom) setState(() => _hasNewMessages = false);
+  }
 
   @override
   void dispose() {
@@ -45,13 +61,26 @@ class _AiAssistantScreenState extends ConsumerState<AiAssistantScreen> {
   }
 
   void _scrollToBottom() {
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (!mounted || !_scrollController.hasClients) return;
-      _scrollController.animateTo(
-        _scrollController.position.maxScrollExtent,
-        duration: const Duration(milliseconds: 280),
-        curve: Curves.easeOut,
-      );
+    if (_hasNewMessages) setState(() => _hasNewMessages = false);
+    final generation = ++_scrollGeneration;
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      // Variable-height messages refine the estimated extent as they are built.
+      for (var attempt = 0; attempt < 8; attempt++) {
+        if (!mounted ||
+            generation != _scrollGeneration ||
+            !_scrollController.hasClients)
+          return;
+        await _scrollController.animateTo(
+          _scrollController.position.maxScrollExtent,
+          duration: const Duration(milliseconds: 180),
+          curve: Curves.easeOut,
+        );
+        if (!mounted ||
+            generation != _scrollGeneration ||
+            !_scrollController.hasClients ||
+            _scrollController.position.extentAfter < 1)
+          return;
+      }
     });
   }
 
@@ -64,9 +93,9 @@ class _AiAssistantScreenState extends ConsumerState<AiAssistantScreen> {
     final sent = await ref
         .read(aiAssistantControllerProvider.notifier)
         .submit(_questionController.text);
+    if (!mounted) return;
     if (sent) {
       _questionController.clear();
-      _scrollToBottom();
     }
   }
 
@@ -255,7 +284,14 @@ class _AiAssistantScreenState extends ConsumerState<AiAssistantScreen> {
       aiAssistantControllerProvider.select(
         (value) => value.questions.valueOrNull?.length ?? 0,
       ),
-      (_, __) => _scrollToBottom(),
+      (previous, next) {
+        if (next == 0 || next == previous) return;
+        if (_nearBottom) {
+          _scrollToBottom();
+        } else {
+          setState(() => _hasNewMessages = true);
+        }
+      },
     );
 
     return Material(
@@ -267,18 +303,44 @@ class _AiAssistantScreenState extends ConsumerState<AiAssistantScreen> {
             if (!keyboardVisible)
               _AssistantHeader(state: state, onRefresh: controller.load),
             Expanded(
-              child: state.questions.when(
-                loading: () => const Center(child: Loader()),
-                error: (error, _) => _LoadError(
-                  message: error.toString(),
-                  onRetry: controller.load,
-                ),
-                data: (questions) => _ConversationList(
-                  controller: _scrollController,
-                  questions: questions,
-                  pendingQuestion: state.pendingQuestion,
-                  errorMessage: state.errorMessage,
-                  onSuggestionSelected: _useSuggestion,
+              child: NotificationListener<ScrollStartNotification>(
+                onNotification: (notification) {
+                  if (notification.dragDetails != null) _scrollGeneration++;
+                  return false;
+                },
+                child: Stack(
+                  children: [
+                    Positioned.fill(
+                      child: state.questions.when(
+                        loading: () => const Center(child: Loader()),
+                        error: (error, _) => _LoadError(
+                          message:
+                              'Konverzaci se nepodařilo načíst. Zkus to znovu.',
+                          onRetry: controller.load,
+                        ),
+                        data: (questions) => _ConversationList(
+                          controller: _scrollController,
+                          questions: questions,
+                          pendingQuestion: state.pendingQuestion,
+                          errorMessage: state.errorMessage,
+                          onSuggestionSelected: _useSuggestion,
+                        ),
+                      ),
+                    ),
+                    if (_hasNewMessages)
+                      Positioned(
+                        bottom: 8,
+                        left: 0,
+                        right: 0,
+                        child: Center(
+                          child: FilledButton.icon(
+                            onPressed: _scrollToBottom,
+                            icon: const Icon(Icons.arrow_downward),
+                            label: const Text('Nové zprávy'),
+                          ),
+                        ),
+                      ),
+                  ],
                 ),
               ),
             ),
@@ -563,7 +625,11 @@ class _QuestionPair extends StatelessWidget {
     children: [
       _UserBubble(text: question.question),
       _AssistantBubble(
-        text: question.answer,
+        text: question.status == AiQuestionStatus.failed
+            ? 'TrusBot na tento dotaz nedokázal odpovědět. Zkus ho položit znovu.'
+            : question.status == AiQuestionStatus.disabled
+            ? 'TrusBot není pro tento účet dostupný.'
+            : question.answer,
         error:
             question.status == AiQuestionStatus.failed ||
             question.status == AiQuestionStatus.disabled,

@@ -4,6 +4,7 @@ import 'package:trus_app/features/membership/repository/membership_api_service.d
 import 'package:trus_app/features/ai/state/ai_assistant_state.dart';
 import 'package:trus_app/features/general/notifier/safe_state_notifier.dart';
 import 'package:trus_app/models/api/ai/ai_models.dart';
+import 'package:trus_app/services/crash_reporting_service.dart';
 
 final aiAssistantControllerProvider =
     StateNotifierProvider.autoDispose<AiAssistantController, AiAssistantState>(
@@ -41,12 +42,17 @@ class AiAssistantController extends SafeStateNotifier<AiAssistantState> {
         ),
       );
     } catch (error, stack) {
+      await CrashReportingService.recordError(
+        error,
+        stack,
+        reason: 'trusbot.load',
+      );
       if (!mounted) return;
       safeSetState(
         state.copyWith(
           questions: AsyncValue.error(error, stack),
           usage: AsyncValue.error(error, stack),
-          errorMessage: error.toString(),
+          errorMessage: 'Konverzaci se nepodařilo načíst. Zkus to znovu.',
         ),
       );
     }
@@ -100,13 +106,19 @@ class AiAssistantController extends SafeStateNotifier<AiAssistantState> {
       );
       ref.invalidate(membershipProvider);
       return true;
-    } catch (error) {
+    } catch (error, stack) {
+      await CrashReportingService.recordError(
+        error,
+        stack,
+        reason: 'trusbot.ask',
+      );
       if (!mounted) return false;
       safeSetState(
         state.copyWith(
           submitting: false,
           clearPendingQuestion: true,
-          errorMessage: error.toString(),
+          errorMessage:
+              'Odpověď se nepodařilo získat. Dotaz zůstal rozepsaný; zkus ho odeslat znovu.',
         ),
       );
       return false;

@@ -59,7 +59,7 @@ class _ViewUserScreenState extends ConsumerState<ViewUserScreen> {
       ],
       actions: [
         ActionButtonItem(
-          label: "Potvrdit změny",
+          label: "Uložit profil",
           onPressed: () => notifier.commit(),
           type: ActionButtonType.primary,
         ),

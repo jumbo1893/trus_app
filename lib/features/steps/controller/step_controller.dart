@@ -29,6 +29,13 @@ class StepController extends SafeStateNotifier<StepsState> {
   Future<void> load() async {
     await CrashReportingService.log('steps.screen.load.begin');
     final consent = await AsyncValue.guard(api.getConsent);
+    if (consent.hasError) {
+      await CrashReportingService.recordError(
+        consent.error!,
+        consent.stackTrace!,
+        reason: 'steps.consent.load',
+      );
+    }
     if (!mounted) return;
     safeSetState(state.copyWith(consent: consent));
     if (consent.valueOrNull == true) {
@@ -169,11 +176,28 @@ class StepController extends SafeStateNotifier<StepsState> {
     final result = await AsyncValue.guard(
       () => api.getLeaderboard(state.period),
     );
+    if (result.hasError) {
+      await CrashReportingService.recordError(
+        result.error!,
+        result.stackTrace!,
+        reason: 'steps.leaderboard.load',
+      );
+    }
     if (mounted) safeSetState(state.copyWith(leaderboard: result));
   }
 
-  Future<StepHistoryData> loadHistory({int? userId, int days = 30}) =>
-      api.getHistory(userId: userId, days: days);
+  Future<StepHistoryData> loadHistory({int? userId, int days = 30}) async {
+    try {
+      return await api.getHistory(userId: userId, days: days);
+    } catch (error, stack) {
+      await CrashReportingService.recordError(
+        error,
+        stack,
+        reason: 'steps.history.load',
+      );
+      rethrow;
+    }
+  }
 }
 
 int? _todayStepCount(List<StepSyncDay> days) {

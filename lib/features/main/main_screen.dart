@@ -196,13 +196,13 @@ class _MainScreenState extends ConsumerState<MainScreen> {
           case UiConfirmationSheet():
             ConfirmActionBottomSheet.show(
               context,
-              title: "Potvrdit akci",
+              title: "Změna oprávnění",
               message: effect.message,
-              confirmText: "Potvrdit",
+              confirmText: "Změnit oprávnění",
               cancelText: "Zrušit",
               icon: Icons.done,
               isDanger: true,
-              onConfirm: () async => effect.continueCallBack,
+              onConfirm: () async => effect.continueCallBack(),
             );
           case UiLoadingSheet():
             if (_loadingSheetVisible) return;

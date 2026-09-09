@@ -34,7 +34,7 @@ class _EditMatchScreenState extends ConsumerState<EditMatchScreen> {
       fields: matchFields(context, state, notifier),
       actions: [
         ActionButtonItem(
-          label: "Uložit",
+          label: "Uložit zápas",
           onPressed: () => notifier.submitCrud(Crud.update, false),
           type: ActionButtonType.primary,
         ),

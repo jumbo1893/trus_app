@@ -185,7 +185,7 @@ class _MultiSelectBottomSheetState<T extends ModelToString>
                       Navigator.pop(context);
                     },
                     child: Text(
-                      "Potvrdit",
+                      "Použít výběr",
                       style: TextStyle(color: context.appColors.buttonForeground),
                     ),
                   ),

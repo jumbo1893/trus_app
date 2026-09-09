@@ -1,3 +1,4 @@
+import 'package:trus_app/services/crash_reporting_service.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -39,10 +40,15 @@ class _MatchReportCardState extends ConsumerState<MatchReportCard> {
         _canGenerate = state.canGenerate;
         _teamGenerating = state.generating;
       });
-    } catch (error) {
+    } catch (error, stack) {
+      await CrashReportingService.recordError(
+        error,
+        stack,
+        reason: 'match_report.request',
+      );
       if (mounted) {
         setState(() {
-          _error = error.toString();
+          _error = 'Report se nepodařilo načíst nebo vytvořit. Zkus to znovu.';
           _canGenerate = false;
         });
       }
@@ -72,12 +78,17 @@ class _MatchReportCardState extends ConsumerState<MatchReportCard> {
       });
       // Refresh server-authoritative membership/permission after creating the shared report.
       await _load(showLoading: false);
-    } catch (error) {
+    } catch (error, stack) {
+      await CrashReportingService.recordError(
+        error,
+        stack,
+        reason: 'match_report.request',
+      );
       if (!mounted) return;
       await _load(showLoading: false);
       if (mounted) {
         setState(() {
-          _error = error.toString();
+          _error = 'Report se nepodařilo načíst nebo vytvořit. Zkus to znovu.';
         });
       }
     } finally {

@@ -124,7 +124,8 @@ void main() {
       api.pending!.completeError(StateError('Offline'));
       await tester.pumpAndSettle();
       expect(find.text('Původní report'), findsOneWidget);
-      expect(find.textContaining('Offline'), findsOneWidget);
+      expect(find.textContaining('Report se nepodařilo'), findsOneWidget);
+      expect(find.textContaining('Offline'), findsNothing);
       expect(find.text('Vygenerovat znovu'), findsNothing);
     },
   );

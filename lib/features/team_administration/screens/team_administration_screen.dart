@@ -247,7 +247,7 @@ class _TeamAdministrationScreenState
                       dimension: 18,
                       child: CircularProgressIndicator(strokeWidth: 2),
                     )
-                  : const Text('Uložit'),
+                  : const Text('Uložit tým'),
             ),
           ],
         ),

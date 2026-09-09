@@ -62,7 +62,7 @@ class _EditFineScreenState extends ConsumerState<EditFineScreen> {
       ],
       actions: [
         ActionButtonItem(
-          label: "Uložit",
+          label: "Uložit pokutu",
           onPressed: () => notifier.submitCrud(Crud.update),
           type: ActionButtonType.primary,
         ),

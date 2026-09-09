@@ -49,7 +49,7 @@ class _EnabledNotificationsScreenState
             Padding(
               padding: const EdgeInsets.only(bottom: 16.0),
               child: CustomButton(
-                text: "Potvrď změny",
+                text: "Uložit nastavení oznámení",
                 onPressed: notifier.commit,
               ),
             ),

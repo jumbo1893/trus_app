@@ -35,7 +35,7 @@ class _StepScreenState extends ConsumerState<StepScreen> {
         child: state.consent.when(
           loading: () => const Loader(),
           error: (error, _) =>
-              _ErrorView(message: '$error', onRetry: controller.load),
+              _ErrorView(message: 'Kroky se nepodařilo načíst. Zkus to znovu.', onRetry: controller.load),
           data: (enabled) => enabled
               ? _LeaderboardView(state: state, controller: controller)
               : _ConsentView(onGrant: controller.grantConsent),
@@ -144,7 +144,7 @@ class _LeaderboardView extends StatelessWidget {
           loading: () =>
               const Padding(padding: EdgeInsets.all(32), child: Loader()),
           error: (error, _) => _ErrorView(
-            message: '$error',
+            message: 'Kroky se nepodařilo načíst. Zkus to znovu.',
             onRetry: controller.loadLeaderboard,
           ),
           data: (leaderboard) => _LeaderboardTable(

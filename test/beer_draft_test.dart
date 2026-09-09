@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter/material.dart';
@@ -54,6 +55,10 @@ class _Seasons implements SeasonApiService {
 class _Beers implements BeerApiService {
   int loads = 0, saves = 0;
   bool failSave = false;
+  int rosterSize = 1;
+  Completer<void>? saveGate;
+  BeerList? lastPayload;
+  final stored = <int, (int, int)>{};
   @override
   Future<BeerSetupResponse> setupBeers(int? matchId, int? seasonId) async {
     loads++;
@@ -62,11 +67,12 @@ class _Beers implements BeerApiService {
       season: season,
       matchList: [match(1), match(2)],
       beerList: [
-        BeerNoMatchWithPlayer(
-          player: PlayerApiModel.dummy(),
-          beerNumber: 1,
-          liquorNumber: 0,
-        ),
+        for (var i = 0; i < rosterSize; i++)
+          BeerNoMatchWithPlayer(
+            player: PlayerApiModel.dummy()..id = i,
+            beerNumber: stored[i]?.$1 ?? 1,
+            liquorNumber: stored[i]?.$2 ?? 0,
+          ),
       ],
     );
   }
@@ -74,7 +80,12 @@ class _Beers implements BeerApiService {
   @override
   Future<BeerMultiAddResponse> addBeers(BeerList list) async {
     saves++;
+    lastPayload = list;
+    if (saveGate != null) await saveGate!.future;
     if (failSave) throw Exception('offline');
+    for (final beer in list.beerList) {
+      stored[beer.playerId] = (beer.beerNumber, beer.liquorNumber);
+    }
     return BeerMultiAddResponse.fromJson({});
   }
 
@@ -103,6 +114,71 @@ void main() {
         .changeByFragmentId('beer-simple-screen');
   });
   tearDown(() => container.dispose());
+
+  test(
+    'two sessions hand off saved beer entry by refreshing on resume',
+    () async {
+      final second = ProviderContainer(
+        overrides: [
+          beerApiServiceProvider.overrideWithValue(api),
+          seasonApiServiceProvider.overrideWithValue(_Seasons()),
+        ],
+      );
+      addTearDown(second.dispose);
+      second.listen(beerNotifierProvider, (_, __) {});
+      final firstWriter = container.read(beerNotifierProvider.notifier);
+      final secondWriter = second.read(beerNotifierProvider.notifier);
+      await secondWriter.init(matchId: 1);
+      firstWriter.addNumber(0, true, null);
+      await firstWriter.changeBeers();
+      await secondWriter.refreshOnResume();
+      expect(second.read(beerNotifierProvider).beers.single.beerNumber, 2);
+      secondWriter.addNumber(0, true, null);
+      await secondWriter.changeBeers();
+      await firstWriter.refreshOnResume();
+      expect(container.read(beerNotifierProvider).beers.single.beerNumber, 3);
+    },
+  );
+
+  test(
+    'post-match evening: 40 players, corrections, resume, failed and slow save',
+    () async {
+      api.rosterSize = 40;
+      final notifier = container.read(beerNotifierProvider.notifier);
+      await notifier.refreshOnResume();
+      for (var i = 0; i < 40; i++) {
+        notifier.addNumber(i, true, null);
+        notifier.addNumber(i, true, null);
+        notifier.addNumber(i, false, null);
+      }
+      notifier.removeNumber(39, true);
+      notifier.removeNumber(0, false);
+      final edited = Map<String, int>.of(notifier.draftValues);
+      await notifier.refreshOnResume();
+      expect(notifier.draftValues, edited);
+      api.failSave = true;
+      await expectLater(notifier.changeBeers(), throwsA(anything));
+      expect(notifier.draftValues, edited);
+      expect(container.read(beerNotifierProvider).hasChanges, isTrue);
+      api.failSave = false;
+      api.saveGate = Completer<void>();
+      final saving = notifier.changeBeers();
+      final duplicate = notifier.changeBeers();
+      await Future<void>.delayed(Duration.zero);
+      expect(api.saves, 2); // One failed request and one pending request.
+      notifier.addNumber(20, true, null);
+      api.saveGate!.complete();
+      await Future.wait([saving, duplicate]);
+      expect(container.read(beerNotifierProvider).hasChanges, isTrue);
+      expect(container.read(beerNotifierProvider).beers[20].beerNumber, 4);
+      api.saveGate = null;
+      await notifier.changeBeers();
+      expect(container.read(beerNotifierProvider).hasChanges, isFalse);
+      expect(api.saves, 3);
+      expect(container.read(beerNotifierProvider).beers[39].beerNumber, 2);
+      expect(container.read(beerNotifierProvider).beers[0].liquorNumber, 0);
+    },
+  );
 
   testWidgets(
     'beer entry fits a narrow phone and retains match context in tally mode',
@@ -201,7 +277,9 @@ void main() {
     expect(
       container
           .read(
-            seasonDropdownNotifierProvider(const SeasonArgs(false, true, true, playedOnly: true)),
+            seasonDropdownNotifierProvider(
+              const SeasonArgs(false, true, true, playedOnly: true),
+            ),
           )
           .selected,
       season,
@@ -220,4 +298,3 @@ void main() {
     expect(container.read(beerNotifierProvider).beers.single.beerNumber, 2);
   });
 }
-

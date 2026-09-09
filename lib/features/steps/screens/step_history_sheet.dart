@@ -116,7 +116,7 @@ class _StepHistorySheetState extends State<StepHistorySheet> {
               }
               if (snapshot.hasError) {
                 return _HistoryError(
-                  error: '${snapshot.error}',
+                  error: 'Historii kroků se nepodařilo načíst. Zkus to znovu.',
                   onRetry: _retry,
                 );
               }

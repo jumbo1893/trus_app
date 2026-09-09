@@ -110,7 +110,7 @@ class FineMatchActionBar extends StatelessWidget {
                   child: FilledButton.icon(
                     onPressed: selectedCount > 0 ? onConfirm : null,
                     icon: const Icon(Icons.check),
-                    label: const Text('Potvrdit'),
+                    label: const Text('Vybrat pokuty'),
                     style: FilledButton.styleFrom(
                       minimumSize: Size.fromHeight(compact ? 44 : 46),
                       shape: RoundedRectangleBorder(
