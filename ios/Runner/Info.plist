@@ -21,15 +21,15 @@
 	<key>CFBundleSignature</key>
 	<string>????</string>
 	<key>NSMotionUsageDescription</key>
-    <string>Tato aplikace počítá vaše kroky</string>
+    <string>Trusí appka používá rozpoznání fyzické aktivity ke čtení počtu kroků pro vaši osobní historii a volitelnou týmovou výzvu.</string>
 	<key>NSMicrophoneUsageDescription</key>
 	<string>Aplikace používá mikrofon pro nadiktování dotazu TrusBotovi.</string>
 	<key>NSSpeechRecognitionUsageDescription</key>
 	<string>Aplikace převádí nadiktovaný dotaz pro TrusBota na text.</string>
 	<key>NSHealthShareUsageDescription</key>
-	<string>Aplikace čte počet kroků pro týmové statistiky.</string>
+	<string>Trusí appka čte z Apple Health pouze počet kroků. Denní součty používá pro vaši historii, statistiky, týmovou výzvu, žebříček a krokové úspěchy.</string>
 	<key>NSHealthUpdateUsageDescription</key>
-	<string>Aplikace používá zdravotní data pouze pro týmové statistiky kroků.</string>
+	<string>Trusí appka používá přístup k Apple Health pouze pro funkci kroků; do Apple Health žádné zdravotní údaje nezapisuje.</string>
     <key>NSPushNotificationsUsageDescription</key>
     <string>Aplikace chce odesílat oznámení o výsledcích zápasů</string>
     <key>UIBackgroundModes</key>

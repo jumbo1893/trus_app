@@ -5,11 +5,13 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import 'package:trus_app/common/widgets/loader.dart';
 import 'package:trus_app/common/widgets/screen/custom_consumer_stateful_widget.dart';
+import 'package:trus_app/config.dart';
 import 'package:trus_app/features/steps/controller/step_controller.dart';
 import 'package:trus_app/features/steps/screens/step_history_sheet.dart';
 import 'package:trus_app/features/steps/state/step_state.dart';
 import 'package:trus_app/models/api/step/step_models.dart';
 import 'package:trus_app/theme/app_colors.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 final _myStepUserProvider = FutureProvider.autoDispose<int>(
   (ref) async =>
@@ -34,8 +36,10 @@ class _StepScreenState extends ConsumerState<StepScreen> {
       body: SafeArea(
         child: state.consent.when(
           loading: () => const Loader(),
-          error: (error, _) =>
-              _ErrorView(message: 'Kroky se nepodařilo načíst. Zkus to znovu.', onRetry: controller.load),
+          error: (error, _) => _ErrorView(
+            message: 'Kroky se nepodařilo načíst. Zkus to znovu.',
+            onRetry: controller.load,
+          ),
           data: (enabled) => enabled
               ? _LeaderboardView(state: state, controller: controller)
               : _ConsentView(onGrant: controller.grantConsent),
@@ -62,7 +66,7 @@ class _ConsentView extends StatelessWidget {
           ),
           const SizedBox(height: 22),
           Text(
-            'Týmová výzva v krocích',
+            'Aktivita a kondice: týmová výzva v krocích',
             textAlign: TextAlign.center,
             style: Theme.of(
               context,
@@ -70,19 +74,37 @@ class _ConsentView extends StatelessWidget {
           ),
           const SizedBox(height: 12),
           Text(
-            'Pro zobrazení statistik musíte udělit souhlas se čtením počtu kroků. '
-            'Do týmu se sdílí pouze denní součet, nikoliv trasa ani další zdravotní údaje.',
+            'Tato volitelná fitness funkce vám pomáhá sledovat denní pohyb, osobní '
+            'historii, průměry, aktivitu mezi zápasy, týmový žebříček a krokové úspěchy.\n\n'
+            'Trusí appka přistupuje k počtu kroků z Health Connect na Androidu nebo '
+            'Apple Health na iOS. Shromažďuje denní součty za posledních 30 dní a '
+            'ukládá je k vašemu účtu na serveru. Vaše jméno, denní součty, historii, '
+            'průměry a pořadí mohou vidět pouze přihlášení členové stejného týmu.\n\n'
+            'Pokud na Androidu povolíte přístup na pozadí, aplikace synchronizuje '
+            'aktuální a předchozí den přibližně každých 6 hodin, i když je zavřená '
+            'nebo ji právě nepoužíváte. Bez tohoto oprávnění se kroky aktualizují při '
+            'používání aplikace. Na iOS může systém provést obdobnou občasnou '
+            'aktualizaci na pozadí v rámci uděleného přístupu k Apple Health; její '
+            'časování určuje iOS.\n\n'
+            'Aplikace nečte kadenci, trasu, polohu ani jiné zdravotní údaje a data '
+            'nepoužívá k reklamě ani je neprodává.',
             textAlign: TextAlign.center,
             style: TextStyle(
               color: context.appColors.textSecondary,
               height: 1.45,
             ),
           ),
-          const SizedBox(height: 28),
+          const SizedBox(height: 12),
+          TextButton.icon(
+            onPressed: () => _openPrivacyPolicy(context),
+            icon: const Icon(Icons.privacy_tip_outlined),
+            label: const Text('Zásady ochrany soukromí'),
+          ),
+          const SizedBox(height: 20),
           FilledButton.icon(
             onPressed: onGrant,
             icon: const Icon(Icons.favorite_outline),
-            label: const Text('Udělit souhlas'),
+            label: const Text('Souhlasím – povolit kroky'),
           ),
         ],
       ),
@@ -171,7 +193,8 @@ class _LeaderboardView extends StatelessWidget {
             subtitle: Text(
               state.syncing
                   ? 'Právě synchronizuji posledních 30 dní…'
-                  : 'Aktualizace proběhne při otevření této sekce.',
+                  : 'Aktualizace probíhá při používání aplikace a na podporovaných '
+                        'zařízeních přibližně každých 6 hodin na pozadí.',
             ),
           ),
         ),
@@ -181,6 +204,11 @@ class _LeaderboardView extends StatelessWidget {
               StepHistorySheet.show(context, controller: controller),
           icon: const Icon(Icons.history_rounded),
           label: const Text('Moje historie kroků'),
+        ),
+        TextButton.icon(
+          onPressed: () => _openPrivacyPolicy(context),
+          icon: const Icon(Icons.privacy_tip_outlined),
+          label: const Text('Jak používáme údaje o krocích'),
         ),
         const SizedBox(height: 14),
       ],
@@ -458,6 +486,20 @@ String _sortFieldLabel(StepSortField field) => switch (field) {
   StepSortField.days => 'Počet dní',
   StepSortField.averageStepsPerDay => 'Průměr kroků za den',
 };
+
+Future<void> _openPrivacyPolicy(BuildContext context) async {
+  final opened = await launchUrl(
+    Uri.parse(privacyPolicyUrl),
+    mode: LaunchMode.externalApplication,
+  );
+  if (!opened && context.mounted) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('Zásady ochrany soukromí se nepodařilo otevřít.'),
+      ),
+    );
+  }
+}
 
 class _ErrorView extends StatelessWidget {
   final String message;
