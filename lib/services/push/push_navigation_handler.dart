@@ -1,4 +1,7 @@
 import 'package:flutter/widgets.dart';
+import 'package:trus_app/features/footbar/screens/footbar_connect_screen.dart';
+import 'package:trus_app/features/footbar/controller/footbar_connect_notifier.dart';
+import 'package:trus_app/features/footbar/repository/footbar_repository.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:trus_app/features/beer/screens/beer_simple_screen.dart';
 import 'package:trus_app/features/fine/match/screens/fine_match_screen.dart';
@@ -50,6 +53,11 @@ class PushNavigationHandler {
     final variables = ref.read(screenVariablesNotifierProvider.notifier);
 
     switch (payload.screenId) {
+      case FootbarConnectScreen.id:
+        ref.read(footbarRepositoryProvider).invalidateProfile();
+        ref.invalidate(footbarConnectNotifierProvider);
+        screenNotifier.changeByFragmentId(FootbarConnectScreen.id);
+        return;
       case BeerSimpleScreen.id:
         if (payload.matchId != null) {
           variables.setMatchId(payload.matchId!);

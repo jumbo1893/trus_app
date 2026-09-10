@@ -106,8 +106,9 @@ class _StatsTableView extends StatelessWidget {
               bottom: index == data.rows.length - 1 ? 0 : 6,
             ),
             child: InkWell(
-              onTap: () =>
-                  row.redirect != null ? onRedirect(row.redirect!) : {},
+              onTap: (row.redirect?.canNavigate ?? false)
+                  ? () => onRedirect(row.redirect!)
+                  : null,
               child: _TableRow(values: row.columns, textStyle: cellStyle),
             ),
           );

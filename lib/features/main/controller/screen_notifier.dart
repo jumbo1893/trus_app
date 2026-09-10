@@ -14,6 +14,8 @@ import 'package:trus_app/models/api/helper/redirect/redirect.dart';
 
 import '../../../models/api/helper/redirect/redirect_api_model.dart';
 import '../../beer/screens/beer_simple_screen.dart';
+import '../../fine/match/screens/fine_match_screen.dart';
+import '../../fine/match/controller/fine_match_notifier.dart';
 import '../../general/app_bar_title.dart';
 import '../../general/global_variables_controller.dart';
 import '../../general/screen_name.dart';
@@ -230,6 +232,19 @@ class ScreenNotifier extends SafeStateNotifier<ScreenState> {
   }
 
   void redirect(RedirectApiModel redirect) {
+    if (!redirect.canNavigate) return;
+    if (redirect.redirect == Redirect.achievements) {
+      final achievement = redirect.playerAchievement;
+      if (achievement != null && achievement.id > 0) {
+        ref
+            .read(screenVariablesNotifierProvider.notifier)
+            .setPlayerAchievement(achievement);
+        changeByFragmentId(ViewPlayerAchievementDetailScreen.id);
+      } else {
+        changeByFragmentId(AchievementScreen.id);
+      }
+      return;
+    }
     if (redirect.match != null) {
       ref
           .read(screenVariablesNotifierProvider.notifier)
@@ -252,6 +267,9 @@ class ScreenNotifier extends SafeStateNotifier<ScreenState> {
       ref
           .read(screenVariablesNotifierProvider.notifier)
           .setSeason(redirect.season!);
+    }
+    if (redirect.redirect == Redirect.playerFineStats) {
+      ref.invalidate(fineMatchNotifierProvider);
     }
     chooseRedirect(redirect.redirect);
   }
@@ -299,8 +317,9 @@ class ScreenNotifier extends SafeStateNotifier<ScreenState> {
             .setFootballMatchId(footballMatch!.id!);
         changeByFragmentId(MatchParticipationScreen.id);
       case Redirect.playerFineStats:
-        // TODO: Handle this case.
-        throw UnimplementedError();
+        changeByFragmentId(FineMatchScreen.id);
+      case Redirect.achievements:
+        changeByFragmentId(AchievementScreen.id);
       case null:
         return;
       case Redirect.viewPlayer:

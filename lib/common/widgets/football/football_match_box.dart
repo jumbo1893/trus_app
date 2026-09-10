@@ -612,7 +612,7 @@ class _CompactWarningCard extends StatelessWidget {
               overflow: TextOverflow.ellipsis,
             ),
           ),
-          if (warning.redirectApiModel != null) ...[
+          if (warning.redirectApiModel?.canNavigate ?? false) ...[
             const SizedBox(width: 4),
             Icon(
               Icons.chevron_right,
@@ -624,7 +624,7 @@ class _CompactWarningCard extends StatelessWidget {
       ),
     );
 
-    if (warning.redirectApiModel == null) return content;
+    if (!(warning.redirectApiModel?.canNavigate ?? false)) return content;
 
     return InkWell(
       borderRadius: BorderRadius.circular(14),

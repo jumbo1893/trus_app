@@ -10,6 +10,7 @@ class HomeSetup implements IEndpointId {
   final DashboardMatch? nextMatch;
   final DashboardMatch? lastMatch;
   final MatchParticipationPrompt? participationPrompt;
+  final String? footbarWarning;
 
   final List<StatsBoardData> statsBoards;
 
@@ -22,11 +23,13 @@ class HomeSetup implements IEndpointId {
     required this.lastMatch,
     required this.participationPrompt,
     required this.statsBoards,
+    this.footbarWarning,
   });
 
   factory HomeSetup.fromJson(Map<String, dynamic> json) {
     return HomeSetup(
       nextBirthday: json["nextBirthday"] ?? "",
+      footbarWarning: json['footbarWarning'] as String?,
 
       randomFacts: List<String>.from(json['randomFacts'] ?? []),
 

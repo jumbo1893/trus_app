@@ -1,4 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:trus_app/features/footbar/screens/footbar_warning_card.dart';
+import 'package:trus_app/features/footbar/screens/footbar_connect_screen.dart';
+import 'package:trus_app/features/footbar/controller/footbar_connect_notifier.dart';
+import 'package:trus_app/features/footbar/repository/footbar_repository.dart';
 import 'package:trus_app/theme/app_colors.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:trus_app/common/widgets/home/birthday_text.dart';
@@ -132,6 +136,15 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
           physics: const AlwaysScrollableScrollPhysics(),
           padding: const EdgeInsets.fromLTRB(0, 8, 0, 24),
           children: [
+            if (state.setup.asData?.value.footbarWarning case final warning?)
+              FootbarWarningCard(
+                message: warning,
+                onOpen: () {
+                  ref.read(footbarRepositoryProvider).invalidateProfile();
+                  ref.invalidate(footbarConnectNotifierProvider);
+                  notifier.changeFragment(FootbarConnectScreen.id);
+                },
+              ),
             if (state.refreshFailed && state.setup.hasValue)
               Card(
                 child: ListTile(

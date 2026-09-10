@@ -4,6 +4,7 @@ enum Redirect {
   matchParticipation,
   playerFineStats,
   viewPlayer,
+  achievements,
 }
 
 extension RedirectExtension on Redirect {
@@ -19,6 +20,8 @@ extension RedirectExtension on Redirect {
         return Redirect.playerFineStats;
       case "VIEW_PLAYER":
         return Redirect.viewPlayer;
+      case "ACHIEVEMENTS":
+        return Redirect.achievements;
       default:
         return null;
     }
@@ -36,6 +39,8 @@ extension RedirectExtension on Redirect {
         return "PLAYER_FINE_STATS";
       case Redirect.viewPlayer:
         return "VIEW_PLAYER";
+      case Redirect.achievements:
+        return "ACHIEVEMENTS";
     }
   }
 }
