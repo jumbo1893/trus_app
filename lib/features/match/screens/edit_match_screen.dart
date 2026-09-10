@@ -30,7 +30,7 @@ class _EditMatchScreenState extends ConsumerState<EditMatchScreen> {
     final state = ref.watch(matchEditNotifierProvider(arg));
     return BaseFormScreen(
       headerTitle: state.name,
-      headerText: dateTimeToString(state.date),
+      headerText: matchDateToString(state.date),
       fields: matchFields(context, state, notifier),
       actions: [
         ActionButtonItem(

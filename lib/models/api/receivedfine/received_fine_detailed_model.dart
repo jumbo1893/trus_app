@@ -1,4 +1,3 @@
-import 'package:trus_app/common/utils/calendar.dart';
 import 'package:trus_app/models/api/fine_api_model.dart';
 import 'package:trus_app/models/api/player/player_api_model.dart';
 
@@ -41,7 +40,7 @@ class ReceivedFineDetailedModel implements ModelToString {
   @override
   String listViewTitle() {
     if(match != null) {
-      return "${match!.listViewTitle()}, ${dateTimeToString(match!.date)}";
+      return match!.listViewTitle();
     }
     else if (player != null) {
       return player!.listViewTitle();

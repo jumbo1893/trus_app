@@ -124,7 +124,7 @@ class MatchApiModel implements ModelToString, JsonAndHttpConverter, DropdownItem
 
   @override
   String toStringForListView() {
-    return "Datum zápasu: ${dateTimeToString(date)}";
+    return "Datum zápasu: ${matchDateToString(date)}";
   }
 
   @override
@@ -139,12 +139,12 @@ class MatchApiModel implements ModelToString, JsonAndHttpConverter, DropdownItem
           : "";
     }
 
-    return "$teams $result, ${dateTimeToString(date)}";
+    return "$teams $result, ${matchDateToString(date)}";
   }
 
   @override
   String toStringForAdd() {
-    return "Přidán zápas ${home ? "Liščí Trus - $name" : "$name - Liščí Trus"} $name s datumem: ${dateTimeToString(date)}";
+    return "Přidán zápas ${home ? "Liščí Trus - $name" : "$name - Liščí Trus"} $name s datumem: ${matchDateToString(date)}";
   }
 
   @override
@@ -154,7 +154,7 @@ class MatchApiModel implements ModelToString, JsonAndHttpConverter, DropdownItem
 
   @override
   String toStringForEdit(String originName) {
-    return "Zápas se soupeřem $originName upraven na ${home ? "Liščí Trus - $name" : "$name - Liščí Trus"} $name s datumem: ${dateTimeToString(date)}";
+    return "Zápas se soupeřem $originName upraven na ${home ? "Liščí Trus - $name" : "$name - Liščí Trus"} $name s datumem: ${matchDateToString(date)}";
   }
 
   @override

@@ -62,7 +62,9 @@ class MatchListTile extends StatelessWidget {
                       isUserTeam: !match.home,
                     ),
                     const SizedBox(height: 10),
-                    Row(
+                    Wrap(
+                      crossAxisAlignment: WrapCrossAlignment.center,
+                      runSpacing: 4,
                       children: [
                         Icon(
                           Icons.calendar_today_rounded,
@@ -71,7 +73,7 @@ class MatchListTile extends StatelessWidget {
                         ),
                         const SizedBox(width: 5),
                         Text(
-                          dateTimeToString(match.date),
+                          matchDateToString(match.date),
                           style: TextStyle(
                             color: context.appColors.textMuted,
                             fontSize: 13,

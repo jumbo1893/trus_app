@@ -161,7 +161,7 @@ class FootballMatchApiModel implements JsonAndHttpConverter, ModelToString {
   }
 
   String toStringForDateSubtitle() {
-    return "v čase ${formatDateForFrontend(date)}";
+    return "v čase ${matchDateToString(date, includeTime: true)}";
   }
 
   String toStringForMeta() {
@@ -169,19 +169,19 @@ class FootballMatchApiModel implements JsonAndHttpConverter, ModelToString {
   }
 
   String toStringForNextMatch() {
-    return "${toStringNameWithOpponent()}, v čase ${formatDateForFrontend(date)}. Jedná se o souboj ${opponentsTeamRanking()} v $round. kole a bude se hrát ${stadiumToString()}. Pískat bude ${refereeToString()}";
+    return "${toStringNameWithOpponent()}, v čase ${matchDateToString(date, includeTime: true)}. Jedná se o souboj ${opponentsTeamRanking()} v $round. kole a bude se hrát ${stadiumToString()}. Pískat bude ${refereeToString()}";
   }
 
   String toStringForCurrentlyPlayingMatch() {
-    return "${toStringNameWithOpponent()}, v čase ${formatDateForFrontend(date)}. Jedná se o souboj ${opponentsTeamRanking()} v $round. kole a hraje se ${stadiumToString()}. Píská ${refereeToString()}";
+    return "${toStringNameWithOpponent()}, v čase ${matchDateToString(date, includeTime: true)}. Jedná se o souboj ${opponentsTeamRanking()} v $round. kole a hraje se ${stadiumToString()}. Píská ${refereeToString()}";
   }
 
   String toStringForLastMatch() {
-    return "${toStringNameWithOpponent()}, v čase ${formatDateForFrontend(date)}. Jednalo se o souboj ${opponentsTeamRanking()} v $round. kole a hrálo se ${stadiumToString()} ${resultToString()}. Rozhodčí byl ${refereeToString()}";
+    return "${toStringNameWithOpponent()}, v čase ${matchDateToString(date, includeTime: true)}. Jednalo se o souboj ${opponentsTeamRanking()} v $round. kole a hrálo se ${stadiumToString()} ${resultToString()}. Rozhodčí byl ${refereeToString()}";
   }
 
   String toStringForCardDetail() {
-    return "${toStringNameWithOpponent()} hraném ${formatDateForFrontend(date)} ${stadiumToString()} s konečným výsledkem ${resultToString()}. Kartu udělil ${refereeToString()}";
+    return "${toStringNameWithOpponent()} hraném ${matchDateToString(date, includeTime: true)} ${stadiumToString()} s konečným výsledkem ${resultToString()}. Kartu udělil ${refereeToString()}";
   }
 
   String opponentsTeamRanking() {
@@ -270,7 +270,7 @@ class FootballMatchApiModel implements JsonAndHttpConverter, ModelToString {
   }
 
   String returnRoundLeagueDate() {
-    return "$round. kolo, $league, hrané ${formatDateForFrontend(date)}";
+    return "$round. kolo, $league, hrané ${matchDateToString(date, includeTime: true)}";
   }
 
 
@@ -372,7 +372,7 @@ class FootballMatchApiModel implements JsonAndHttpConverter, ModelToString {
   }
 
   String toStringWithTeamsDateAndResult() {
-    return "${bothTeamsToString()} ${simpleResultToString()}, ${formatDateForFrontend(date)}";
+    return "${bothTeamsToString()} ${simpleResultToString()}, ${matchDateToString(date, includeTime: true)}";
   }
 
   String toStringWithTeamsAndResult() {
@@ -381,7 +381,7 @@ class FootballMatchApiModel implements JsonAndHttpConverter, ModelToString {
 
   String toStringForSubtitle() {
     String secondText = _isScoreUnknown() ? "stadion: $stadium" : "výsledek: ${simpleResultToString()}";
-    return "Datum: ${formatDateForFrontend(date)}, $secondText";
+    return "Datum: ${matchDateToString(date, includeTime: true)}, $secondText";
   }
 
   String toStringForMutualMatchesSubtitle(bool homeTeam) {

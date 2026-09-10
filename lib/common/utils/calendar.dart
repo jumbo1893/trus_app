@@ -23,6 +23,22 @@ String dateTimeToString(DateTime dateTime) {
   return returnDate;
 }
 
+/// Match dates use the same local date for both the weekday and the date.
+String matchDateToString(DateTime dateTime, {bool includeTime = false}) {
+  final local = dateTime.toLocal();
+  const weekdays = [
+    'pondělí',
+    'úterý',
+    'středa',
+    'čtvrtek',
+    'pátek',
+    'sobota',
+    'neděle',
+  ];
+  final date = DateFormat(includeTime ? 'dd.MM.yyyy HH:mm' : 'dd.MM.yyyy').format(local);
+  return '${weekdays[local.weekday - 1]} $date';
+}
+
 String dateTimeToTimeString(DateTime dateTime) {
   final formatter = DateFormat('HH:mm:ss');
   final returnDate = formatter.format(dateTime.toLocal());
