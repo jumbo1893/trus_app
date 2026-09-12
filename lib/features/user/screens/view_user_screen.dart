@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:trus_app/features/onboarding/onboarding_card.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:trus_app/features/user/controller/view_user_notifier.dart';
 import 'package:trus_app/features/membership/widgets/membership_info.dart';
@@ -65,6 +66,7 @@ class _ViewUserScreenState extends ConsumerState<ViewUserScreen> {
         ),
       ],
       extraSections: [
+        const OnboardingCard(),
         AccountDeletionOptions(
           onDelete: () =>
               ref.read(mainNotifierProvider.notifier).onDeleteAccountTapped(),

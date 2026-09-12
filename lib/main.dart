@@ -2,6 +2,7 @@ import 'dart:io';
 
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_driver/driver_extension.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:trus_app/common/widgets/loader.dart';
@@ -54,6 +55,10 @@ class MyApp extends ConsumerWidget {
       debugShowCheckedModeBanner: false,
       navigatorKey: navigatorKey,
       title: "Trusí aplikace",
+      // Keep built-in dialogs Czech even when the device uses another language.
+      locale: const Locale('cs', 'CZ'),
+      supportedLocales: const [Locale('cs', 'CZ')],
+      localizationsDelegates: GlobalMaterialLocalizations.delegates,
       theme: AppTheme.light(),
       darkTheme: AppTheme.dark(),
       themeMode: themeMode,

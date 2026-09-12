@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:trus_app/features/onboarding/onboarding_screen.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:trus_app/features/auth/app_team/controller/auth_app_team_registration_controller.dart';
 import 'package:trus_app/features/main/main_screen.dart';
@@ -26,7 +27,15 @@ class AppTeamRegistrationScreen extends ConsumerStatefulWidget {
 
 class _AppTeamRegistrationScreen
     extends ConsumerState<AppTeamRegistrationScreen> {
-  void navigateToMainScreen(TeamOnboardingChoice choice) {
+  bool _entering = false;
+
+  Future<void> navigateToMainScreen(TeamOnboardingChoice choice) async {
+    if (_entering) return;
+    _entering = true;
+    // Team membership/header are already saved by completeRegistration.
+    // Keep the guide inside registration, before creating MainScreen.
+    await openOnboarding(context, ref, registration: true);
+    if (!mounted) return;
     final destination = choice == TeamOnboardingChoice.createNew
         ? TeamAdministrationScreen.id
         : HomeScreen.id;
@@ -83,13 +92,13 @@ class _AppTeamRegistrationScreen
             columns: [
               const SizedBox(height: 16),
               Text(
-                '2 ze 2 · Tvůj tým',
+                'Tvůj tým',
                 style: Theme.of(context).textTheme.headlineSmall,
                 textAlign: TextAlign.center,
               ),
               const SizedBox(height: 6),
               const Text(
-                'Výběr můžeš později změnit nebo se přidat k dalším týmům.',
+                'Potom si nastavíš profil, oznámení a další možnosti. Všechny další kroky můžeš přeskočit.',
                 textAlign: TextAlign.center,
               ),
               const SizedBox(height: 16),
@@ -198,7 +207,7 @@ class _AppTeamRegistrationScreen
                 },
               ),
               CustomButton(
-                text: 'Dokončit registraci',
+                text: 'Pokračovat k nastavení aplikace',
                 onPressed: () async {
                   if (await controller.completeRegistration() && mounted) {
                     navigateToMainScreen(controller.selectedChoice);

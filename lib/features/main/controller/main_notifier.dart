@@ -54,13 +54,18 @@ class MainNotifier extends SafeStateNotifier<MainState> {
   }
 
   void _init() {
-    String? user = authRepository.getCurrentUserName();
-    if (user != null) {
-      state = state.copyWith(userName: "píč $user");
-    }
+    refreshUserName();
+  }
+
+  void refreshUserName() {
+    final name = authRepository.getCurrentUserName();
+    safeSetState(state.copyWith(userName: name == null ? '' : 'píč $name'));
   }
 
   void _emitUiEvent(MainUiEventType type) {
+    // This provider survives logout. Resolve identity when opening a menu,
+    // not only when the first account creates the notifier.
+    refreshUserName();
     _uiEventId++;
 
     safeSetState(

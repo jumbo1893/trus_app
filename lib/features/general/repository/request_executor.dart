@@ -145,8 +145,9 @@ class RequestExecutor extends ResponseValidator {
   Future<T> executePutRequest<T>(
     Uri uri,
     T Function(dynamic) mapFunction,
-    Object body,
-  ) async {
+    Object body, {
+    bool queueOnFailure = true,
+  }) async {
     return await _executeRequest(
       (client) async {
         final headers = await _headerProvider.getHeaders();
@@ -155,6 +156,7 @@ class RequestExecutor extends ResponseValidator {
       },
       mapFunction,
       false,
+      queueOnFailure: queueOnFailure,
     );
   }
 

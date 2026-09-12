@@ -42,7 +42,7 @@ Future<void> openFootbarWebView(String url, BuildContext context, Function(Strin
     ..loadRequest(Uri.parse(url));
 
   // Zobraz WebView v dialogu nebo novém screen (např. full-screen dialog)
-  showDialog(
+  await showDialog(
     context: context,
     builder: (context) => AlertDialog(
       content: SizedBox(

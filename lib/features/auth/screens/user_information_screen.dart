@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:trus_app/features/onboarding/onboarding_screen.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:trus_app/features/auth/controller/auth_controller.dart';
 import 'package:trus_app/features/auth/app_team/screens/app_team_registration_screen.dart';
@@ -54,6 +55,8 @@ class _UserInformationScreenState extends ConsumerState<UserInformationScreen> {
         return;
       }
       authController.saveAppTeam(user.teamRoles!.first.appTeam);
+      await openOnboarding(context, ref, registration: true);
+      if (!mounted) return;
       Navigator.pushNamedAndRemoveUntil(
         context,
         MainScreen.routeName,

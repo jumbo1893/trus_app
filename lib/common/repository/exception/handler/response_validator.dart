@@ -32,10 +32,22 @@ class ResponseValidator {
     } else if (value == 400) {
       try {
         final decodedBody = json.decode(utf8.decode(response.bodyBytes));
+        // A 400 can be a routing/JSON error, not only field validation. Keep
+        // its server message instead of failing while casting missing fields.
+        if (decodedBody is Map<String, dynamic> &&
+            decodedBody['fields'] is! List) {
+          final message = decodedBody['message'];
+          throw ServerException(
+            message is String && message.trim().isNotEmpty
+                ? message
+                : 'Server odmítl požadavek. Status: $value',
+          );
+        }
         FieldValidationResponse fieldValidationResponse =
             FieldValidationResponse.fromJson(decodedBody);
         throw FieldValidationException(fieldValidationResponse.fields);
       } catch (e) {
+        if (e is ServerException) rethrow;
         if (e is! FieldValidationException) {
           throw ServerException(
             'Nelze načíst data z neznámých důvodů. Status: $value',

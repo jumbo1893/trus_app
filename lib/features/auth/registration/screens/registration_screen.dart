@@ -43,10 +43,7 @@ class _RegistrationScreen extends ConsumerState<RegistrationScreen> {
         loadingScreen: null,
         columns: [
           const SizedBox(height: 30),
-          Text(
-            '1 ze 2 · Tvůj účet',
-            style: Theme.of(context).textTheme.titleMedium,
-          ),
+          Text('Tvůj účet', style: Theme.of(context).textTheme.titleMedium),
           const SizedBox(height: 8),
           const Text(
             "Zadej e-mail, heslo a přezdívku. V dalším kroku si vybereš tým.",
