@@ -1,4 +1,7 @@
 import 'package:flutter/widgets.dart';
+import 'package:trus_app/features/match_participation/screens/match_participation_screen.dart';
+import 'package:trus_app/features/match_participation/controller/match_participation_notifier.dart';
+import 'package:trus_app/features/general/global_variables_controller.dart';
 import 'package:trus_app/features/footbar/screens/footbar_connect_screen.dart';
 import 'package:trus_app/features/footbar/controller/footbar_connect_notifier.dart';
 import 'package:trus_app/features/footbar/repository/footbar_repository.dart';
@@ -53,6 +56,24 @@ class PushNavigationHandler {
     final variables = ref.read(screenVariablesNotifierProvider.notifier);
 
     switch (payload.screenId) {
+      case MatchParticipationScreen.id:
+        if (payload.footballMatchId == null) return;
+        if (payload.appTeamId != null &&
+            ref.read(globalVariablesControllerProvider).appTeam?.id !=
+                payload.appTeamId) {
+          ref
+              .read(uiFeedbackProvider.notifier)
+              .showErrorDialog(
+                'Tato účast patří do jiného týmu. Nejdřív přepni tým.',
+              );
+          return;
+        }
+        variables.setFootballMatchId(payload.footballMatchId!);
+        ref.invalidate(
+          matchParticipationNotifierProvider(payload.footballMatchId!),
+        );
+        screenNotifier.changeByFragmentId(MatchParticipationScreen.id);
+        return;
       case FootbarConnectScreen.id:
         ref.read(footbarRepositoryProvider).invalidateProfile();
         ref.invalidate(footbarConnectNotifierProvider);

@@ -5,11 +5,13 @@ class PendingParticipation {
   final int footballMatchId;
   final MatchParticipationStatus status;
   final String? comment;
+  final bool? playing;
 
   const PendingParticipation({
     required this.footballMatchId,
     required this.status,
     this.comment,
+    this.playing,
   });
 }
 

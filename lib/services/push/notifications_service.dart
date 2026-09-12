@@ -592,6 +592,7 @@ class NotificationsService {
               if (payload.footballMatchId != null)
                 'footballMatchId': payload.footballMatchId,
               if (payload.playerId != null) 'playerId': payload.playerId,
+              if (payload.appTeamId != null) 'appTeamId': payload.appTeamId,
             }),
     );
   }

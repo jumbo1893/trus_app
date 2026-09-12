@@ -70,6 +70,8 @@ class EnabledPushNotification implements JsonAndHttpConverter, ModelToString {
   @override
   String listViewTitle() {
     switch (type) {
+      case NotificationType.matchParticipation:
+        return 'Když se změní účast nebo přibude komentář k zápasu';
       case NotificationType.global:
         return 'Chci dostávat upozornění';
       case NotificationType.threeDaysBefore:

@@ -164,6 +164,7 @@ class PlayerEditNotifier
             status: pending.status,
             player: model,
             comment: pending.comment,
+            playing: pending.playing,
           );
       final createdPlayer = detail.currentPlayer;
       if (createdPlayer != null) {

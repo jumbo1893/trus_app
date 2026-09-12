@@ -25,11 +25,13 @@ class MatchParticipationRepository {
     required MatchParticipationStatus status,
     int? playerId,
     String? comment,
+    bool? playing,
   }) {
     return api.respond(
       footballMatchId: footballMatchId,
       status: status,
       playerId: playerId,
+      playing: playing,
       comment: comment,
     );
   }
@@ -39,11 +41,13 @@ class MatchParticipationRepository {
     required MatchParticipationStatus status,
     required PlayerApiModel player,
     String? comment,
+    bool? playing,
   }) {
     return api.createPlayerAndRespond(
       footballMatchId: footballMatchId,
       status: status,
       player: player,
+      playing: playing,
       comment: comment,
     );
   }
@@ -70,4 +74,7 @@ class MatchParticipationRepository {
   Future<MatchParticipationDetail> deleteComment(int commentId) {
     return api.deleteComment(commentId);
   }
+
+  Future<MatchParticipationDetail> deleteResponse(int matchId, int playerId) =>
+      api.deleteResponse(matchId, playerId);
 }

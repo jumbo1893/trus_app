@@ -9,13 +9,21 @@ class ParticipationChoice {
   final PlayerApiModel? player;
   final bool createNewPlayer;
   final String? comment;
+  final bool? playing;
 
-  const ParticipationChoice.respond(this.status, {this.player, this.comment})
-    : createNewPlayer = false;
+  const ParticipationChoice.respond(
+    this.status, {
+    this.player,
+    this.comment,
+    this.playing,
+  }) : createNewPlayer = false;
 
-  const ParticipationChoice.createPlayer(this.status, {this.comment})
-    : player = null,
-      createNewPlayer = true;
+  const ParticipationChoice.createPlayer(
+    this.status, {
+    this.comment,
+    this.playing,
+  }) : player = null,
+       createNewPlayer = true;
 }
 
 class ParticipationResponseBottomSheet extends StatefulWidget {
@@ -23,6 +31,7 @@ class ParticipationResponseBottomSheet extends StatefulWidget {
   final PlayerApiModel? currentPlayer;
   final List<PlayerApiModel> eligiblePlayers;
   final bool reconsideration;
+  final bool? initialPlaying;
 
   const ParticipationResponseBottomSheet({
     super.key,
@@ -30,6 +39,7 @@ class ParticipationResponseBottomSheet extends StatefulWidget {
     required this.currentPlayer,
     required this.eligiblePlayers,
     required this.reconsideration,
+    this.initialPlaying,
   });
 
   static Future<ParticipationChoice?> show(
@@ -38,6 +48,7 @@ class ParticipationResponseBottomSheet extends StatefulWidget {
     required PlayerApiModel? currentPlayer,
     required List<PlayerApiModel> eligiblePlayers,
     bool reconsideration = false,
+    bool? initialPlaying,
   }) {
     return showModalBottomSheet<ParticipationChoice>(
       context: context,
@@ -49,6 +60,7 @@ class ParticipationResponseBottomSheet extends StatefulWidget {
         currentPlayer: currentPlayer,
         eligiblePlayers: eligiblePlayers,
         reconsideration: reconsideration,
+        initialPlaying: initialPlaying,
       ),
     );
   }
@@ -76,12 +88,62 @@ class _ParticipationResponseBottomSheetState
 
   void _onStatusSelected(MatchParticipationStatus status) {
     if (widget.currentPlayer != null) {
-      Navigator.of(
-        context,
-      ).pop(ParticipationChoice.respond(status, comment: _comment));
+      _finish(status, widget.currentPlayer);
       return;
     }
     setState(() => _selectedStatus = status);
+  }
+
+  Future<void> _finish(
+    MatchParticipationStatus status,
+    PlayerApiModel? player, {
+    bool create = false,
+  }) async {
+    bool? playing;
+    if (status == MatchParticipationStatus.attending) {
+      var selected = widget.initialPlaying ?? !(player?.fan ?? false);
+      playing = await showDialog<bool>(
+        context: context,
+        builder: (ctx) => StatefulBuilder(
+          builder: (ctx, update) => AlertDialog(
+            title: const Text('Zúčastním se'),
+            content: SwitchListTile(
+              title: const Text('Hrající'),
+              subtitle: Text(selected ? 'Jdu hrát' : 'Jdu jako nehrající'),
+              value: selected,
+              onChanged: (value) => update(() => selected = value),
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(ctx),
+                child: const Text('Zpět'),
+              ),
+              FilledButton(
+                onPressed: () => Navigator.pop(ctx, selected),
+                child: const Text('Potvrdit účast'),
+              ),
+            ],
+          ),
+        ),
+      );
+      if (playing == null || !mounted) return;
+    }
+    if (!mounted) return;
+    Navigator.pop(
+      context,
+      create
+          ? ParticipationChoice.createPlayer(
+              status,
+              comment: _comment,
+              playing: playing,
+            )
+          : ParticipationChoice.respond(
+              status,
+              player: player,
+              comment: _comment,
+              playing: playing,
+            ),
+    );
   }
 
   @override
@@ -269,20 +331,12 @@ class _ParticipationResponseBottomSheetState
                 style: TextStyle(color: colors.textMuted, fontSize: 12),
               ),
               trailing: Icon(Icons.chevron_right, color: colors.accent),
-              onTap: () => Navigator.of(context).pop(
-                ParticipationChoice.respond(
-                  status,
-                  player: player,
-                  comment: _comment,
-                ),
-              ),
+              onTap: () => _finish(status, player),
             ),
           ),
         const SizedBox(height: 4),
         OutlinedButton.icon(
-          onPressed: () => Navigator.of(
-            context,
-          ).pop(ParticipationChoice.createPlayer(status, comment: _comment)),
+          onPressed: () => _finish(status, null, create: true),
           icon: const Icon(Icons.person_add_alt_1),
           label: const Text('Nejsem na seznamu – vytvořit osobu'),
         ),

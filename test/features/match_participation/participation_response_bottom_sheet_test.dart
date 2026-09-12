@@ -9,6 +9,52 @@ import 'package:trus_app/models/api/player/player_api_model.dart';
 import 'package:trus_app/theme/app_theme.dart';
 
 void main() {
+  for (final fan in [false, true]) {
+    testWidgets('playing defaults for fan=$fan and can be changed', (
+      tester,
+    ) async {
+      ParticipationChoice? choice;
+      await tester.pumpWidget(
+        MaterialApp(
+          theme: AppTheme.light(),
+          home: Builder(
+            builder: (context) => Scaffold(
+              body: TextButton(
+                child: const Text('Otevřít'),
+                onPressed: () async {
+                  choice = await ParticipationResponseBottomSheet.show(
+                    context,
+                    footballMatch: footballMatch(),
+                    eligiblePlayers: [],
+                    currentPlayer: PlayerApiModel(
+                      id: 7,
+                      name: 'Test',
+                      birthday: DateTime(2000),
+                      fan: fan,
+                      active: true,
+                    ),
+                  );
+                },
+              ),
+            ),
+          ),
+        ),
+      );
+      await tester.tap(find.text('Otevřít'));
+      await tester.pumpAndSettle();
+      expect(find.byType(SwitchListTile), findsNothing);
+      await tester.tap(find.text('Zúčastním se'));
+      await tester.pumpAndSettle();
+      expect(
+        tester.widget<SwitchListTile>(find.byType(SwitchListTile)).value,
+        !fan,
+      );
+      await tester.tap(find.byType(SwitchListTile));
+      await tester.tap(find.text('Potvrdit účast'));
+      await tester.pumpAndSettle();
+      expect(choice?.playing, fan);
+    });
+  }
   testWidgets('unpaired response remembers status while player is selected', (
     tester,
   ) async {

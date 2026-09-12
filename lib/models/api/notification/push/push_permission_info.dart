@@ -13,7 +13,7 @@ class PushPermissionInfo {
 
   bool get allowed =>
       authorizationStatus == AuthorizationStatus.authorized ||
-          authorizationStatus == AuthorizationStatus.provisional;
+      authorizationStatus == AuthorizationStatus.provisional;
 
   bool get hasToken => token != null && token!.isNotEmpty;
 }

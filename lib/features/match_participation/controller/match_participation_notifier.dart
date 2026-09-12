@@ -54,6 +54,7 @@ class MatchParticipationNotifier
     MatchParticipationStatus status, {
     PlayerApiModel? player,
     String? comment,
+    bool? playing,
   }) async {
     late final ApiResult<MatchParticipationDetail> result;
     try {
@@ -62,6 +63,7 @@ class MatchParticipationNotifier
           footballMatchId: footballMatchId,
           status: status,
           playerId: player?.id,
+          playing: playing,
           comment: comment,
         ),
         loadingMessage: 'Ukládám účast…',
@@ -141,13 +143,34 @@ class MatchParticipationNotifier
     }
   }
 
-  void startNewPlayerFlow(MatchParticipationStatus status, {String? comment}) {
+  Future<void> deleteResponse(int playerId) async {
+    try {
+      final detail = await runUiWithResult(
+        () => repository.deleteResponse(footballMatchId, playerId),
+        loadingMessage: 'Mažu účast…',
+        successSnack: 'Účast byla smazána',
+      );
+      if (!mounted) return;
+      safeSetState(state.copyWith(detail: AsyncValue.data(detail)));
+      ref.read(homeRepositoryProvider).invalidateSetup();
+      ref.invalidate(homeNotifierProvider);
+    } catch (_) {
+      return;
+    }
+  }
+
+  void startNewPlayerFlow(
+    MatchParticipationStatus status, {
+    String? comment,
+    bool? playing,
+  }) {
     ref
         .read(pendingParticipationProvider.notifier)
         .state = PendingParticipation(
       footballMatchId: footballMatchId,
       status: status,
       comment: comment,
+      playing: playing,
     );
     ref
         .read(screenVariablesNotifierProvider.notifier)

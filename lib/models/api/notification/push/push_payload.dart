@@ -7,6 +7,7 @@ class PushPayload {
   final int? matchId;
   final int? footballMatchId;
   final int? playerId;
+  final int? appTeamId;
 
   const PushPayload({
     required this.title,
@@ -17,6 +18,7 @@ class PushPayload {
     required this.footballMatchId,
     required this.playerId,
     required this.navigateText,
+    this.appTeamId,
   });
 
   factory PushPayload.fromData(Map<String, dynamic> data) {
@@ -28,6 +30,7 @@ class PushPayload {
       matchId: _toInt(data['matchId']),
       footballMatchId: _toInt(data['footballMatchId']),
       playerId: _toInt(data['playerId']),
+      appTeamId: _toInt(data['appTeamId']),
       navigateText: data['navigateText']?.toString(),
     );
   }

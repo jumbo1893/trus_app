@@ -28,6 +28,7 @@ class MatchParticipationApiService extends CrudApiService {
     required MatchParticipationStatus status,
     int? playerId,
     String? comment,
+    bool? playing,
   }) {
     return executePostRequest(
       Uri.parse('$serverUrl/$matchParticipationApi/respond'),
@@ -35,6 +36,7 @@ class MatchParticipationApiService extends CrudApiService {
       jsonEncode({
         'footballMatchId': footballMatchId,
         'playerId': playerId,
+        'playing': playing,
         'status': status.toJson(),
         'comment': comment,
       }),
@@ -46,6 +48,7 @@ class MatchParticipationApiService extends CrudApiService {
     required MatchParticipationStatus status,
     required PlayerApiModel player,
     String? comment,
+    bool? playing,
   }) {
     return executePostRequest(
       Uri.parse('$serverUrl/$matchParticipationApi/respond-with-new-player'),
@@ -55,6 +58,7 @@ class MatchParticipationApiService extends CrudApiService {
         'status': status.toJson(),
         'comment': comment,
         'player': player.toJson(),
+        'playing': playing,
       }),
     );
   }
@@ -95,4 +99,13 @@ class MatchParticipationApiService extends CrudApiService {
       null,
     );
   }
+
+  Future<MatchParticipationDetail> deleteResponse(int matchId, int playerId) =>
+      executeDeleteRequest(
+        Uri.parse(
+          '$serverUrl/$matchParticipationApi/$matchId/player/$playerId',
+        ),
+        (json) => MatchParticipationDetail.fromJson(json),
+        null,
+      );
 }

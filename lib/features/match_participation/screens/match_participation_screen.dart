@@ -11,6 +11,7 @@ import 'package:trus_app/models/api/participation/match_participation_member.dar
 import 'package:trus_app/models/api/participation/match_participation_reaction.dart';
 import 'package:trus_app/models/api/participation/match_participation_status.dart';
 import 'package:trus_app/theme/app_colors.dart';
+import 'package:trus_app/models/api/player/player_api_model.dart';
 
 class MatchParticipationScreen extends CustomConsumerWidget {
   static const String id = 'match-participation-screen';
@@ -55,23 +56,42 @@ class MatchParticipationScreen extends CustomConsumerWidget {
           ),
           data: (detail) => _ParticipationContent(
             detail: detail,
+            onRespondFor: (player) async {
+              final choice = await ParticipationResponseBottomSheet.show(
+                context,
+                footballMatch: detail.footballMatch,
+                currentPlayer: player,
+                eligiblePlayers: const [],
+                initialPlaying: _playingFor(detail, player.id),
+              );
+              if (choice == null || !context.mounted) return;
+              await notifier.respond(
+                choice.status,
+                player: player,
+                playing: choice.playing,
+                comment: choice.comment,
+              );
+            },
             onRespond: () async {
               final choice = await ParticipationResponseBottomSheet.show(
                 context,
                 footballMatch: detail.footballMatch,
                 currentPlayer: detail.currentPlayer,
                 eligiblePlayers: detail.eligiblePlayers,
+                initialPlaying: _playingFor(detail, detail.currentPlayer?.id),
               );
               if (choice == null || !context.mounted) return;
               if (choice.createNewPlayer) {
                 notifier.startNewPlayerFlow(
                   choice.status,
                   comment: choice.comment,
+                  playing: choice.playing,
                 );
               } else {
                 await notifier.respond(
                   choice.status,
                   player: choice.player,
+                  playing: choice.playing,
                   comment: choice.comment,
                 );
               }
@@ -100,6 +120,22 @@ class MatchParticipationScreen extends CustomConsumerWidget {
       ),
     );
   }
+}
+
+List<MatchParticipationMember> _allMembers(MatchParticipationDetail detail) => [
+  ...detail.attendingPlayers,
+  ...detail.attendingFans,
+  ...detail.maybePlayers,
+  ...detail.maybeFans,
+  ...detail.notAttendingPlayers,
+  ...detail.notAttendingFans,
+];
+
+bool? _playingFor(MatchParticipationDetail detail, int? id) {
+  for (final member in _allMembers(detail)) {
+    if (member.player.id == id) return member.isPlaying;
+  }
+  return null;
 }
 
 Future<bool> _confirmDeleteComment(
@@ -133,6 +169,7 @@ Future<bool> _confirmDeleteComment(
 class _ParticipationContent extends StatelessWidget {
   final MatchParticipationDetail detail;
   final VoidCallback onRespond;
+  final Future<void> Function(PlayerApiModel) onRespondFor;
   final Future<void> Function(MatchParticipationComment? parent) onAddComment;
   final Future<void> Function(
     int commentId,
@@ -144,6 +181,7 @@ class _ParticipationContent extends StatelessWidget {
   const _ParticipationContent({
     required this.detail,
     required this.onRespond,
+    required this.onRespondFor,
     required this.onAddComment,
     required this.onReact,
     required this.onDelete,
@@ -209,6 +247,30 @@ class _ParticipationContent extends StatelessWidget {
                         : 'Změnit odpověď',
                   ),
                 ),
+                if (detail.currentPlayer != null)
+                  OutlinedButton.icon(
+                    icon: const Icon(Icons.person_add_alt),
+                    label: const Text('Zadat účast za někoho jiného'),
+                    onPressed: () async {
+                      final player = await showDialog<PlayerApiModel>(
+                        context: context,
+                        builder: (ctx) => SimpleDialog(
+                          title: const Text('Za koho odpovídáš?'),
+                          children: [
+                            for (final player in detail.eligiblePlayers)
+                              if (player.id != detail.currentPlayer?.id)
+                                SimpleDialogOption(
+                                  onPressed: () => Navigator.pop(ctx, player),
+                                  child: Text(player.name),
+                                ),
+                          ],
+                        ),
+                      );
+                      if (player != null && context.mounted) {
+                        await onRespondFor(player);
+                      }
+                    },
+                  ),
               ],
             ),
           ),
@@ -216,6 +278,7 @@ class _ParticipationContent extends StatelessWidget {
         const SizedBox(height: 14),
         _ParticipationGroup(
           title: 'Zúčastní se',
+          showPlaying: true,
           icon: Icons.check_circle_outline,
           accent: Colors.green.shade700,
           players: detail.attendingPlayers,
@@ -254,6 +317,7 @@ class _ParticipationContent extends StatelessWidget {
 }
 
 class _ParticipationGroup extends StatelessWidget {
+  final bool showPlaying;
   final String title;
   final IconData icon;
   final Color accent;
@@ -261,6 +325,7 @@ class _ParticipationGroup extends StatelessWidget {
   final List<MatchParticipationMember> fans;
 
   const _ParticipationGroup({
+    this.showPlaying = false,
     required this.title,
     required this.icon,
     required this.accent,
@@ -299,12 +364,14 @@ class _ParticipationGroup extends StatelessWidget {
               title: 'Hráči',
               icon: Icons.sports_soccer_outlined,
               members: players,
+              showPlaying: showPlaying,
             ),
             const SizedBox(height: 10),
             _MemberAudience(
               title: 'Fanoušci',
               icon: Icons.emoji_people_outlined,
               members: fans,
+              showPlaying: showPlaying,
             ),
           ],
         ),
@@ -314,11 +381,13 @@ class _ParticipationGroup extends StatelessWidget {
 }
 
 class _MemberAudience extends StatelessWidget {
+  final bool showPlaying;
   final String title;
   final IconData icon;
   final List<MatchParticipationMember> members;
 
   const _MemberAudience({
+    required this.showPlaying,
     required this.title,
     required this.icon,
     required this.members,
@@ -356,7 +425,7 @@ class _MemberAudience extends StatelessWidget {
             Text('Zatím nikdo', style: TextStyle(color: colors.textMuted))
           else
             for (var index = 0; index < members.length; index++) ...[
-              _MemberTile(member: members[index]),
+              _MemberTile(member: members[index], showPlaying: showPlaying),
               if (index < members.length - 1)
                 Divider(color: colors.textMuted.withAlpha(35)),
             ],
@@ -366,13 +435,14 @@ class _MemberAudience extends StatelessWidget {
   }
 }
 
-class _MemberTile extends StatelessWidget {
+class _MemberTile extends ConsumerWidget {
+  final bool showPlaying;
   final MatchParticipationMember member;
 
-  const _MemberTile({required this.member});
+  const _MemberTile({required this.member, required this.showPlaying});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final colors = context.appColors;
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 3),
@@ -380,13 +450,49 @@ class _MemberTile extends StatelessWidget {
         children: [
           Expanded(
             child: Text(
-              member.player.name,
+              '${member.player.name}${showPlaying ? " · ${member.isPlaying ? "hrající" : "nehrající"}" : ""}'
+              '${member.respondedBy != null ? "\nZadal/a: ${member.respondedBy!.name}" : ""}',
               style: TextStyle(
                 color: colors.textPrimary,
                 fontWeight: FontWeight.w700,
               ),
             ),
           ),
+          if (member.canDelete)
+            IconButton(
+              tooltip: 'Smazat účast',
+              icon: const Icon(Icons.delete_outline),
+              onPressed: () async {
+                final confirmed = await showDialog<bool>(
+                  context: context,
+                  builder: (ctx) => AlertDialog(
+                    title: Text('Smazat účast: ${member.player.name}?'),
+                    content: const Text(
+                      'Smažou se také komentáře této účasti a jejich reakce.',
+                    ),
+                    actions: [
+                      TextButton(
+                        onPressed: () => Navigator.pop(ctx, false),
+                        child: const Text('Zrušit'),
+                      ),
+                      FilledButton(
+                        onPressed: () => Navigator.pop(ctx, true),
+                        child: const Text('Smazat'),
+                      ),
+                    ],
+                  ),
+                );
+                if (confirmed != true || !context.mounted) return;
+                final id = ref
+                    .read(screenVariablesNotifierProvider)
+                    .footballMatchId;
+                if (id != null) {
+                  await ref
+                      .read(matchParticipationNotifierProvider(id).notifier)
+                      .deleteResponse(member.player.id!);
+                }
+              },
+            ),
           if (!member.player.active)
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
