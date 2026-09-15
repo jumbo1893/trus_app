@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'package:flutter/services.dart';
 
 import 'package:health/health.dart';
 import 'package:permission_handler/permission_handler.dart';
@@ -6,7 +7,12 @@ import 'package:trus_app/models/api/step/step_models.dart';
 import 'package:trus_app/services/crash_reporting_service.dart';
 
 class HealthStepService {
-  final Health _health = Health();
+  final Health _health;
+  final bool _isIOS;
+
+  HealthStepService({Health? health, bool? isIOS})
+    : _health = health ?? Health(),
+      _isIOS = isIOS ?? Platform.isIOS;
 
   Future<bool> requestPermission() async {
     await _health.configure();
@@ -97,6 +103,14 @@ class HealthStepService {
           'steps.health.read.day.success date=$dateKey',
         );
       } catch (error, stack) {
+        if (isProtectedHealthDataUnavailable(error, isIOS: _isIOS)) {
+          // Locked HealthKit data is not denied consent or a zero step count.
+          // Keep successful days only; callers retry on resume/next scheduled run.
+          await CrashReportingService.log(
+            'steps.health.read.deferred protected_data_unavailable',
+          );
+          break;
+        }
         firstError ??= error;
         firstStack ??= stack;
         failedDates.add(dateKey);
@@ -111,6 +125,10 @@ class HealthStepService {
       failedDates.length,
     );
     if (firstError != null && firstStack != null) {
+      // Complete failures are reported by the caller, not both layers.
+      if (result.isEmpty) {
+        Error.throwWithStackTrace(firstError, firstStack);
+      }
       await CrashReportingService.recordError(
         firstError,
         firstStack,
@@ -120,9 +138,6 @@ class HealthStepService {
           'Neúspěšné dny: ${failedDates.join(',')}',
         ],
       );
-      if (result.isEmpty) {
-        Error.throwWithStackTrace(firstError, firstStack);
-      }
     }
 
     await CrashReportingService.setKey('steps_sync_phase', 'health_read_done');
@@ -132,6 +147,15 @@ class HealthStepService {
     return result;
   }
 }
+
+bool isProtectedHealthDataUnavailable(Object error, {required bool isIOS}) =>
+    isIOS &&
+    error is PlatformException &&
+    error.code == 'STEPS_ERROR' &&
+    (error.message?.toLowerCase().contains(
+          'protected health data is inaccessible',
+        ) ??
+        false);
 
 String _dateKey(DateTime date) =>
     '${date.year.toString().padLeft(4, '0')}-'

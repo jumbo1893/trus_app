@@ -12,6 +12,9 @@ class LifecycleEventHandler extends WidgetsBindingObserver {
 
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state != AppLifecycleState.resumed) {
+      container.read(stepSyncSchedulerProvider).pauseForegroundMonitoring();
+    }
     if (state == AppLifecycleState.resumed) {
       container.read(requestExecutorProvider).retryQueuedRequests();
       container

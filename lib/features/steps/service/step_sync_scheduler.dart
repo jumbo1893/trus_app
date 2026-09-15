@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'package:flutter/widgets.dart';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:trus_app/features/steps/repository/health_step_service.dart';
@@ -8,7 +9,11 @@ import 'package:trus_app/features/steps/repository/background_step_sync.dart';
 import 'package:trus_app/services/crash_reporting_service.dart';
 import 'package:workmanager/workmanager.dart';
 
-final stepSyncSchedulerProvider = Provider((ref) => StepSyncScheduler(ref));
+final stepSyncSchedulerProvider = Provider((ref) {
+  final scheduler = StepSyncScheduler(ref);
+  ref.onDispose(scheduler.pauseForegroundMonitoring);
+  return scheduler;
+});
 
 class StepSyncScheduler {
   final Ref ref;
@@ -20,6 +25,9 @@ class StepSyncScheduler {
   StepSyncScheduler(this.ref);
 
   void startForegroundMonitoring() {
+    if (WidgetsBinding.instance.lifecycleState != AppLifecycleState.resumed) {
+      return;
+    }
     _timer ??= Timer.periodic(
       const Duration(minutes: 2),
       (_) => syncIfNeeded(),
@@ -27,7 +35,18 @@ class StepSyncScheduler {
     unawaited(syncIfNeeded(force: true));
   }
 
-  Future<void> onAppResumed() => syncIfNeeded(force: true);
+  Future<void> onAppResumed() {
+    _timer ??= Timer.periodic(
+      const Duration(minutes: 2),
+      (_) => syncIfNeeded(),
+    );
+    return syncIfNeeded(force: true);
+  }
+
+  void pauseForegroundMonitoring() {
+    _timer?.cancel();
+    _timer = null;
+  }
 
   Future<void> enable(int appTeamId) async {
     await _preferences.enable(appTeamId);
@@ -49,13 +68,23 @@ class StepSyncScheduler {
   }
 
   Future<void> syncIfNeeded({bool force = false}) async {
-    if (_running || !await _preferences.isEnabled()) return;
+    if (_running ||
+        WidgetsBinding.instance.lifecycleState != AppLifecycleState.resumed) {
+      return;
+    }
     _running = true;
     try {
+      if (!await _preferences.isEnabled() ||
+          WidgetsBinding.instance.lifecycleState != AppLifecycleState.resumed) {
+        return;
+      }
       final api = ref.read(stepApiServiceProvider);
       if (!await _health.hasReadPermission()) {
         await api.setConsent(false);
         await disable();
+        return;
+      }
+      if (WidgetsBinding.instance.lifecycleState != AppLifecycleState.resumed) {
         return;
       }
       final days = await _health.readLastDays(days: 1);

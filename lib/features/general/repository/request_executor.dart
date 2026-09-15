@@ -16,19 +16,25 @@ import '../../../common/repository/exception/handler/response_validator.dart';
 import '../../../common/repository/exception/login_exception.dart';
 import '../../../common/repository/exception/model/login_expired_exception.dart';
 import '../../../common/repository/header/cookies/header_provider.dart';
-import '../../main/ui/ui_feedback_notifier.dart';
 
 final requestExecutorProvider = Provider<RequestExecutor>((ref) {
   return RequestExecutor(ref);
 });
 
 class RequestExecutor extends ResponseValidator {
-  final FirebaseAuth auth = FirebaseAuth.instance;
+  final FirebaseAuth auth;
   final Ref ref;
+  final HeaderProvider? _providedHeaderProvider;
 
-  RequestExecutor(this.ref);
+  RequestExecutor(
+    this.ref, {
+    FirebaseAuth? auth,
+    HeaderProvider? headerProvider,
+  }) : auth = auth ?? FirebaseAuth.instance,
+       _providedHeaderProvider = headerProvider;
 
-  HeaderProvider get _headerProvider => HeaderProvider(ref);
+  HeaderProvider get _headerProvider =>
+      _providedHeaderProvider ?? HeaderProvider(ref);
 
   final Duration timeoutDuration = const Duration(seconds: 120);
 
@@ -77,21 +83,15 @@ class RequestExecutor extends ResponseValidator {
       }
     } catch (e, stack) {
       if (e is LoginExpiredException && !secondTry) {
-        final ui = ref.read(uiFeedbackProvider.notifier);
-
-        ui.showSessionLoadingSheet();
-
-        try {
-          await _ensureReLogin();
-          return await _executeRequest(
-            request,
-            mapFunction,
-            true,
-            queueOnFailure: queueOnFailure,
-          );
-        } finally {
-          ui.hideSessionLoadingSheet();
-        }
+        // Token renewal is infrastructure, not a user action. Keep it silent;
+        // a modal here races other sheets during login and app resume.
+        await _ensureReLogin();
+        return await _executeRequest(
+          request,
+          mapFunction,
+          true,
+          queueOnFailure: queueOnFailure,
+        );
       }
       if (e is TimeoutException || e is http.ClientException) {
         if (queueOnFailure) _enqueueRequest(request, mapFunction);

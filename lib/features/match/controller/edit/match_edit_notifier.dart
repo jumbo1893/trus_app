@@ -24,6 +24,7 @@ import '../../../../models/api/interfaces/dropdown_item.dart';
 import '../../../../models/api/player/player_api_model.dart';
 import '../../../../models/enum/crud.dart';
 import '../../../general/notifier/base_crud_notifier.dart';
+import '../../../general/repository/api_result.dart';
 import '../../state/footbal_match_detail_state.dart';
 import '../../state/match_stats_state.dart';
 import '../match_notifier.dart';
@@ -99,6 +100,7 @@ class MatchEditNotifier extends BaseCrudNotifier<MatchApiModel, MatchEditState>
   }
 
   Future<void> _bootstrap() async {
+    if (!mounted) return;
     final flow = resolver.resolve(args);
 
     switch (flow) {
@@ -147,13 +149,15 @@ class MatchEditNotifier extends BaseCrudNotifier<MatchApiModel, MatchEditState>
       state = mapper.applySetup(state, cached);
     }
 
-    final fresh = await runUiWithResult<MatchSetup>(
+    final result = await runUi<MatchSetup>(
       () => loader.fetchSetup(null),
       showLoading: cached == null,
+      showErrors: cached == null,
       successSnack: null,
     );
 
-    if (!mounted) return;
+    if (!mounted || result is! ApiSuccess<MatchSetup>) return;
+    final fresh = result.data;
 
     state = mapper.applySetup(state, fresh);
   }
@@ -177,13 +181,15 @@ class MatchEditNotifier extends BaseCrudNotifier<MatchApiModel, MatchEditState>
       );
     }
 
-    final fresh = await runUiWithResult<MatchSetup>(
+    final result = await runUi<MatchSetup>(
       () => loader.fetchSetup(null, footballMatchId: fm.id),
       showLoading: cached == null,
+      showErrors: cached == null,
       successSnack: null,
     );
 
-    if (!mounted) return;
+    if (!mounted || result is! ApiSuccess<MatchSetup>) return;
+    final fresh = result.data;
 
     state = mapper.applyStateByFootballMatch(
       state,
@@ -204,13 +210,15 @@ class MatchEditNotifier extends BaseCrudNotifier<MatchApiModel, MatchEditState>
       state = mapper.applySetup(state, cached);
     }
 
-    final fresh = await runUiWithResult<MatchSetup>(
+    final result = await runUi<MatchSetup>(
       () => loader.fetchSetup(matchId),
       showLoading: cached == null,
+      showErrors: cached == null,
       successSnack: null,
     );
 
-    if (!mounted) return;
+    if (!mounted || result is! ApiSuccess<MatchSetup>) return;
+    final fresh = result.data;
 
     state = mapper.applySetup(state, fresh);
   }
@@ -225,13 +233,15 @@ class MatchEditNotifier extends BaseCrudNotifier<MatchApiModel, MatchEditState>
       );
     }
 
-    final fresh = await runUiWithResult<MatchSetup>(
+    final result = await runUi<MatchSetup>(
       () => loader.fetchSetup(matchId),
       showLoading: cached == null,
+      showErrors: cached == null,
       successSnack: null,
     );
 
-    if (!mounted) return;
+    if (!mounted || result is! ApiSuccess<MatchSetup>) return;
+    final fresh = result.data;
 
     _applyOpenDetailSetup(
       matchId: matchId,
@@ -275,14 +285,16 @@ class MatchEditNotifier extends BaseCrudNotifier<MatchApiModel, MatchEditState>
       _applyFootballDetailFromPush(cached, refreshStats: false);
     }
 
-    final fresh = await runUiWithResult<FootballMatchDetail>(
+    final result = await runUi<FootballMatchDetail>(
       () => loader.fetchFootballDetail(footballMatchId),
       loadingMessage: "Načítám zápas…",
       showLoading: cached == null,
+      showErrors: cached == null,
       successSnack: null,
     );
 
-    if (!mounted) return;
+    if (!mounted || result is! ApiSuccess<FootballMatchDetail>) return;
+    final fresh = result.data;
 
     _applyFootballDetailFromPush(fresh, refreshStats: true);
   }
@@ -388,13 +400,15 @@ class MatchEditNotifier extends BaseCrudNotifier<MatchApiModel, MatchEditState>
 
     if (!refresh) return;
 
-    final fresh = await runUiWithResult<FootballMatchDetail>(
+    final result = await runUi<FootballMatchDetail>(
       () => loader.fetchFootballDetail(footballMatchId),
       showLoading: cached == null,
+      showErrors: cached == null,
       successSnack: null,
     );
 
-    if (!mounted) return;
+    if (!mounted || result is! ApiSuccess<FootballMatchDetail>) return;
+    final fresh = result.data;
 
     _applyFootballDetail(
       fresh,
@@ -415,13 +429,15 @@ class MatchEditNotifier extends BaseCrudNotifier<MatchApiModel, MatchEditState>
 
     if (!refresh) return;
 
-    final fresh = await runUiWithResult<MatchStats>(
+    final result = await runUi<MatchStats>(
       () => loader.fetchStats(matchId),
       showLoading: cached == null,
+      showErrors: cached == null,
       successSnack: null,
     );
 
-    if (!mounted) return;
+    if (!mounted || result is! ApiSuccess<MatchStats>) return;
+    final fresh = result.data;
 
     _applyMatchStats(fresh, includeEditTab: includeEditTab);
   }

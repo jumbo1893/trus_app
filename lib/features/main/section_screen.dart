@@ -131,6 +131,7 @@ class _SectionScreenState extends ConsumerState<SectionScreen> {
               ],
             ),
           ),
+          group([row(Icons.group_outlined, 'Hráči', PlayerScreen.id)]),
           group([
             row(Icons.auto_awesome_outlined, 'TrusBot', AiAssistantScreen.id),
             row(
@@ -155,7 +156,6 @@ class _SectionScreenState extends ConsumerState<SectionScreen> {
                   'Sazebník pokut',
                   FineScreen.id,
                 ),
-                row(Icons.group_outlined, 'Hráči', PlayerScreen.id),
                 row(Icons.edit_calendar_outlined, 'Sezony', SeasonScreen.id),
               ],
             ),

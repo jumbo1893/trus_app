@@ -11,62 +11,71 @@ abstract class AppNotifier<S> extends StateNotifier<S> with ApiExecutorMixin {
   AppNotifier(this.ref, S state) : super(state);
 
   UiFeedbackNotifier get ui => ref.read(uiFeedbackProvider.notifier);
-  ScreenNotifier get screenNotifier => ref.read(screenNotifierProvider.notifier);
+  ScreenNotifier get screenNotifier =>
+      ref.read(screenNotifierProvider.notifier);
 
   Future<ApiResult<T>> runUi<T>(
-      Future<T> Function() action, {
-        String? loadingMessage = "Načítám…",
-        String? successSnack,
-        bool showErrorDialog = true,
-        bool showLoading = true,
-        bool successResultSnack = false,
-      }) async {
+    Future<T> Function() action, {
+    String? loadingMessage = "Načítám…",
+    String? successSnack,
+    bool showErrorDialog = true,
+    bool showLoading = true,
+    bool successResultSnack = false,
+    bool showErrors = true,
+  }) async {
+    // Capture before awaiting: the provider may be disposed while HTTP is in flight.
+    final feedback = ui;
     int token = -1;
     if (showLoading) {
-      token = ui.startLoading(loadingMessage);
+      token = feedback.startLoading(loadingMessage);
     }
     try {
       final result = await executeApi(action);
+      if (!mounted) return result;
 
       switch (result) {
         case ApiSuccess():
           if (successSnack != null) {
-            ui.showSnack(successSnack);
+            feedback.showSnack(successSnack);
+          } else if (successResultSnack) {
+            feedback.showSnack(result.data.toString());
           }
-          else if (successResultSnack) {
-            ui.showSnack(result.data.toString());
-      }
           return result;
 
         case ApiFieldError():
-        // field chyby se mají vrátit do notifieru (form)
+          // field chyby se mají vrátit do notifieru (form)
           return result;
 
         case ApiError():
+          if (!showErrors) return result;
           if (showErrorDialog) {
-            ui.showErrorDialog(result.message);
+            feedback.showErrorDialog(result.message);
           } else {
-            ui.showSnack(result.message);
+            feedback.showSnack(result.message);
           }
           return result;
         case LoginExpired<T>():
-          throw Exception(result.message);
+          if (!showErrors) return result;
+          feedback.showErrorDialog(
+            'Přihlášení se nepodařilo obnovit. Přihlas se prosím znovu.',
+          );
+          return result;
       }
     } finally {
-      if (showLoading) {
-        ui.stopLoading(token);
+      if (showLoading && feedback.mounted) {
+        feedback.stopLoading(token);
       }
     }
   }
 
   Future<T> runUiWithResult<T>(
-      Future<T> Function() action, {
-        String loadingMessage = "Načítám…",
-        String? successSnack,
-        bool showErrorDialog = true,
-        bool showLoading = true,
-        bool successResultSnack = false,
-      }) async {
+    Future<T> Function() action, {
+    String loadingMessage = "Načítám…",
+    String? successSnack,
+    bool showErrorDialog = true,
+    bool showLoading = true,
+    bool successResultSnack = false,
+  }) async {
     final result = await runUi<T>(
       action,
       loadingMessage: loadingMessage,

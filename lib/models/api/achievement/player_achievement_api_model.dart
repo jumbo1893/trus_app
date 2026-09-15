@@ -31,6 +31,10 @@ class PlayerAchievementApiModel implements ModelToString, JsonAndHttpConverter {
         achievement = AchievementApiModel.dummy(),
         player = PlayerApiModel.dummy();
 
+  // Navigation reference only; the detail provider loads the full record by id.
+  PlayerAchievementApiModel.reference(this.id)
+      : achievement = AchievementApiModel.dummy(), player = PlayerApiModel.dummy();
+
   String get getMatchDetail {
     if(match != null) {
       return match!.listViewTitle();

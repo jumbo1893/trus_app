@@ -1,4 +1,9 @@
 import 'package:flutter/widgets.dart';
+import 'package:trus_app/features/achievement/screens/view_player_achievement_detail_screen.dart';
+import 'package:trus_app/features/achievement/repository/achievement_repository.dart';
+import 'package:trus_app/features/achievement/achievement_view_args.dart';
+import 'package:trus_app/features/achievement/controller/achievement_edit_notifier.dart';
+import 'package:trus_app/models/api/achievement/player_achievement_api_model.dart';
 import 'package:trus_app/features/match_participation/screens/match_participation_screen.dart';
 import 'package:trus_app/features/match_participation/controller/match_participation_notifier.dart';
 import 'package:trus_app/features/general/global_variables_controller.dart';
@@ -56,6 +61,27 @@ class PushNavigationHandler {
     final variables = ref.read(screenVariablesNotifierProvider.notifier);
 
     switch (payload.screenId) {
+      case ViewPlayerAchievementDetailScreen.id:
+        if (payload.appTeamId != null &&
+            ref.read(globalVariablesControllerProvider).appTeam?.id !=
+                payload.appTeamId) {
+          ref
+              .read(uiFeedbackProvider.notifier)
+              .showErrorDialog(
+                'Achievement patří do jiného týmu. Nejdřív přepni tým.',
+              );
+          return;
+        }
+        final id = payload.playerAchievementId;
+        if (id == null || id <= 0) return;
+        final reference = PlayerAchievementApiModel.reference(id);
+        ref.read(achievementRepositoryProvider).invalidateDetail(id);
+        ref.invalidate(
+          achievementViewProvider(AchievementViewArgs.player(reference)),
+        );
+        variables.setPlayerAchievement(reference);
+        screenNotifier.changeByFragmentId(ViewPlayerAchievementDetailScreen.id);
+        return;
       case MatchParticipationScreen.id:
         if (payload.footballMatchId == null) return;
         if (payload.appTeamId != null &&

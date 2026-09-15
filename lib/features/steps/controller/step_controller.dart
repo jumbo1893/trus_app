@@ -145,6 +145,7 @@ class StepController extends SafeStateNotifier<StepsState> {
         return;
       }
       final days = await health.readLastDays();
+      if (days.isEmpty) return;
       await CrashReportingService.setKey('steps_sync_phase', 'backend_upload');
       await runUiWithResult(() => api.sync(days), showLoading: false);
       final todayCount = _todayStepCount(days);
