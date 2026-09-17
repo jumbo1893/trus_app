@@ -9,6 +9,16 @@ import 'package:trus_app/common/repository/header/cookies/custom_cookie_manager.
 import 'package:trus_app/common/repository/exception/model/login_expired_exception.dart';
 import 'package:trus_app/features/general/repository/request_executor.dart';
 import 'package:trus_app/features/main/ui/ui_feedback_notifier.dart';
+import 'package:trus_app/features/season_recap/season_recap_data.dart';
+import 'package:trus_app/features/general/notifier/global_variables_notifier.dart';
+import 'package:trus_app/models/api/auth/app_team_api_model.dart';
+
+class _Team implements AppTeamApiModel {
+  @override
+  int get id => 5;
+  @override
+  dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
+}
 
 class _User implements User {
   int refreshes = 0;
@@ -49,6 +59,69 @@ class _Executor extends RequestExecutor {
 }
 
 void main() {
+  test(
+    'real recap providers refresh history after saving without a dependency cycle',
+    () async {
+      bool saved = false;
+      final client = MockClient((request) async {
+        if (request.method == 'POST') {
+          saved = true;
+          return http.Response('{"opened":true}', 200);
+        }
+        return http.Response(
+          '[{"id":9,"seasonName":"Podzim","from":"2026-06-02","to":"2026-12-01","opened":$saved}]',
+          200,
+        );
+      });
+      final container = ProviderContainer(
+        overrides: [
+          requestExecutorProvider.overrideWith(
+            (ref) => _Executor(ref, _Auth(null), client),
+          ),
+        ],
+      );
+      addTearDown(container.dispose);
+      container.read(globalVariablesProvider.notifier).setAppTeam(_Team());
+      final subscription = container.listen(seasonRecapsProvider, (_, __) {});
+      addTearDown(subscription.close);
+      expect(
+        (await container.read(seasonRecapsProvider.future)).single.opened,
+        isFalse,
+      );
+      await container.read(seasonRecapApiProvider).opened(9);
+      expect(saved, isTrue);
+      expect(
+        (await container.read(seasonRecapsProvider.future)).single.opened,
+        isTrue,
+      );
+    },
+  );
+  for (final response in [
+    http.Response('', 200),
+    http.Response('{"opened":true}', 200),
+    http.Response('', 204),
+  ]) {
+    test(
+      'recap opened accepts ${response.statusCode} with body ${response.body}',
+      () async {
+        final container = ProviderContainer();
+        addTearDown(container.dispose);
+        bool invalidated = false;
+        final client = MockClient((request) async {
+          expect(request.method, 'POST');
+          expect(request.url.path, endsWith('/season-recap/9/opened'));
+          return response;
+        });
+        final provider = Provider((ref) => _Executor(ref, _Auth(null), client));
+        final api = SeasonRecapApi(
+          container.read(provider),
+          onOpened: () => invalidated = true,
+        );
+        await api.opened(9);
+        expect(invalidated, isTrue);
+      },
+    );
+  }
   test(
     'concurrent expired requests renew once without opening any sheet',
     () async {

@@ -68,7 +68,7 @@ class ResponseValidator {
       final decodedBody = json.decode(utf8.decode(response.bodyBytes));
       ErrorResponse errorResponse = ErrorResponse.fromJson(decodedBody);
       throw ServerException(errorResponse.message);
-    } else if (value > 200 || value < 200) {
+    } else if (value < 200 || value >= 300) {
       throw ServerException(
         'Nelze načíst data z neznámých důvodů. Status: $value',
       );

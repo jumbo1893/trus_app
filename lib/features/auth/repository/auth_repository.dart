@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:trus_app/features/season_recap/season_recap_data.dart';
 
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
@@ -117,6 +118,8 @@ class AuthRepository extends CrudApiService {
 
   Future<bool> signOutFromFirebase() async {
     await auth.signOut();
+    ref.invalidate(seasonRecapsProvider);
+    ref.invalidate(pendingSeasonRecapProvider);
     return true;
   }
 

@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:trus_app/features/season_recap/season_recap_cards.dart';
+import 'package:trus_app/features/season_recap/season_recap_data.dart';
+import 'package:trus_app/features/season_recap/season_recap_sheet.dart';
 import 'package:trus_app/features/footbar/screens/footbar_warning_card.dart';
 import 'package:trus_app/features/footbar/screens/footbar_connect_screen.dart';
 import 'package:trus_app/features/footbar/controller/footbar_connect_notifier.dart';
@@ -37,11 +40,20 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
   late final ProviderSubscription<AsyncValue<HomeSetup>> _setupSubscription;
   Future<void> _sheetQueue = Future.value();
   bool _permissionsStarted = false;
+  bool _recapQueued = false;
 
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
+    ref.listenManual<int?>(pendingSeasonRecapProvider, (_, id) {
+      if (id == null) return;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted) return;
+        ref.read(pendingSeasonRecapProvider.notifier).state = null;
+        _openRecap(id);
+      });
+    }, fireImmediately: true);
     _noticeSubscription = ref.listenManual<AsyncValue<AppNotice?>>(
       homeNotifierProvider.select((state) => state.appNotice),
       (_, next) {
@@ -90,6 +102,19 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
     // Permission dialogs also trigger resumed. Keep queued/presented prompts
     // reserved for this screen's lifetime so they cannot stack up again.
     ref.read(homeNotifierProvider.notifier).load(background: true);
+    ref.invalidate(seasonRecapsProvider);
+  }
+
+  void _openRecap(int id) {
+    if (_recapQueued) return;
+    _recapQueued = true;
+    _enqueueSheet(() async {
+      try {
+        await showSeasonRecap(context, id);
+      } finally {
+        _recapQueued = false;
+      }
+    });
   }
 
   void _enqueueSheet(Future<void> Function() showSheet) {
@@ -130,7 +155,10 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
       body: RefreshIndicator(
         color: context.appColors.legacyAccent,
         backgroundColor: context.appColors.cardBackground,
-        onRefresh: notifier.load,
+        onRefresh: () async {
+          ref.invalidate(seasonRecapsProvider);
+          await notifier.load();
+        },
         notificationPredicate: (n) => n.depth == 0,
         child: ListView(
           physics: const AlwaysScrollableScrollPhysics(),
@@ -238,6 +266,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
                             },
                           ),
                         ),
+                    SeasonRecapDashboardCard(onOpen: _openRecap),
                     BirthdayText(nextBirthdayText: setup.nextBirthday),
                     const SizedBox(height: sectionSpacing),
 

@@ -1,4 +1,6 @@
 import 'package:flutter/widgets.dart';
+import 'package:trus_app/features/season_recap/season_recap_data.dart';
+import 'package:trus_app/features/home/screens/home_screen.dart';
 import 'package:trus_app/features/achievement/screens/view_player_achievement_detail_screen.dart';
 import 'package:trus_app/features/achievement/repository/achievement_repository.dart';
 import 'package:trus_app/features/achievement/achievement_view_args.dart';
@@ -39,6 +41,10 @@ class PushNavigationRef {
 class PushNavigationHandler {
   static void navigate(PushNavigationRef ref, PushPayload payload) {
     if (!payload.hasNavigationTarget) return;
+    if (payload.screenId == 'season-recap') {
+      _navigateInternal(ref, payload);
+      return;
+    }
 
     final ui = ref.read(uiFeedbackProvider.notifier);
     final loadingToken = ui.startLoading("Otevírám notifikaci…");
@@ -61,6 +67,15 @@ class PushNavigationHandler {
     final variables = ref.read(screenVariablesNotifierProvider.notifier);
 
     switch (payload.screenId) {
+      case 'season-recap':
+        // Backend checks ownership and membership against the recap's own team.
+        if (payload.recapId == null || payload.recapId! <= 0) return;
+        ref.read(pendingSeasonRecapProvider.notifier).state = payload.recapId;
+        screenNotifier.changeByFragmentId(HomeScreen.id);
+        return;
+      case HomeScreen.id:
+        screenNotifier.changeByFragmentId(HomeScreen.id);
+        return;
       case ViewPlayerAchievementDetailScreen.id:
         if (payload.appTeamId != null &&
             ref.read(globalVariablesControllerProvider).appTeam?.id !=

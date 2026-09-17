@@ -594,6 +594,7 @@ class NotificationsService {
               if (payload.playerId != null) 'playerId': payload.playerId,
               if (payload.appTeamId != null) 'appTeamId': payload.appTeamId,
               if (payload.playerAchievementId != null) 'playerAchievementId': payload.playerAchievementId,
+              if (payload.recapId != null) 'recapId': payload.recapId,
             }),
     );
   }

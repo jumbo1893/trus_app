@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:trus_app/features/season_recap/season_recap_cards.dart';
 import 'package:trus_app/features/onboarding/onboarding_card.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:trus_app/features/user/controller/view_user_notifier.dart';
@@ -66,6 +67,7 @@ class _ViewUserScreenState extends ConsumerState<ViewUserScreen> {
         ),
       ],
       extraSections: [
+        const SeasonRecapHistoryCard(),
         const OnboardingCard(),
         AccountDeletionOptions(
           onDelete: () =>
