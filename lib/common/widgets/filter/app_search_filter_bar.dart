@@ -89,6 +89,10 @@ class _AppSearchFilterBarState extends State<AppSearchFilterBar> {
                 const SizedBox(width: 9),
                 Expanded(
                   child: TextField(
+                    autocorrect: false,
+                    enableSuggestions: false,
+                    spellCheckConfiguration:
+                        const SpellCheckConfiguration.disabled(),
                     controller: _controller,
                     onChanged: (value) {
                       setState(() => _localQuery = value);

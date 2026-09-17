@@ -24,6 +24,7 @@ class SeasonRecapSheet extends ConsumerStatefulWidget {
 
 class _SeasonRecapSheetState extends ConsumerState<SeasonRecapSheet> {
   final _controller = PageController();
+  final _pageScrollControllers = <int, ScrollController>{};
   SeasonRecap? _recap;
   bool _failed = false;
   bool _markFailed = false;
@@ -66,7 +67,19 @@ class _SeasonRecapSheetState extends ConsumerState<SeasonRecapSheet> {
   @override
   void dispose() {
     _controller.dispose();
+    for (final controller in _pageScrollControllers.values) {
+      controller.dispose();
+    }
     super.dispose();
+  }
+
+  void _onPageChanged(int index) {
+    setState(() => _index = index);
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted || _index != index) return;
+      final scroll = _pageScrollControllers[index];
+      if (scroll != null && scroll.hasClients) scroll.jumpTo(0);
+    });
   }
 
   @override
@@ -140,9 +153,14 @@ class _SeasonRecapSheetState extends ConsumerState<SeasonRecapSheet> {
                 child: PageView.builder(
                   controller: _controller,
                   itemCount: recap.pages.length,
-                  onPageChanged: (index) => setState(() => _index = index),
-                  itemBuilder: (_, index) =>
-                      _RecapPageView(page: recap.pages[index]),
+                  onPageChanged: _onPageChanged,
+                  itemBuilder: (_, index) => _RecapPageView(
+                    page: recap.pages[index],
+                    scrollController: _pageScrollControllers.putIfAbsent(
+                      index,
+                      () => ScrollController(keepScrollOffset: false),
+                    ),
+                  ),
                 ),
               ),
               Padding(
@@ -209,7 +227,8 @@ class _SeasonRecapSheetState extends ConsumerState<SeasonRecapSheet> {
 
 class _RecapPageView extends StatelessWidget {
   final RecapPage page;
-  const _RecapPageView({required this.page});
+  final ScrollController scrollController;
+  const _RecapPageView({required this.page, required this.scrollController});
 
   IconData get _icon => switch (page.kind) {
     'drinks' || 'drink_match' => Icons.sports_bar,
@@ -236,7 +255,9 @@ class _RecapPageView extends StatelessWidget {
         ),
       ),
       child: SingleChildScrollView(
-        key: PageStorageKey('recap-${page.kind}'),
+        key: ValueKey('recap-${page.kind}'),
+        controller: scrollController,
+        primary: false,
         padding: const EdgeInsets.all(24),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,

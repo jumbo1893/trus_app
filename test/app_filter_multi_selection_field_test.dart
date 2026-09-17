@@ -60,6 +60,13 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(tester.testTextInput.isVisible, isFalse);
+      final search = tester.widget<TextField>(find.byType(TextField));
+      expect(search.autocorrect, isFalse);
+      expect(search.enableSuggestions, isFalse);
+      expect(
+        search.spellCheckConfiguration,
+        const SpellCheckConfiguration.disabled(),
+      );
 
       await tester.tap(find.text('Pivní'));
       await tester.tap(find.text('Pokutové'));

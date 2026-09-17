@@ -44,7 +44,63 @@ class FakeRecapApi implements SeasonRecapApi {
   dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
 }
 
+class LongRecapApi extends FakeRecapApi {
+  @override
+  Future<SeasonRecap> detail(int id) async =>
+      SeasonRecap('Podzim', '2026-06-02', '2026-12-01', [
+        for (final kind in ['intro', 'steps', 'footbar'])
+          RecapPage(
+            kind,
+            kind,
+            '',
+            List.generate(20, (i) => RecapMetric('Metrika $i', '$i')),
+            [],
+          ),
+      ]);
+}
+
 void main() {
+  testWidgets(
+    'every page visit resets vertical scroll for buttons and swipes',
+    (tester) async {
+      await tester.pumpWidget(
+        ProviderScope(
+          overrides: [seasonRecapApiProvider.overrideWithValue(LongRecapApi())],
+          child: const MaterialApp(
+            home: Scaffold(body: SeasonRecapSheet(id: 9)),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+      Finder page(String kind) => find.byKey(ValueKey('recap-$kind'));
+      double offset(String kind) =>
+          tester.widget<SingleChildScrollView>(page(kind)).controller!.offset;
+      await tester.drag(page('intro'), const Offset(0, -450));
+      await tester.pumpAndSettle();
+      expect(offset('intro'), greaterThan(0));
+      await tester.tap(find.text('Další'));
+      await tester.pumpAndSettle();
+      expect(offset('steps'), 0);
+      await tester.drag(page('steps'), const Offset(0, -450));
+      await tester.pumpAndSettle();
+      expect(offset('steps'), greaterThan(0));
+      await tester.tap(find.byTooltip('Předchozí strana'));
+      await tester.pumpAndSettle();
+      expect(offset('intro'), 0);
+      await tester.tap(find.text('Další'));
+      await tester.pumpAndSettle();
+      expect(offset('steps'), 0);
+      await tester.drag(page('steps'), const Offset(0, -450));
+      await tester.pumpAndSettle();
+      await tester.drag(find.byType(PageView), const Offset(-700, 0));
+      await tester.pumpAndSettle();
+      expect(offset('footbar'), 0);
+      await tester.drag(find.byType(PageView), const Offset(700, 0));
+      await tester.pumpAndSettle();
+      expect(offset('steps'), 0);
+      expect(tester.takeException(), isNull);
+    },
+  );
   testWidgets('history retains both seasons and renders Czech numeric dates', (
     tester,
   ) async {

@@ -26,6 +26,13 @@ void main() {
     );
 
     await tester.enterText(find.byType(TextField), 'gól');
+    final search = tester.widget<TextField>(find.byType(TextField));
+    expect(search.autocorrect, isFalse);
+    expect(search.enableSuggestions, isFalse);
+    expect(
+      search.spellCheckConfiguration,
+      const SpellCheckConfiguration.disabled(),
+    );
     await tester.pump();
 
     expect(query, 'gól');

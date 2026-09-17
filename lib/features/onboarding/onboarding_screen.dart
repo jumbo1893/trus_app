@@ -561,6 +561,9 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
       if (!_create) ...[
         TextField(
           controller: _search,
+          autocorrect: false,
+          enableSuggestions: false,
+          spellCheckConfiguration: const SpellCheckConfiguration.disabled(),
           enabled: !_busy,
           decoration: _inputDecoration('Hledat jméno nebo přezdívku'),
           onChanged: (_) => setState(() {}),

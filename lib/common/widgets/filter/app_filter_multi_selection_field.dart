@@ -218,6 +218,10 @@ class _FilterMultiSelectionSheetState<T>
               Padding(
                 padding: const EdgeInsets.fromLTRB(20, 0, 20, 12),
                 child: TextField(
+                  autocorrect: false,
+                  enableSuggestions: false,
+                  spellCheckConfiguration:
+                      const SpellCheckConfiguration.disabled(),
                   autofocus: false,
                   onChanged: (value) => setState(() => query = value),
                   decoration: InputDecoration(
