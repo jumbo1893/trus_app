@@ -15,10 +15,23 @@ import 'error_statutes.dart';
 class ResponseValidator {
   void validateStatusCode(http.Response response) {
     int value = response.statusCode;
+    // Older servers return Spring's expired-session text with HTTP 200.
+    // Check before JSON decoding so all API screens can renew their session.
+    if (response.body.trimLeft().startsWith('This session has been expired')) {
+      throw LoginExpiredException();
+    }
     if (value == 404) {
       throw ServerException(" $value: Chybná url na server");
     } else if (value == 401) {
-      final decodedBody = json.decode(utf8.decode(response.bodyBytes));
+      dynamic decodedBody;
+      try {
+        decodedBody = json.decode(utf8.decode(response.bodyBytes));
+      } on FormatException {
+        throw LoginExpiredException();
+      }
+      if (decodedBody is! Map<String, dynamic>) {
+        throw LoginExpiredException();
+      }
       ErrorResponse errorResponse = ErrorResponse.fromJson(decodedBody);
       if (errorResponse.code == notLoggedIn) {
         throw LoginExpiredException();

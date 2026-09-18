@@ -2,10 +2,12 @@ import 'package:http/http.dart' as http;
 
 class CustomCookieManager {
   final Map<String, String> _headers = {};
+  void clear() => _headers.clear();
   //Map<String, String> _cookies = {};
   String? getCookie(String name) {
     return _headers[name];
   }
+
   Map<String, String> getCookies() {
     return _headers;
   }
@@ -14,8 +16,9 @@ class CustomCookieManager {
     String? rawCookie = response.headers['set-cookie'];
     if (rawCookie != null) {
       int index = rawCookie.indexOf(';');
-      _headers['cookie'] =
-      (index == -1) ? rawCookie : rawCookie.substring(0, index);
+      _headers['cookie'] = (index == -1)
+          ? rawCookie
+          : rawCookie.substring(0, index);
     }
   }
 }

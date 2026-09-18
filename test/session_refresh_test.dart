@@ -45,20 +45,67 @@ class _Headers implements HeaderProvider {
   @override
   final cookieJar = CustomCookieManager();
   @override
-  Future<Map<String, String>> getHeaders() async => {};
+  Future<Map<String, String>> getHeaders() async =>
+      Map.of(cookieJar.getCookies());
   @override
   dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
 }
 
 class _Executor extends RequestExecutor {
   final http.Client client;
-  _Executor(Ref ref, FirebaseAuth auth, this.client)
-    : super(ref, auth: auth, headerProvider: _Headers());
+  _Executor(Ref ref, FirebaseAuth auth, this.client, [_Headers? headers])
+    : super(ref, auth: auth, headerProvider: headers ?? _Headers());
   @override
   http.Client getClient() => client;
 }
 
 void main() {
+  for (final status in [200, 401]) {
+    test(
+      'expired plain-text session $status clears cookie and retries',
+      () async {
+        final user = _User()..renewed.complete('new-token');
+        final headers = _Headers();
+        headers.cookieJar.updateCookie(
+          http.Response(
+            '',
+            200,
+            headers: {'set-cookie': 'JSESSIONID=expired; Path=/'},
+          ),
+        );
+        var calls = 0;
+        final client = MockClient((request) async {
+          calls++;
+          if (calls == 1) {
+            expect(request.headers['cookie'], 'JSESSIONID=expired');
+            return http.Response(
+              'This session has been expired (possibly due to multiple concurrent logins being attempted as the same user).',
+              status,
+            );
+          }
+          expect(request.headers.containsKey('cookie'), isFalse);
+          return http.Response('{"ok":true}', 200);
+        });
+        final container = ProviderContainer();
+        addTearDown(container.dispose);
+        final provider = Provider(
+          (ref) => _Executor(ref, _Auth(user), client, headers),
+        );
+        expect(
+          await container
+              .read(provider)
+              .executeGetRequest(
+                Uri.parse('https://example.test/player'),
+                (data) => data['ok'],
+                null,
+              ),
+          isTrue,
+        );
+        expect(calls, 2);
+        expect(user.refreshes, 1);
+      },
+    );
+  }
   test(
     'real recap providers refresh history after saving without a dependency cycle',
     () async {

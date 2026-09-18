@@ -83,6 +83,8 @@ class RequestExecutor extends ResponseValidator {
       }
     } catch (e, stack) {
       if (e is LoginExpiredException && !secondTry) {
+        // A renewed Firebase token alone cannot repair an expired JSESSIONID.
+        _headerProvider.cookieJar.clear();
         // Token renewal is infrastructure, not a user action. Keep it silent;
         // a modal here races other sheets during login and app resume.
         await _ensureReLogin();
