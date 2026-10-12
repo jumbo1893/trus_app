@@ -153,7 +153,7 @@ class FootballMatchBox extends StatelessWidget {
                 ),
                 _BottomSheetActionTile(
                   icon: Icons.sports_bar,
-                  title: "Přidat piva",
+                  title: "DO HOSPODY",
                   enabled: matchActionsEnabled,
                   onTap: () {
                     Navigator.of(context).pop();
@@ -305,6 +305,17 @@ class FootballMatchBox extends StatelessWidget {
                 ),
               ],
             ),
+            if (!isNextMatch && matchActionsEnabled) ...[
+              const SizedBox(height: 10),
+              SizedBox(
+                width: double.infinity,
+                child: FilledButton.icon(
+                  onPressed: () => onAddBeer(match),
+                  icon: const Icon(Icons.sports_bar_rounded),
+                  label: const Text('DO HOSPODY'),
+                ),
+              ),
+            ],
           ],
           if (visibleWarnings.isNotEmpty) ...[
             const SizedBox(height: 14),

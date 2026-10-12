@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:trus_app/features/user/controller/view_user_notifier.dart';
 import 'package:trus_app/features/membership/widgets/membership_info.dart';
 import 'package:trus_app/features/main/controller/main_notifier.dart';
+import 'package:trus_app/features/beer/controller/beer_view_preference.dart';
 
 import '../../../common/widgets/bar/action_button_item.dart';
 import '../../../common/widgets/dropdown/custom_dropdown_sheet.dart';
@@ -67,6 +68,7 @@ class _ViewUserScreenState extends ConsumerState<ViewUserScreen> {
         ),
       ],
       extraSections: [
+        const _BeerViewPreferenceCard(),
         const SeasonRecapHistoryCard(),
         const OnboardingCard(),
         AccountDeletionOptions(
@@ -74,6 +76,54 @@ class _ViewUserScreenState extends ConsumerState<ViewUserScreen> {
               ref.read(mainNotifierProvider.notifier).onDeleteAccountTapped(),
         ),
       ],
+    );
+  }
+}
+
+class _BeerViewPreferenceCard extends ConsumerWidget {
+  const _BeerViewPreferenceCard();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final drawMode = ref.watch(beerViewPreferenceProvider);
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
+      child: Card(
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'Zápis v hospodě',
+                style: Theme.of(context).textTheme.titleMedium,
+              ),
+              const SizedBox(height: 4),
+              const Text('Zvolený pohled se ukládá hned do tohoto zařízení.'),
+              const SizedBox(height: 12),
+              SegmentedButton<bool>(
+                showSelectedIcon: false,
+                segments: const [
+                  ButtonSegment(
+                    value: false,
+                    icon: Icon(Icons.receipt_long_outlined),
+                    label: Text('Účet'),
+                  ),
+                  ButtonSegment(
+                    value: true,
+                    icon: Icon(Icons.edit_note_rounded),
+                    label: Text('Čárkování'),
+                  ),
+                ],
+                selected: {drawMode},
+                onSelectionChanged: (selected) => ref
+                    .read(beerViewPreferenceProvider.notifier)
+                    .setDrawMode(selected.first),
+              ),
+            ],
+          ),
+        ),
+      ),
     );
   }
 }

@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:trus_app/features/beer/controller/beer_notifier.dart';
+import 'package:trus_app/features/beer/controller/beer_view_preference.dart';
 import 'package:trus_app/features/beer/repository/beer_api_service.dart';
 import 'package:trus_app/features/main/controller/navigation_guard.dart';
 import 'package:trus_app/features/main/controller/screen_notifier.dart';
@@ -208,17 +209,16 @@ void main() {
       expect(tester.takeException(), isNull);
       expect(find.text('Změnit'), findsOneWidget);
       expect(find.byType(BottomAppBar), findsNothing);
-      final counterPosition = tester.getCenter(find.byIcon(Icons.add).first);
       container.read(beerNotifierProvider.notifier).addNumber(0, true, null);
       await tester.pumpAndSettle();
-      expect(find.textContaining('Neuložené změny'), findsOneWidget);
-      expect(tester.getCenter(find.byIcon(Icons.add).first), counterPosition);
+      expect(find.textContaining('Neuložené změny'), findsNothing);
       container.read(beerNotifierProvider.notifier).removeNumber(0, true);
       await tester.pumpAndSettle();
-      expect(tester.getCenter(find.byIcon(Icons.add).first), counterPosition);
       expect(find.text('Vrátit'), findsNothing);
       await capturePreview(tester, 'beer-entry');
-      container.read(beerNotifierProvider.notifier).toggleMode(true);
+      await container
+          .read(beerViewPreferenceProvider.notifier)
+          .setDrawMode(true);
       await tester.pump();
       await tester.runAsync(
         () => Future<void>.delayed(const Duration(milliseconds: 200)),

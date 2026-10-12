@@ -8,16 +8,25 @@ import '../../../models/api/beer/beer_detailed_response.dart';
 import '../../../models/api/beer/beer_list.dart';
 import '../../../models/api/beer/beer_multi_add_response.dart';
 import '../../../models/api/beer/beer_setup_response.dart';
+import '../../../models/api/beer/pub_attendance.dart';
 import '../../../models/api/interfaces/json_and_http_converter.dart';
 import '../../../models/api/stats/stats.dart';
 import '../../general/repository/crud_api_service.dart';
 
-final beerApiServiceProvider =
-    Provider<BeerApiService>((ref) => BeerApiService(ref));
+final beerApiServiceProvider = Provider<BeerApiService>(
+  (ref) => BeerApiService(ref),
+);
 
 class BeerApiService extends CrudApiService {
   BeerApiService(super.ref);
 
+  Future<PubAttendance> savePubAttendance(PubAttendance attendance) =>
+      executePutRequest(
+        Uri.parse('$serverUrl/$beerApi/pub-attendance'),
+        (dynamic json) => PubAttendance.fromJson(json),
+        jsonEncode(attendance.toJson()),
+        queueOnFailure: false,
+      );
 
   Future<List<BeerApiModel>> getBeers() async {
     final decodedBody = await getModels<JsonAndHttpConverter>(beerApi, null);
@@ -31,9 +40,10 @@ class BeerApiService extends CrudApiService {
     };
     const String url = "$serverUrl/$beerApi/setup";
     final BeerSetupResponse beerSetupResponse = await executeGetRequest(
-        Uri.parse(url),
-        (dynamic json) => BeerSetupResponse.fromJson(json),
-        queryParameters);
+      Uri.parse(url),
+      (dynamic json) => BeerSetupResponse.fromJson(json),
+      queryParameters,
+    );
     return beerSetupResponse;
   }
 
@@ -41,14 +51,21 @@ class BeerApiService extends CrudApiService {
     final Map<String, dynamic> requestPayload = beerList.toJson();
     const String url = "$serverUrl/$beerApi/multiple-add";
     final BeerMultiAddResponse response = await executePostRequest(
-        Uri.parse(url),
-        (dynamic json) => BeerMultiAddResponse.fromJson(json),
-        jsonEncode(requestPayload));
+      Uri.parse(url),
+      (dynamic json) => BeerMultiAddResponse.fromJson(json),
+      jsonEncode(requestPayload),
+      queueOnFailure: false,
+    );
     return response;
   }
 
-  Future<BeerDetailedResponse> getDetailedBeer(int? matchId, int? seasonId,
-      int? playerId, bool? matchStatsOrPlayerStats, String? filter) async {
+  Future<BeerDetailedResponse> getDetailedBeer(
+    int? matchId,
+    int? seasonId,
+    int? playerId,
+    bool? matchStatsOrPlayerStats,
+    String? filter,
+  ) async {
     final queryParameters = {
       'seasonId': intToString(seasonId),
       'matchId': intToString(matchId),
@@ -58,20 +75,21 @@ class BeerApiService extends CrudApiService {
     };
     const String url = "$serverUrl/$beerApi/get-all-detailed";
     final BeerDetailedResponse beerDetailedResponse = await executeGetRequest(
-        Uri.parse(url),
-        (dynamic json) => BeerDetailedResponse.fromJson(json),
-        queryParameters);
+      Uri.parse(url),
+      (dynamic json) => BeerDetailedResponse.fromJson(json),
+      queryParameters,
+    );
     return beerDetailedResponse;
   }
 
-  Future<List<Stats>> getBeerStats(
-      int? seasonId) async {
-    final queryParameters = {
-      'seasonId': intToString(seasonId),
-    };
+  Future<List<Stats>> getBeerStats(int? seasonId) async {
+    final queryParameters = {'seasonId': intToString(seasonId)};
     final decodedBody =
-    await getModelsWithVariableControllerEndpoint<JsonAndHttpConverter>(
-        beerApi, queryParameters, statsApi);
+        await getModelsWithVariableControllerEndpoint<JsonAndHttpConverter>(
+          beerApi,
+          queryParameters,
+          statsApi,
+        );
     return decodedBody.map((model) => model as Stats).toList();
   }
 }

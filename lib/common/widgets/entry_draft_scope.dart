@@ -62,6 +62,7 @@ class EntryDraftScope extends ConsumerStatefulWidget {
   final Map<String, int> values, baseline;
   final Map<String, String> labels;
   final bool loaded;
+  final bool showStatus;
   final bool Function() hasChanges;
   final ValueChanged<Map<String, int>> restore;
   final Future<void> Function() save;
@@ -74,6 +75,7 @@ class EntryDraftScope extends ConsumerStatefulWidget {
     required this.baseline,
     required this.labels,
     required this.loaded,
+    this.showStatus = true,
     required this.restore,
     required this.save,
     required this.hasChanges,
@@ -257,6 +259,12 @@ class _EntryDraftScopeState extends ConsumerState<EntryDraftScope>
 
   @override
   Widget build(BuildContext context) {
+    if (!widget.showStatus) {
+      return AbsorbPointer(
+        absorbing: widget.loaded && !_ready,
+        child: widget.child,
+      );
+    }
     final changes = widget.values.entries
         .where((e) => widget.loaded && e.value != widget.baseline[e.key])
         .toList();

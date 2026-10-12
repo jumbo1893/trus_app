@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import '../../../common/widgets/entry_draft_scope.dart';
 import '../../main/controller/navigation_guard.dart';
 import 'dart:math';
@@ -12,6 +14,7 @@ import 'package:trus_app/models/api/beer/beer_list.dart';
 import 'package:trus_app/models/api/beer/beer_no_match.dart';
 import 'package:trus_app/models/api/beer/beer_no_match_with_player.dart';
 import 'package:trus_app/models/api/beer/beer_setup_response.dart';
+import 'package:trus_app/models/api/beer/pub_attendance.dart';
 import 'package:trus_app/models/api/match/match_api_model.dart';
 import 'package:trus_app/models/api/season_api_model.dart';
 
@@ -53,6 +56,7 @@ class BeerNotifier extends AppNotifier<BeerState> {
     }
     state = state.copyWith(beers: [...state.beers]);
     _initPlayerLinesFromBeers();
+    _autoSave();
   }
 
   static const _seasonArgs = SeasonArgs(false, true, true, playedOnly: true);
@@ -103,8 +107,9 @@ class BeerNotifier extends AppNotifier<BeerState> {
       if (mounted) _applySetup(setup);
     } catch (error, stack) {
       _initialized = false;
-      if (mounted)
+      if (mounted) {
         state = state.copyWith(matches: AsyncValue.error(error, stack));
+      }
     }
   }
 
@@ -116,8 +121,9 @@ class BeerNotifier extends AppNotifier<BeerState> {
         matchId == null ||
         _refreshing ||
         _changingContext ||
-        _saveFuture != null)
+        _saveFuture != null) {
       return;
+    }
     if (state.hasChanges) {
       ui.showSnack(
         'Máš neuložené změny. Zápis zůstal zachovaný.',
@@ -163,11 +169,15 @@ class BeerNotifier extends AppNotifier<BeerState> {
 
     state = state.copyWith(
       selectedMatch: setup.match,
+      pubAttendance: setup.pubAttendance,
+      clearPubAttendance: setup.pubAttendance == null,
       clearSelectedMatch: setup.match == null,
       matches: AsyncValue.data(setup.matchList),
       beers: setup.beerList,
       initialBeerValues: initialValues,
       playerIndex: 0,
+      saving: false,
+      saveFailed: false,
     );
 
     _initPlayerLinesFromBeers();
@@ -241,15 +251,28 @@ class BeerNotifier extends AppNotifier<BeerState> {
       state.beers[i].beerNumber = int.parse(values[0]);
       state.beers[i].liquorNumber = int.parse(values[1]);
     }
-    state = state.copyWith(beers: [...state.beers]);
+    state = state.copyWith(beers: [...state.beers], saveFailed: false);
     _initPlayerLinesFromBeers();
   }
 
-  // ==========================================================
-  // MODE (LIST/PAINT)
-  // ==========================================================
-  void toggleMode(bool draw) {
-    state = state.copyWith(drawMode: draw);
+  Future<PubAttendance> savePubAttendance(
+    Set<int> guestIds,
+    Set<int> leftIds,
+  ) async {
+    final matchId = state.selectedMatch?.id;
+    if (matchId == null) throw StateError('Není vybraný zápas');
+    final saved = await beerApi.savePubAttendance(
+      PubAttendance(
+        matchId: matchId,
+        configured: true,
+        guestIds: guestIds,
+        leftIds: leftIds,
+      ),
+    );
+    if (mounted && state.selectedMatch?.id == matchId) {
+      state = state.copyWith(pubAttendance: saved);
+    }
+    return saved;
   }
 
   // ==========================================================
@@ -272,6 +295,7 @@ class BeerNotifier extends AppNotifier<BeerState> {
     // změna dat
     list[index].addNumber(beer);
     state = state.copyWith(beers: list);
+    _autoSave();
   }
 
   void removeNumber(int index, bool beer) {
@@ -282,6 +306,7 @@ class BeerNotifier extends AppNotifier<BeerState> {
     if (list[index].number(beer) == 0) return;
     list[index].removeNumber(beer);
     state = state.copyWith(beers: list);
+    _autoSave();
 
     // ✅ inkrementální změna čárek
     if (index < _playerLinesList.length) {
@@ -297,36 +322,54 @@ class BeerNotifier extends AppNotifier<BeerState> {
   // CONFIRM
   // ==========================================================
   Future<void>? _saveFuture;
-  Future<void> changeBeers() =>
-      _saveFuture ??= _saveBeers().whenComplete(() => _saveFuture = null);
+  void _autoSave() {
+    unawaited(changeBeers().catchError((Object _) {}));
+  }
+
+  Future<void> changeBeers() => _saveFuture ??= _saveAndRelease();
+
+  Future<void> _saveAndRelease() async {
+    try {
+      await _saveBeers();
+    } finally {
+      _saveFuture = null;
+      if (mounted && state.hasChanges && !state.saveFailed) _autoSave();
+    }
+  }
 
   Future<void> _saveBeers() async {
-    if (!state.hasChanges) return;
+    while (mounted && state.hasChanges) {
+      final matchId = state.selectedMatch?.id;
+      if (matchId == null) {
+        state = state.copyWith(saveFailed: true);
+        ui.showSnack('Není vybraný zápas');
+        return;
+      }
 
-    final matchId = state.selectedMatch?.id;
-    if (matchId == null) {
-      ui.showSnack("Není vybraný zápas");
-      return;
+      final savedValues = state.beers
+          .map((b) => '${b.beerNumber}|${b.liquorNumber}')
+          .toList();
+      final payload = BeerList(
+        matchId: matchId,
+        beerList: _toBeerNoMatchList(state.beers),
+      );
+      state = state.copyWith(saving: true, saveFailed: false);
+      try {
+        await runUiWithResult<BeerMultiAddResponse>(
+          () => beerApi.addBeers(payload),
+          showLoading: false,
+          showErrorDialog: false,
+        );
+      } catch (_) {
+        if (mounted) state = state.copyWith(saving: false, saveFailed: true);
+        rethrow;
+      }
+
+      if (!mounted || state.selectedMatch?.id != matchId) return;
+      state = state.copyWith(initialBeerValues: savedValues);
+      if (!state.hasChanges) await clearEntryDraft(ref, draftId);
     }
-
-    final savedValues = state.beers
-        .map((b) => '${b.beerNumber}|${b.liquorNumber}')
-        .toList();
-    final payload = BeerList(
-      matchId: matchId,
-      beerList: _toBeerNoMatchList(state.beers),
-    );
-
-    await runUiWithResult<BeerMultiAddResponse>(
-      () => beerApi.addBeers(payload),
-      showLoading: true,
-      successSnack: 'Zápis piv byl uložen',
-      loadingMessage: "Ukládám…",
-    );
-
-    if (!mounted) return;
-    state = state.copyWith(initialBeerValues: savedValues);
-    await clearEntryDraft(ref, draftId);
+    if (mounted) state = state.copyWith(saving: false, saveFailed: false);
   }
 
   List<BeerNoMatch> _toBeerNoMatchList(List<BeerNoMatchWithPlayer> list) {
