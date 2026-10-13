@@ -1,0 +1,672 @@
+import 'package:flutter/material.dart';
+import 'package:trus_app/models/api/beer/beer_no_match_with_player.dart';
+import 'package:trus_app/models/api/beer/pub_attendance.dart';
+
+import 'czech_name_compare.dart';
+import 'pub_drink_art.dart';
+
+class PubTally extends StatefulWidget {
+  const PubTally({
+    super.key,
+    required this.matchId,
+    required this.players,
+    required this.matchPlayerIds,
+    required this.myPlayerId,
+    required this.onAdd,
+    required this.onRemove,
+    required this.attendance,
+    required this.onSaveAttendance,
+    this.onChoosingChanged,
+  });
+  final int matchId;
+  final List<BeerNoMatchWithPlayer> players;
+  final List<int> matchPlayerIds;
+  final int? myPlayerId;
+  final void Function(int, bool) onAdd;
+  final void Function(int, bool) onRemove;
+  final PubAttendance? attendance;
+  final Future<PubAttendance> Function(Set<int>, Set<int>) onSaveAttendance;
+  final ValueChanged<bool>? onChoosingChanged;
+  @override
+  State<PubTally> createState() => _PubTallyState();
+}
+
+class _DashedTileBorderPainter extends CustomPainter {
+  const _DashedTileBorderPainter(this.color);
+
+  final Color color;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final path = Path()
+      ..addRRect(
+        RRect.fromRectAndRadius(Offset.zero & size, const Radius.circular(18)),
+      );
+    final paint = Paint()
+      ..color = color
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 1;
+    for (final metric in path.computeMetrics()) {
+      for (var distance = 0.0; distance < metric.length; distance += 7) {
+        canvas.drawPath(
+          metric.extractPath(distance, (distance + 3).clamp(0, metric.length)),
+          paint,
+        );
+      }
+    }
+  }
+
+  @override
+  bool shouldRepaint(covariant _DashedTileBorderPainter oldDelegate) =>
+      oldDelegate.color != color;
+}
+
+class _PubTallyState extends State<PubTally> {
+  static const styledDrinkOrder = [PubDrinkType.beer, PubDrinkType.shot];
+
+  Set<int> guests = {};
+  Set<int> left = {};
+  bool choosing = true;
+  bool saving = false;
+  bool correcting = false;
+  @override
+  void initState() {
+    super.initState();
+    selectInitialGuests();
+    applySavedAttendance();
+  }
+
+  @override
+  void didUpdateWidget(covariant PubTally oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.matchId != widget.matchId) {
+      selectInitialGuests();
+      applySavedAttendance();
+    } else {
+      if (oldWidget.attendance != widget.attendance) applySavedAttendance();
+    }
+  }
+
+  void addDrink(int index, PubDrinkType type) {
+    if (left.contains(widget.players[index].player.id)) return;
+    widget.onAdd(index, type == PubDrinkType.beer);
+  }
+
+  void removeDrink(int index, PubDrinkType type) {
+    if (left.contains(widget.players[index].player.id)) return;
+    widget.onRemove(index, type == PubDrinkType.beer);
+  }
+
+  void selectInitialGuests() {
+    final ids = widget.matchPlayerIds.toSet();
+    guests = widget.players
+        .where(
+          (p) =>
+              ids.contains(p.player.id) ||
+              p.beerNumber > 0 ||
+              p.liquorNumber > 0,
+        )
+        .map((p) => p.player.id)
+        .whereType<int>()
+        .toSet();
+    if (guests.isEmpty) {
+      guests = widget.players.map((p) => p.player.id).whereType<int>().toSet();
+    }
+  }
+
+  void applySavedAttendance() {
+    if (widget.attendance?.configured == true) {
+      guests = {...widget.attendance!.guestIds};
+      left = {...widget.attendance!.leftIds};
+      choosing = false;
+    } else {
+      left = {};
+      choosing = true;
+    }
+  }
+
+  Future<void> saveAttendance(
+    Set<int> newGuests,
+    Set<int> newLeft, {
+    required bool finishChoosing,
+  }) async {
+    if (saving) return;
+    final savingMatchId = widget.matchId;
+    setState(() => saving = true);
+    try {
+      final saved = await widget.onSaveAttendance(newGuests, newLeft);
+      if (!mounted || widget.matchId != savingMatchId) return;
+      setState(() {
+        guests = {...saved.guestIds};
+        left = {...saved.leftIds};
+        if (finishChoosing) choosing = false;
+      });
+      if (finishChoosing) widget.onChoosingChanged?.call(false);
+    } catch (_) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text(
+              'Účast v hospodě se nepodařilo uložit. Zkus to znovu.',
+            ),
+          ),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => saving = false);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) =>
+      choosing ? picker(context) : tally(context);
+
+  Widget picker(BuildContext context) {
+    final sortedPlayers = [...widget.players]
+      ..sort((a, b) {
+        final aMe =
+            widget.myPlayerId != null && a.player.id == widget.myPlayerId;
+        final bMe =
+            widget.myPlayerId != null && b.player.id == widget.myPlayerId;
+        if (aMe != bMe) return aMe ? -1 : 1;
+        return compareCzechNames(a.player.name, b.player.name);
+      });
+    return Column(
+      children: [
+        Material(
+          color: Theme.of(context).scaffoldBackgroundColor,
+          child: SizedBox(
+            width: double.infinity,
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Kdo jde do hospody?',
+                    style: Theme.of(context).textTheme.titleLarge,
+                  ),
+                  const SizedBox(height: 4),
+                  const Text(
+                    'Účastníci zápasu jsou vybraní. Odškrtni ty, kteří nejdou.',
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+        Expanded(
+          child: ClipRect(
+            child: ListView.builder(
+              clipBehavior: Clip.hardEdge,
+              physics: const ClampingScrollPhysics(),
+              itemCount: sortedPlayers.length,
+              itemBuilder: (context, i) {
+                final player = sortedPlayers[i].player;
+                return CheckboxListTile(
+                  value: guests.contains(player.id),
+                  title: Text(player.name),
+                  secondary: const Icon(Icons.person_outline_rounded),
+                  onChanged: player.id == null
+                      ? null
+                      : (checked) => setState(() {
+                          if (checked ?? false) {
+                            guests.add(player.id!);
+                          } else {
+                            guests.remove(player.id);
+                            left.remove(player.id);
+                          }
+                        }),
+                );
+              },
+            ),
+          ),
+        ),
+        Padding(
+          padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
+          child: SizedBox(
+            width: double.infinity,
+            child: FilledButton.icon(
+              onPressed: saving
+                  ? null
+                  : () => saveAttendance(
+                      {...guests},
+                      {...left},
+                      finishChoosing: true,
+                    ),
+              icon: const Icon(Icons.sports_bar_rounded),
+              label: Text('DO HOSPODY · ${guests.length}'),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget tally(BuildContext context) {
+    final entries = <(int, BeerNoMatchWithPlayer)>[
+      for (var i = 0; i < widget.players.length; i++)
+        if (guests.contains(widget.players[i].player.id))
+          (i, widget.players[i]),
+    ];
+    entries.sort((a, b) {
+      final aMe =
+          widget.myPlayerId != null && a.$2.player.id == widget.myPlayerId;
+      final bMe =
+          widget.myPlayerId != null && b.$2.player.id == widget.myPlayerId;
+      if (aMe != bMe) return aMe ? -1 : 1;
+      final aLeft = left.contains(a.$2.player.id);
+      final bLeft = left.contains(b.$2.player.id);
+      if (aLeft != bLeft) return aLeft ? 1 : -1;
+      final byName = compareCzechNames(a.$2.player.name, b.$2.player.name);
+      return byName != 0 ? byName : a.$1.compareTo(b.$1);
+    });
+    return styledTally(context, entries);
+  }
+
+  Map<PubDrinkType, int> countsFor(BeerNoMatchWithPlayer item) => {
+    PubDrinkType.beer: item.beerNumber,
+    PubDrinkType.shot: item.liquorNumber,
+  };
+
+  double litersFor(Map<PubDrinkType, int> counts) =>
+      counts[PubDrinkType.beer]! * .5 + counts[PubDrinkType.shot]! * .04;
+
+  String litersLabel(double liters) => liters
+      .toStringAsFixed(liters < .1 && liters > 0 ? 2 : 1)
+      .replaceAll('.', ',');
+
+  Widget styledTally(
+    BuildContext context,
+    List<(int, BeerNoMatchWithPlayer)> entries,
+  ) {
+    const background = Color(0xFF0E0B12);
+    const muted = Color(0xFFA29BB4);
+    const gold = Color(0xFFFFB529);
+    final totals = {
+      for (final type in styledDrinkOrder)
+        type: entries.fold<int>(
+          0,
+          (sum, entry) => sum + countsFor(entry.$2)[type]!,
+        ),
+    };
+    final totalPieces = totals.values.fold<int>(0, (sum, n) => sum + n);
+    final totalLiters = litersFor(totals);
+    final leader = entries.isEmpty
+        ? null
+        : ([...entries]..sort(
+                (a, b) => litersFor(
+                  countsFor(b.$2),
+                ).compareTo(litersFor(countsFor(a.$2))),
+              ))
+              .first
+              .$2;
+
+    return ColoredBox(
+      color: background,
+      child: Column(
+        children: [
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
+            child: Row(
+              children: [
+                const Expanded(
+                  child: Text(
+                    'Účet v hospodě',
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(
+                      color: Color(0xFFFFF7E9),
+                      fontSize: 16,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                ),
+                IconButton(
+                  tooltip: 'Upravit účastníky',
+                  onPressed: () {
+                    setState(() => choosing = true);
+                    widget.onChoosingChanged?.call(true);
+                  },
+                  icon: const Icon(
+                    Icons.group_outlined,
+                    color: Color(0xFFFFF7E9),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 2, 16, 10),
+            child: Row(
+              children: [
+                const Icon(
+                  Icons.workspace_premium_outlined,
+                  color: gold,
+                  size: 16,
+                ),
+                const SizedBox(width: 4),
+                Expanded(
+                  child: Text(
+                    leader != null && totalPieces > 0
+                        ? 'Vede ${leader.player.name}'
+                        : 'Zatím bez lídra',
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(
+                      color: gold,
+                      fontSize: 12,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Text(
+                  '$totalPieces ks',
+                  style: const TextStyle(
+                    color: muted,
+                    fontSize: 12,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+                const SizedBox(width: 10),
+                Text(
+                  '${litersLabel(totalLiters)} l',
+                  style: const TextStyle(
+                    color: Color(0xFFFFF2D8),
+                    fontSize: 12,
+                    fontWeight: FontWeight.w800,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          Expanded(
+            child: ListView.builder(
+              padding: const EdgeInsets.fromLTRB(12, 0, 12, 4),
+              itemCount: entries.length,
+              itemBuilder: (context, position) {
+                final (index, item) = entries[position];
+                return styledPlayerCard(index, item);
+              },
+            ),
+          ),
+          Container(
+            padding: const EdgeInsets.fromLTRB(12, 5, 12, 8),
+            decoration: const BoxDecoration(
+              border: Border(top: BorderSide(color: Color(0xFF2D2834))),
+            ),
+            child: Row(
+              children: [
+                Expanded(
+                  child: Row(
+                    children: [
+                      for (final type in styledDrinkOrder)
+                        Expanded(
+                          child: Column(
+                            children: [
+                              Text(
+                                '${totals[type]}',
+                                style: TextStyle(
+                                  color: styledDrinkColor(type),
+                                  fontWeight: FontWeight.w800,
+                                  fontSize: 18,
+                                ),
+                              ),
+                              Text(
+                                drinkLabel(type),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: const TextStyle(
+                                  color: muted,
+                                  fontSize: 9,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                    ],
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Tooltip(
+                  message: correcting
+                      ? 'Přepnout na přidávání nápojů'
+                      : 'Přepnout na opravu nápojů',
+                  child: InkWell(
+                    key: const ValueKey('pub-mode-toggle'),
+                    borderRadius: BorderRadius.circular(12),
+                    onTap: () => setState(() => correcting = !correcting),
+                    child: Container(
+                      width: 58,
+                      height: 50,
+                      decoration: BoxDecoration(
+                        color: correcting ? gold : const Color(0xFFE74778),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(correcting ? Icons.add : Icons.remove, size: 18),
+                          Text(
+                            correcting ? 'Přidávat' : 'Opravit',
+                            style: const TextStyle(
+                              fontSize: 10,
+                              fontWeight: FontWeight.w800,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Color styledDrinkColor(PubDrinkType type) => switch (type) {
+    PubDrinkType.beer => const Color(0xFFFFB529),
+    PubDrinkType.shot => const Color(0xFF7ADCCC),
+  };
+
+  Widget styledPlayerCard(int index, BeerNoMatchWithPlayer item) {
+    const muted = Color(0xFFA29BB4);
+    final counts = countsFor(item);
+    final pieces = counts.values.fold<int>(0, (sum, n) => sum + n);
+    final hasLeft = left.contains(item.player.id);
+    return Container(
+      key: ValueKey('styled-player-${item.player.id}'),
+      margin: const EdgeInsets.symmetric(vertical: 3),
+      padding: const EdgeInsets.fromLTRB(10, 6, 8, 6),
+      decoration: BoxDecoration(
+        color: const Color(0xFF1A1721),
+        border: Border.all(color: const Color(0xFF302A38)),
+        borderRadius: BorderRadius.circular(16),
+      ),
+      child: Opacity(
+        opacity: hasLeft ? .55 : 1,
+        child: Row(
+          children: [
+            SizedBox(
+              width: 90,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Expanded(
+                        child: Text(
+                          item.player.name,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: const TextStyle(
+                            color: Color(0xFFF7F2FA),
+                            fontSize: 16,
+                            fontWeight: FontWeight.w800,
+                          ),
+                        ),
+                      ),
+                      Tooltip(
+                        message: hasLeft
+                            ? 'Vrátit do hospody'
+                            : 'Odešel z hospody',
+                        child: InkWell(
+                          key: ValueKey('styled-leave-${item.player.id}'),
+                          onTap: saving
+                              ? null
+                              : () {
+                                  final next = {...left};
+                                  if (hasLeft) {
+                                    next.remove(item.player.id);
+                                  } else {
+                                    next.add(item.player.id!);
+                                  }
+                                  saveAttendance(
+                                    {...guests},
+                                    next,
+                                    finishChoosing: false,
+                                  );
+                                },
+                          child: SizedBox(
+                            width: 26,
+                            height: 26,
+                            child: Center(
+                              child: Icon(
+                                hasLeft
+                                    ? Icons.undo_rounded
+                                    : Icons.logout_rounded,
+                                color: muted,
+                                size: 17,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    pieces == 0
+                        ? 'zatím nic'
+                        : '$pieces ks · ${litersLabel(litersFor(counts))} l',
+                    maxLines: 1,
+                    style: const TextStyle(color: muted, fontSize: 11),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(width: 5),
+            for (final type in styledDrinkOrder)
+              Expanded(
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 2),
+                  child: styledDrinkTile(index, type, counts[type]!, hasLeft),
+                ),
+              ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget styledDrinkTile(
+    int index,
+    PubDrinkType type,
+    int count,
+    bool hasLeft,
+  ) {
+    final active = count > 0;
+    final accent = styledDrinkColor(type);
+    final enabled = !hasLeft && (correcting ? active : true);
+    return Semantics(
+      button: true,
+      label:
+          '${correcting ? 'Odebrat' : 'Přidat'} ${drinkLabel(type).toLowerCase()}, $count kusů',
+      child: GestureDetector(
+        key: ValueKey('styled-${widget.players[index].player.id}-${type.name}'),
+        onTap: enabled
+            ? () =>
+                  correcting ? removeDrink(index, type) : addDrink(index, type)
+            : null,
+        child: Container(
+          height: 52,
+          decoration: BoxDecoration(
+            color: active ? accent.withAlpha(24) : const Color(0xFF18151E),
+            border: active ? Border.all(color: accent.withAlpha(100)) : null,
+            borderRadius: BorderRadius.circular(14),
+          ),
+          child: CustomPaint(
+            foregroundPainter: active
+                ? null
+                : const _DashedTileBorderPainter(Color(0xFF373140)),
+            child: Stack(
+              clipBehavior: Clip.none,
+              alignment: Alignment.center,
+              children: [
+                PubDrinkArt(type: type, active: active),
+                if (correcting && active && !hasLeft)
+                  Positioned(
+                    top: -4,
+                    left: -4,
+                    child: Container(
+                      key: ValueKey(
+                        'remove-badge-${widget.players[index].player.id}-${type.name}',
+                      ),
+                      width: 20,
+                      height: 20,
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFE74778),
+                        shape: BoxShape.circle,
+                        border: Border.all(
+                          color: const Color(0xFF1A1721),
+                          width: 2,
+                        ),
+                      ),
+                      child: const Icon(
+                        Icons.remove_rounded,
+                        size: 13,
+                        color: Colors.white,
+                      ),
+                    ),
+                  ),
+                if (active)
+                  Positioned(
+                    top: correcting ? null : -3,
+                    bottom: correcting ? -3 : null,
+                    right: -3,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 5,
+                        vertical: 2,
+                      ),
+                      decoration: BoxDecoration(
+                        color: accent,
+                        borderRadius: BorderRadius.circular(18),
+                      ),
+                      child: Text(
+                        '×$count',
+                        style: const TextStyle(
+                          color: Color(0xFF100C12),
+                          fontSize: 11,
+                          fontWeight: FontWeight.w900,
+                        ),
+                      ),
+                    ),
+                  ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  String drinkLabel(PubDrinkType type) => switch (type) {
+    PubDrinkType.beer => 'Pivo',
+    PubDrinkType.shot => 'Panák',
+  };
+}
