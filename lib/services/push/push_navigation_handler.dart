@@ -1,6 +1,8 @@
 import 'package:flutter/widgets.dart';
 import 'package:trus_app/features/season_recap/season_recap_data.dart';
 import 'package:trus_app/features/home/screens/home_screen.dart';
+import 'package:trus_app/features/chat/chat_screen.dart';
+import 'package:trus_app/features/chat/chat_controller.dart';
 import 'package:trus_app/features/achievement/screens/view_player_achievement_detail_screen.dart';
 import 'package:trus_app/features/achievement/repository/achievement_repository.dart';
 import 'package:trus_app/features/achievement/achievement_view_args.dart';
@@ -67,6 +69,22 @@ class PushNavigationHandler {
     final variables = ref.read(screenVariablesNotifierProvider.notifier);
 
     switch (payload.screenId) {
+      case ChatScreen.id:
+        if (payload.appTeamId != null &&
+            ref.read(globalVariablesControllerProvider).appTeam?.id !=
+                payload.appTeamId) {
+          ref
+              .read(uiFeedbackProvider.notifier)
+              .showErrorDialog(
+                'Zpráva patří do jiného týmu. Nejdřív přepni tým.',
+              );
+          return;
+        }
+        screenNotifier.changeByFragmentId(ChatScreen.id);
+        if (payload.room == 'all' || payload.room == 'players') {
+          ref.read(chatControllerProvider.notifier).load(payload.room!);
+        }
+        return;
       case 'season-recap':
         // Backend checks ownership and membership against the recap's own team.
         if (payload.recapId == null || payload.recapId! <= 0) return;

@@ -11,9 +11,8 @@ import '../state/enabled_notifications_state.dart';
 class EnabledNotificationsScreen extends CustomConsumerStatefulWidget {
   static const String id = "enabled-notification-screen";
 
-  const EnabledNotificationsScreen({
-    Key? key,
-  }) : super(key: key, title: "Oznámení", name: id);
+  const EnabledNotificationsScreen({Key? key})
+    : super(key: key, title: "Oznámení", name: id);
 
   @override
   ConsumerState<EnabledNotificationsScreen> createState() =>
@@ -21,7 +20,29 @@ class EnabledNotificationsScreen extends CustomConsumerStatefulWidget {
 }
 
 class _EnabledNotificationsScreenState
-    extends ConsumerState<EnabledNotificationsScreen> {
+    extends ConsumerState<EnabledNotificationsScreen>
+    with WidgetsBindingObserver {
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addObserver(this);
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      ref
+          .read(enabledNotificationsNotifierProvider.notifier)
+          .refreshPushPermissionInfo();
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final state = ref.watch(enabledNotificationsNotifierProvider);
@@ -38,7 +59,8 @@ class _EnabledNotificationsScreenState
               refreshingPushStatus: state.refreshingPushStatus,
               onRefresh: notifier.refreshPushPermissionInfo,
               onSendTestPush: notifier.sendTestPushToThisDevice,
-              onRequestPermission: notifier.requestPermissionAndRefresh,
+              onRequestPermission: () =>
+                  notifier.requestPermissionAndRefresh(context),
             ),
             Expanded(
               child: EnabledNotificationsListBuilder(
@@ -82,10 +104,8 @@ class PushStatusCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return pushPermissionInfo.when(
       loading: () => const _PushStatusLoadingCard(),
-      error: (error, _) => _PushStatusErrorCard(
-        error: error,
-        onRefresh: onRefresh,
-      ),
+      error: (error, _) =>
+          _PushStatusErrorCard(error: error, onRefresh: onRefresh),
       data: (info) => _PushStatusLoadedCard(
         info: info,
         sendingTestPush: sendingTestPush,
@@ -115,9 +135,7 @@ class _PushStatusLoadingCard extends StatelessWidget {
               child: CircularProgressIndicator(strokeWidth: 2),
             ),
             SizedBox(width: 12),
-            Expanded(
-              child: Text("Ověřuji stav push notifikací..."),
-            ),
+            Expanded(child: Text("Ověřuji stav push notifikací...")),
           ],
         ),
       ),
@@ -129,10 +147,7 @@ class _PushStatusErrorCard extends StatelessWidget {
   final Object error;
   final VoidCallback onRefresh;
 
-  const _PushStatusErrorCard({
-    required this.error,
-    required this.onRefresh,
-  });
+  const _PushStatusErrorCard({required this.error, required this.onRefresh});
 
   @override
   Widget build(BuildContext context) {
@@ -145,10 +160,7 @@ class _PushStatusErrorCard extends StatelessWidget {
           children: [
             Text(
               "Stav push notifikací se nepodařilo ověřit",
-              style: TextStyle(
-                fontWeight: FontWeight.bold,
-                fontSize: 16,
-              ),
+              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
             ),
             SizedBox(height: 8),
             Text(
@@ -157,10 +169,7 @@ class _PushStatusErrorCard extends StatelessWidget {
               overflow: TextOverflow.ellipsis,
             ),
             SizedBox(height: 12),
-            OutlinedButton(
-              onPressed: onRefresh,
-              child: Text("Zkusit znovu"),
-            ),
+            OutlinedButton(onPressed: onRefresh, child: Text("Zkusit znovu")),
           ],
         ),
       ),
@@ -324,12 +333,12 @@ class _StatusLine extends StatelessWidget {
           Icon(
             ok ? Icons.check_circle : Icons.warning_amber_rounded,
             size: 17,
-            color: ok ? context.appColors.successSolid : context.appColors.legacyAccent,
+            color: ok
+                ? context.appColors.successSolid
+                : context.appColors.legacyAccent,
           ),
           const SizedBox(width: 6),
-          Expanded(
-            child: Text("$label: $value"),
-          ),
+          Expanded(child: Text("$label: $value")),
         ],
       ),
     );

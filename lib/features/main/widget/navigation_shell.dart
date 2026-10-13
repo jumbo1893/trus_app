@@ -11,6 +11,8 @@ class NavigationShell extends StatelessWidget {
   final int selectedIndex;
   final VoidCallback onBack, onHome, onAccount, onNotifications;
   final VoidCallback? onAi;
+  final VoidCallback? onChat;
+  final int chatUnread;
   final ValueChanged<int> onDestination;
   final Widget child;
   const NavigationShell({
@@ -24,6 +26,8 @@ class NavigationShell extends StatelessWidget {
     required this.onHome,
     required this.onAccount,
     this.onAi,
+    this.onChat,
+    this.chatUnread = 0,
     required this.onNotifications,
     required this.onDestination,
     required this.child,
@@ -80,6 +84,17 @@ class NavigationShell extends StatelessWidget {
                   onPressed: onAi,
                   icon: const Icon(Icons.auto_awesome),
                 ),
+            if (isRoot && onChat != null)
+              IconButton(
+                key: const ValueKey('chat_button'),
+                tooltip: 'Týmový chat',
+                onPressed: onChat,
+                icon: Badge(
+                  isLabelVisible: chatUnread > 0,
+                  label: Text(chatUnread >= 9 ? '9+' : '$chatUnread'),
+                  child: const Icon(Icons.chat_bubble_outline),
+                ),
+              ),
             if (isRoot)
               IconButton(
                 key: const ValueKey('account_button'),

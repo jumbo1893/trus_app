@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../chat/chat_screen.dart';
 import 'section_screen.dart';
 import 'package:trus_app/features/ai/screens/ai_assistant_screen.dart';
 import 'package:trus_app/features/achievement/screens/achievement_screen.dart';
@@ -200,6 +201,7 @@ final List<Widget> _widgetList = [
   const SectionScreen(section: 'entries-hub', title: 'Zápisy'),
   const SectionScreen(section: 'statistics-hub', title: 'Statistiky'),
   const SectionScreen(section: 'more-hub', title: 'Více'),
+  const ChatScreen(),
 ];
 
 List<Widget> get widgetList => _widgetList;

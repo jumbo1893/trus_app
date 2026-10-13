@@ -1,6 +1,8 @@
 import '../../common/widgets/entry_draft_scope.dart';
 import 'widget/navigation_shell.dart';
 import '../ai/screens/ai_assistant_screen.dart';
+import '../chat/chat_screen.dart';
+import '../chat/chat_controller.dart';
 import 'controller/navigation_guard.dart';
 import '../beer/controller/beer_notifier.dart';
 import 'package:flutter/material.dart';
@@ -49,7 +51,8 @@ class MainScreen extends ConsumerStatefulWidget {
   ConsumerState<MainScreen> createState() => _MainScreenState();
 }
 
-class _MainScreenState extends ConsumerState<MainScreen> {
+class _MainScreenState extends ConsumerState<MainScreen>
+    with WidgetsBindingObserver {
   final PageController pageController = PageController();
 
   late BottomSheetNavigationManager _bottomSheetNavigationManager;
@@ -58,13 +61,16 @@ class _MainScreenState extends ConsumerState<MainScreen> {
 
   late final ProviderSubscription<MainState> _mainSub;
   late final ProviderSubscription<int> _pageSub;
+  late final ProviderSubscription<String> _chatScreenSub;
   late final ProviderSubscription<UiFeedbackState> _uiSub;
   bool _loadingSheetVisible = false;
+  bool _appActive = true;
   late final VoidCallback _unregisterNavigationGuard;
 
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     _unregisterNavigationGuard = ref
         .read(navigationGuardProvider)
         .register(_confirmLeave);
@@ -129,6 +135,12 @@ class _MainScreenState extends ConsumerState<MainScreen> {
         });
       },
     );
+
+    _chatScreenSub = ref.listenManual<String>(
+      screenNotifierProvider.select((s) => s.currentScreenId),
+      (_, screenId) => _updateChatVisibility(screenId),
+    );
+    _updateChatVisibility(ref.read(screenNotifierProvider).currentScreenId);
 
     // ať skočíš i na start (pokud currentPageIndex != 0 nebo chceš jistotu):
     WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -266,11 +278,36 @@ class _MainScreenState extends ConsumerState<MainScreen> {
   }
 
   @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    _appActive = state == AppLifecycleState.resumed;
+    _updateChatVisibility(ref.read(screenNotifierProvider).currentScreenId);
+    if (_appActive) ref.read(chatControllerProvider.notifier).refresh();
+  }
+
+  void _updateChatVisibility(String screenId) {
+    if (!_appActive || screenId != ChatScreen.id) {
+      ref.read(chatControllerProvider.notifier).setScreenVisible(false);
+      return;
+    }
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted ||
+          !_appActive ||
+          ref.read(screenNotifierProvider).currentScreenId != ChatScreen.id) {
+        return;
+      }
+      ref.read(chatControllerProvider.notifier).setScreenVisible(true);
+    });
+  }
+
+  @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    ref.read(chatControllerProvider.notifier).setScreenVisible(false);
     _unregisterNavigationGuard();
     pageController.dispose();
     _mainSub.close();
     _pageSub.close();
+    _chatScreenSub.close();
     _uiSub.close();
     super.dispose();
   }
@@ -434,6 +471,9 @@ class _MainScreenState extends ConsumerState<MainScreen> {
     final colorScheme = theme.colorScheme;
     final screenState = ref.watch(screenNotifierProvider);
     final mainState = ref.watch(mainNotifierProvider);
+    final chatUnread = ref.watch(
+      chatControllerProvider.select((state) => state.unread),
+    );
     final notifier = ref.read(mainNotifierProvider.notifier);
     final screenNotifier = ref.read(screenNotifierProvider.notifier);
     final uiState = ref.watch(uiFeedbackProvider);
@@ -473,6 +513,8 @@ class _MainScreenState extends ConsumerState<MainScreen> {
               onAccount: notifier.onUpperMenuTapped,
               onAi: () =>
                   screenNotifier.changeByFragmentId(AiAssistantScreen.id),
+              onChat: () => screenNotifier.changeByFragmentId(ChatScreen.id),
+              chatUnread: chatUnread,
               onNotifications: () =>
                   screenNotifier.changeByFragmentId(NotificationScreen.id),
               onDestination: notifier.onBottomMenuTapped,

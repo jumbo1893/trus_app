@@ -45,6 +45,17 @@ class _MainTableTeamScreenState extends ConsumerState<MainTableTeamScreen>
         length: tabs.length,
         initialIndex: safeIndex,
       );
+      _tabController!.addListener(() {
+        final controller = _tabController;
+        if (controller == null || controller.indexIsChanging || !mounted) return;
+        final teamId = ref.read(screenVariablesNotifierProvider).tableTeam.id!;
+        final current = ref.read(footballTableTeamDetailNotifierProvider(teamId));
+        if (controller.index < current.tabs.length &&
+            current.activeTab != current.tabs[controller.index]) {
+          ref.read(footballTableTeamDetailNotifierProvider(teamId).notifier)
+              .changeTab(current.tabs[controller.index]);
+        }
+      });
       return;
     }
 
@@ -71,9 +82,9 @@ class _MainTableTeamScreenState extends ConsumerState<MainTableTeamScreen>
       case FootballTeamDetailTab.detail:
         return const TableTeamDetailScreen();
       case FootballTeamDetailTab.nextMatches:
-        return const TableTeamDetailMatchesScreen();
+        return const TableTeamDetailMatchesScreen(tab: FootballTeamDetailTab.nextMatches);
       case FootballTeamDetailTab.pastMatches:
-        return const TableTeamDetailMatchesScreen();
+        return const TableTeamDetailMatchesScreen(tab: FootballTeamDetailTab.pastMatches);
       case FootballTeamDetailTab.mutualMatches:
         return const TableTeamMutualMatchesScreen();
     }
@@ -93,15 +104,40 @@ class _MainTableTeamScreenState extends ConsumerState<MainTableTeamScreen>
     }
 
     return Scaffold(
+      backgroundColor: context.appColors.backgroundPrimary,
       appBar: AppBar(
-        backgroundColor: context.appColors.cardBackground,
+        backgroundColor: context.appColors.backgroundPrimary,
+        surfaceTintColor: Colors.transparent,
+        elevation: 0,
         toolbarHeight: 0,
-        bottom: TabBar(
-          controller: controller,
-          labelColor: context.appColors.buttonForeground,
-          indicatorColor: context.appColors.legacyAccent,
-          tabs: state.tabs.map(_tabLabel).toList(),
-          onTap: notifier.changeTabByIndex,
+        bottom: PreferredSize(
+          preferredSize: const Size.fromHeight(60),
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
+            child: Container(
+              height: 44,
+              padding: const EdgeInsets.all(3),
+              decoration: BoxDecoration(
+                color: context.appColors.backgroundSecondary,
+                borderRadius: BorderRadius.circular(16),
+              ),
+              child: TabBar(
+                controller: controller,
+                dividerColor: Colors.transparent,
+                indicatorSize: TabBarIndicatorSize.tab,
+                labelPadding: EdgeInsets.zero,
+                indicatorPadding: EdgeInsets.zero,
+                indicator: BoxDecoration(
+                  color: context.appColors.cardBackground,
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                labelColor: context.appColors.textPrimary,
+                unselectedLabelColor: context.appColors.textMuted,
+                tabs: state.tabs.map(_tabLabel).toList(),
+                onTap: notifier.changeTabByIndex,
+              ),
+            ),
+          ),
         ),
       ),
       body: TabBarView(

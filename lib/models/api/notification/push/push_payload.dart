@@ -10,6 +10,7 @@ class PushPayload {
   final int? appTeamId;
   final int? playerAchievementId;
   final int? recapId;
+  final String? room;
 
   const PushPayload({
     required this.title,
@@ -23,6 +24,7 @@ class PushPayload {
     this.appTeamId,
     this.playerAchievementId,
     this.recapId,
+    this.room,
   });
 
   factory PushPayload.fromData(Map<String, dynamic> data) {
@@ -37,11 +39,16 @@ class PushPayload {
       appTeamId: _toInt(data['appTeamId']),
       playerAchievementId: _toInt(data['playerAchievementId']),
       recapId: _toInt(data['recapId']),
+      room: data['room']?.toString(),
       navigateText: data['navigateText']?.toString(),
     );
   }
 
   bool get hasNavigationTarget => screenId != null && screenId!.isNotEmpty;
+
+  bool get isChatMessage =>
+      notificationType?.toUpperCase() == 'CHAT' ||
+      (screenId == 'chat-screen' && room != null);
 
   static int? _toInt(Object? value) {
     if (value == null) return null;

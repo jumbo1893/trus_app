@@ -22,50 +22,65 @@ class EnabledNotificationsListBuilder<T> extends ConsumerWidget {
     double padding = 20;
     final size = MediaQuery.of(context).size;
     return notificationsList.when(
-        loading: () => const Loader(),
-        error: (_, __) => const SizedBox(),
-        data: (modelList) => ListView.builder(
-          shrinkWrap: true,
-          itemCount: modelList.length,
-          itemBuilder: (context, index) {
-            var notification = modelList[index];
-            return Column(
-              children: [
-                InkWell(
-                  onTap: () => {},
-                  child: Padding(
-                    padding: const EdgeInsets.only(
-                        bottom: 8.0, left: 8, right: 8),
-                    child: Container(
-                        decoration: BoxDecoration(
-                            border: Border(
-                                bottom: BorderSide(
-                                  color: context.appColors.textMuted,
-                                ))),
-                        child: Container(
-                          decoration: BoxDecoration(
-                              border: Border(bottom: BorderSide(color: context.appColors.legacyAccent))),
-                          alignment: Alignment.centerRight,
-                          width: size.width - padding,
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              CustomText(text: notification.listViewTitle()),
-                              Switch(
-                                  activeThumbColor: context.appColors.legacyAccent,
-                                  value: notification.enabled,
-                                  onChanged: (bool value) {
-                                    notifier.changeEnabledNotification(notification, value);
-                                  }
-                              ),
-                            ],
-                          ),
-                        )),
+      loading: () => const Loader(),
+      error: (_, __) => const SizedBox(),
+      data: (modelList) => ListView.builder(
+        shrinkWrap: true,
+        itemCount: modelList.length,
+        itemBuilder: (context, index) {
+          var notification = modelList[index];
+          return Column(
+            children: [
+              InkWell(
+                onTap: () => {},
+                child: Padding(
+                  padding: const EdgeInsets.only(
+                    bottom: 8.0,
+                    left: 8,
+                    right: 8,
                   ),
-                )
-              ],
-            );
-          },
-        ));
+                  child: Container(
+                    decoration: BoxDecoration(
+                      border: Border(
+                        bottom: BorderSide(color: context.appColors.textMuted),
+                      ),
+                    ),
+                    child: Container(
+                      decoration: BoxDecoration(
+                        border: Border(
+                          bottom: BorderSide(
+                            color: context.appColors.legacyAccent,
+                          ),
+                        ),
+                      ),
+                      alignment: Alignment.centerRight,
+                      width: size.width - padding,
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          CustomText(text: notification.listViewTitle()),
+                          Switch(
+                            activeThumbColor: context.appColors.legacyAccent,
+                            value: notification.enabled,
+                            onChanged: (bool value) async {
+                              await notifier
+                                  .changeEnabledNotificationWithPermission(
+                                    context,
+                                    notification,
+                                    value,
+                                  );
+                            },
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          );
+        },
+      ),
+    );
   }
 }

@@ -4,11 +4,13 @@ import 'package:flutter_markdown_plus/flutter_markdown_plus.dart';
 class TrusBotMarkdownText extends StatelessWidget {
   final String data;
   final Color color;
+  final bool selectable;
 
   const TrusBotMarkdownText({
     super.key,
     required this.data,
     required this.color,
+    this.selectable = true,
   });
 
   @override
@@ -22,7 +24,7 @@ class TrusBotMarkdownText extends StatelessWidget {
 
     return MarkdownBody(
       data: data,
-      selectable: true,
+      selectable: selectable,
       softLineBreak: true,
       imageBuilder: (_, _, alt) => Text(
         alt == null || alt.isBlank ? '[obrázek]' : alt,

@@ -250,6 +250,10 @@ class NotificationsService {
 
       final payload = _payloadFromMessage(message);
 
+      // The chat is updated by WebSocket; foreground push needs no sheet or
+      // local notification, even when the user is on another app screen.
+      if (payload.isChatMessage) return;
+
       // Push bez vlastních dat (případně pouze s title/body) nemá akci,
       // proto ji ve foregroundu zobrazíme jako běžné systémové oznámení.
       if (!_hasCustomData(message.data)) {
@@ -593,7 +597,8 @@ class NotificationsService {
                 'footballMatchId': payload.footballMatchId,
               if (payload.playerId != null) 'playerId': payload.playerId,
               if (payload.appTeamId != null) 'appTeamId': payload.appTeamId,
-              if (payload.playerAchievementId != null) 'playerAchievementId': payload.playerAchievementId,
+              if (payload.playerAchievementId != null)
+                'playerAchievementId': payload.playerAchievementId,
               if (payload.recapId != null) 'recapId': payload.recapId,
             }),
     );

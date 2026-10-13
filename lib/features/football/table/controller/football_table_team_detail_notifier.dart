@@ -49,7 +49,7 @@ class FootballTableTeamDetailNotifier extends AppNotifier<FootballTableTeamState
   }
 
   void _applyDetail(detail) {
-    final tabs = _buildTabs(detail);
+    final tabs = _buildTabs();
     // pokud aktivní tab už neexistuje, fallback na detail
     final active = tabs.contains(state.activeTab) ? state.activeTab : FootballTeamDetailTab.detail;
 
@@ -60,15 +60,13 @@ class FootballTableTeamDetailNotifier extends AppNotifier<FootballTableTeamState
     );
   }
 
-  List<FootballTeamDetailTab> _buildTabs(detail) {
+  List<FootballTeamDetailTab> _buildTabs() {
     final tabs = <FootballTeamDetailTab>[
       FootballTeamDetailTab.detail,
       FootballTeamDetailTab.nextMatches,
       FootballTeamDetailTab.pastMatches,
+      FootballTeamDetailTab.mutualMatches,
     ];
-    if (detail.mutualMatches.isNotEmpty) {
-      tabs.add(FootballTeamDetailTab.mutualMatches);
-    }
     return tabs;
   }
 

@@ -11,6 +11,7 @@ enum NotificationType {
   achievementProgress,
   unknown,
   matchParticipation,
+  chat,
 }
 
 /// Mapování serverových stringů <-> FE enum
@@ -24,6 +25,8 @@ NotificationType notificationTypeFromServer(Object? raw) {
   switch (upper) {
     case 'MATCH_PARTICIPATION':
       return NotificationType.matchParticipation;
+    case 'CHAT':
+      return NotificationType.chat;
     case 'GLOBAL':
       return NotificationType.global;
     case 'THREE_DAYS_BEFORE':
@@ -53,6 +56,8 @@ String notificationTypeToServer(NotificationType t) {
   switch (t) {
     case NotificationType.matchParticipation:
       return 'MATCH_PARTICIPATION';
+    case NotificationType.chat:
+      return 'CHAT';
     case NotificationType.global:
       return 'GLOBAL';
     case NotificationType.threeDaysBefore:
