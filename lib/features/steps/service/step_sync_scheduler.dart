@@ -50,6 +50,32 @@ class StepSyncScheduler {
 
   Future<void> enable(int appTeamId) async {
     await _preferences.enable(appTeamId);
+    await _updateBackgroundSchedule();
+  }
+
+  Future<bool> isBackgroundEnabled() async {
+    if (!await _preferences.isBackgroundEnabled()) return false;
+    if (await _health.hasBackgroundPermission()) return true;
+    await _preferences.setBackgroundEnabled(false);
+    await Workmanager().cancelByUniqueName(stepBackgroundTask);
+    return false;
+  }
+
+  Future<bool> setBackgroundEnabled(bool enabled) async {
+    if (enabled) {
+      if (!await _health.requestBackgroundPermission()) return false;
+    }
+    await _preferences.setBackgroundEnabled(enabled);
+    await _updateBackgroundSchedule();
+    return true;
+  }
+
+  Future<void> _updateBackgroundSchedule() async {
+    if (!await _preferences.isBackgroundEnabled() ||
+        !await _health.hasBackgroundPermission()) {
+      await Workmanager().cancelByUniqueName(stepBackgroundTask);
+      return;
+    }
     await Workmanager().registerPeriodicTask(
       stepBackgroundTask,
       stepBackgroundTask,

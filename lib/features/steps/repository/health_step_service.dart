@@ -24,14 +24,14 @@ class HealthStepService {
       const [HealthDataType.STEPS],
       permissions: const [HealthDataAccess.READ],
     );
-    if (granted && Platform.isAndroid) {
-      final backgroundAvailable = await _health
-          .isHealthDataInBackgroundAvailable();
-      if (backgroundAvailable) {
-        await _health.requestHealthDataInBackgroundAuthorization();
-      }
-    }
     return granted;
+  }
+
+  Future<bool> requestBackgroundPermission() async {
+    if (!Platform.isAndroid) return false;
+    await _health.configure();
+    if (!await _health.isHealthDataInBackgroundAvailable()) return false;
+    return _health.requestHealthDataInBackgroundAuthorization();
   }
 
   Future<bool> hasReadPermission() async {

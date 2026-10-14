@@ -42,7 +42,8 @@ class BackgroundStepSync {
   final HealthStepService _health = HealthStepService();
 
   Future<bool> run() async {
-    if (!await _preferences.isEnabled()) return true;
+    if (!await _preferences.isEnabled() ||
+        !await _preferences.isBackgroundEnabled()) return true;
     final teamId = await _preferences.teamId();
     final firebaseUser = FirebaseAuth.instance.currentUser;
     if (teamId == null || firebaseUser?.email == null) return true;

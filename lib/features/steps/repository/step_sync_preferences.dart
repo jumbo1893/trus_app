@@ -4,6 +4,7 @@ class StepSyncPreferences {
   static const _enabledKey = 'steps.sync.enabled';
   static const _teamIdKey = 'steps.sync.appTeamId';
   static const _lastCountKey = 'steps.sync.lastCount';
+  static const _backgroundEnabledKey = 'steps.sync.backgroundEnabled';
   static const _healthPermissionPromptedKey = 'steps.healthPermissionPrompted';
 
   Future<bool> isEnabled() async {
@@ -16,6 +17,17 @@ class StepSyncPreferences {
     final prefs = await SharedPreferences.getInstance();
     await prefs.reload();
     return prefs.getInt(_teamIdKey);
+  }
+
+  Future<bool> isBackgroundEnabled() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.reload();
+    return prefs.getBool(_backgroundEnabledKey) ?? false;
+  }
+
+  Future<void> setBackgroundEnabled(bool enabled) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool(_backgroundEnabledKey, enabled);
   }
 
   Future<int> lastCount() async {
@@ -33,6 +45,7 @@ class StepSyncPreferences {
   Future<void> disable() async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setBool(_enabledKey, false);
+    await prefs.setBool(_backgroundEnabledKey, false);
     await prefs.remove(_lastCountKey);
   }
 

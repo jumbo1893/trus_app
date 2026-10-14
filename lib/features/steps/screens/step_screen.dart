@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import '../repository/step_api_service.dart';
 import '../../../common/widgets/load_failure.dart';
 import 'package:flutter/material.dart';
@@ -9,6 +11,8 @@ import 'package:trus_app/config.dart';
 import 'package:trus_app/features/steps/controller/step_controller.dart';
 import 'package:trus_app/features/steps/screens/step_history_sheet.dart';
 import 'package:trus_app/features/steps/state/step_state.dart';
+import 'package:trus_app/features/steps/service/step_sync_scheduler.dart';
+import 'package:trus_app/features/steps/screens/background_steps_prompt.dart';
 import 'package:trus_app/models/api/step/step_models.dart';
 import 'package:trus_app/theme/app_colors.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -27,6 +31,61 @@ class StepScreen extends CustomConsumerStatefulWidget {
 }
 
 class _StepScreenState extends ConsumerState<StepScreen> {
+  bool? _backgroundEnabled;
+  bool _backgroundBusy = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadBackgroundSetting();
+  }
+
+  Future<void> _loadBackgroundSetting() async {
+    final enabled = await ref
+        .read(stepSyncSchedulerProvider)
+        .isBackgroundEnabled();
+    if (mounted) setState(() => _backgroundEnabled = enabled);
+  }
+
+  Future<void> _setBackgroundEnabled(bool enabled) async {
+    if (_backgroundBusy) return;
+    if (enabled && !await askForBackgroundSteps(context)) return;
+    if (!mounted) return;
+    setState(() => _backgroundBusy = true);
+    try {
+      final allowed = await ref
+          .read(stepSyncSchedulerProvider)
+          .setBackgroundEnabled(enabled);
+      if (!mounted) return;
+      setState(() => _backgroundEnabled = enabled && allowed);
+      if (enabled && !allowed) {
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+          content: Text('Přístup na pozadí nebyl povolen. Kroky se budou aktualizovat při používání aplikace.'),
+        ));
+      }
+    } catch (_) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+          content: Text('Nastavení aktualizací se nepodařilo změnit. Zkus to znovu.'),
+        ));
+      }
+    } finally {
+      if (mounted) setState(() => _backgroundBusy = false);
+    }
+  }
+
+  Future<void> _grantSteps(StepController controller) async {
+    await controller.grantConsent();
+    if (!mounted ||
+        ref.read(stepControllerProvider).consent.valueOrNull != true) return;
+    await _setBackgroundEnabled(true);
+  }
+
+  Future<void> _revokeSteps(StepController controller) async {
+    await controller.revokeConsent();
+    if (mounted) setState(() => _backgroundEnabled = false);
+  }
+
   @override
   Widget build(BuildContext context) {
     final state = ref.watch(stepControllerProvider);
@@ -41,8 +100,15 @@ class _StepScreenState extends ConsumerState<StepScreen> {
             onRetry: controller.load,
           ),
           data: (enabled) => enabled
-              ? _LeaderboardView(state: state, controller: controller)
-              : _ConsentView(onGrant: controller.grantConsent),
+              ? _LeaderboardView(
+                  state: state,
+                  controller: controller,
+                  backgroundEnabled: _backgroundEnabled,
+                  backgroundBusy: _backgroundBusy,
+                  onBackgroundChanged: _setBackgroundEnabled,
+                  onRevoke: () => _revokeSteps(controller),
+                )
+              : _ConsentView(onGrant: () => _grantSteps(controller)),
         ),
       ),
     );
@@ -115,7 +181,18 @@ class _ConsentView extends StatelessWidget {
 class _LeaderboardView extends StatelessWidget {
   final StepsState state;
   final StepController controller;
-  const _LeaderboardView({required this.state, required this.controller});
+  final bool? backgroundEnabled;
+  final bool backgroundBusy;
+  final ValueChanged<bool> onBackgroundChanged;
+  final VoidCallback onRevoke;
+  const _LeaderboardView({
+    required this.state,
+    required this.controller,
+    required this.backgroundEnabled,
+    required this.backgroundBusy,
+    required this.onBackgroundChanged,
+    required this.onRevoke,
+  });
 
   @override
   Widget build(BuildContext context) => RefreshIndicator(
@@ -186,18 +263,34 @@ class _LeaderboardView extends StatelessWidget {
           child: SwitchListTile.adaptive(
             value: true,
             onChanged: (enabled) {
-              if (!enabled) controller.revokeConsent();
+              if (!enabled) onRevoke();
             },
             secondary: const Icon(Icons.directions_walk_rounded),
             title: const Text('Sdílet moje kroky s týmem'),
             subtitle: Text(
               state.syncing
                   ? 'Právě synchronizuji posledních 30 dní…'
-                  : 'Aktualizace probíhá při používání aplikace a na podporovaných '
-                        'zařízeních přibližně každých 6 hodin na pozadí.',
+                  : 'Kroky se aktualizují při používání aplikace.',
             ),
           ),
         ),
+        if (Platform.isAndroid) ...[
+          const SizedBox(height: 10),
+          Card(
+            child: SwitchListTile.adaptive(
+              value: backgroundEnabled ?? false,
+              onChanged: backgroundEnabled == null || backgroundBusy
+                  ? null
+                  : onBackgroundChanged,
+              secondary: const Icon(Icons.update_rounded),
+              title: const Text('Automatické aktualizace na pozadí'),
+              subtitle: const Text(
+                'Volitelné načítání dnešních a včerejších kroků přibližně '
+                'každých 6 hodin, i když aplikaci nepoužíváš.',
+              ),
+            ),
+          ),
+        ],
         const SizedBox(height: 10),
         OutlinedButton.icon(
           onPressed: () =>

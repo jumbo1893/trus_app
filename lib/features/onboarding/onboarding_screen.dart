@@ -11,6 +11,7 @@ import 'package:trus_app/features/notification/repository/notification_api_servi
 import 'package:trus_app/features/notification/push/controller/enabled_notifications_notifier.dart';
 import 'package:trus_app/features/player/repository/player_repository.dart';
 import 'package:trus_app/features/steps/controller/step_controller.dart';
+import 'package:trus_app/features/steps/screens/background_steps_prompt.dart';
 import 'package:trus_app/features/user/controller/view_user_notifier.dart';
 import 'package:trus_app/common/utils/web_view_browser.dart';
 import 'package:trus_app/features/footbar/controller/footbar_connect_notifier.dart';
@@ -259,6 +260,20 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
         );
       }
       return;
+    }
+    if (!mounted) return;
+    if (await askForBackgroundSteps(context) && mounted) {
+      bool allowed;
+      try {
+        allowed = await ref.read(onboardingPermissionsProvider).backgroundSteps();
+      } catch (_) {
+        allowed = false;
+      }
+      if (!allowed && mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+          content: Text('Aktualizace na pozadí nebyla povolena. Kroky se budou aktualizovat při používání aplikace.'),
+        ));
+      }
     }
     if (!mounted) return;
     ref.invalidate(stepControllerProvider);
@@ -513,6 +528,10 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
       SizedBox(height: 12),
       Text(
         'Zapnutí je dobrovolné. Souhlas můžeš později vypnout na obrazovce Kroky. Na iPhonu systém kvůli soukromí nepotvrdí, zda jsi čtení skutečně povolil; bez něj se kroky nenačtou.',
+      ),
+      SizedBox(height: 12),
+      Text(
+        'Po povolení kroků se na Androidu zvlášť rozhodneš, zda chceš také automatické aktualizace na pozadí. Bez nich se kroky aktualizují při používání aplikace.',
       ),
     ],
     OnboardingStep.footbar => [

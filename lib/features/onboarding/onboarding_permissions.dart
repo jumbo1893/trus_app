@@ -42,4 +42,7 @@ class OnboardingPermissions {
     await api.sync(await health.readLastDays());
     return true;
   }
+
+  Future<bool> backgroundSteps() async =>
+      ref.read(stepSyncSchedulerProvider).setBackgroundEnabled(true);
 }
