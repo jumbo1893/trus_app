@@ -37,7 +37,7 @@ void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
   for (final fail in [false, true]) {
     test(
-      'goals save only on confirmation and preserve draft on failure=$fail',
+      'goals and assists save automatically and preserve draft on failure=$fail',
       () async {
         SharedPreferences.setMockInitialValues({
           'userEmail': 'test@example.test',
@@ -53,9 +53,8 @@ void main() {
         await notifier.setupMatch(5);
         expect(notifier.hasChanges, isFalse);
         notifier.addNumber(0, true);
-        notifier.navigateToAssistScreen();
         notifier.addNumber(0, false);
-        expect(api.saves, 0);
+        expect(api.saves, greaterThan(0));
         final route = container.read(screenNotifierProvider).currentScreenId;
         if (fail) {
           await expectLater(
@@ -76,4 +75,3 @@ void main() {
     );
   }
 }
-

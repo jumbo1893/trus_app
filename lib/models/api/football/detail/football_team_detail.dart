@@ -1,4 +1,5 @@
 import 'package:trus_app/models/api/football/detail/best_scorer.dart';
+import 'foreign_name_estimate.dart';
 import 'package:trus_app/models/api/football/football_match_api_model.dart';
 import 'package:trus_app/models/api/football/table_team_api_model.dart';
 
@@ -11,6 +12,7 @@ class FootballTeamDetail {
   String? aggregateMatches;
   final int averageBirthYear;
   BestScorer? bestScorer;
+  ForeignNameEstimate? foreignNameEstimate;
 
   FootballTeamDetail({
     required this.tableTeam,
@@ -21,6 +23,7 @@ class FootballTeamDetail {
     this.aggregateMatches,
     required this.averageBirthYear,
     this.bestScorer,
+    this.foreignNameEstimate,
   });
 
   Map<String, dynamic> toJson() {
@@ -52,6 +55,8 @@ class FootballTeamDetail {
               .map((match) => FootballMatchApiModel.fromJson(match))),
       bestScorer: json["bestScorer"] != null ? BestScorer.fromJson(
           json["bestScorer"]) : null,
+      foreignNameEstimate: json['foreignNameEstimate'] != null
+          ? ForeignNameEstimate.fromJson(json['foreignNameEstimate']) : null,
       averageBirthYear: json["averageBirthYear"],
     );
   }

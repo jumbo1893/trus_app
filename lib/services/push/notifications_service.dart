@@ -250,16 +250,9 @@ class NotificationsService {
 
       final payload = _payloadFromMessage(message);
 
-      // The chat is updated by WebSocket; foreground push needs no sheet or
-      // local notification, even when the user is on another app screen.
-      if (payload.isChatMessage) return;
-
-      // Push bez vlastních dat (případně pouze s title/body) nemá akci,
-      // proto ji ve foregroundu zobrazíme jako běžné systémové oznámení.
-      if (!_hasCustomData(message.data)) {
-        await _showLocalNotification(message, payload: payload);
-        return;
-      }
+      // Chat se aktualizuje přes WebSocket. Připsané pivo a pokutu
+      // ve foregroundu nezobrazujeme; systémový push v pozadí zůstává.
+      if (payload.suppressForegroundSheet) return;
 
       ref.read(uiFeedbackProvider.notifier).showPushNotificationSheet(payload);
     });
@@ -288,10 +281,6 @@ class NotificationsService {
       if (message.notification?.body != null)
         'body': message.notification!.body!,
     });
-  }
-
-  static bool _hasCustomData(Map<String, dynamic> data) {
-    return data.keys.any((key) => key != 'title' && key != 'body');
   }
 
   static void _navigateFromOpenedNotification(
@@ -547,94 +536,5 @@ class NotificationsService {
               },
             },
     };
-  }
-
-  static Future<void> _showLocalNotification(
-    RemoteMessage message, {
-    PushPayload? payload,
-  }) async {
-    final notification = message.notification;
-    final title = notification?.title ?? payload?.title ?? 'Notifikace';
-    final body = notification?.body ?? payload?.body ?? '';
-
-    const AndroidNotificationDetails androidDetails =
-        AndroidNotificationDetails(
-          'default_channel',
-          'Obecné',
-          importance: Importance.max,
-          priority: Priority.high,
-        );
-
-    const DarwinNotificationDetails iosDetails = DarwinNotificationDetails(
-      presentAlert: true,
-      presentBadge: true,
-      presentSound: true,
-    );
-
-    const NotificationDetails platformDetails = NotificationDetails(
-      android: androidDetails,
-      iOS: iosDetails,
-    );
-
-    await _localNotifications.show(
-      message.messageId?.hashCode ??
-          DateTime.now().millisecondsSinceEpoch ~/ 1000,
-      title,
-      body,
-      platformDetails,
-      payload: payload == null
-          ? null
-          : jsonEncode({
-              'title': payload.title,
-              'body': payload.body,
-              if (payload.screenId != null) 'screenId': payload.screenId,
-              if (payload.notificationType != null)
-                'notificationType': payload.notificationType,
-              if (payload.navigateText != null)
-                'navigateText': payload.navigateText,
-              if (payload.matchId != null) 'matchId': payload.matchId,
-              if (payload.footballMatchId != null)
-                'footballMatchId': payload.footballMatchId,
-              if (payload.playerId != null) 'playerId': payload.playerId,
-              if (payload.appTeamId != null) 'appTeamId': payload.appTeamId,
-              if (payload.playerAchievementId != null)
-                'playerAchievementId': payload.playerAchievementId,
-              if (payload.recapId != null) 'recapId': payload.recapId,
-            }),
-    );
-  }
-
-  static Future<void> _showLocalNotificationFromData(
-    Map<String, dynamic> data,
-  ) async {
-    final title = data['title'] ?? 'Notifikace';
-    final body = data['body'] ?? '';
-
-    const AndroidNotificationDetails androidDetails =
-        AndroidNotificationDetails(
-          'default_channel',
-          'Obecné',
-          importance: Importance.max,
-          priority: Priority.high,
-          styleInformation: BigTextStyleInformation(''),
-        );
-
-    const DarwinNotificationDetails iosDetails = DarwinNotificationDetails(
-      presentAlert: true,
-      presentBadge: true,
-      presentSound: true,
-    );
-
-    const NotificationDetails platformDetails = NotificationDetails(
-      android: androidDetails,
-      iOS: iosDetails,
-    );
-
-    await _localNotifications.show(
-      DateTime.now().millisecondsSinceEpoch ~/ 1000,
-      title,
-      body,
-      platformDetails,
-    );
   }
 }

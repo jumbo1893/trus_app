@@ -8,12 +8,16 @@ class GoalState extends ErrorState implements StateBackCondition {
   final List<GoalSetup> setups;
   final bool rewriteToFines;
   final int matchId;
+  final bool saving;
+  final bool saveFailed;
 
   const GoalState({
     required this.screen,
     required this.setups,
     required this.rewriteToFines,
     required this.matchId,
+    this.saving = false,
+    this.saveFailed = false,
     super.errors,
   });
 
@@ -31,6 +35,8 @@ class GoalState extends ErrorState implements StateBackCondition {
     bool? rewriteToFines,
     Map<String, String>? errors,
     int? matchId,
+    bool? saving,
+    bool? saveFailed,
   }) {
     return GoalState(
       screen: screen ?? this.screen,
@@ -38,6 +44,8 @@ class GoalState extends ErrorState implements StateBackCondition {
       rewriteToFines: rewriteToFines ?? this.rewriteToFines,
       errors: errors ?? this.errors,
       matchId: matchId ?? this.matchId,
+      saving: saving ?? this.saving,
+      saveFailed: saveFailed ?? this.saveFailed,
     );
   }
 

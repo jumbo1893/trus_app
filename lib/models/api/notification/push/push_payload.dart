@@ -50,6 +50,11 @@ class PushPayload {
       notificationType?.toUpperCase() == 'CHAT' ||
       (screenId == 'chat-screen' && room != null);
 
+  bool get suppressForegroundSheet =>
+      isChatMessage ||
+      notificationType?.toUpperCase() == 'BEER' ||
+      notificationType?.toUpperCase() == 'FINE';
+
   static int? _toInt(Object? value) {
     if (value == null) return null;
     if (value is int) return value;

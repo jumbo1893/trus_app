@@ -90,17 +90,28 @@ class FootballMatchBox extends StatelessWidget {
 
     final warnings = <_WarningItem>[];
 
-    for (final textWithRedirect in matchInfoList) {
-      warnings.add(
-        _WarningItem(
-          text: textWithRedirect.text ?? "",
-          warningType: textWithRedirect.warningType ?? WarningType.info,
-          redirectApiModel: textWithRedirect.redirect,
-        ),
-      );
-    }
-
     if (isNextMatch) {
+      final currentTeamId = appTeamApiModel?.team.id;
+      final match = detail.footballMatch;
+      final isHome =
+          currentTeamId != null && match.homeTeam?.id == currentTeamId;
+      final isAway =
+          currentTeamId != null && match.awayTeam?.id == currentTeamId;
+      final opponentEstimate = isHome
+          ? detail.awayTeamForeignNameEstimate
+          : isAway
+          ? detail.homeTeamForeignNameEstimate
+          : null;
+      final opponentName = isHome ? match.awayTeam?.name : match.homeTeam?.name;
+      if (opponentEstimate != null) {
+        warnings.add(
+          _WarningItem(
+            text:
+                'Hlášení cizinecké policie o${opponentName == null ? '' : ' $opponentName'}: ${opponentEstimate.summary}',
+            warningType: WarningType.info,
+          ),
+        );
+      }
       warnings.add(
         _WarningItem(
           text:
@@ -119,6 +130,16 @@ class FootballMatchBox extends StatelessWidget {
           ),
         );
       }
+    }
+
+    for (final textWithRedirect in matchInfoList) {
+      warnings.add(
+        _WarningItem(
+          text: textWithRedirect.text ?? "",
+          warningType: textWithRedirect.warningType ?? WarningType.info,
+          redirectApiModel: textWithRedirect.redirect,
+        ),
+      );
     }
 
     return warnings;
@@ -245,7 +266,7 @@ class FootballMatchBox extends StatelessWidget {
     );
 
     final header = _buildHeaderData(match);
-    final visibleWarnings = warnings.take(1).toList();
+    final visibleWarnings = warnings.take(isNextMatch ? 3 : 1).toList();
 
     final secondActionLabel = matchActionsEnabled ? "Přidat góly" : "Detail";
     final secondActionIcon = matchActionsEnabled
@@ -619,7 +640,7 @@ class _CompactWarningCard extends StatelessWidget {
                 height: 1.3,
                 color: context.appColors.textPrimary,
               ),
-              maxLines: 2,
+              maxLines: 4,
               overflow: TextOverflow.ellipsis,
             ),
           ),

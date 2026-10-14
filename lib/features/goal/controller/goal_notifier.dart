@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/foundation.dart';
 import '../../../common/widgets/entry_draft_scope.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -5,7 +6,6 @@ import 'package:trus_app/features/general/notifier/app_notifier.dart';
 import 'package:trus_app/features/goal/goal_screens.dart';
 import 'package:trus_app/features/goal/repository/goal_api_service.dart';
 import 'package:trus_app/features/goal/state/goal_state.dart';
-import 'package:trus_app/features/home/screens/home_screen.dart';
 import 'package:trus_app/features/main/controller/screen_variables_notifier.dart';
 import 'package:trus_app/models/api/goal/goal_api_model.dart';
 import 'package:trus_app/models/api/goal/goal_list_multi_add.dart';
@@ -26,6 +26,8 @@ final goalNotifierProvider =
 class GoalNotifier extends AppNotifier<GoalState> implements BackAction {
   final GoalApiService api;
   Map<String, int> _baseline = {};
+  Future<void>? _saving;
+  bool _needsSave = false;
   String get draftId => 'goals:${state.matchId}';
   Map<String, int> get draftValues => {
     for (final g in state.setups) ...{
@@ -45,6 +47,7 @@ class GoalNotifier extends AppNotifier<GoalState> implements BackAction {
       setups: [...state.setups],
       rewriteToFines: (values['rewrite'] ?? 1) != 0,
     );
+    _scheduleSave();
   }
 
   final ScreenVariablesNotifier screenController;
@@ -94,6 +97,7 @@ class GoalNotifier extends AppNotifier<GoalState> implements BackAction {
 
   void setRewriteToFines(bool value) {
     state = state.copyWith(rewriteToFines: value);
+    _scheduleSave();
   }
 
   // ==========================================================
@@ -104,12 +108,22 @@ class GoalNotifier extends AppNotifier<GoalState> implements BackAction {
     final list = [...state.setups];
     list[index].addNumber(goal);
     state = state.copyWith(setups: list);
+    _scheduleSave();
   }
 
   void removeNumber(int index, bool goal) {
     final list = [...state.setups];
     list[index].removeNumber(goal);
     state = state.copyWith(setups: list);
+    _scheduleSave();
+  }
+
+  void _scheduleSave() {
+    if (state.matchId <= 0) return;
+    _needsSave = true;
+    if (_saving == null) {
+      unawaited(changeGoals(navigate: false).catchError((Object _) {}));
+    }
   }
 
   // ==========================================================
@@ -117,28 +131,47 @@ class GoalNotifier extends AppNotifier<GoalState> implements BackAction {
   // ==========================================================
 
   Future<void> changeGoals({bool navigate = true}) async {
-    final goals = _buildGoalModels();
+    if (_saving != null) {
+      _needsSave = true;
+      return _saving!;
+    }
+    _needsSave = true;
+    final operation = _savePending();
+    _saving = operation;
+    try {
+      await operation;
+    } finally {
+      _saving = null;
+    }
+  }
 
-    final payload = GoalListMultiAdd(
-      matchId: state.matchId,
-      goalList: goals,
-      rewriteToFines: state.rewriteToFines,
-    );
-    await runUiWithResult<GoalMultiAddResponse>(
-      () => api.addMultipleGoals(payload),
-      showLoading: true,
-      successSnack: null,
-    );
-    if (!mounted) return;
-    _baseline = draftValues;
-    state = state.copyWith(setups: [...state.setups]);
-    await clearEntryDraft(ref, draftId);
-    ui.showSnack(
-      state.rewriteToFines
-          ? 'Góly a asistence uloženy. Pokuty za góly a hattricky byly přepočítány.'
-          : 'Góly a asistence jsou uložené',
-    );
-    if (mounted && navigate) changeFragment(HomeScreen.id);
+  Future<void> _savePending() async {
+    while (_needsSave && mounted) {
+      _needsSave = false;
+      if (!hasChanges && !state.saveFailed) continue;
+      final snapshot = draftValues;
+      final payload = GoalListMultiAdd(
+        matchId: state.matchId,
+        goalList: _buildGoalModels(),
+        rewriteToFines: state.rewriteToFines,
+      );
+      state = state.copyWith(saving: true, saveFailed: false);
+      try {
+        await runUiWithResult<GoalMultiAddResponse>(
+          () => api.addMultipleGoals(payload),
+          showLoading: false,
+          showErrorDialog: false,
+        );
+      } catch (_) {
+        if (mounted) state = state.copyWith(saving: false, saveFailed: true);
+        rethrow;
+      }
+      if (!mounted) return;
+      _baseline = snapshot;
+      state = state.copyWith(setups: [...state.setups]);
+      if (!hasChanges) await clearEntryDraft(ref, draftId);
+    }
+    if (mounted) state = state.copyWith(saving: false, saveFailed: false);
   }
 
   List<GoalApiModel> _buildGoalModels() {

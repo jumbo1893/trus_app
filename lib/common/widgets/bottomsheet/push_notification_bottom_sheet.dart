@@ -6,6 +6,7 @@ class PushNotificationBottomSheet extends StatelessWidget {
   final String title;
   final String message;
   final String navigateText;
+  final bool showNavigation;
   final VoidCallback onOk;
   final VoidCallback onGo;
 
@@ -14,6 +15,7 @@ class PushNotificationBottomSheet extends StatelessWidget {
     required this.title,
     required this.message,
     required this.navigateText,
+    this.showNavigation = true,
     required this.onOk,
     required this.onGo,
   });
@@ -23,6 +25,7 @@ class PushNotificationBottomSheet extends StatelessWidget {
         required String title,
         required String message,
         required String navigateText,
+        bool showNavigation = true,
         required VoidCallback onOk,
         required VoidCallback onGo,
       }) {
@@ -35,6 +38,7 @@ class PushNotificationBottomSheet extends StatelessWidget {
         title: title,
         message: message,
         navigateText: navigateText,
+        showNavigation: showNavigation,
         onOk: onOk,
         onGo: onGo,
       ),
@@ -98,16 +102,18 @@ class PushNotificationBottomSheet extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(height: 18),
-                FilledButton(
-                  onPressed: onGo,
-                  child: Text(
-                    navigateText,
-                    textAlign: TextAlign.center,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
+                if (showNavigation) ...[
+                  FilledButton(
+                    onPressed: onGo,
+                    child: Text(
+                      navigateText,
+                      textAlign: TextAlign.center,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
                   ),
-                ),
-                const SizedBox(height: 10),
+                  const SizedBox(height: 10),
+                ],
                 OutlinedButton(
                   onPressed: onOk,
                   child: const Text("OK"),

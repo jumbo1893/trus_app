@@ -1,4 +1,5 @@
 import 'package:trus_app/models/api/football/detail/best_scorer.dart';
+import 'foreign_name_estimate.dart';
 import 'package:trus_app/models/api/football/football_match_api_model.dart';
 
 import '../../weather/match_weather_api_model.dart';
@@ -13,6 +14,8 @@ class FootballMatchDetail {
   BestScorer? homeTeamBestScorer;
   BestScorer? awayTeamBestScorer;
   MatchWeatherApiModel? weather;
+  ForeignNameEstimate? homeTeamForeignNameEstimate;
+  ForeignNameEstimate? awayTeamForeignNameEstimate;
 
   FootballMatchDetail({
     required this.footballMatch,
@@ -23,7 +26,9 @@ class FootballMatchDetail {
     required this.awayTeamAverageBirthYear,
     required this.homeTeamBestScorer,
     required this.awayTeamBestScorer,
-    this.weather
+    this.weather,
+    this.homeTeamForeignNameEstimate,
+    this.awayTeamForeignNameEstimate,
   });
 
   FootballMatchDetail.dummy()
@@ -59,6 +64,10 @@ class FootballMatchDetail {
           json["homeTeamBestScorer"]) : null,
       awayTeamBestScorer: json["awayTeamBestScorer"] != null ? BestScorer.fromJson(
           json["awayTeamBestScorer"]) : null,
+      homeTeamForeignNameEstimate: json['homeTeamForeignNameEstimate'] != null
+          ? ForeignNameEstimate.fromJson(json['homeTeamForeignNameEstimate']) : null,
+      awayTeamForeignNameEstimate: json['awayTeamForeignNameEstimate'] != null
+          ? ForeignNameEstimate.fromJson(json['awayTeamForeignNameEstimate']) : null,
       weather: json["weather"] != null
           ? MatchWeatherApiModel.fromJson(json["weather"])
           : null,

@@ -260,6 +260,7 @@ class _MainScreenState extends ConsumerState<MainScreen>
               title: effect.payload.title,
               message: effect.payload.body,
               navigateText: effect.payload.navigateText ?? "Mrknu na to!",
+              showNavigation: effect.payload.hasNavigationTarget,
               onOk: () {
                 Navigator.of(context).pop();
               },

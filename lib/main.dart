@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:trus_app/common/widgets/text_input_scroll_boundary.dart';
+import 'package:trus_app/common/widgets/system_navigation_safe_area.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_driver/driver_extension.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -63,8 +64,11 @@ class MyApp extends ConsumerWidget {
       theme: AppTheme.light(),
       darkTheme: AppTheme.dark(),
       themeMode: themeMode,
-      builder: (context, child) =>
-          TextInputScrollBoundary(child: child ?? const SizedBox.shrink()),
+      builder: (context, child) => SystemNavigationSafeArea(
+        child: TextInputScrollBoundary(
+          child: child ?? const SizedBox.shrink(),
+        ),
+      ),
       onGenerateRoute: (settings) => generateRoute(settings),
       home: ref
           .watch(userDataAuthProvider)
