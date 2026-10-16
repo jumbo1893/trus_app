@@ -10,7 +10,6 @@ import 'package:trus_app/features/fine/match/fine_multiple_player_args.dart';
 import 'package:trus_app/features/fine/match/repository/fine_match_api_service.dart';
 import 'package:trus_app/features/fine/repository/fine_api_service.dart';
 import 'package:trus_app/features/main/controller/screen_notifier.dart';
-import 'package:trus_app/features/main/controller/screen_variables_notifier.dart';
 import 'package:trus_app/features/statistics/statistics_navigation.dart';
 import 'package:trus_app/models/api/fine_api_model.dart';
 import 'package:trus_app/models/api/receivedfine/received_fine_api_model.dart';
@@ -125,7 +124,7 @@ void main() {
   for (final multiple in [false, true]) {
     for (final fail in [false, true]) {
       test(
-        'fine save multiple=$multiple fail=$fail preserves match and returns only on success',
+        'fine auto save multiple=$multiple fail=$fail stays on entry screen',
         () async {
           final api = _FineApi()..fail = fail;
           final container = ProviderContainer(
@@ -165,15 +164,51 @@ void main() {
             await save();
             expect(
               container.read(screenNotifierProvider).currentScreenId,
-              'fine-match-screen',
+              'fine-player-screen',
             );
-            expect(container.read(screenVariablesNotifierProvider).matchId, 42);
             expect(api.saved!.matchId, 42);
           }
         },
       );
     }
   }
+  test('hromadné pokuty drží součet na obrazovce a odesílají jen rozdíl', () async {
+    final api = _FineApi();
+    final container = ProviderContainer(
+      overrides: [
+        fineMatchApiServiceProvider.overrideWithValue(api),
+        fineApiServiceProvider.overrideWithValue(_TariffApi()),
+      ],
+    );
+    addTearDown(container.dispose);
+    final args = FineMultiplePlayerArgs(42, [7, 8]);
+    final provider = fineMultiplePlayerNotifier(args);
+    container.listen(provider, (_, __) {});
+    await Future<void>.delayed(Duration.zero);
+    final notifier = container.read(provider.notifier);
+
+    notifier.addNumber(0);
+    await notifier.changeFines();
+    expect(container.read(provider).receivedFines[0].fineNumber, 1);
+    expect(api.saved!.fineList[0].fineNumber, 1);
+
+    notifier.addNumber(0);
+    await notifier.changeFines();
+    expect(container.read(provider).receivedFines[0].fineNumber, 2);
+    expect(api.saved!.fineList[0].fineNumber, 1);
+    expect(container.read(provider).hasChanges, isFalse);
+
+    notifier.removeNumber(0);
+    await notifier.changeFines();
+    expect(container.read(provider).receivedFines[0].fineNumber, 1);
+    expect(api.saved!.fineList[0].fineNumber, -1);
+  });
+  test('výběr stejných hráčů sdílí stejný stav hromadného zápisu', () {
+    expect(
+      FineMultiplePlayerArgs(42, [8, 7]),
+      FineMultiplePlayerArgs(42, [7, 8]),
+    );
+  });
   test(
     'all legacy statistics destinations open their category in the shared overview',
     () async {

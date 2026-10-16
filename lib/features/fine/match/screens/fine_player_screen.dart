@@ -7,9 +7,9 @@ import 'package:trus_app/features/fine/match/fine_player_args.dart';
 import 'package:trus_app/features/main/controller/screen_variables_notifier.dart';
 
 import '../widget/quick_fine_list.dart';
+import '../widget/fine_correction_button.dart';
 import '../../../../common/widgets/header/header_card.dart';
 import '../../../../common/widgets/screen/custom_consumer_stateful_widget.dart';
-import '../../../../common/widgets/bar/bottom_bar.dart';
 
 class FinePlayerScreen extends CustomConsumerStatefulWidget {
   static const String id = "fine-player-screen";
@@ -22,6 +22,7 @@ class FinePlayerScreen extends CustomConsumerStatefulWidget {
 }
 
 class _FinePlayerScreenState extends ConsumerState<FinePlayerScreen> {
+  bool _correcting = false;
   @override
   Widget build(BuildContext context) {
     final sc = ref.read(screenVariablesNotifierProvider);
@@ -45,6 +46,7 @@ class _FinePlayerScreenState extends ConsumerState<FinePlayerScreen> {
       hasChanges: () => ref.read(finePlayerNotifier(args)).hasChanges,
       restore: notifier.restoreDraft,
       save: () => notifier.changeFines(navigate: false),
+      showStatus: false,
       child: Scaffold(
         body: SafeArea(
           child: Column(
@@ -64,17 +66,40 @@ class _FinePlayerScreenState extends ConsumerState<FinePlayerScreen> {
                   padding: const EdgeInsets.symmetric(horizontal: 16),
                   child: QuickFineList(
                     items: state.receivedFines,
+                    correcting: _correcting,
                     onAdd: (index) => notifier.addNumber(index),
                     onRemove: (index) => notifier.removeNumber(index),
                   ),
                 ),
               ),
+              if (notifier.saveFailed)
+                TextButton.icon(
+                  onPressed: () => notifier
+                      .changeFines(navigate: false)
+                      .catchError((Object _) {}),
+                  icon: const Icon(Icons.refresh_rounded),
+                  label: const Text('Nepodařilo se uložit · Zkusit znovu'),
+                ),
+              Padding(
+                padding: const EdgeInsets.fromLTRB(16, 4, 16, 12),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: Text(notifier.saving
+                          ? 'Ukládá se…'
+                          : notifier.saveFailed
+                              ? 'Neuloženo'
+                              : 'Ukládá se automaticky'),
+                    ),
+                    FineCorrectionButton(
+                      correcting: _correcting,
+                      onTap: () => setState(() => _correcting = !_correcting),
+                    ),
+                  ],
+                ),
+              ),
             ],
           ),
-        ),
-        bottomNavigationBar: BottomBar(
-          enabled: state.hasChanges,
-          onConfirm: notifier.changeFines,
         ),
       ),
     );

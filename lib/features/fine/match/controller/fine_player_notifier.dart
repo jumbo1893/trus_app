@@ -1,11 +1,10 @@
+import 'dart:async';
 import '../../../../common/widgets/entry_draft_scope.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:trus_app/features/fine/match/fine_player_args.dart';
 import 'package:trus_app/features/fine/match/repository/fine_match_api_service.dart';
 import 'package:trus_app/features/general/notifier/app_notifier.dart';
-import '../screens/fine_match_screen.dart';
 import 'fine_match_notifier.dart';
-import 'package:trus_app/features/main/controller/screen_variables_notifier.dart';
 
 import '../../../../models/api/receivedfine/received_fine_api_model.dart';
 import '../../../../models/api/receivedfine/received_fine_list.dart';
@@ -17,20 +16,21 @@ final finePlayerNotifier = StateNotifierProvider.autoDispose
       return FinePlayerNotifier(
         ref: ref,
         api: ref.read(fineMatchApiServiceProvider),
-        screenController: ref.read(screenVariablesNotifierProvider.notifier),
         args: args,
       );
     });
 
 class FinePlayerNotifier extends AppNotifier<FinePlayerState> {
   final FineMatchApiService api;
-  final ScreenVariablesNotifier screenController;
   final FinePlayerArgs args;
+  Future<void>? _saving;
+  bool _needsSave = false;
+  bool saving = false;
+  bool saveFailed = false;
 
   FinePlayerNotifier({
     required Ref ref,
     required this.api,
-    required this.screenController,
     required this.args,
   }) : super(ref, FinePlayerState.initial()) {
     Future.microtask(() => setupReceivedFines(args));
@@ -70,6 +70,7 @@ class FinePlayerNotifier extends AppNotifier<FinePlayerState> {
         f.fineNumber = values['${f.fine.id}']!;
     }
     state = state.copyWith(receivedFines: [...state.receivedFines]);
+    _scheduleSave();
   }
   // ==========================================================
   // LISTVIEW / ADD BUILDER
@@ -80,6 +81,7 @@ class FinePlayerNotifier extends AppNotifier<FinePlayerState> {
     final list = [...state.receivedFines];
     list[index].addNumber(true);
     state = state.copyWith(receivedFines: list);
+    _scheduleSave();
   }
 
   void removeNumber(int index) {
@@ -87,6 +89,15 @@ class FinePlayerNotifier extends AppNotifier<FinePlayerState> {
     final list = [...state.receivedFines];
     list[index].removeNumber(true);
     state = state.copyWith(receivedFines: list);
+    _scheduleSave();
+  }
+
+  void _scheduleSave() {
+    if (state.matchId <= 0) return;
+    _needsSave = true;
+    if (_saving == null) {
+      unawaited(changeFines(navigate: false).catchError((Object _) {}));
+    }
   }
 
   // ==========================================================
@@ -94,35 +105,65 @@ class FinePlayerNotifier extends AppNotifier<FinePlayerState> {
   // ==========================================================
 
   Future<void> changeFines({bool navigate = true}) async {
-    if (!state.hasChanges) return;
+    if (_saving != null) {
+      _needsSave = true;
+      return _saving!;
+    }
+    _needsSave = true;
+    final operation = _savePending();
+    _saving = operation;
+    try {
+      await operation;
+    } finally {
+      _saving = null;
+    }
+  }
 
-    final payload = ReceivedFineList(
-      matchId: state.matchId,
-      playerId: state.playerId,
-      fineList: state.receivedFines,
-      playerIdList: null,
-    );
-
-    await runUiWithResult<ReceivedFineResponse>(
-      () => api.addFines(payload, false),
-      showLoading: true,
-      successResultSnack: true,
-      loadingMessage: "Ukládám nové pokuty…",
-    );
-
-    if (!mounted) return;
-    state = state.copyWith(
-      initialFineValues: state.receivedFines
-          .map((f) => f.numberToString(true))
-          .toList(),
-    );
-    await clearEntryDraft(ref, draftId);
-    if (!mounted) return;
-    ref.invalidate(fineMatchNotifierProvider);
-    if (!navigate) return;
-    ref
-        .read(screenVariablesNotifierProvider.notifier)
-        .setMatchId(state.matchId);
-    changeFragment(FineMatchScreen.id);
+  Future<void> _savePending() async {
+    while (_needsSave && mounted) {
+      _needsSave = false;
+      if (!state.hasChanges) continue;
+      final snapshot = state.receivedFines.map((f) => f.fineNumber).toList();
+      final payload = ReceivedFineList(
+        matchId: state.matchId,
+        playerId: state.playerId,
+        fineList: [
+          for (var i = 0; i < state.receivedFines.length; i++)
+            ReceivedFineApiModel(
+              id: state.receivedFines[i].id,
+              matchId: state.matchId,
+              playerId: state.playerId,
+              fine: state.receivedFines[i].fine,
+              fineNumber: snapshot[i],
+            ),
+        ],
+        playerIdList: null,
+      );
+      saving = true;
+      saveFailed = false;
+      state = state.copyWith(receivedFines: [...state.receivedFines]);
+      try {
+        await runUiWithResult<ReceivedFineResponse>(
+          () => api.addFines(payload, false),
+          showLoading: false,
+          showErrorDialog: false,
+        );
+      } catch (_) {
+        if (mounted) {
+          saving = false;
+          saveFailed = true;
+          state = state.copyWith(receivedFines: [...state.receivedFines]);
+        }
+        rethrow;
+      }
+      if (!mounted) return;
+      state = state.copyWith(initialFineValues: snapshot.map((n) => '$n').toList());
+      ref.invalidate(fineMatchNotifierProvider);
+      if (!state.hasChanges) await clearEntryDraft(ref, draftId);
+    }
+    if (mounted) {
+      saving = false;
+      state = state.copyWith(receivedFines: [...state.receivedFines]);
+    }
   }
 }

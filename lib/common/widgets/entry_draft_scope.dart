@@ -63,6 +63,7 @@ class EntryDraftScope extends ConsumerStatefulWidget {
   final Map<String, String> labels;
   final bool loaded;
   final bool showStatus;
+  final bool allowNegativeValues;
   final bool Function() hasChanges;
   final ValueChanged<Map<String, int>> restore;
   final Future<void> Function() save;
@@ -76,6 +77,7 @@ class EntryDraftScope extends ConsumerStatefulWidget {
     required this.labels,
     required this.loaded,
     this.showStatus = true,
+    this.allowNegativeValues = false,
     required this.restore,
     required this.save,
     required this.hasChanges,
@@ -168,7 +170,7 @@ class _EntryDraftScopeState extends ConsumerState<EntryDraftScope>
                 restored[key] = key == 'rewrite'
                     ? values[key]!.clamp(0, 1)
                     : (widget.baseline[key]! + values[key]! - baseline[key]!)
-                          .clamp(0, 1000000);
+                          .clamp(widget.allowNegativeValues ? -1000000 : 0, 1000000);
               }
             }
             widget.restore(restored);

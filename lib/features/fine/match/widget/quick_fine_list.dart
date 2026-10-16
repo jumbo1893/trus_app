@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import '../../../../common/utils/search_text.dart';
-import '../../../../common/widgets/listview/listview_add_model.dart';
 import '../../../../models/api/receivedfine/received_fine_api_model.dart';
 
 int quickFineRank(String name) {
@@ -18,11 +17,15 @@ int quickFineRank(String name) {
 class QuickFineList extends StatelessWidget {
   final List<ReceivedFineApiModel> items;
   final ValueChanged<int> onAdd, onRemove;
+  final bool correcting;
+  final bool multiple;
   const QuickFineList({
     super.key,
     required this.items,
     required this.onAdd,
     required this.onRemove,
+    this.correcting = false,
+    this.multiple = false,
   });
   @override
   Widget build(BuildContext context) {
@@ -61,12 +64,17 @@ class QuickFineList extends StatelessWidget {
                     style: Theme.of(context).textTheme.titleSmall,
                   ),
                 ),
-              ListviewAddModel(
-                addToString: items[i],
-                onNumberAdded: () => onAdd(i),
-                onNumberRemoved: () => onRemove(i),
-                goal: true,
-                enabled: !items[i].fine.inactive,
+              Card(
+                child: ListTile(
+                  title: Text(items[i].toStringForListView()),
+                  subtitle: Text(multiple
+                      ? 'Zapsáno vybraným hráčům: ${items[i].fineNumber >= 0 ? '+' : ''}${items[i].fineNumber}'
+                      : 'Počet: ${items[i].fineNumber}'),
+                  trailing: Icon(correcting ? Icons.remove : Icons.add),
+                  onTap: items[i].fine.inactive
+                      ? null
+                      : () => correcting ? onRemove(i) : onAdd(i),
+                ),
               ),
             ],
           ),

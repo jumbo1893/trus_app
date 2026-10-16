@@ -1,11 +1,10 @@
+import 'dart:async';
 import '../../../../common/widgets/entry_draft_scope.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:trus_app/features/fine/match/repository/fine_match_api_service.dart';
 import 'package:trus_app/features/fine/repository/fine_api_service.dart';
 import 'package:trus_app/features/general/notifier/app_notifier.dart';
-import '../screens/fine_match_screen.dart';
 import 'fine_match_notifier.dart';
-import 'package:trus_app/features/main/controller/screen_variables_notifier.dart';
 
 import '../../../../models/api/fine_api_model.dart';
 import '../../../../models/api/receivedfine/received_fine_api_model.dart';
@@ -32,6 +31,10 @@ class FineMultiplePlayerNotifier extends AppNotifier<FineMultiplePlayerState> {
   final FineMatchApiService api;
   final FineMultiplePlayerArgs args;
   final FineApiService fineApiService;
+  Future<void>? _saving;
+  bool _needsSave = false;
+  bool saving = false;
+  bool saveFailed = false;
 
   FineMultiplePlayerNotifier({
     required Ref ref,
@@ -98,6 +101,7 @@ class FineMultiplePlayerNotifier extends AppNotifier<FineMultiplePlayerState> {
         f.fineNumber = values['${f.fine.id}']!;
     }
     state = state.copyWith(receivedFines: [...state.receivedFines]);
+    _scheduleSave();
   }
   // ==========================================================
   // LISTVIEW / ADD BUILDER
@@ -108,13 +112,23 @@ class FineMultiplePlayerNotifier extends AppNotifier<FineMultiplePlayerState> {
     final list = [...state.receivedFines];
     list[index].addNumber(true);
     state = state.copyWith(receivedFines: list);
+    _scheduleSave();
   }
 
   void removeNumber(int index) {
     if (state.receivedFines[index].fine.inactive) return;
     final list = [...state.receivedFines];
-    list[index].removeNumber(true);
+    list[index].fineNumber--;
     state = state.copyWith(receivedFines: list);
+    _scheduleSave();
+  }
+
+  void _scheduleSave() {
+    if (state.matchId <= 0) return;
+    _needsSave = true;
+    if (_saving == null) {
+      unawaited(changeFines(navigate: false).catchError((Object _) {}));
+    }
   }
 
   // ==========================================================
@@ -122,33 +136,71 @@ class FineMultiplePlayerNotifier extends AppNotifier<FineMultiplePlayerState> {
   // ==========================================================
 
   Future<void> changeFines({bool navigate = true}) async {
-    if (!state.hasChanges) return;
-    final payload = ReceivedFineList(
-      matchId: state.matchId,
-      playerId: null,
-      fineList: state.receivedFines,
-      playerIdList: state.playerIdList,
-    );
+    if (_saving != null) {
+      _needsSave = true;
+      return _saving!;
+    }
+    _needsSave = true;
+    final operation = _savePending();
+    _saving = operation;
+    try {
+      await operation;
+    } finally {
+      _saving = null;
+    }
+  }
 
-    await runUiWithResult<ReceivedFineResponse>(
-      () => api.addFines(payload, true),
-      showLoading: true,
-      successResultSnack: true,
-      loadingMessage: "Ukládám nové pokuty…",
-    );
-    if (!mounted) return;
-    state = state.copyWith(
-      initialFineValues: state.receivedFines
-          .map((f) => f.numberToString(true))
-          .toList(),
-    );
-    await clearEntryDraft(ref, draftId);
-    if (!mounted) return;
-    ref.invalidate(fineMatchNotifierProvider);
-    if (!navigate) return;
-    ref
-        .read(screenVariablesNotifierProvider.notifier)
-        .setMatchId(state.matchId);
-    changeFragment(FineMatchScreen.id);
+  Future<void> _savePending() async {
+    while (_needsSave && mounted) {
+      _needsSave = false;
+      if (!state.hasChanges) continue;
+      final snapshot = state.receivedFines.map((f) => f.fineNumber).toList();
+      final delta = [
+        for (var i = 0; i < snapshot.length; i++)
+          snapshot[i] - int.parse(state.initialFineValues[i]),
+      ];
+      final payload = ReceivedFineList(
+        matchId: state.matchId,
+        playerId: null,
+        fineList: [
+          for (var i = 0; i < state.receivedFines.length; i++)
+            ReceivedFineApiModel(
+              matchId: state.matchId,
+              playerId: -1,
+              fine: state.receivedFines[i].fine,
+              fineNumber: delta[i],
+            ),
+        ],
+        playerIdList: state.playerIdList,
+      );
+      saving = true;
+      saveFailed = false;
+      state = state.copyWith(receivedFines: [...state.receivedFines]);
+      try {
+        await runUiWithResult<ReceivedFineResponse>(
+          () => api.addFines(payload, true),
+          showLoading: false,
+          showErrorDialog: false,
+        );
+      } catch (_) {
+        if (mounted) {
+          saving = false;
+          saveFailed = true;
+          state = state.copyWith(receivedFines: [...state.receivedFines]);
+        }
+        rethrow;
+      }
+      if (!mounted) return;
+      state = state.copyWith(
+        receivedFines: [...state.receivedFines],
+        initialFineValues: snapshot.map((n) => '$n').toList(),
+      );
+      ref.invalidate(fineMatchNotifierProvider);
+      if (!state.hasChanges) await clearEntryDraft(ref, draftId);
+    }
+    if (mounted) {
+      saving = false;
+      state = state.copyWith(receivedFines: [...state.receivedFines]);
+    }
   }
 }
