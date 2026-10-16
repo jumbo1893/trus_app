@@ -85,9 +85,8 @@ class AuthRepository extends CrudApiService {
   }
 
   Future<bool> deleteAccount() async {
-    bool firstSignOut = await deleteAccountFromServer();
-    bool secondSignOut = await deleteAccountFromFirebase();
-    return firstSignOut && secondSignOut;
+    if (!await deleteAccountFromServer()) return false;
+    return deleteAccountFromFirebase();
   }
 
   Future<bool> deleteAccountFromFirebase() async {

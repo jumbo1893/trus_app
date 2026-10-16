@@ -53,9 +53,7 @@ class AuthController implements ReadOperations {
     return result;
   }
 
-  Future<void> deleteAccount() async {
-    await authRepository.deleteAccount();
-  }
+  Future<bool> deleteAccount() => authRepository.deleteAccount();
 
   Future<UserApiModel> saveUserData(String username) async {
     return await authRepository.editCurrentUser(false, username, null);

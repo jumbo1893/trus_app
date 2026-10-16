@@ -59,7 +59,7 @@ class RequestExecutor extends ResponseValidator {
   }
 
   bool isTestEnvironment() {
-    return serverUrl != prodUrl;
+    return runningUrl != prodUrl;
   }
 
   ///[request] request do kterým se ptáme

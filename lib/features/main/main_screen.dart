@@ -346,14 +346,21 @@ class _MainScreenState extends ConsumerState<MainScreen>
     var dialog = ConfirmationDialog(
       "Opravdu chcete smazat tento účet?",
       () async {
-        await executeApi<void>(
-          () async {
-            return await ref.read(authControllerProvider).deleteAccount();
-          },
+        final deleted = await executeApi<bool>(
+          () => ref.read(authControllerProvider).deleteAccount(),
           () {},
           context,
           true,
-        ).then((value) => signOut());
+        );
+        if (!mounted) return;
+        if (deleted == true) {
+          await signOut();
+        } else if (deleted == false) {
+          showSnackBarWithPostFrame(
+            context: context,
+            content: 'Smazání se nepodařilo dokončit. Požádej o pomoc na matej.jandak@seznam.cz.',
+          );
+        }
       },
     );
     showDialog(context: context, builder: (BuildContext context) => dialog);
