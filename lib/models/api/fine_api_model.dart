@@ -10,6 +10,7 @@ class FineApiModel implements ModelToString, JsonAndHttpConverter, IEndpointId {
   bool inactive;
   final String? code;
   final bool editable;
+  final String category;
   static const endpointId = "fine_api_model";
 
   FineApiModel({
@@ -19,6 +20,7 @@ class FineApiModel implements ModelToString, JsonAndHttpConverter, IEndpointId {
     this.id,
     this.code,
     this.editable = true,
+    this.category = 'COMMON',
   });
 
   FineApiModel.dummy()
@@ -27,7 +29,8 @@ class FineApiModel implements ModelToString, JsonAndHttpConverter, IEndpointId {
       amount = 0,
       inactive = false,
       code = null,
-      editable = true;
+      editable = true,
+      category = 'COMMON';
 
   @override
   String toString() {
@@ -43,6 +46,7 @@ class FineApiModel implements ModelToString, JsonAndHttpConverter, IEndpointId {
       "inactive": inactive,
       "code": code,
       "editable": editable,
+      "category": category,
     };
   }
 
@@ -55,6 +59,7 @@ class FineApiModel implements ModelToString, JsonAndHttpConverter, IEndpointId {
       inactive: json["inactive"] ?? false,
       code: json["code"],
       editable: json["editable"] ?? true,
+      category: json["category"] ?? 'COMMON',
     );
   }
 

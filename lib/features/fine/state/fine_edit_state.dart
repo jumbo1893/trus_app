@@ -6,11 +6,13 @@ class FineEditState extends BaseCrudState<FineApiModel> {
   final String name;
   final String amount;
   final bool inactive;
+  final String category;
 
   const FineEditState({
     required this.name,
     required this.amount,
     required this.inactive,
+    required this.category,
     FineApiModel? model,
     super.errors,
   }) : super(model: model);
@@ -20,6 +22,7 @@ class FineEditState extends BaseCrudState<FineApiModel> {
     String? name,
     String? amount,
     bool? inactive,
+    String? category,
     FineApiModel? model,
     Map<String, String>? errors,
   }) {
@@ -27,6 +30,7 @@ class FineEditState extends BaseCrudState<FineApiModel> {
       name: name ?? this.name,
       amount: amount ?? this.amount,
       inactive: inactive ?? this.inactive,
+      category: category ?? this.category,
       model: model ?? this.model,
       errors: errors ?? this.errors,
     );

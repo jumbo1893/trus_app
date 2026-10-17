@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:trus_app/common/utils/calendar.dart';
+import 'package:trus_app/common/widgets/football/match_outcome.dart';
 import 'package:trus_app/models/api/football/football_match_api_model.dart';
 import 'package:trus_app/theme/app_colors.dart';
 import 'package:trus_app/theme/app_widget_values.dart';
@@ -24,6 +25,15 @@ class FootballFixtureListTile extends StatelessWidget {
         : match.isHomeMatch(userTeamId!);
 
     final score = match.simpleResultToString();
+    final outcome = MatchOutcome.fromScore(
+      homeGoals: match.homeGoalNumber,
+      awayGoals: match.awayGoalNumber,
+      isHome: userTeamId != null && userTeamId == match.homeTeam?.id
+          ? true
+          : userTeamId != null && userTeamId == match.awayTeam?.id
+              ? false
+              : null,
+    );
 
     return Material(
       color: context.appColors.cardBackground,
@@ -123,7 +133,7 @@ class FootballFixtureListTile extends StatelessWidget {
               ),
               if (score.isNotEmpty) ...[
                 const SizedBox(width: 10),
-                _ScoreChip(score: score),
+                _ScoreChip(score: score, outcome: outcome),
               ],
               if (onTap != null) ...[
                 const SizedBox(width: 6),
@@ -215,9 +225,11 @@ class _OpponentBadge extends StatelessWidget {
 
 class _ScoreChip extends StatelessWidget {
   final String score;
+  final MatchOutcome? outcome;
 
   const _ScoreChip({
     required this.score,
+    required this.outcome,
   });
 
   @override
@@ -228,16 +240,21 @@ class _ScoreChip extends StatelessWidget {
         vertical: 7,
       ),
       decoration: BoxDecoration(
-        color: context.appColors.accentSoft,
+        color: outcome?.background(context.appColors) ?? context.appColors.accentSoft,
         borderRadius: BorderRadius.circular(12),
       ),
-      child: Text(
-        score,
-        style: TextStyle(
-          color: context.appColors.accent,
-          fontSize: 14,
-          fontWeight: FontWeight.w800,
-        ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(score, style: TextStyle(
+            color: outcome?.foreground(context.appColors) ?? context.appColors.accent,
+            fontSize: 14, fontWeight: FontWeight.w800,
+          )),
+          if (outcome != null) Text(outcome!.label, style: TextStyle(
+            color: outcome!.foreground(context.appColors),
+            fontSize: 9, fontWeight: FontWeight.w800,
+          )),
+        ],
       ),
     );
   }

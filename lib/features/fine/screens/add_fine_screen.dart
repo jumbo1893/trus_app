@@ -48,6 +48,20 @@ class _AddFineScreenState extends ConsumerState<AddFineScreen> {
             onChanged: notifier.setAmount,
           ),
         ),
+        FormFieldWrapper(
+          label: "Kategorie pokuty",
+          child: DropdownButtonFormField<String>(
+            value: state.category,
+            items: const [
+              DropdownMenuItem(value: 'FREQUENT', child: Text('Časté pokuty')),
+              DropdownMenuItem(value: 'COMMON', child: Text('Běžné pokuty')),
+              DropdownMenuItem(value: 'RARE', child: Text('Méně časté pokuty')),
+            ],
+            onChanged: (value) {
+              if (value != null) notifier.setCategory(value);
+            },
+          ),
+        ),
       ],
       actions: [
         ActionButtonItem(

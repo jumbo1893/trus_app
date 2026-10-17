@@ -6,12 +6,14 @@ import 'package:trus_app/theme/app_colors.dart';
 
 class PlayerStatsAppBarText extends StatefulWidget {
   final PlayerStats? stats;
+  final VoidCallback? onAchievementsTap;
   final Duration rotateEvery;
   final Duration highlightFor;
 
   const PlayerStatsAppBarText({
     Key? key,
     required this.stats,
+    this.onAchievementsTap,
     this.rotateEvery = const Duration(seconds: 5),
     this.highlightFor = const Duration(seconds: 1),
   }) : super(key: key);
@@ -49,22 +51,28 @@ class _PlayerStatsAppBarTextState extends State<PlayerStatsAppBarText>
       duration: const Duration(milliseconds: 300),
     );
 
-    _shakeAnimation = TweenSequence<Offset>([
-      TweenSequenceItem(
-        tween: Tween(begin: const Offset(0.00, 0), end: const Offset(-0.06, 0)),
-        weight: 1,
-      ),
-      TweenSequenceItem(
-        tween: Tween(begin: const Offset(-0.06, 0), end: const Offset(0.06, 0)),
-        weight: 2,
-      ),
-      TweenSequenceItem(
-        tween: Tween(begin: const Offset(0.06, 0), end: const Offset(0, 0)),
-        weight: 1,
-      ),
-    ]).animate(
-      CurvedAnimation(parent: _shakeController, curve: Curves.easeOut),
-    );
+    _shakeAnimation = TweenSequence<Offset>(
+      [
+        TweenSequenceItem(
+          tween: Tween(
+            begin: const Offset(0.00, 0),
+            end: const Offset(-0.06, 0),
+          ),
+          weight: 1,
+        ),
+        TweenSequenceItem(
+          tween: Tween(
+            begin: const Offset(-0.06, 0),
+            end: const Offset(0.06, 0),
+          ),
+          weight: 2,
+        ),
+        TweenSequenceItem(
+          tween: Tween(begin: const Offset(0.06, 0), end: const Offset(0, 0)),
+          weight: 1,
+        ),
+      ],
+    ).animate(CurvedAnimation(parent: _shakeController, curve: Curves.easeOut));
   }
 
   @override
@@ -77,7 +85,7 @@ class _PlayerStatsAppBarTextState extends State<PlayerStatsAppBarText>
 
   int? _computeChangedIndex(PlayerStats oldStats, PlayerStats newStats) {
     if (oldStats.playerAchievementCount.totalAchievements !=
-        newStats.playerAchievementCount.totalAchievements ||
+            newStats.playerAchievementCount.totalAchievements ||
         oldStats.playerAchievementCount.accomplishedAchievements !=
             newStats.playerAchievementCount.accomplishedAchievements) {
       return 0;
@@ -89,7 +97,7 @@ class _PlayerStatsAppBarTextState extends State<PlayerStatsAppBarText>
     }
 
     if (oldStats.playerGoalCount.totalGoals !=
-        newStats.playerGoalCount.totalGoals ||
+            newStats.playerGoalCount.totalGoals ||
         oldStats.playerGoalCount.totalAssists !=
             newStats.playerGoalCount.totalAssists) {
       return 2;
@@ -101,7 +109,7 @@ class _PlayerStatsAppBarTextState extends State<PlayerStatsAppBarText>
     }
 
     if (oldStats.playerBeerCount.totalBeers !=
-        newStats.playerBeerCount.totalBeers ||
+            newStats.playerBeerCount.totalBeers ||
         oldStats.playerBeerCount.totalLiquors !=
             newStats.playerBeerCount.totalLiquors) {
       return 4;
@@ -171,7 +179,8 @@ class _PlayerStatsAppBarTextState extends State<PlayerStatsAppBarText>
     final normalColor = appColors.textPrimary;
     final valueColor = _highlight ? appColors.appBarHighlight : normalColor;
 
-    final totalAchievements = playerStats.playerAchievementCount.totalAchievements;
+    final totalAchievements =
+        playerStats.playerAchievementCount.totalAchievements;
     final accomplishedAchievements =
         playerStats.playerAchievementCount.accomplishedAchievements;
 
@@ -189,26 +198,30 @@ class _PlayerStatsAppBarTextState extends State<PlayerStatsAppBarText>
     final seasonName = playerStats.season.name;
 
     final items = [
-      Row(
+      InkWell(
         key: const ValueKey("ach"),
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Text(
-            "$accomplishedAchievements / $totalAchievements",
-            style: _valueStyle(valueColor),
+        onTap: widget.onAchievementsTap,
+        borderRadius: BorderRadius.circular(8),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 10),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                "$accomplishedAchievements / $totalAchievements",
+                style: _valueStyle(valueColor),
+              ),
+              const SizedBox(width: 4),
+              Icon(Icons.emoji_events, color: valueColor, size: 17),
+            ],
           ),
-          const SizedBox(width: 4),
-          Icon(Icons.emoji_events, color: valueColor, size: 17),
-        ],
+        ),
       ),
       Row(
         key: const ValueKey("foot"),
         mainAxisSize: MainAxisSize.min,
         children: [
-          Text(
-            "$totalDistance km",
-            style: _valueStyle(valueColor),
-          ),
+          Text("$totalDistance km", style: _valueStyle(valueColor)),
           const SizedBox(width: 4),
           Icon(Icons.directions_run, color: valueColor, size: 17),
         ],
@@ -217,15 +230,9 @@ class _PlayerStatsAppBarTextState extends State<PlayerStatsAppBarText>
         key: const ValueKey("goals"),
         mainAxisSize: MainAxisSize.min,
         children: [
-          Text(
-            "$totalGoals ",
-            style: _valueStyle(valueColor),
-          ),
+          Text("$totalGoals ", style: _valueStyle(valueColor)),
           Icon(Icons.sports_soccer, color: valueColor, size: 17),
-          Text(
-            " / $totalAssists ",
-            style: _valueStyle(valueColor),
-          ),
+          Text(" / $totalAssists ", style: _valueStyle(valueColor)),
           Icon(Icons.handshake_outlined, color: valueColor, size: 17),
         ],
       ),
@@ -233,25 +240,16 @@ class _PlayerStatsAppBarTextState extends State<PlayerStatsAppBarText>
         key: const ValueKey("fines"),
         mainAxisSize: MainAxisSize.min,
         children: [
-          Text(
-            "Pokuty: $totalFines Kč",
-            style: _valueStyle(valueColor),
-          ),
+          Text("Pokuty: $totalFines Kč", style: _valueStyle(valueColor)),
         ],
       ),
       Row(
         key: const ValueKey("beers"),
         mainAxisSize: MainAxisSize.min,
         children: [
-          Text(
-            "$totalBeers ",
-            style: _valueStyle(valueColor),
-          ),
+          Text("$totalBeers ", style: _valueStyle(valueColor)),
           Icon(Icons.sports_bar, color: valueColor, size: 17),
-          Text(
-            " / $totalLiquors ",
-            style: _valueStyle(valueColor),
-          ),
+          Text(" / $totalLiquors ", style: _valueStyle(valueColor)),
           Icon(Icons.liquor, color: valueColor, size: 17),
         ],
       ),
@@ -286,10 +284,7 @@ class _PlayerStatsAppBarTextState extends State<PlayerStatsAppBarText>
                     child: AnimatedSwitcher(
                       duration: const Duration(milliseconds: 350),
                       transitionBuilder: (child, animation) {
-                        return FadeTransition(
-                          opacity: animation,
-                          child: child,
-                        );
+                        return FadeTransition(opacity: animation, child: child);
                       },
                       child: KeyedSubtree(
                         key: ValueKey(index),

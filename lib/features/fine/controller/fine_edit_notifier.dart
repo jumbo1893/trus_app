@@ -28,6 +28,7 @@ class FineEditNotifier extends BaseCrudNotifier<FineApiModel, FineEditState> {
           name: model?.name ?? "",
           amount: model?.amount.toString() ?? "0",
           inactive: model?.inactive ?? false,
+          category: model?.category ?? 'COMMON',
           model: model,
         ),
       );
@@ -43,6 +44,10 @@ class FineEditNotifier extends BaseCrudNotifier<FineApiModel, FineEditState> {
 
   void setInactive(bool inactive) {
     state = state.copyWith(inactive: inactive);
+  }
+
+  void setCategory(String category) {
+    state = state.copyWith(category: category);
   }
 
   /// =========================
@@ -91,6 +96,7 @@ class FineEditNotifier extends BaseCrudNotifier<FineApiModel, FineEditState> {
       inactive: state.inactive,
       code: state.model?.code,
       editable: state.model?.editable ?? true,
+      category: state.category,
     );
   }
 

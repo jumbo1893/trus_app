@@ -54,6 +54,22 @@ class _EditFineScreenState extends ConsumerState<EditFineScreen> {
             onChanged: notifier.setAmount,
           ),
         ),
+        FormFieldWrapper(
+          label: "Kategorie pokuty",
+          child: state.category == 'AUTOMATIC'
+              ? const AppReadOnlyField(value: 'Automaticky udělované pokuty')
+              : DropdownButtonFormField<String>(
+                  value: state.category,
+                  items: const [
+                    DropdownMenuItem(value: 'FREQUENT', child: Text('Časté pokuty')),
+                    DropdownMenuItem(value: 'COMMON', child: Text('Běžné pokuty')),
+                    DropdownMenuItem(value: 'RARE', child: Text('Méně časté pokuty')),
+                  ],
+                  onChanged: (value) {
+                    if (value != null) notifier.setCategory(value);
+                  },
+                ),
+        ),
         const AppWarningBox(
           text:
               "Změna částky se použije jen na nově udělené pokuty. "

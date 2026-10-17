@@ -1,5 +1,6 @@
 import '../../common/widgets/entry_draft_scope.dart';
 import 'widget/navigation_shell.dart';
+import '../achievement/screens/achievement_screen.dart';
 import '../ai/screens/ai_assistant_screen.dart';
 import '../chat/chat_screen.dart';
 import '../chat/chat_controller.dart';
@@ -358,7 +359,8 @@ class _MainScreenState extends ConsumerState<MainScreen>
         } else if (deleted == false) {
           showSnackBarWithPostFrame(
             context: context,
-            content: 'Smazání se nepodařilo dokončit. Požádej o pomoc na matej.jandak@seznam.cz.',
+            content:
+                'Smazání se nepodařilo dokončit. Požádej o pomoc na matej.jandak@seznam.cz.',
           );
         }
       },
@@ -509,7 +511,11 @@ class _MainScreenState extends ConsumerState<MainScreen>
               title: pageTitle,
               titleWidget: screenState.showPlayerStatsTitle
                   ? mainState.playerStats.when(
-                      data: (stats) => PlayerStatsAppBarText(stats: stats),
+                      data: (stats) => PlayerStatsAppBarText(
+                        stats: stats,
+                        onAchievementsTap: () => screenNotifier
+                            .changeByFragmentId(AchievementScreen.id),
+                      ),
                       loading: () => Text(pageTitle),
                       error: (_, __) => Text(pageTitle),
                     )

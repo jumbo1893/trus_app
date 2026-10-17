@@ -303,6 +303,7 @@ void main() {
   testWidgets(
     'root app bar displays the rotating current-season player stats',
     (tester) async {
+      var achievementTapped = false;
       final stats = PlayerStats.fromJson({
         'playerAchievementCount': {
           'totalAchievements': 7,
@@ -326,7 +327,10 @@ void main() {
           home: NavigationShell(
             screenId: 'home-screen',
             title: 'Přehled',
-            titleWidget: PlayerStatsAppBarText(stats: stats),
+            titleWidget: PlayerStatsAppBarText(
+              stats: stats,
+              onAchievementsTap: () => achievementTapped = true,
+            ),
             teamName: 'Liščí Trus',
             selectedIndex: 0,
             onBack: () {},
@@ -341,6 +345,8 @@ void main() {
 
       expect(find.text('Jaro 2026 | '), findsOneWidget);
       expect(find.text('2 / 7'), findsOneWidget);
+      await tester.tap(find.text('2 / 7'));
+      expect(achievementTapped, isTrue);
       expect(find.text('Liščí Trus'), findsOneWidget);
       expect(find.byKey(const ValueKey('account_divider')), findsOneWidget);
       expect(tester.takeException(), isNull);

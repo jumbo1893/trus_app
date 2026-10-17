@@ -5,6 +5,7 @@ import 'package:trus_app/common/widgets/rows/app_read_only_field.dart';
 import 'package:trus_app/common/widgets/rows/form/form_field_wrapper.dart';
 import 'package:trus_app/common/widgets/screen/custom_consumer_stateful_widget.dart';
 import 'package:trus_app/features/main/controller/screen_variables_notifier.dart';
+import 'package:trus_app/features/general/notifier/global_variables_notifier.dart';
 import 'package:trus_app/models/api/achievement/player_achievement_api_model.dart';
 
 import '../../../common/widgets/screen/base_form_screen.dart';
@@ -15,9 +16,8 @@ import '../controller/achievement_edit_notifier.dart';
 class ViewPlayerAchievementDetailScreen extends CustomConsumerStatefulWidget {
   static const String id = "view-player-achievement-detail-screen";
 
-  const ViewPlayerAchievementDetailScreen({
-    Key? key,
-  }) : super(key: key, title: "Zobrazení achievementu", name: id);
+  const ViewPlayerAchievementDetailScreen({Key? key})
+    : super(key: key, title: "Zobrazení achievementu", name: id);
 
   @override
   ConsumerState<ViewPlayerAchievementDetailScreen> createState() =>
@@ -28,12 +28,23 @@ class _ViewPlayerAchievementDetailScreenState
     extends ConsumerState<ViewPlayerAchievementDetailScreen> {
   @override
   Widget build(BuildContext context) {
-    final PlayerAchievementApiModel playerAchievementApiModel =
-        ref.read(screenVariablesNotifierProvider).playerAchievement;
+    final PlayerAchievementApiModel playerAchievementApiModel = ref
+        .read(screenVariablesNotifierProvider)
+        .playerAchievement;
 
     final args = AchievementViewArgs.player(playerAchievementApiModel);
     final state = ref.watch(achievementViewProvider(args));
     final notifier = ref.read(achievementViewProvider(args).notifier);
+    final playerId = ref.watch(
+      globalVariablesProvider.select((value) => value.player?.id),
+    );
+    final ownStatus = playerId == null
+        ? 'Není spárován hráč'
+        : state.model == null
+        ? 'Načítání…'
+        : state.model!.accomplishedPlayerIds.contains(playerId)
+        ? 'Splněno'
+        : 'Nesplněno';
 
     return BaseFormScreen(
       headerTitle: state.name,
@@ -41,6 +52,10 @@ class _ViewPlayerAchievementDetailScreenState
           ? "Achievement je splněný"
           : "Achievement zatím není splněný",
       fields: [
+        FormFieldWrapper(
+          label: 'Můj stav',
+          child: AppReadOnlyField(value: ownStatus),
+        ),
         if ((state.playerName ?? "").trim().isNotEmpty)
           FormFieldWrapper(
             label: "Hráč",
@@ -51,17 +66,11 @@ class _ViewPlayerAchievementDetailScreenState
           ),
         FormFieldWrapper(
           label: "Název",
-          child: AppReadOnlyField(
-            value: state.name,
-            allowWrap: true,
-          ),
+          child: AppReadOnlyField(value: state.name, allowWrap: true),
         ),
         FormFieldWrapper(
           label: "Popis",
-          child: AppReadOnlyField(
-            value: state.description,
-            allowWrap: true,
-          ),
+          child: AppReadOnlyField(value: state.description, allowWrap: true),
         ),
         if (state.secondaryCondition.trim().isNotEmpty)
           FormFieldWrapper(
@@ -97,10 +106,7 @@ class _ViewPlayerAchievementDetailScreenState
           ),
         FormFieldWrapper(
           label: "Úspěšnost",
-          child: AppReadOnlyField(
-            value: state.successRate,
-            allowWrap: true,
-          ),
+          child: AppReadOnlyField(value: state.successRate, allowWrap: true),
         ),
         if (state.accomplishedPlayers.trim().isNotEmpty)
           FormFieldWrapper(

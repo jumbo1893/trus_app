@@ -1,18 +1,13 @@
 import 'package:flutter/material.dart';
-import '../../../../common/utils/search_text.dart';
 import '../../../../models/api/receivedfine/received_fine_api_model.dart';
 
-int quickFineRank(String name) {
-  final n = normalizeSearchText(name);
-  if (n == 'prekop') return 0;
-  if (n == 'treti polocas') return 1;
-  if (n == 'pozdni prichod do zacatku') return 2;
-  if (n.contains('pozdni prichod') &&
-      n.contains('pred') &&
-      (n.contains('utkani') || n.contains('zapas')))
-    return 2;
-  return 3;
-}
+const fineCategoryOrder = ['FREQUENT', 'COMMON', 'RARE', 'AUTOMATIC'];
+const fineCategoryTitles = {
+  'FREQUENT': 'Časté pokuty',
+  'COMMON': 'Běžné pokuty',
+  'RARE': 'Méně časté pokuty',
+  'AUTOMATIC': 'Automaticky udělované pokuty',
+};
 
 class QuickFineList extends StatelessWidget {
   final List<ReceivedFineApiModel> items;
@@ -29,21 +24,13 @@ class QuickFineList extends StatelessWidget {
   });
   @override
   Widget build(BuildContext context) {
-    final preferred =
-        [
-          for (var i = 0; i < items.length; i++)
-            if (!items[i].fine.inactive &&
-                quickFineRank(items[i].fine.name) < 3)
-              i,
-        ]..sort(
-          (a, b) => quickFineRank(
-            items[a].fine.name,
-          ).compareTo(quickFineRank(items[b].fine.name)),
-        );
     final order = [
-      ...preferred,
-      for (var i = 0; i < items.length; i++)
-        if (!preferred.contains(i)) i,
+      for (final category in fineCategoryOrder)
+        for (var i = 0; i < items.length; i++)
+          if (!items[i].fine.inactive &&
+              (fineCategoryTitles.containsKey(items[i].fine.category)
+                      ? items[i].fine.category
+                      : 'COMMON') == category) i,
     ];
     return ListView.builder(
       padding: const EdgeInsets.only(bottom: 16),
@@ -55,12 +42,12 @@ class QuickFineList extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              if (preferred.isNotEmpty &&
-                  (position == 0 || position == preferred.length))
+              if (position == 0 ||
+                  items[order[position - 1]].fine.category != items[i].fine.category)
                 Padding(
                   padding: const EdgeInsets.symmetric(vertical: 8),
                   child: Text(
-                    position == 0 ? 'Časté pokuty' : 'Ostatní pokuty',
+                    fineCategoryTitles[items[i].fine.category] ?? 'Běžné pokuty',
                     style: Theme.of(context).textTheme.titleSmall,
                   ),
                 ),

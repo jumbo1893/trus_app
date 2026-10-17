@@ -3,7 +3,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:trus_app/common/widgets/entry_draft_scope.dart';
-import 'package:trus_app/features/fine/match/widget/quick_fine_list.dart';
 
 void main() {
   setUp(
@@ -32,13 +31,6 @@ void main() {
     );
     await store.write('1:beer:1', null);
     expect(await store.read('1:beer:1'), isNull);
-  });
-  test('preferred fines retain required ordering', () {
-    expect(quickFineRank('Překop'), 0);
-    expect(quickFineRank('Pozdní příchod do začátku'), 2);
-    expect(quickFineRank('Třetí poločas'), 1);
-    expect(quickFineRank('Pozdní příchod před začátkem utkání'), 2);
-    expect(quickFineRank('Pozdní příchod po začátku utkání'), 3);
   });
   testWidgets(
     'restoration merges own delta with newer server values and failed save retains draft',

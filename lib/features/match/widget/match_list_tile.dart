@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:trus_app/common/utils/calendar.dart';
+import 'package:trus_app/common/widgets/football/match_outcome.dart';
 import 'package:trus_app/models/api/match/match_api_model.dart';
 import 'package:trus_app/theme/app_colors.dart';
 import 'package:trus_app/theme/app_widget_values.dart';
@@ -24,6 +25,11 @@ class MatchListTile extends StatelessWidget {
     final score = hasResult
         ? '${footballMatch!.homeGoalNumber}:${footballMatch.awayGoalNumber}'
         : '–';
+    final outcome = MatchOutcome.fromScore(
+      homeGoals: footballMatch?.homeGoalNumber,
+      awayGoals: footballMatch?.awayGoalNumber,
+      isHome: match.home,
+    );
 
     final homeTeamName = match.home ? 'Liščí Trus' : match.name;
     final awayTeamName = match.home ? match.name : 'Liščí Trus';
@@ -45,7 +51,7 @@ class MatchListTile extends StatelessWidget {
             children: [
               _ScoreBadge(
                 score: score,
-                hasResult: hasResult,
+                outcome: outcome,
               ),
               const SizedBox(width: 14),
               Expanded(
@@ -104,34 +110,36 @@ class MatchListTile extends StatelessWidget {
 
 class _ScoreBadge extends StatelessWidget {
   final String score;
-  final bool hasResult;
+  final MatchOutcome? outcome;
 
   const _ScoreBadge({
     required this.score,
-    required this.hasResult,
+    required this.outcome,
   });
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      width: 58,
-      height: 66,
+      width: 68,
+      height: 70,
       decoration: BoxDecoration(
-        color: hasResult
-            ? context.appColors.accentSoft
-            : context.appColors.backgroundSecondary,
+        color: outcome?.background(context.appColors) ??
+            context.appColors.backgroundSecondary,
         borderRadius: BorderRadius.circular(18),
       ),
       alignment: Alignment.center,
-      child: Text(
-        score,
-        style: TextStyle(
-          color: hasResult
-              ? context.appColors.accent
-              : context.appColors.textMuted,
-          fontSize: 20,
-          fontWeight: FontWeight.w800,
-        ),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Text(score, style: TextStyle(
+            color: outcome?.foreground(context.appColors) ?? context.appColors.textMuted,
+            fontSize: 20, fontWeight: FontWeight.w800,
+          )),
+          if (outcome != null) Text(outcome!.label, style: TextStyle(
+            color: outcome!.foreground(context.appColors),
+            fontSize: 10, fontWeight: FontWeight.w800,
+          )),
+        ],
       ),
     );
   }
