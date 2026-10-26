@@ -72,7 +72,7 @@ class ResponseValidator {
     } else if (value == 409) {
       final decodedBody = json.decode(utf8.decode(response.bodyBytes));
       ErrorResponse errorResponse = ErrorResponse.fromJson(decodedBody);
-      throw LoginException(errorResponse.message);
+      throw ServerException(errorResponse.message);
     } else if (value == 422) {
       final decodedBody = json.decode(utf8.decode(response.bodyBytes));
       ErrorResponse errorResponse = ErrorResponse.fromJson(decodedBody);
