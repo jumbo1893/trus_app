@@ -12,9 +12,8 @@ import '../../../models/enum/crud.dart';
 class AddFineScreen extends CustomConsumerStatefulWidget {
   static const String id = "add-fine-screen";
 
-  const AddFineScreen({
-    Key? key,
-  }) : super(key: key, title: "Přidat pokutu", name: id);
+  const AddFineScreen({Key? key})
+    : super(key: key, title: "Přidat pokutu", name: id);
 
   @override
   ConsumerState<AddFineScreen> createState() => _AddFineScreenState();
@@ -53,9 +52,11 @@ class _AddFineScreenState extends ConsumerState<AddFineScreen> {
           child: DropdownButtonFormField<String>(
             value: state.category,
             items: const [
-              DropdownMenuItem(value: 'FREQUENT', child: Text('Časté pokuty')),
-              DropdownMenuItem(value: 'COMMON', child: Text('Běžné pokuty')),
-              DropdownMenuItem(value: 'RARE', child: Text('Méně časté pokuty')),
+              DropdownMenuItem(value: 'PRE_MATCH', child: Text('Předzápasové')),
+              DropdownMenuItem(value: 'MATCH', child: Text('Zápasové')),
+              DropdownMenuItem(value: 'POST_MATCH', child: Text('Pozápasové')),
+              DropdownMenuItem(value: 'SPECIAL', child: Text('Speciální')),
+              DropdownMenuItem(value: 'AUTOMATIC', child: Text('Automatické')),
             ],
             onChanged: (value) {
               if (value != null) notifier.setCategory(value);

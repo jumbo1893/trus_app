@@ -56,19 +56,19 @@ class _EditFineScreenState extends ConsumerState<EditFineScreen> {
         ),
         FormFieldWrapper(
           label: "Kategorie pokuty",
-          child: state.category == 'AUTOMATIC'
-              ? const AppReadOnlyField(value: 'Automaticky udělované pokuty')
-              : DropdownButtonFormField<String>(
-                  value: state.category,
-                  items: const [
-                    DropdownMenuItem(value: 'FREQUENT', child: Text('Časté pokuty')),
-                    DropdownMenuItem(value: 'COMMON', child: Text('Běžné pokuty')),
-                    DropdownMenuItem(value: 'RARE', child: Text('Méně časté pokuty')),
-                  ],
-                  onChanged: (value) {
-                    if (value != null) notifier.setCategory(value);
-                  },
-                ),
+          child: DropdownButtonFormField<String>(
+            value: state.category,
+            items: const [
+              DropdownMenuItem(value: 'PRE_MATCH', child: Text('Předzápasové')),
+              DropdownMenuItem(value: 'MATCH', child: Text('Zápasové')),
+              DropdownMenuItem(value: 'POST_MATCH', child: Text('Pozápasové')),
+              DropdownMenuItem(value: 'SPECIAL', child: Text('Speciální')),
+              DropdownMenuItem(value: 'AUTOMATIC', child: Text('Automatické')),
+            ],
+            onChanged: (value) {
+              if (value != null) notifier.setCategory(value);
+            },
+          ),
         ),
         const AppWarningBox(
           text:

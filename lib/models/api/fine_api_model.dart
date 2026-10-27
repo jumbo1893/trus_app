@@ -13,6 +13,14 @@ class FineApiModel implements ModelToString, JsonAndHttpConverter, IEndpointId {
   final String category;
   static const endpointId = "fine_api_model";
 
+  static String categoryFromApi(String? category) => switch (category) {
+    'FREQUENT' || 'LATE' => 'PRE_MATCH',
+    'RARE' => 'SPECIAL',
+    'AUTOMATIC' => 'AUTOMATIC',
+    'PRE_MATCH' || 'MATCH' || 'POST_MATCH' || 'SPECIAL' => category!,
+    _ => 'MATCH',
+  };
+
   FineApiModel({
     required this.name,
     required this.amount,
@@ -20,7 +28,7 @@ class FineApiModel implements ModelToString, JsonAndHttpConverter, IEndpointId {
     this.id,
     this.code,
     this.editable = true,
-    this.category = 'COMMON',
+    this.category = 'MATCH',
   });
 
   FineApiModel.dummy()
@@ -30,7 +38,7 @@ class FineApiModel implements ModelToString, JsonAndHttpConverter, IEndpointId {
       inactive = false,
       code = null,
       editable = true,
-      category = 'COMMON';
+      category = 'MATCH';
 
   @override
   String toString() {
@@ -50,7 +58,6 @@ class FineApiModel implements ModelToString, JsonAndHttpConverter, IEndpointId {
     };
   }
 
-  @override
   factory FineApiModel.fromJson(Map<String, dynamic> json) {
     return FineApiModel(
       amount: json['amount'] ?? 0,
@@ -59,7 +66,7 @@ class FineApiModel implements ModelToString, JsonAndHttpConverter, IEndpointId {
       inactive: json["inactive"] ?? false,
       code: json["code"],
       editable: json["editable"] ?? true,
-      category: json["category"] ?? 'COMMON',
+      category: categoryFromApi(json["category"] as String?),
     );
   }
 

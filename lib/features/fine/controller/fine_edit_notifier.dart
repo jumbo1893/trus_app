@@ -28,7 +28,7 @@ class FineEditNotifier extends BaseCrudNotifier<FineApiModel, FineEditState> {
           name: model?.name ?? "",
           amount: model?.amount.toString() ?? "0",
           inactive: model?.inactive ?? false,
-          category: model?.category ?? 'COMMON',
+          category: model?.category ?? 'MATCH',
           model: model,
         ),
       );

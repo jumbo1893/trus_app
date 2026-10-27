@@ -5,13 +5,12 @@ import '../../../models/api/fine_api_model.dart';
 import '../../../models/api/interfaces/json_and_http_converter.dart';
 import '../../general/repository/crud_api_service.dart';
 
-
-final fineApiServiceProvider =
-    Provider<FineApiService>((ref) => FineApiService(ref));
+final fineApiServiceProvider = Provider<FineApiService>(
+  (ref) => FineApiService(ref),
+);
 
 class FineApiService extends CrudApiService {
   FineApiService(super.ref);
-
 
   Future<List<FineApiModel>> getFines() async {
     final decodedBody = await getModels<JsonAndHttpConverter>(fineApi, null);

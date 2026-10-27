@@ -11,9 +11,7 @@ import '../../../../common/widgets/dropdown/match_dropdown_sheet.dart';
 import '../../../../common/widgets/screen/custom_consumer_stateful_widget.dart';
 import '../../../season/controller/season_dropdown_notifier.dart';
 import '../../../season/season_args.dart';
-import '../widget/fine_match_action_bar.dart';
-import '../widget/fine_match_listview.dart';
-import '../../../../common/widgets/toggle_mode.dart';
+import '../widget/fine_type_grid.dart';
 
 class FineMatchScreen extends CustomConsumerStatefulWidget {
   static const String id = "fine-match-screen";
@@ -118,50 +116,14 @@ class _FineMatchScreenState extends ConsumerState<FineMatchScreen> {
                 ),
               ),
             ),
-            Padding(
-              padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
-              child: ToggleMode(
-                firstLabel: "Jeden hráč",
-                firstIcon: Icons.person,
-                secondLabel: "Více hráčů",
-                secondIcon: Icons.checklist_rounded,
-                secondChoice: state.multiCheck,
-                onChanged: notifier.switchScreen,
-              ),
-            ),
             Expanded(
-              child: Padding(
-                padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
-                child: FineMatchListview(
-                  scrollController: _scrollController,
-                  checkedPlayers: state.checkedPlayers,
-                  multiselect: state.multiCheck,
-                  onPlayerChecked: notifier.toggleCheckedPlayer,
-                  onPlayerSelected: notifier.setSelectedPlayer,
-                  players: state.allPlayers,
-                  playersInMatchIds: state.playersInMatch
-                      .map((player) => player.id)
-                      .whereType<int>()
-                      .toSet(),
-                  playerFineSummaryByPlayerId:
-                      state.playerFineSummaryByPlayerId,
-                ),
-              ),
+              child: state.selectedMatch == null
+                  ? const Center(child: Text('Vyber zápas pro zápis pokut.'))
+                  : FineTypeGrid(key: ValueKey(state.selectedMatch!.id)),
             ),
           ],
         ),
       ),
-      bottomNavigationBar: state.multiCheck
-          ? FineMatchActionBar(
-              compact: !_showFilters,
-              selectedCount: state.checkedPlayers.length,
-              onSelectAll: notifier.selectAllPlayers,
-              onSelectPlaying: notifier.selectPlayingPlayers,
-              onSelectNotPlaying: notifier.selectNotPlayingPlayers,
-              onConfirm: notifier.confirmSelection,
-              onClearSelection: notifier.cleanCheckPlayers,
-            )
-          : null,
     );
   }
 }
