@@ -69,7 +69,10 @@ class ChatController extends StateNotifier<ChatState> {
   int? _teamId;
   bool _screenVisible = false;
   bool _viewingLatest = true;
+  bool _historyWindow = false;
+  bool get historyWindow => _historyWindow;
   final Map<String, int> _lastReadRequest = {};
+  int _loadRevision = 0;
   ChatController(this.ref) : super(const ChatState()) {
     _authSubscription = FirebaseAuth.instance.idTokenChanges().listen((
       user,
@@ -95,6 +98,7 @@ class ChatController extends StateNotifier<ChatState> {
 
   Future<void> switchTeam(int? teamId) async {
     if (_teamId == teamId) return;
+    _loadRevision++;
     _socket?.deactivate();
     _socket = null;
     _socketToken = null;
@@ -229,15 +233,43 @@ class ChatController extends StateNotifier<ChatState> {
 
   Future<void> load(String kind) async {
     final team = _teamId;
+    final revision = ++_loadRevision;
     _viewingLatest = true;
+    _historyWindow = false;
     state = state.copyWith(activeRoom: kind, clearDetail: true);
     try {
       final detail = await ref.read(chatRepositoryProvider).detail(kind);
-      if (!mounted || _teamId != team || state.activeRoom != kind) return;
+      if (!mounted || _teamId != team || _loadRevision != revision) return;
       state = state.copyWith(detail: detail);
       _markLatestIfVisible();
     } catch (e) {
-      if (mounted) state = state.copyWith(error: '$e');
+      if (mounted && _teamId == team && _loadRevision == revision) {
+        state = state.copyWith(error: '$e');
+      }
+    }
+  }
+
+  Future<bool> jumpTo(String kind, int id) async {
+    if (state.activeRoom != kind) return false;
+    final revision = ++_loadRevision;
+    final team = _teamId;
+    try {
+      final page = await ref.read(chatRepositoryProvider).around(kind, id);
+      if (!mounted ||
+          _teamId != team ||
+          _loadRevision != revision ||
+          state.activeRoom != kind) {
+        return false;
+      }
+      _viewingLatest = false;
+      _historyWindow = true;
+      state = state.copyWith(detail: page);
+      return page.messages.any((message) => message.id == id);
+    } catch (error) {
+      if (mounted && _teamId == team && state.activeRoom == kind) {
+        state = state.copyWith(error: '$error');
+      }
+      return false;
     }
   }
 
@@ -298,7 +330,7 @@ class ChatController extends StateNotifier<ChatState> {
   }
 
   void setViewingLatest(bool visible) {
-    _viewingLatest = visible;
+    _viewingLatest = visible && !_historyWindow;
     if (visible) _markLatestIfVisible();
   }
 
@@ -329,6 +361,8 @@ class ChatController extends StateNotifier<ChatState> {
   }
 
   void closeRoom() {
+    _loadRevision++;
+    _historyWindow = false;
     state = state.copyWith(activeRoom: '', clearDetail: true);
     refresh();
   }

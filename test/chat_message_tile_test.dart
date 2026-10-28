@@ -5,6 +5,53 @@ import 'package:trus_app/features/chat/chat_repository.dart';
 import 'package:trus_app/features/chat/chat_screen.dart';
 
 void main() {
+  testWidgets('double tap reacts and reply preview shows original message', (
+    tester,
+  ) async {
+    var hearts = 0;
+    var replyTaps = 0;
+    final message = ChatMessage.fromJson({
+      'id': 20,
+      'authorId': 2,
+      'author': 'Eva',
+      'text': 'Souhlasím',
+      'createdAt': '2026-10-13T10:00:00Z',
+      'replyTo': {
+        'id': 19,
+        'author': 'Jan',
+        'text': 'Platí to?',
+        'image': false,
+      },
+    });
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: ChatMessageTile(
+            message: message,
+            room: 'all',
+            own: false,
+            selected: false,
+            seen: const [],
+            onTap: () {},
+            onDoubleTap: () => hearts++,
+            onReplyTap: () => replyTaps++,
+            onLongPress: (_) {},
+            onReactionsTap: () {},
+          ),
+        ),
+      ),
+    );
+    expect(find.text('Platí to?'), findsOneWidget);
+    await tester.tap(find.byKey(const ValueKey('chat-reply-20')));
+    await tester.pump();
+    expect(replyTaps, 1);
+    await tester.tap(find.byKey(const ValueKey('chat-bubble-20')));
+    await tester.pump(const Duration(milliseconds: 80));
+    await tester.tap(find.byKey(const ValueKey('chat-bubble-20')));
+    await tester.pumpAndSettle();
+    expect(hearts, 1);
+  });
+
   testWidgets('TrusBot message has a distinct sender icon', (tester) async {
     var taps = 0;
     var longPresses = 0;

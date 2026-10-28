@@ -35,6 +35,7 @@ class ChatMessage {
   final DateTime createdAt;
   final bool image, bot;
   final List<ChatReaction> reactions;
+  final ChatReply? replyTo;
   String? get displayText {
     if (!bot || text == null) return text;
     return text!
@@ -56,6 +57,9 @@ class ChatMessage {
       createdAt = DateTime.parse(json['createdAt'] as String).toLocal(),
       image = json['image'] as bool? ?? false,
       bot = json['bot'] as bool? ?? false,
+      replyTo = json['replyTo'] == null
+          ? null
+          : ChatReply.fromJson(json['replyTo'] as Map<String, dynamic>),
       reactions = (json['reactions'] as List? ?? const [])
           .map((item) => ChatReaction.fromJson(item as Map<String, dynamic>))
           .toList();
@@ -67,7 +71,20 @@ class ChatMessage {
       text = message.text,
       createdAt = message.createdAt,
       image = message.image,
-      bot = message.bot;
+      bot = message.bot,
+      replyTo = message.replyTo;
+}
+
+class ChatReply {
+  final int id;
+  final String author;
+  final String? text;
+  final bool image;
+  ChatReply.fromJson(Map<String, dynamic> json)
+    : id = (json['id'] as num).toInt(),
+      author = json['author'] as String,
+      text = json['text'] as String?,
+      image = json['image'] as bool? ?? false;
 }
 
 class ChatReaction {
@@ -130,6 +147,12 @@ class ChatRepository extends RequestExecutor {
     before == null ? null : {'before': '$before'},
   );
 
+  Future<ChatDetail> around(String kind, int id) => executeGetRequest(
+    Uri.parse('$serverUrl/chat/$kind/around/$id'),
+    (json) => ChatDetail.fromJson(json as Map<String, dynamic>),
+    null,
+  );
+
   Future<bool> setPushEnabled(String kind, bool enabled) => executePutRequest(
     Uri.parse('$serverUrl/chat/$kind/push'),
     (json) => (json as Map<String, dynamic>)['pushEnabled'] as bool,
@@ -137,12 +160,16 @@ class ChatRepository extends RequestExecutor {
     queueOnFailure: false,
   );
 
-  Future<ChatMessage> send(String kind, String text) => executePostRequest(
-    Uri.parse('$serverUrl/chat/$kind'),
-    (json) => ChatMessage.fromJson(json as Map<String, dynamic>),
-    jsonEncode({'text': text}),
-    queueOnFailure: false,
-  );
+  Future<ChatMessage> send(String kind, String text, {int? replyToId}) =>
+      executePostRequest(
+        Uri.parse('$serverUrl/chat/$kind'),
+        (json) => ChatMessage.fromJson(json as Map<String, dynamic>),
+        jsonEncode({
+          'text': text,
+          if (replyToId != null) 'replyToId': replyToId,
+        }),
+        queueOnFailure: false,
+      );
 
   Future<ChatReceipt> markRead(String kind, int id) => executePostRequest(
     Uri.parse('$serverUrl/chat/$kind/read/$id'),
@@ -162,8 +189,9 @@ class ChatRepository extends RequestExecutor {
   Future<ChatMessage> sendImage(
     String kind,
     Uint8List bytes,
-    String text,
-  ) async {
+    String text, {
+    int? replyToId,
+  }) async {
     final client = getClient();
     try {
       final request = http.MultipartRequest(
@@ -175,6 +203,7 @@ class ChatRepository extends RequestExecutor {
           ..remove('Content-Type'),
       );
       request.fields['text'] = text;
+      if (replyToId != null) request.fields['replyToId'] = '$replyToId';
       request.files.add(
         http.MultipartFile.fromBytes(
           'image',
