@@ -63,6 +63,6 @@ class GoalDetailedModel implements ModelToString {
 
   @override
   String toStringForListView() {
-    return "Počet gólů: $goalNumber, počet asistencí: $assistNumber";
+    return "Góly: $goalNumber · Asistence: $assistNumber";
   }
 }

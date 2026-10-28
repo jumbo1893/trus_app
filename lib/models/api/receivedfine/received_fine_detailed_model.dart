@@ -70,6 +70,6 @@ class ReceivedFineDetailedModel implements ModelToString {
 
   @override
   String toStringForListView() {
-    return "Počet pokut: $fineNumber v celkové výši $fineAmount Kč";
+    return "Pokuty: $fineNumber · $fineAmount Kč";
   }
 }

@@ -63,6 +63,6 @@ class BeerDetailedModel implements ModelToString {
 
   @override
   String toStringForListView() {
-    return "Počet piv: $beerNumber, počet panáků: $liquorNumber, celkem: ${beerNumber+liquorNumber} ";
+    return "Piva: $beerNumber · Panáky: $liquorNumber";
   }
 }

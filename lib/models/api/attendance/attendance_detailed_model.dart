@@ -56,11 +56,11 @@ class AttendanceDetailedModel implements ModelToString {
   @override
   String toStringForListView() {
     if (match != null && player == null && totalCount > 0) {
-      return "Hráči: $playerCount, fanoušci: $fanCount, celkem: $totalCount";
+      return "Hráči: $playerCount · Fanoušci: $fanCount · Celkem: $totalCount";
     }
 
     if (player != null && match == null) {
-      return "Počet zápasů: $attendanceCount";
+      return "Zápasy: $attendanceCount";
     }
 
     if (player != null) {
