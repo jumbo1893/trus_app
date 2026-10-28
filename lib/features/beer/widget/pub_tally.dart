@@ -1,4 +1,7 @@
+import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
+import 'package:trus_app/theme/app_colors.dart';
 import 'package:trus_app/models/api/beer/beer_no_match_with_player.dart';
 import 'package:trus_app/models/api/beer/pub_attendance.dart';
 
@@ -12,6 +15,7 @@ class PubTally extends StatefulWidget {
     required this.players,
     required this.matchPlayerIds,
     required this.myPlayerId,
+    this.active = true,
     required this.onAdd,
     required this.onRemove,
     required this.attendance,
@@ -22,6 +26,7 @@ class PubTally extends StatefulWidget {
   final List<BeerNoMatchWithPlayer> players;
   final List<int> matchPlayerIds;
   final int? myPlayerId;
+  final bool active;
   final void Function(int, bool) onAdd;
   final void Function(int, bool) onRemove;
   final PubAttendance? attendance;
@@ -61,8 +66,13 @@ class _DashedTileBorderPainter extends CustomPainter {
       oldDelegate.color != color;
 }
 
-class _PubTallyState extends State<PubTally> {
+class _PubTallyState extends State<PubTally>
+    with SingleTickerProviderStateMixin {
   static const styledDrinkOrder = [PubDrinkType.beer, PubDrinkType.shot];
+  late final AnimationController _deleteWiggle = AnimationController(
+    vsync: this,
+    duration: const Duration(milliseconds: 230),
+  );
 
   Set<int> guests = {};
   Set<int> left = {};
@@ -77,11 +87,31 @@ class _PubTallyState extends State<PubTally> {
   }
 
   @override
+  void dispose() {
+    _deleteWiggle.dispose();
+    super.dispose();
+  }
+
+  void setCorrection(bool enabled) {
+    setState(() => correcting = enabled);
+    if (enabled) {
+      _deleteWiggle.repeat(reverse: true);
+    } else {
+      _deleteWiggle.stop();
+      _deleteWiggle.reset();
+    }
+  }
+
+  @override
   void didUpdateWidget(covariant PubTally oldWidget) {
     super.didUpdateWidget(oldWidget);
     if (oldWidget.matchId != widget.matchId) {
       selectInitialGuests();
       applySavedAttendance();
+    } else if (!oldWidget.active &&
+        widget.active &&
+        widget.attendance?.configured != true) {
+      choosing = true;
     } else {
       if (oldWidget.attendance != widget.attendance) applySavedAttendance();
     }
@@ -224,19 +254,30 @@ class _PubTallyState extends State<PubTally> {
         ),
         Padding(
           padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
-          child: SizedBox(
-            width: double.infinity,
-            child: FilledButton.icon(
-              onPressed: saving
-                  ? null
-                  : () => saveAttendance(
-                      {...guests},
-                      {...left},
-                      finishChoosing: true,
-                    ),
-              icon: const Icon(Icons.sports_bar_rounded),
-              label: Text('DO HOSPODY · ${guests.length}'),
-            ),
+          child: Row(
+            children: [
+              TextButton(
+                key: const ValueKey('pub-choose-later'),
+                onPressed: saving
+                    ? null
+                    : () => setState(() => choosing = false),
+                child: const Text('Později'),
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: FilledButton.icon(
+                  onPressed: saving
+                      ? null
+                      : () => saveAttendance(
+                          {...guests},
+                          {...left},
+                          finishChoosing: true,
+                        ),
+                  icon: const Icon(Icons.sports_bar_rounded),
+                  label: Text('DO HOSPODY · ${guests.length}'),
+                ),
+              ),
+            ],
           ),
         ),
       ],
@@ -280,9 +321,34 @@ class _PubTallyState extends State<PubTally> {
     BuildContext context,
     List<(int, BeerNoMatchWithPlayer)> entries,
   ) {
-    const background = Color(0xFF0E0B12);
-    const muted = Color(0xFFA29BB4);
-    const gold = Color(0xFFFFB529);
+    final canDelete = entries.any(
+      (entry) =>
+          !left.contains(entry.$2.player.id) &&
+          (entry.$2.beerNumber > 0 || entry.$2.liquorNumber > 0),
+    );
+    if (correcting && !canDelete) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted || !correcting) return;
+        if (widget.players.any(
+          (player) =>
+              guests.contains(player.player.id) &&
+              !left.contains(player.player.id) &&
+              (player.beerNumber > 0 || player.liquorNumber > 0),
+        ))
+          return;
+        setCorrection(false);
+      });
+    }
+    final light = Theme.of(context).brightness == Brightness.light;
+    final colors =
+        Theme.of(context).extension<AppColors>() ??
+        (light ? AppColors.light : AppColors.dark);
+    final background = light
+        ? colors.backgroundPrimary
+        : const Color(0xFF0E0B12);
+    final muted = light ? colors.textSecondary : const Color(0xFFA29BB4);
+    final gold = light ? const Color(0xFF9A5B00) : const Color(0xFFFFB529);
+    final text = light ? colors.textPrimary : const Color(0xFFFFF7E9);
     final totals = {
       for (final type in styledDrinkOrder)
         type: entries.fold<int>(
@@ -310,13 +376,13 @@ class _PubTallyState extends State<PubTally> {
             padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
             child: Row(
               children: [
-                const Expanded(
+                Expanded(
                   child: Text(
                     'Účet v hospodě',
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                     style: TextStyle(
-                      color: Color(0xFFFFF7E9),
+                      color: text,
                       fontSize: 16,
                       fontWeight: FontWeight.w700,
                     ),
@@ -328,10 +394,7 @@ class _PubTallyState extends State<PubTally> {
                     setState(() => choosing = true);
                     widget.onChoosingChanged?.call(true);
                   },
-                  icon: const Icon(
-                    Icons.group_outlined,
-                    color: Color(0xFFFFF7E9),
-                  ),
+                  icon: Icon(Icons.group_outlined, color: text),
                 ),
               ],
             ),
@@ -340,11 +403,7 @@ class _PubTallyState extends State<PubTally> {
             padding: const EdgeInsets.fromLTRB(16, 2, 16, 10),
             child: Row(
               children: [
-                const Icon(
-                  Icons.workspace_premium_outlined,
-                  color: gold,
-                  size: 16,
-                ),
+                Icon(Icons.workspace_premium_outlined, color: gold, size: 16),
                 const SizedBox(width: 4),
                 Expanded(
                   child: Text(
@@ -353,7 +412,7 @@ class _PubTallyState extends State<PubTally> {
                         : 'Zatím bez lídra',
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(
+                    style: TextStyle(
                       color: gold,
                       fontSize: 12,
                       fontWeight: FontWeight.w700,
@@ -363,7 +422,7 @@ class _PubTallyState extends State<PubTally> {
                 const SizedBox(width: 8),
                 Text(
                   '$totalPieces ks',
-                  style: const TextStyle(
+                  style: TextStyle(
                     color: muted,
                     fontSize: 12,
                     fontWeight: FontWeight.w600,
@@ -372,8 +431,8 @@ class _PubTallyState extends State<PubTally> {
                 const SizedBox(width: 10),
                 Text(
                   '${litersLabel(totalLiters)} l',
-                  style: const TextStyle(
-                    color: Color(0xFFFFF2D8),
+                  style: TextStyle(
+                    color: text,
                     fontSize: 12,
                     fontWeight: FontWeight.w800,
                   ),
@@ -393,8 +452,12 @@ class _PubTallyState extends State<PubTally> {
           ),
           Container(
             padding: const EdgeInsets.fromLTRB(12, 5, 12, 8),
-            decoration: const BoxDecoration(
-              border: Border(top: BorderSide(color: Color(0xFF2D2834))),
+            decoration: BoxDecoration(
+              border: Border(
+                top: BorderSide(
+                  color: light ? colors.border : const Color(0xFF2D2834),
+                ),
+              ),
             ),
             child: Row(
               children: [
@@ -417,10 +480,7 @@ class _PubTallyState extends State<PubTally> {
                                 drinkLabel(type),
                                 maxLines: 1,
                                 overflow: TextOverflow.ellipsis,
-                                style: const TextStyle(
-                                  color: muted,
-                                  fontSize: 9,
-                                ),
+                                style: TextStyle(color: muted, fontSize: 9),
                               ),
                             ],
                           ),
@@ -429,36 +489,22 @@ class _PubTallyState extends State<PubTally> {
                   ),
                 ),
                 const SizedBox(width: 8),
-                Tooltip(
-                  message: correcting
-                      ? 'Přepnout na přidávání nápojů'
-                      : 'Přepnout na opravu nápojů',
-                  child: InkWell(
-                    key: const ValueKey('pub-mode-toggle'),
-                    borderRadius: BorderRadius.circular(12),
-                    onTap: () => setState(() => correcting = !correcting),
-                    child: Container(
-                      width: 58,
-                      height: 50,
-                      decoration: BoxDecoration(
-                        color: correcting ? gold : const Color(0xFFE74778),
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Icon(correcting ? Icons.add : Icons.remove, size: 18),
-                          Text(
-                            correcting ? 'Přidávat' : 'Opravit',
-                            style: const TextStyle(
-                              fontSize: 10,
-                              fontWeight: FontWeight.w800,
-                            ),
-                          ),
-                        ],
+                Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      'Mazání',
+                      style: TextStyle(
+                        color: text,
+                        fontWeight: FontWeight.w600,
                       ),
                     ),
-                  ),
+                    Switch.adaptive(
+                      key: const ValueKey('pub-mode-toggle'),
+                      value: correcting && canDelete,
+                      onChanged: canDelete ? setCorrection : null,
+                    ),
+                  ],
                 ),
               ],
             ),
@@ -469,12 +515,22 @@ class _PubTallyState extends State<PubTally> {
   }
 
   Color styledDrinkColor(PubDrinkType type) => switch (type) {
-    PubDrinkType.beer => const Color(0xFFFFB529),
-    PubDrinkType.shot => const Color(0xFF7ADCCC),
+    PubDrinkType.beer =>
+      Theme.of(context).brightness == Brightness.light
+          ? const Color(0xFF9A5B00)
+          : const Color(0xFFFFB529),
+    PubDrinkType.shot =>
+      Theme.of(context).brightness == Brightness.light
+          ? const Color(0xFF087A70)
+          : const Color(0xFF7ADCCC),
   };
 
   Widget styledPlayerCard(int index, BeerNoMatchWithPlayer item) {
-    const muted = Color(0xFFA29BB4);
+    final light = Theme.of(context).brightness == Brightness.light;
+    final colors =
+        Theme.of(context).extension<AppColors>() ??
+        (light ? AppColors.light : AppColors.dark);
+    final muted = light ? colors.textSecondary : const Color(0xFFA29BB4);
     final counts = countsFor(item);
     final pieces = counts.values.fold<int>(0, (sum, n) => sum + n);
     final hasLeft = left.contains(item.player.id);
@@ -483,8 +539,10 @@ class _PubTallyState extends State<PubTally> {
       margin: const EdgeInsets.symmetric(vertical: 3),
       padding: const EdgeInsets.fromLTRB(10, 6, 8, 6),
       decoration: BoxDecoration(
-        color: const Color(0xFF1A1721),
-        border: Border.all(color: const Color(0xFF302A38)),
+        color: light ? colors.cardBackground : const Color(0xFF1A1721),
+        border: Border.all(
+          color: light ? colors.border : const Color(0xFF302A38),
+        ),
         borderRadius: BorderRadius.circular(16),
       ),
       child: Opacity(
@@ -503,8 +561,10 @@ class _PubTallyState extends State<PubTally> {
                           item.player.name,
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
-                          style: const TextStyle(
-                            color: Color(0xFFF7F2FA),
+                          style: TextStyle(
+                            color: light
+                                ? colors.textPrimary
+                                : const Color(0xFFF7F2FA),
                             fontSize: 16,
                             fontWeight: FontWeight.w800,
                           ),
@@ -554,7 +614,7 @@ class _PubTallyState extends State<PubTally> {
                         ? 'zatím nic'
                         : '$pieces ks · ${litersLabel(litersFor(counts))} l',
                     maxLines: 1,
-                    style: const TextStyle(color: muted, fontSize: 11),
+                    style: TextStyle(color: muted, fontSize: 11),
                   ),
                 ],
               ),
@@ -580,6 +640,10 @@ class _PubTallyState extends State<PubTally> {
     bool hasLeft,
   ) {
     final active = count > 0;
+    final light = Theme.of(context).brightness == Brightness.light;
+    final colors =
+        Theme.of(context).extension<AppColors>() ??
+        (light ? AppColors.light : AppColors.dark);
     final accent = styledDrinkColor(type);
     final enabled = !hasLeft && (correcting ? active : true);
     return Semantics(
@@ -595,19 +659,41 @@ class _PubTallyState extends State<PubTally> {
         child: Container(
           height: 52,
           decoration: BoxDecoration(
-            color: active ? accent.withAlpha(24) : const Color(0xFF18151E),
+            color: active
+                ? accent.withAlpha(light ? 20 : 24)
+                : (light
+                      ? colors.backgroundSecondary
+                      : const Color(0xFF18151E)),
             border: active ? Border.all(color: accent.withAlpha(100)) : null,
             borderRadius: BorderRadius.circular(14),
           ),
           child: CustomPaint(
             foregroundPainter: active
                 ? null
-                : const _DashedTileBorderPainter(Color(0xFF373140)),
+                : _DashedTileBorderPainter(
+                    light ? colors.border : const Color(0xFF373140),
+                  ),
             child: Stack(
               clipBehavior: Clip.none,
               alignment: Alignment.center,
               children: [
-                PubDrinkArt(type: type, active: active),
+                if (correcting && active)
+                  AnimatedBuilder(
+                    animation: _deleteWiggle,
+                    builder: (context, child) => Transform.rotate(
+                      angle:
+                          math.sin(
+                            _deleteWiggle.value * math.pi * 2 +
+                                index * 0.5 +
+                                type.index * 0.9,
+                          ) *
+                          0.065,
+                      child: child,
+                    ),
+                    child: PubDrinkArt(type: type, active: active),
+                  )
+                else
+                  PubDrinkArt(type: type, active: active),
                 if (correcting && active && !hasLeft)
                   Positioned(
                     top: -4,
@@ -622,12 +708,14 @@ class _PubTallyState extends State<PubTally> {
                         color: const Color(0xFFE74778),
                         shape: BoxShape.circle,
                         border: Border.all(
-                          color: const Color(0xFF1A1721),
+                          color: light
+                              ? colors.cardBackground
+                              : const Color(0xFF1A1721),
                           width: 2,
                         ),
                       ),
                       child: const Icon(
-                        Icons.remove_rounded,
+                        Icons.close,
                         size: 13,
                         color: Colors.white,
                       ),
@@ -649,8 +737,8 @@ class _PubTallyState extends State<PubTally> {
                       ),
                       child: Text(
                         '×$count',
-                        style: const TextStyle(
-                          color: Color(0xFF100C12),
+                        style: TextStyle(
+                          color: light ? Colors.white : const Color(0xFF100C12),
                           fontSize: 11,
                           fontWeight: FontWeight.w900,
                         ),

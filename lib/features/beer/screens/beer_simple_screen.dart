@@ -83,6 +83,11 @@ class _BeerSimpleScreenState extends ConsumerState<BeerSimpleScreen>
     final sc = ref.read(screenVariablesNotifierProvider);
     final state = ref.watch(beerNotifierProvider);
     final drawMode = ref.watch(beerViewPreferenceProvider);
+    final active = ref.watch(
+      screenNotifierProvider.select(
+        (screen) => screen.currentScreenId == BeerSimpleScreen.id,
+      ),
+    );
     final notifier = ref.read(beerNotifierProvider.notifier);
 
     if (!_initDone) {
@@ -209,6 +214,7 @@ class _BeerSimpleScreenState extends ConsumerState<BeerSimpleScreen>
                           matchPlayerIds:
                               state.selectedMatch?.playerIdList ?? const [],
                           myPlayerId: sc.playerId,
+                          active: active,
                           attendance: state.pubAttendance,
                           onSaveAttendance: notifier.savePubAttendance,
                           onAdd: (i, beer) => notifier.addNumber(i, beer, null),

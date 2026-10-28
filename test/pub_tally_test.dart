@@ -22,6 +22,92 @@ void main() {
     active: true,
   );
 
+  testWidgets('later opens drinks only until the next pub visit', (
+    tester,
+  ) async {
+    var saves = 0;
+    Widget screen(bool active) => MaterialApp(
+      home: Scaffold(
+        body: PubTally(
+          matchId: 10,
+          players: [
+            BeerNoMatchWithPlayer(
+              player: player,
+              beerNumber: 0,
+              liquorNumber: 0,
+            ),
+          ],
+          matchPlayerIds: const [1],
+          myPlayerId: 1,
+          active: active,
+          attendance: null,
+          onAdd: (_, __) {},
+          onRemove: (_, __) {},
+          onSaveAttendance: (_, __) async {
+            saves++;
+            throw UnimplementedError();
+          },
+        ),
+      ),
+    );
+
+    await tester.pumpWidget(screen(true));
+    expect(find.text('Kdo jde do hospody?'), findsOneWidget);
+    await tester.tap(find.byKey(const ValueKey('pub-choose-later')));
+    await tester.pump();
+    expect(find.byKey(const ValueKey('styled-1-beer')), findsOneWidget);
+    expect(saves, 0);
+
+    await tester.pumpWidget(screen(false));
+    await tester.pumpWidget(screen(true));
+    expect(find.text('Kdo jde do hospody?'), findsOneWidget);
+  });
+
+  testWidgets('delete mode disables and exits when drinks reach zero', (
+    tester,
+  ) async {
+    Widget screen(int beers) => MaterialApp(
+      home: Scaffold(
+        body: PubTally(
+          matchId: 10,
+          players: [
+            BeerNoMatchWithPlayer(
+              player: player,
+              beerNumber: beers,
+              liquorNumber: 0,
+            ),
+          ],
+          matchPlayerIds: const [1],
+          myPlayerId: 1,
+          attendance: const PubAttendance(
+            matchId: 10,
+            configured: true,
+            guestIds: {1},
+            leftIds: {},
+          ),
+          onAdd: (_, __) {},
+          onRemove: (_, __) {},
+          onSaveAttendance: (_, __) async => throw UnimplementedError(),
+        ),
+      ),
+    );
+
+    await tester.pumpWidget(screen(1));
+    final toggle = find.byKey(const ValueKey('pub-mode-toggle'));
+    await tester.tap(toggle);
+    await tester.pump();
+    expect(tester.widget<Switch>(toggle).value, isTrue);
+
+    await tester.pumpWidget(screen(0));
+    await tester.pump();
+    expect(tester.widget<Switch>(toggle).value, isFalse);
+    expect(tester.widget<Switch>(toggle).onChanged, isNull);
+
+    await tester.pumpWidget(screen(1));
+    expect(tester.widget<Switch>(toggle).value, isFalse);
+    expect(tester.widget<Switch>(toggle).onChanged, isNotNull);
+  });
+
   testWidgets('saved attendance opens the tally and tapping a drink adds it', (
     tester,
   ) async {
@@ -257,9 +343,23 @@ void main() {
 
       await tester.tap(find.byKey(const ValueKey('pub-mode-toggle')));
       await tester.pump();
-      expect(find.text('Přidávat'), findsOneWidget);
+      expect(find.text('Mazání'), findsOneWidget);
       expect(find.byKey(const ValueKey('remove-badge-1-beer')), findsOneWidget);
+      expect(
+        find.descendant(
+          of: find.byKey(const ValueKey('remove-badge-1-beer')),
+          matching: find.byIcon(Icons.close),
+        ),
+        findsOneWidget,
+      );
       expect(find.byKey(const ValueKey('remove-badge-1-shot')), findsNothing);
+      expect(
+        find.descendant(
+          of: find.byKey(const ValueKey('styled-1-beer')),
+          matching: find.byType(AnimatedBuilder),
+        ),
+        findsOneWidget,
+      );
       await tester.tap(shot);
       expect(removedBeers, 0);
       await tester.tap(find.byKey(const ValueKey('styled-1-beer')));

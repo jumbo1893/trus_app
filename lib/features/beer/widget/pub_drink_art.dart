@@ -12,15 +12,20 @@ class PubDrinkArt extends StatelessWidget {
   @override
   Widget build(BuildContext context) => CustomPaint(
     size: const Size(38, 40),
-    painter: _PubDrinkPainter(type, active),
+    painter: _PubDrinkPainter(
+      type,
+      active,
+      Theme.of(context).brightness == Brightness.light,
+    ),
   );
 }
 
 class _PubDrinkPainter extends CustomPainter {
-  const _PubDrinkPainter(this.type, this.active);
+  const _PubDrinkPainter(this.type, this.active, this.light);
 
   final PubDrinkType type;
   final bool active;
+  final bool light;
 
   static const _outline = Color(0xFFFFF4DD);
   static const _muted = Color(0xFF484351);
@@ -30,7 +35,9 @@ class _PubDrinkPainter extends CustomPainter {
     canvas.save();
     canvas.scale(size.width / 40, size.height / 40);
     final line = Paint()
-      ..color = active ? _outline : _muted
+      ..color = light
+          ? (active ? const Color(0xFF3B3024) : const Color(0xFF777D87))
+          : (active ? _outline : _muted)
       ..style = PaintingStyle.stroke
       ..strokeWidth = 2.2
       ..strokeJoin = StrokeJoin.round
@@ -68,7 +75,7 @@ class _PubDrinkPainter extends CustomPainter {
       ..lineTo(29, 30);
     canvas.drawPath(handle, line);
     if (active) {
-      final foam = Paint()..color = _outline;
+      final foam = Paint()..color = light ? const Color(0xFF3B3024) : _outline;
       canvas.drawOval(const Rect.fromLTWH(6, 8, 11, 7), foam);
       canvas.drawOval(const Rect.fromLTWH(14, 6, 10, 8), foam);
       canvas.drawOval(const Rect.fromLTWH(21, 9, 9, 6), foam);
@@ -89,7 +96,8 @@ class _PubDrinkPainter extends CustomPainter {
       canvas.clipPath(glass);
       canvas.drawRect(
         const Rect.fromLTWH(11, 23, 18, 11),
-        Paint()..color = const Color(0xFF7ADCCC),
+        Paint()
+          ..color = light ? const Color(0xFF48B8AC) : const Color(0xFF7ADCCC),
       );
       canvas.restore();
     }
@@ -100,5 +108,7 @@ class _PubDrinkPainter extends CustomPainter {
 
   @override
   bool shouldRepaint(covariant _PubDrinkPainter oldDelegate) =>
-      oldDelegate.type != type || oldDelegate.active != active;
+      oldDelegate.type != type ||
+      oldDelegate.active != active ||
+      oldDelegate.light != light;
 }

@@ -85,14 +85,14 @@ class _GoalScreenState extends ConsumerState<GoalScreen>
     );
   }
 
-  Widget _deleteSwitch() => Row(
+  Widget _deleteSwitch(bool canDelete) => Row(
     mainAxisSize: MainAxisSize.min,
     children: [
       const Text('Mazání', style: TextStyle(fontWeight: FontWeight.w600)),
       Switch(
         key: const ValueKey('goal-mode-toggle'),
-        value: _correcting,
-        onChanged: _setCorrection,
+        value: _correcting && canDelete,
+        onChanged: canDelete ? _setCorrection : null,
       ),
     ],
   );
@@ -114,6 +114,23 @@ class _GoalScreenState extends ConsumerState<GoalScreen>
     final yellowCards = state.setups.fold<int>(0, (n, p) => n + p.yellowCards);
     final redCards = state.setups.fold<int>(0, (n, p) => n + p.redCards);
     final keepers = state.setups.where((p) => p.goalkeepingMinutes > 0).length;
+    final canDelete = goals + assists + yellowCards + redCards + keepers > 0;
+    if (_correcting && !canDelete) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted || !_correcting) return;
+        final current = ref.read(goalNotifierProvider).setups;
+        if (current.any(
+          (p) =>
+              p.goalNumber > 0 ||
+              p.assistNumber > 0 ||
+              p.yellowCards > 0 ||
+              p.redCards > 0 ||
+              p.goalkeepingMinutes > 0,
+        ))
+          return;
+        _setCorrection(false);
+      });
+    }
     final dark = Theme.of(context).brightness == Brightness.dark;
     final colors = context.appColors;
     final goalColor = dark ? const Color(0xFF43C87A) : const Color(0xFF177245);
@@ -150,7 +167,7 @@ class _GoalScreenState extends ConsumerState<GoalScreen>
             if (sc.matchModel.id == matchId)
               MatchContextHeader(
                 match: sc.matchModel,
-                trailing: _deleteSwitch(),
+                trailing: _deleteSwitch(canDelete),
               ),
             Padding(
               padding: const EdgeInsets.fromLTRB(16, 10, 16, 8),
@@ -166,7 +183,7 @@ class _GoalScreenState extends ConsumerState<GoalScreen>
                       ),
                     ),
                   ),
-                  if (sc.matchModel.id != matchId) _deleteSwitch(),
+                  if (sc.matchModel.id != matchId) _deleteSwitch(canDelete),
                   if (state.saving)
                     const SizedBox(
                       width: 18,

@@ -450,6 +450,20 @@ class _FineTypeGridState extends ConsumerState<FineTypeGrid>
     final recipients = allPlayers
         .where((player) => _count(state, player.id!, fine.id!) > 0)
         .toList();
+    final canDelete = recipients.isNotEmpty;
+    if (expanded && _deleteMode && !canDelete) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted || !_deleteMode || _expandedFineId != fine.id) return;
+        final current = ref.read(fineMatchNotifierProvider);
+        if (current.selectedMatch?.id != state.selectedMatch?.id) return;
+        if (allPlayers.any(
+          (player) => _count(current, player.id!, fine.id!) > 0,
+        )) {
+          return;
+        }
+        _setDeleteMode(false);
+      });
+    }
     final dark = Theme.of(context).brightness == Brightness.dark;
     final totalAmount = allPlayers.fold<int>(
       0,
@@ -569,8 +583,10 @@ class _FineTypeGridState extends ConsumerState<FineTypeGrid>
                       ),
                       const Text('Mazání'),
                       Switch.adaptive(
-                        value: _deleteMode,
-                        onChanged: _saving ? null : _setDeleteMode,
+                        value: _deleteMode && canDelete,
+                        onChanged: _saving || !canDelete
+                            ? null
+                            : _setDeleteMode,
                       ),
                     ],
                   ),
