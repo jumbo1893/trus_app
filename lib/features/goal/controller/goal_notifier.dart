@@ -33,8 +33,10 @@ class GoalNotifier extends AppNotifier<GoalState> implements BackAction {
     for (final g in state.setups) ...{
       '${g.player.id}:g': g.goalNumber,
       '${g.player.id}:a': g.assistNumber,
+      '${g.player.id}:y': g.yellowCards,
+      '${g.player.id}:r': g.redCards,
+      '${g.player.id}:m': g.goalkeepingMinutes,
     },
-    'rewrite': state.rewriteToFines ? 1 : 0,
   };
   Map<String, int> get draftBaseline => {..._baseline};
   bool get hasChanges => !mapEquals(draftValues, _baseline);
@@ -42,11 +44,11 @@ class GoalNotifier extends AppNotifier<GoalState> implements BackAction {
     for (final g in state.setups) {
       g.goalNumber = values['${g.player.id}:g'] ?? g.goalNumber;
       g.assistNumber = values['${g.player.id}:a'] ?? g.assistNumber;
+      g.yellowCards = values['${g.player.id}:y'] ?? g.yellowCards;
+      g.redCards = values['${g.player.id}:r'] ?? g.redCards;
+      g.goalkeepingMinutes = values['${g.player.id}:m'] ?? g.goalkeepingMinutes;
     }
-    state = state.copyWith(
-      setups: [...state.setups],
-      rewriteToFines: (values['rewrite'] ?? 1) != 0,
-    );
+    state = state.copyWith(setups: [...state.setups]);
     _scheduleSave();
   }
 
@@ -68,11 +70,12 @@ class GoalNotifier extends AppNotifier<GoalState> implements BackAction {
       for (final g in setups) ...{
         '${g.player.id}:g': g.goalNumber,
         '${g.player.id}:a': g.assistNumber,
+        '${g.player.id}:y': g.yellowCards,
+        '${g.player.id}:r': g.redCards,
+        '${g.player.id}:m': g.goalkeepingMinutes,
       },
-      'rewrite': 1,
     };
     state = state.copyWith(
-      rewriteToFines: true,
       setups: setups,
       screen: GoalScreens.addGoals,
       matchId: matchId,
@@ -92,15 +95,6 @@ class GoalNotifier extends AppNotifier<GoalState> implements BackAction {
   }
 
   // ==========================================================
-  // SWITCH
-  // ==========================================================
-
-  void setRewriteToFines(bool value) {
-    state = state.copyWith(rewriteToFines: value);
-    _scheduleSave();
-  }
-
-  // ==========================================================
   // LISTVIEW / ADD BUILDER
   // ==========================================================
 
@@ -115,6 +109,45 @@ class GoalNotifier extends AppNotifier<GoalState> implements BackAction {
     final list = [...state.setups];
     list[index].removeNumber(goal);
     state = state.copyWith(setups: list);
+    _scheduleSave();
+  }
+
+  void changeCard(int index, {required bool yellow, required bool remove}) {
+    final item = state.setups[index];
+    if (yellow) {
+      item.yellowCards = (item.yellowCards + (remove ? -1 : 1)).clamp(0, 99);
+    } else {
+      item.redCards = (item.redCards + (remove ? -1 : 1)).clamp(0, 99);
+    }
+    state = state.copyWith(setups: [...state.setups]);
+    _scheduleSave();
+  }
+
+  void toggleGoalkeeper(int index) {
+    final selected = state.setups
+        .where((p) => p.goalkeepingMinutes > 0)
+        .toList();
+    final player = state.setups[index];
+    if (player.goalkeepingMinutes > 0) {
+      player.goalkeepingMinutes = 0;
+      selected.remove(player);
+    } else {
+      selected.add(player);
+    }
+    if (selected.isNotEmpty) {
+      final each = 60 ~/ selected.length;
+      for (final p in selected) {
+        p.goalkeepingMinutes = each;
+      }
+      selected.last.goalkeepingMinutes += 60 - each * selected.length;
+    }
+    state = state.copyWith(setups: [...state.setups]);
+    _scheduleSave();
+  }
+
+  void setGoalkeepingMinutes(int index, int minutes) {
+    state.setups[index].goalkeepingMinutes = minutes.clamp(0, 999);
+    state = state.copyWith(setups: [...state.setups]);
     _scheduleSave();
   }
 
@@ -153,7 +186,7 @@ class GoalNotifier extends AppNotifier<GoalState> implements BackAction {
       final payload = GoalListMultiAdd(
         matchId: state.matchId,
         goalList: _buildGoalModels(),
-        rewriteToFines: state.rewriteToFines,
+        rewriteToFines: true,
       );
       state = state.copyWith(saving: true, saveFailed: false);
       try {
@@ -183,6 +216,9 @@ class GoalNotifier extends AppNotifier<GoalState> implements BackAction {
             playerId: s.player.getId(),
             goalNumber: s.goalNumber,
             assistNumber: s.assistNumber,
+            yellowCards: s.yellowCards,
+            redCards: s.redCards,
+            goalkeepingMinutes: s.goalkeepingMinutes,
           ),
         )
         .toList();

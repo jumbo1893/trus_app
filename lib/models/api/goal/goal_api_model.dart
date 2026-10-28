@@ -5,24 +5,32 @@ class GoalApiModel implements JsonAndHttpConverter {
   int? id;
   final int goalNumber;
   final int assistNumber;
+  final int yellowCards;
+  final int redCards;
+  final int goalkeepingMinutes;
   final int playerId;
   final int matchId;
 
   GoalApiModel({
     required this.goalNumber,
     required this.assistNumber,
+    this.yellowCards = 0,
+    this.redCards = 0,
+    this.goalkeepingMinutes = 0,
     required this.playerId,
     required this.matchId,
     this.id,
   });
 
   GoalApiModel.dummy()
-      : id = 0,
-        goalNumber = 0,
-        assistNumber = 0,
-        playerId = 0,
-        matchId = 0;
-
+    : id = 0,
+      goalNumber = 0,
+      assistNumber = 0,
+      yellowCards = 0,
+      redCards = 0,
+      goalkeepingMinutes = 0,
+      playerId = 0,
+      matchId = 0;
 
   @override
   Map<String, dynamic> toJson() {
@@ -30,6 +38,9 @@ class GoalApiModel implements JsonAndHttpConverter {
       "id": id,
       "goalNumber": goalNumber,
       "assistNumber": assistNumber,
+      "yellowCards": yellowCards,
+      "redCards": redCards,
+      "goalkeepingMinutes": goalkeepingMinutes,
       "playerId": playerId,
       "matchId": matchId,
     };
@@ -41,6 +52,9 @@ class GoalApiModel implements JsonAndHttpConverter {
       goalNumber: json["goalNumber"] ?? 0,
       id: json["id"] ?? 0,
       assistNumber: json["assistNumber"] ?? 0,
+      yellowCards: json["yellowCards"] ?? 0,
+      redCards: json["redCards"] ?? 0,
+      goalkeepingMinutes: json["goalkeepingMinutes"] ?? 0,
       playerId: json["playerId"] ?? 0,
       matchId: json["matchId"] ?? 0,
     );

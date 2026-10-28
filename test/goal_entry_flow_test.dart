@@ -10,11 +10,24 @@ import 'package:trus_app/models/api/goal/goal_setup.dart';
 import 'package:trus_app/models/api/player/player_api_model.dart';
 
 class _Api implements GoalApiService {
+  _Api({this.players = 1});
+  final int players;
   bool fail = false;
   int saves = 0;
   @override
   Future<List<GoalSetup>> setupGoal(int id) async => [
-    GoalSetup(goalNumber: 0, assistNumber: 0, player: PlayerApiModel.dummy()),
+    for (var i = 0; i < players; i++)
+      GoalSetup(
+        goalNumber: 0,
+        assistNumber: 0,
+        player: PlayerApiModel(
+          id: i + 1,
+          name: 'Hráč $i',
+          birthday: DateTime(2000),
+          fan: false,
+          active: true,
+        ),
+      ),
   ];
   @override
   Future<GoalMultiAddResponse> addMultipleGoals(
@@ -74,4 +87,39 @@ void main() {
       },
     );
   }
+
+  test(
+    'removing a goalkeeper clears his minutes and redistributes 60',
+    () async {
+      SharedPreferences.setMockInitialValues({
+        'userEmail': 'test@example.test',
+      });
+      final container = ProviderContainer(
+        overrides: [goalApiServiceProvider.overrideWithValue(_Api(players: 3))],
+      );
+      addTearDown(container.dispose);
+      final subscription = container.listen(goalNotifierProvider, (_, __) {});
+      addTearDown(subscription.close);
+      final notifier = container.read(goalNotifierProvider.notifier);
+      await notifier.setupMatch(5);
+      notifier.toggleGoalkeeper(0);
+      notifier.toggleGoalkeeper(1);
+      notifier.toggleGoalkeeper(2);
+      expect(
+        container
+            .read(goalNotifierProvider)
+            .setups
+            .map((p) => p.goalkeepingMinutes),
+        [20, 20, 20],
+      );
+      notifier.toggleGoalkeeper(1);
+      expect(
+        container
+            .read(goalNotifierProvider)
+            .setups
+            .map((p) => p.goalkeepingMinutes),
+        [30, 0, 30],
+      );
+    },
+  );
 }

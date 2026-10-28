@@ -6,11 +6,13 @@ class MatchContextHeader extends StatelessWidget {
   final MatchApiModel? match;
   final bool hasChanges;
   final VoidCallback? onChange;
+  final Widget? trailing;
   const MatchContextHeader({
     super.key,
     required this.match,
     this.hasChanges = false,
     this.onChange,
+    this.trailing,
   });
   @override
   Widget build(BuildContext context) => Material(
@@ -28,9 +30,11 @@ class MatchContextHeader extends StatelessWidget {
           if (hasChanges) 'Neuložené změny',
         ].join(' · '),
       ),
-      trailing: onChange == null
-          ? null
-          : TextButton(onPressed: onChange, child: const Text('Změnit')),
+      trailing:
+          trailing ??
+          (onChange == null
+              ? null
+              : TextButton(onPressed: onChange, child: const Text('Změnit'))),
     ),
   );
 }

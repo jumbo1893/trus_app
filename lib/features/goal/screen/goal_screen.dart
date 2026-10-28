@@ -1,10 +1,16 @@
 import 'package:flutter/material.dart';
+import 'dart:math' as math;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:trus_app/common/widgets/entry_draft_scope.dart';
 import 'package:trus_app/common/widgets/match_context_header.dart';
 import 'package:trus_app/common/widgets/screen/custom_consumer_stateful_widget.dart';
 import 'package:trus_app/features/goal/controller/goal_notifier.dart';
 import 'package:trus_app/features/main/controller/screen_variables_notifier.dart';
+import 'package:trus_app/features/main/controller/screen_notifier.dart';
+import 'package:trus_app/features/beer/screens/beer_simple_screen.dart';
+import 'package:trus_app/features/fine/match/screens/fine_match_screen.dart';
+import 'package:trus_app/features/home/screens/home_screen.dart';
+import 'package:trus_app/theme/app_colors.dart';
 
 class GoalScreen extends CustomConsumerStatefulWidget {
   static const String id = 'goal-screen';
@@ -15,9 +21,81 @@ class GoalScreen extends CustomConsumerStatefulWidget {
   ConsumerState<GoalScreen> createState() => _GoalScreenState();
 }
 
-class _GoalScreenState extends ConsumerState<GoalScreen> {
+class _GoalScreenState extends ConsumerState<GoalScreen>
+    with SingleTickerProviderStateMixin {
   bool _initialized = false;
   bool _correcting = false;
+  late final AnimationController _deleteWiggle;
+
+  @override
+  void initState() {
+    super.initState();
+    _deleteWiggle = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 230),
+    );
+  }
+
+  @override
+  void dispose() {
+    _deleteWiggle.dispose();
+    super.dispose();
+  }
+
+  void _setCorrection(bool enabled) {
+    setState(() => _correcting = enabled);
+    if (_correcting) {
+      _deleteWiggle.repeat(reverse: true);
+    } else {
+      _deleteWiggle.stop();
+      _deleteWiggle.reset();
+    }
+  }
+
+  Widget _wiggle(Widget child, int index, bool selected, {int icon = 0}) {
+    if (!_correcting || !selected) return child;
+    final marked = Stack(
+      clipBehavior: Clip.none,
+      children: [
+        child,
+        const Positioned(
+          top: -3,
+          right: -3,
+          child: IgnorePointer(
+            child: CircleAvatar(
+              radius: 7,
+              backgroundColor: Color(0xFFE74778),
+              child: Icon(Icons.close, size: 10, color: Colors.white),
+            ),
+          ),
+        ),
+      ],
+    );
+    return AnimatedBuilder(
+      animation: _deleteWiggle,
+      builder: (context, child) => Transform.rotate(
+        angle:
+            math.sin(
+              _deleteWiggle.value * math.pi * 2 + icon * 0.9 + index * 0.5,
+            ) *
+            0.065,
+        child: child,
+      ),
+      child: marked,
+    );
+  }
+
+  Widget _deleteSwitch() => Row(
+    mainAxisSize: MainAxisSize.min,
+    children: [
+      const Text('Mazání', style: TextStyle(fontWeight: FontWeight.w600)),
+      Switch(
+        key: const ValueKey('goal-mode-toggle'),
+        value: _correcting,
+        onChanged: _setCorrection,
+      ),
+    ],
+  );
 
   @override
   Widget build(BuildContext context) {
@@ -33,6 +111,18 @@ class _GoalScreenState extends ConsumerState<GoalScreen> {
     }
     final goals = state.setups.fold<int>(0, (n, p) => n + p.goalNumber);
     final assists = state.setups.fold<int>(0, (n, p) => n + p.assistNumber);
+    final yellowCards = state.setups.fold<int>(0, (n, p) => n + p.yellowCards);
+    final redCards = state.setups.fold<int>(0, (n, p) => n + p.redCards);
+    final keepers = state.setups.where((p) => p.goalkeepingMinutes > 0).length;
+    final dark = Theme.of(context).brightness == Brightness.dark;
+    final colors = context.appColors;
+    final goalColor = dark ? const Color(0xFF43C87A) : const Color(0xFF177245);
+    final assistColor = dark
+        ? const Color(0xFF67A9FF)
+        : const Color(0xFF1E5EB4);
+    final yellowColor = dark ? Colors.amber : const Color(0xFF9B6700);
+    final redColor = dark ? Colors.redAccent : const Color(0xFFB42332);
+    final keeperColor = dark ? Colors.white : const Color(0xFF374151);
     return EntryDraftScope(
       key: ValueKey(notifier.draftId),
       screenId: GoalScreen.id,
@@ -44,33 +134,39 @@ class _GoalScreenState extends ConsumerState<GoalScreen> {
         for (final p in state.setups) ...{
           '${p.player.id}:g': '${p.player.name} · góly',
           '${p.player.id}:a': '${p.player.name} · asistence',
+          '${p.player.id}:y': '${p.player.name} · žluté karty',
+          '${p.player.id}:r': '${p.player.name} · červené karty',
+          '${p.player.id}:m': '${p.player.name} · minuty v bráně',
         },
-        'rewrite': 'Přepočítat pokuty',
       },
       hasChanges: () => notifier.hasChanges,
       restore: notifier.restoreDraft,
       save: () => notifier.changeGoals(navigate: false),
       showStatus: false,
       child: ColoredBox(
-        color: const Color(0xFF0E0B12),
+        color: dark ? const Color(0xFF0E0B12) : colors.backgroundPrimary,
         child: Column(
           children: [
             if (sc.matchModel.id == matchId)
-              MatchContextHeader(match: sc.matchModel),
+              MatchContextHeader(
+                match: sc.matchModel,
+                trailing: _deleteSwitch(),
+              ),
             Padding(
               padding: const EdgeInsets.fromLTRB(16, 10, 16, 8),
               child: Row(
                 children: [
-                  const Expanded(
+                  Expanded(
                     child: Text(
-                      'Účet zápasu',
+                      'Statistiky zápasu',
                       style: TextStyle(
-                        color: Color(0xFFFFF7E9),
+                        color: colors.textPrimary,
                         fontSize: 16,
                         fontWeight: FontWeight.w700,
                       ),
                     ),
                   ),
+                  if (sc.matchModel.id != matchId) _deleteSwitch(),
                   if (state.saving)
                     const SizedBox(
                       width: 18,
@@ -83,8 +179,8 @@ class _GoalScreenState extends ConsumerState<GoalScreen> {
                       style: TextStyle(
                         fontSize: 11,
                         color: state.saveFailed
-                            ? Colors.redAccent
-                            : const Color(0xFFA29BB4),
+                            ? redColor
+                            : colors.textSecondary,
                       ),
                     ),
                 ],
@@ -100,75 +196,133 @@ class _GoalScreenState extends ConsumerState<GoalScreen> {
                         final player = state.setups[index];
                         return Container(
                           key: ValueKey('goal-player-${player.player.id}'),
-                          margin: const EdgeInsets.symmetric(vertical: 3),
-                          padding: const EdgeInsets.fromLTRB(10, 6, 8, 6),
+                          margin: const EdgeInsets.symmetric(vertical: 2),
+                          padding: const EdgeInsets.fromLTRB(8, 4, 8, 4),
                           decoration: BoxDecoration(
-                            color: const Color(0xFF1A1721),
-                            border: Border.all(color: const Color(0xFF302A38)),
+                            color: dark
+                                ? const Color(0xFF1A1721)
+                                : colors.cardBackground,
+                            border: Border.all(
+                              color: dark
+                                  ? const Color(0xFF302A38)
+                                  : colors.border,
+                            ),
                             borderRadius: BorderRadius.circular(16),
                           ),
-                          child: Row(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              SizedBox(
-                                width: 95,
-                                child: Text(
-                                  player.player.name,
-                                  maxLines: 2,
-                                  overflow: TextOverflow.ellipsis,
-                                  style: const TextStyle(
-                                    color: Color(0xFFF7F2FA),
-                                    fontSize: 15,
-                                    fontWeight: FontWeight.w800,
-                                  ),
+                              Text(
+                                player.player.name,
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: TextStyle(
+                                  color: colors.textPrimary,
+                                  fontSize: 15,
+                                  fontWeight: FontWeight.w800,
                                 ),
                               ),
-                              const SizedBox(width: 5),
-                              _scoreTile(
-                                index,
-                                true,
-                                player.goalNumber,
-                                const Color(0xFFFFB529),
+                              const SizedBox(height: 3),
+                              Row(
+                                children: [
+                                  _scoreTile(
+                                    index,
+                                    true,
+                                    player.goalNumber,
+                                    goalColor,
+                                  ),
+                                  const SizedBox(width: 4),
+                                  _scoreTile(
+                                    index,
+                                    false,
+                                    player.assistNumber,
+                                    assistColor,
+                                  ),
+                                  const SizedBox(width: 4),
+                                  _cardTile(
+                                    index,
+                                    true,
+                                    player.yellowCards,
+                                    yellowColor,
+                                  ),
+                                  const SizedBox(width: 4),
+                                  _cardTile(
+                                    index,
+                                    false,
+                                    player.redCards,
+                                    redColor,
+                                  ),
+                                  const SizedBox(width: 4),
+                                  Expanded(
+                                    child: _wiggle(
+                                      Tooltip(
+                                        message: 'Brankář',
+                                        child: InkWell(
+                                          key: ValueKey(
+                                            'goal-${player.player.id}-keeper',
+                                          ),
+                                          borderRadius: BorderRadius.circular(
+                                            10,
+                                          ),
+                                          onTap:
+                                              _correcting &&
+                                                  player.goalkeepingMinutes == 0
+                                              ? null
+                                              : () => notifier.toggleGoalkeeper(
+                                                  index,
+                                                ),
+                                          child: Container(
+                                            height: 42,
+                                            width: double.infinity,
+                                            alignment: Alignment.center,
+                                            decoration: BoxDecoration(
+                                              color:
+                                                  player.goalkeepingMinutes > 0
+                                                  ? keeperColor.withAlpha(24)
+                                                  : dark
+                                                  ? const Color(0xFF18151E)
+                                                  : colors.backgroundSecondary,
+                                              borderRadius:
+                                                  BorderRadius.circular(10),
+                                            ),
+                                            child: Text(
+                                              'GK',
+                                              style: TextStyle(
+                                                color: keeperColor,
+                                                fontSize: 14,
+                                                fontWeight: FontWeight.w900,
+                                              ),
+                                            ),
+                                          ),
+                                        ),
+                                      ),
+                                      index,
+                                      player.goalkeepingMinutes > 0,
+                                      icon: 4,
+                                    ),
+                                  ),
+                                ],
                               ),
-                              const SizedBox(width: 5),
-                              _scoreTile(
-                                index,
-                                false,
-                                player.assistNumber,
-                                const Color(0xFF7ADCCC),
-                              ),
+                              if (player.goalkeepingMinutes > 0)
+                                Align(
+                                  alignment: Alignment.centerRight,
+                                  child: SizedBox(
+                                    width: 95,
+                                    child: _MinutesField(
+                                      key: ValueKey(
+                                        'keeper-minutes-${player.player.id}',
+                                      ),
+                                      minutes: player.goalkeepingMinutes,
+                                      onChanged: (value) => notifier
+                                          .setGoalkeepingMinutes(index, value),
+                                    ),
+                                  ),
+                                ),
                             ],
                           ),
                         );
                       },
                     ),
-            ),
-            SwitchListTile(
-              dense: true,
-              title: const Text(
-                'Přepočítat pokuty za góly a hattricky',
-                style: TextStyle(color: Color(0xFFF7F2FA), fontSize: 13),
-              ),
-              secondary: IconButton(
-                tooltip: 'Jak se přepočítají pokuty',
-                icon: const Icon(Icons.info_outline, color: Color(0xFFA29BB4)),
-                onPressed: () => showDialog<void>(
-                  context: context,
-                  builder: (context) => AlertDialog(
-                    title: const Text('Přepočet pokut'),
-                    content: const Text(
-                      'Stávající pokuty za góly a hattricky v tomto zápase se nahradí podle zadaných gólů. Za každý gól vznikne pokuta střelci. Za každé tři góly jednoho střelce vznikne pokuta za hattrick ostatním aktivním hráčům týmu. Asistence ani ostatní druhy pokut se tím nemění.',
-                    ),
-                    actions: [
-                      TextButton(
-                        onPressed: () => Navigator.pop(context),
-                        child: const Text('Rozumím'),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-              value: state.rewriteToFines,
-              onChanged: notifier.setRewriteToFines,
             ),
             if (state.saveFailed)
               TextButton.icon(
@@ -180,50 +334,66 @@ class _GoalScreenState extends ConsumerState<GoalScreen> {
               ),
             Container(
               padding: const EdgeInsets.fromLTRB(12, 5, 12, 8),
-              decoration: const BoxDecoration(
-                border: Border(top: BorderSide(color: Color(0xFF2D2834))),
+              decoration: BoxDecoration(
+                border: Border(
+                  top: BorderSide(
+                    color: dark ? const Color(0xFF2D2834) : colors.border,
+                  ),
+                ),
               ),
-              child: Row(
+              child: Column(
                 children: [
-                  Expanded(
-                    child: _total(goals, 'GÓLY', const Color(0xFFFFB529)),
-                  ),
-                  Expanded(
-                    child: _total(
-                      assists,
-                      'ASISTENCE',
-                      const Color(0xFF7ADCCC),
-                    ),
-                  ),
-                  InkWell(
-                    key: const ValueKey('goal-mode-toggle'),
-                    onTap: () => setState(() => _correcting = !_correcting),
-                    child: Container(
-                      width: 58,
-                      height: 50,
-                      decoration: BoxDecoration(
-                        color: _correcting
-                            ? const Color(0xFFFFB529)
-                            : const Color(0xFFE74778),
-                        borderRadius: BorderRadius.circular(12),
+                  Row(
+                    children: [
+                      Expanded(child: _total(goals, 'GÓLY', goalColor)),
+                      Expanded(
+                        child: _total(assists, 'ASISTENCE', assistColor),
                       ),
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Icon(
-                            _correcting ? Icons.add : Icons.remove,
-                            size: 18,
-                          ),
-                          Text(
-                            _correcting ? 'Přidávat' : 'Opravit',
-                            style: const TextStyle(
-                              fontSize: 10,
-                              fontWeight: FontWeight.w800,
+                      Expanded(
+                        child: _total(yellowCards, 'ŽLUTÉ', yellowColor),
+                      ),
+                      Expanded(child: _total(redCards, 'ČERVENÉ', redColor)),
+                      Expanded(child: _total(keepers, 'BRANKÁŘI', keeperColor)),
+                    ],
+                  ),
+                  const SizedBox(height: 8),
+                  Row(
+                    children: [
+                      for (final (label, id) in [
+                        ('Do hospody', BeerSimpleScreen.id),
+                        ('K pokutám', FineMatchScreen.id),
+                        ('Přehled', HomeScreen.id),
+                      ])
+                        Expanded(
+                          child: Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 2),
+                            child: SizedBox(
+                              height: 40,
+                              child: FilledButton(
+                                style: FilledButton.styleFrom(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 4,
+                                  ),
+                                  textStyle: const TextStyle(
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.w700,
+                                  ),
+                                ),
+                                onPressed: state.saving
+                                    ? null
+                                    : () => ref
+                                          .read(screenNotifierProvider.notifier)
+                                          .changeByFragmentId(id),
+                                child: Text(
+                                  label,
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                              ),
                             ),
                           ),
-                        ],
-                      ),
-                    ),
+                        ),
+                    ],
                   ),
                 ],
               ),
@@ -246,77 +416,198 @@ class _GoalScreenState extends ConsumerState<GoalScreen> {
       ),
       Text(
         label,
-        style: const TextStyle(color: Color(0xFFA29BB4), fontSize: 9),
+        style: TextStyle(color: context.appColors.textSecondary, fontSize: 9),
       ),
     ],
   );
 
-  Widget _scoreTile(int index, bool goal, int count, Color accent) {
+  Widget _cardTile(int index, bool yellow, int count, Color color) {
     final notifier = ref.read(goalNotifierProvider.notifier);
-    final playerId = ref.read(goalNotifierProvider).setups[index].player.id;
     return Expanded(
-      child: Semantics(
-        button: true,
-        label:
-            '${_correcting ? 'Odebrat' : 'Přidat'} ${goal ? 'gól' : 'asistenci'}, celkem $count',
-        child: InkWell(
-          key: ValueKey('goal-$playerId-${goal ? 'goal' : 'assist'}'),
-          borderRadius: BorderRadius.circular(14),
+      child: _wiggle(
+        InkWell(
+          key: ValueKey(
+            'goal-${ref.read(goalNotifierProvider).setups[index].player.id}-${yellow ? 'yellow' : 'red'}',
+          ),
           onTap: _correcting && count == 0
               ? null
-              : () => _correcting
-                    ? notifier.removeNumber(index, goal)
-                    : notifier.addNumber(index, goal),
+              : () => notifier.changeCard(
+                  index,
+                  yellow: yellow,
+                  remove: _correcting,
+                ),
           child: Container(
-            height: 52,
+            height: 42,
             decoration: BoxDecoration(
-              color: count > 0 ? accent.withAlpha(24) : const Color(0xFF18151E),
-              border: count > 0
-                  ? Border.all(color: accent.withAlpha(100))
-                  : null,
-              borderRadius: BorderRadius.circular(14),
+              color: count > 0
+                  ? color.withAlpha(22)
+                  : Theme.of(context).brightness == Brightness.dark
+                  ? const Color(0xFF18151E)
+                  : context.appColors.backgroundSecondary,
+              borderRadius: BorderRadius.circular(10),
             ),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                _FootballActionIcon(goal: goal, color: accent),
-                const SizedBox(width: 5),
+                Icon(Icons.style, color: color, size: 16),
+                const SizedBox(width: 2),
                 Text(
                   '$count',
-                  style: TextStyle(
-                    color: accent,
-                    fontSize: 19,
-                    fontWeight: FontWeight.w800,
-                  ),
+                  style: TextStyle(color: color, fontWeight: FontWeight.bold),
                 ),
               ],
             ),
           ),
         ),
+        index,
+        count > 0,
+        icon: yellow ? 2 : 3,
+      ),
+    );
+  }
+
+  Widget _scoreTile(int index, bool goal, int count, Color accent) {
+    final notifier = ref.read(goalNotifierProvider.notifier);
+    final playerId = ref.read(goalNotifierProvider).setups[index].player.id;
+    return Expanded(
+      child: _wiggle(
+        Semantics(
+          button: true,
+          label:
+              '${_correcting ? 'Odebrat' : 'Přidat'} ${goal ? 'gól' : 'asistenci'}, celkem $count',
+          child: InkWell(
+            key: ValueKey('goal-$playerId-${goal ? 'goal' : 'assist'}'),
+            borderRadius: BorderRadius.circular(14),
+            onTap: _correcting && count == 0
+                ? null
+                : () => _correcting
+                      ? notifier.removeNumber(index, goal)
+                      : notifier.addNumber(index, goal),
+            child: Container(
+              height: 42,
+              decoration: BoxDecoration(
+                color: count > 0
+                    ? accent.withAlpha(24)
+                    : Theme.of(context).brightness == Brightness.dark
+                    ? const Color(0xFF18151E)
+                    : context.appColors.backgroundSecondary,
+                border: count > 0
+                    ? Border.all(color: accent.withAlpha(100))
+                    : null,
+                borderRadius: BorderRadius.circular(14),
+              ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  SizedBox(
+                    width: 23,
+                    height: 23,
+                    child: FittedBox(
+                      child: _FootballActionIcon(
+                        goal: goal,
+                        color: accent,
+                        background:
+                            Theme.of(context).brightness == Brightness.dark
+                            ? const Color(0xFF18151E)
+                            : context.appColors.backgroundSecondary,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 2),
+                  Text(
+                    '$count',
+                    style: TextStyle(
+                      color: accent,
+                      fontSize: 14,
+                      fontWeight: FontWeight.w800,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+        index,
+        count > 0,
+        icon: goal ? 0 : 1,
       ),
     );
   }
 }
 
+class _MinutesField extends StatefulWidget {
+  const _MinutesField({
+    super.key,
+    required this.minutes,
+    required this.onChanged,
+  });
+  final int minutes;
+  final ValueChanged<int> onChanged;
+
+  @override
+  State<_MinutesField> createState() => _MinutesFieldState();
+}
+
+class _MinutesFieldState extends State<_MinutesField> {
+  late final TextEditingController controller = TextEditingController(
+    text: '${widget.minutes}',
+  );
+
+  @override
+  void didUpdateWidget(covariant _MinutesField oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.minutes != oldWidget.minutes &&
+        int.tryParse(controller.text) != widget.minutes) {
+      controller.text = '${widget.minutes}';
+    }
+  }
+
+  @override
+  void dispose() {
+    controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) => TextField(
+    controller: controller,
+    keyboardType: TextInputType.number,
+    style: TextStyle(color: context.appColors.textPrimary),
+    decoration: const InputDecoration(isDense: true, suffixText: 'min'),
+    onChanged: (value) {
+      final minutes = int.tryParse(value);
+      if (minutes != null) widget.onChanged(minutes);
+    },
+  );
+}
+
 class _FootballActionIcon extends StatelessWidget {
-  const _FootballActionIcon({required this.goal, required this.color});
+  const _FootballActionIcon({
+    required this.goal,
+    required this.color,
+    required this.background,
+  });
 
   final bool goal;
   final Color color;
+  final Color background;
 
   @override
   Widget build(BuildContext context) => SizedBox(
     width: 40,
     height: 32,
-    child: CustomPaint(painter: _FootballActionPainter(goal, color)),
+    child: CustomPaint(
+      painter: _FootballActionPainter(goal, color, background),
+    ),
   );
 }
 
 class _FootballActionPainter extends CustomPainter {
-  const _FootballActionPainter(this.goal, this.color);
+  const _FootballActionPainter(this.goal, this.color, this.background);
 
   final bool goal;
   final Color color;
+  final Color background;
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -398,8 +689,8 @@ class _FootballActionPainter extends CustomPainter {
   }
 
   void _letter(Canvas canvas, String letter, Offset center) {
-    final background = Paint()..color = const Color(0xFF18151E);
-    canvas.drawCircle(center, 7, background);
+    final backgroundPaint = Paint()..color = background;
+    canvas.drawCircle(center, 7, backgroundPaint);
     canvas.drawCircle(
       center,
       7,
@@ -425,5 +716,7 @@ class _FootballActionPainter extends CustomPainter {
 
   @override
   bool shouldRepaint(covariant _FootballActionPainter oldDelegate) =>
-      oldDelegate.goal != goal || oldDelegate.color != color;
+      oldDelegate.goal != goal ||
+      oldDelegate.color != color ||
+      oldDelegate.background != background;
 }

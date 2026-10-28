@@ -202,7 +202,7 @@ class _BeerSimpleScreenState extends ConsumerState<BeerSimpleScreen>
                             ),
                           ),
                         )
-                      : !drawMode
+                      : !drawMode || state.pubAttendance?.configured != true
                       ? PubTally(
                           matchId: state.selectedMatch?.id ?? -1,
                           players: state.beers,

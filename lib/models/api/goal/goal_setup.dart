@@ -8,11 +8,17 @@ class GoalSetup implements JsonAndHttpConverter, AddToString {
   int? id;
   int goalNumber;
   int assistNumber;
+  int yellowCards;
+  int redCards;
+  int goalkeepingMinutes;
   final PlayerApiModel player;
 
   GoalSetup({
     required this.goalNumber,
     required this.assistNumber,
+    this.yellowCards = 0,
+    this.redCards = 0,
+    this.goalkeepingMinutes = 0,
     required this.player,
     this.id,
   });
@@ -43,6 +49,9 @@ class GoalSetup implements JsonAndHttpConverter, AddToString {
       "id": id,
       "goalNumber": goalNumber,
       "assistNumber": assistNumber,
+      "yellowCards": yellowCards,
+      "redCards": redCards,
+      "goalkeepingMinutes": goalkeepingMinutes,
       "player": player,
     };
   }
@@ -53,6 +62,9 @@ class GoalSetup implements JsonAndHttpConverter, AddToString {
       goalNumber: json["goalNumber"] ?? 0,
       id: json["id"] ?? 0,
       assistNumber: json["assistNumber"] ?? 0,
+      yellowCards: json["yellowCards"] ?? 0,
+      redCards: json["redCards"] ?? 0,
+      goalkeepingMinutes: json["goalkeepingMinutes"] ?? 0,
       player: PlayerApiModel.fromJson(json["player"]),
     );
   }
@@ -60,9 +72,7 @@ class GoalSetup implements JsonAndHttpConverter, AddToString {
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
-      other is GoalSetup &&
-          runtimeType == other.runtimeType &&
-          id == other.id;
+      other is GoalSetup && runtimeType == other.runtimeType && id == other.id;
 
   @override
   int get hashCode => id.hashCode;
@@ -79,7 +89,7 @@ class GoalSetup implements JsonAndHttpConverter, AddToString {
 
   @override
   String numberToString(bool goal) {
-    if(goal) {
+    if (goal) {
       return goalNumber.toString();
     }
     return assistNumber.toString();
@@ -87,30 +97,27 @@ class GoalSetup implements JsonAndHttpConverter, AddToString {
 
   @override
   void addNumber(bool goal) {
-    if(goal) {
+    if (goal) {
       addGoal();
-    }
-    else {
+    } else {
       addAssist();
     }
   }
 
   @override
   void removeNumber(bool goal) {
-    if(goal) {
+    if (goal) {
       removeGoal();
-    }
-    else {
+    } else {
       removeAssist();
     }
   }
 
   @override
   int number(bool goal) {
-    if(goal) {
+    if (goal) {
       return goalNumber;
-    }
-    else {
+    } else {
       return assistNumber;
     }
   }
