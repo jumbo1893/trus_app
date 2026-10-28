@@ -18,7 +18,6 @@ import '../../../models/api/football/football_match_api_model.dart';
 import '../../../models/api/player/player_api_model.dart';
 import '../../../models/api/participation/match_participation_detail.dart';
 import '../../../models/api/participation/match_participation_status.dart';
-import '../../beer/screens/beer_simple_screen.dart';
 import '../../fine/match/screens/fine_match_screen.dart';
 import '../../goal/screen/goal_screen.dart';
 import '../../main/controller/screen_variables_notifier.dart';
@@ -171,19 +170,6 @@ class HomeNotifier extends SafeStateNotifier<HomeState> {
   }
 
   // ====== callbacks (nahrazuje IFootballMatchBoxCallback atd.) ======
-
-  void onButtonAddBeerClick(FootballMatchApiModel footballMatch) {
-    final appTeam = ref.read(globalVariablesControllerProvider).appTeam;
-    final matchId =
-        footballMatch.findMatchIdForCurrentAppTeamInMatchIdAndAppTeamIdList(
-          appTeam,
-        ) ??
-        -1;
-    if (matchId != -1) {
-      ref.read(screenVariablesNotifierProvider.notifier).setMatchId(matchId);
-      changeFragment(BeerSimpleScreen.id);
-    }
-  }
 
   void onButtonAddFineClick(FootballMatchApiModel footballMatch) {
     final appTeam = ref.read(globalVariablesControllerProvider).appTeam;

@@ -73,7 +73,14 @@ class ParticipationResponseBottomSheet extends StatefulWidget {
 class _ParticipationResponseBottomSheetState
     extends State<ParticipationResponseBottomSheet> {
   MatchParticipationStatus? _selectedStatus;
+  bool _playing = true;
   final TextEditingController _commentController = TextEditingController();
+
+  @override
+  void initState() {
+    super.initState();
+    _playing = widget.initialPlaying ?? !(widget.currentPlayer?.fan ?? false);
+  }
 
   String? get _comment {
     final value = _commentController.text.trim();
@@ -99,35 +106,11 @@ class _ParticipationResponseBottomSheetState
     PlayerApiModel? player, {
     bool create = false,
   }) async {
-    bool? playing;
-    if (status == MatchParticipationStatus.attending) {
-      var selected = widget.initialPlaying ?? !(player?.fan ?? false);
-      playing = await showDialog<bool>(
-        context: context,
-        builder: (ctx) => StatefulBuilder(
-          builder: (ctx, update) => AlertDialog(
-            title: const Text('Zúčastním se'),
-            content: SwitchListTile(
-              title: const Text('Hrající'),
-              subtitle: Text(selected ? 'Jdu hrát' : 'Jdu jako nehrající'),
-              value: selected,
-              onChanged: (value) => update(() => selected = value),
-            ),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.pop(ctx),
-                child: const Text('Zpět'),
-              ),
-              FilledButton(
-                onPressed: () => Navigator.pop(ctx, selected),
-                child: const Text('Potvrdit účast'),
-              ),
-            ],
-          ),
-        ),
-      );
-      if (playing == null || !mounted) return;
-    }
+    final bool? playing = status == MatchParticipationStatus.attending
+        ? (player?.id == widget.currentPlayer?.id
+              ? _playing
+              : widget.initialPlaying ?? !(player?.fan ?? false))
+        : null;
     if (!mounted) return;
     Navigator.pop(
       context,
@@ -248,6 +231,16 @@ class _ParticipationResponseBottomSheetState
           ),
         ),
         const SizedBox(height: 10),
+        if (widget.currentPlayer != null) ...[
+          SwitchListTile.adaptive(
+            contentPadding: EdgeInsets.zero,
+            title: const Text('Jdu hrát'),
+            subtitle: Text(_playing ? 'Hrající' : 'Nehrající'),
+            value: _playing,
+            onChanged: (value) => setState(() => _playing = value),
+          ),
+          const SizedBox(height: 8),
+        ],
         _StatusButton(
           label: 'Zúčastním se',
           icon: Icons.check_circle_outline,

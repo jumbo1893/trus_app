@@ -222,7 +222,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
                         appTeamApiModel: appTeam,
                         onAddPlayers: notifier.onButtonAddPlayersClick,
                         onAddGoals: notifier.onButtonAddGoalsClick,
-                        onAddBeer: notifier.onButtonAddBeerClick,
                         onAddFine: notifier.onButtonAddFineClick,
                         onDetailMatch: notifier.onButtonDetailMatchClick,
                         onParticipation: notifier.onParticipationClick,

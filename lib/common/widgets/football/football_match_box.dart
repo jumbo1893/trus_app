@@ -19,7 +19,6 @@ class FootballMatchBox extends StatelessWidget {
     required this.appTeamApiModel,
     required this.onAddPlayers,
     required this.onAddGoals,
-    required this.onAddBeer,
     required this.onAddFine,
     required this.onDetailMatch,
     required this.onParticipation,
@@ -33,7 +32,6 @@ class FootballMatchBox extends StatelessWidget {
 
   final void Function(FootballMatchApiModel match) onAddPlayers;
   final void Function(FootballMatchApiModel match) onAddGoals;
-  final void Function(FootballMatchApiModel match) onAddBeer;
   final void Function(FootballMatchApiModel match) onAddFine;
   final void Function(FootballMatchApiModel match) onDetailMatch;
   final void Function(FootballMatchApiModel match) onParticipation;
@@ -170,15 +168,6 @@ class FootballMatchBox extends StatelessWidget {
                   onTap: () {
                     Navigator.of(context).pop();
                     onDetailMatch(match);
-                  },
-                ),
-                _BottomSheetActionTile(
-                  icon: Icons.sports_bar,
-                  title: "DO HOSPODY",
-                  enabled: matchActionsEnabled,
-                  onTap: () {
-                    Navigator.of(context).pop();
-                    onAddBeer(match);
                   },
                 ),
                 _BottomSheetActionTile(
@@ -326,17 +315,6 @@ class FootballMatchBox extends StatelessWidget {
                 ),
               ],
             ),
-            if (!isNextMatch && matchActionsEnabled) ...[
-              const SizedBox(height: 10),
-              SizedBox(
-                width: double.infinity,
-                child: FilledButton.icon(
-                  onPressed: () => onAddBeer(match),
-                  icon: const Icon(Icons.sports_bar_rounded),
-                  label: const Text('DO HOSPODY'),
-                ),
-              ),
-            ],
           ],
           if (visibleWarnings.isNotEmpty) ...[
             const SizedBox(height: 14),
