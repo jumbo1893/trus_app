@@ -664,6 +664,8 @@ class _MemberTile extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final colors = context.appColors;
+    final respondedByOther = member.respondedBy != null &&
+        member.respondedBy!.id != member.player.id;
     final tile = Padding(
       padding: const EdgeInsets.symmetric(vertical: 3),
       child: Row(
@@ -677,8 +679,8 @@ class _MemberTile extends ConsumerWidget {
                   ? () => onTogglePlaying!(member)
                   : null,
               child: Text(
-                '${member.player.name}${showPlaying ? " · ${member.isPlaying ? "hrající" : "nehrající"}" : ""}'
-                '${member.respondedBy != null ? "\nZadal/a: ${member.respondedBy!.name}" : ""}',
+                '${member.player.name}${showPlaying && !member.player.fan && !member.isPlaying ? " (nehrající)" : ""}'
+                '${respondedByOther ? "\nZadal/a: ${member.respondedBy!.name}" : ""}',
                 style: TextStyle(
                   color: colors.textPrimary,
                   fontWeight: FontWeight.w700,
