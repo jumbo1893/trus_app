@@ -10,6 +10,7 @@ import 'package:trus_app/features/auth/screens/user_information_screen.dart';
 import 'package:trus_app/features/main/main_screen.dart';
 import 'package:trus_app/features/home/screens/home_screen.dart';
 import 'package:trus_app/features/main/controller/screen_notifier.dart';
+import 'package:trus_app/services/app_open_tracker.dart';
 
 import '../../../../common/widgets/custom_button.dart';
 import '../../../../common/widgets/rows/crud/row_text_field_stream.dart';
@@ -52,6 +53,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     final redirect = await controller.sendEmailAndPassword();
     redirectWidget = redirect;
     if (redirect != LoginRedirect.needToLogin) {
+      ref.read(appOpenTrackerProvider).recordStart();
       await _systemCredentialService.finishLogin(
         email: email,
         password: password,

@@ -13,6 +13,7 @@ import 'package:trus_app/firebase_options.dart';
 import 'package:trus_app/router.dart';
 import 'package:trus_app/services/crash_reporting_service.dart';
 import 'package:trus_app/services/push/notification_init_provider.dart';
+import 'package:trus_app/services/app_open_tracker.dart';
 import 'package:trus_app/theme/app_theme.dart';
 import 'package:workmanager/workmanager.dart';
 
@@ -51,6 +52,11 @@ class MyApp extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    ref.listen(userDataAuthProvider, (previous, next) {
+      if (next.hasValue && next.value != LoginRedirect.needToLogin) {
+        ref.read(appOpenTrackerProvider).recordStart();
+      }
+    });
     ref.watch(notificationsInitProvider);
     final themeMode = ref.watch(appearanceNotifierProvider);
     return MaterialApp(
@@ -65,9 +71,7 @@ class MyApp extends ConsumerWidget {
       darkTheme: AppTheme.dark(),
       themeMode: themeMode,
       builder: (context, child) => SystemNavigationSafeArea(
-        child: TextInputScrollBoundary(
-          child: child ?? const SizedBox.shrink(),
-        ),
+        child: TextInputScrollBoundary(child: child ?? const SizedBox.shrink()),
       ),
       onGenerateRoute: (settings) => generateRoute(settings),
       home: ref

@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'package:trus_app/features/season_recap/season_recap_data.dart';
+import 'package:trus_app/services/app_open_tracker.dart';
 
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
@@ -92,6 +93,7 @@ class AuthRepository extends CrudApiService {
   Future<bool> deleteAccountFromFirebase() async {
     try {
       await auth.currentUser!.delete();
+      ref.read(appOpenTrackerProvider).onSignedOut();
       return true;
     } catch (e) {
       debugPrint(e.toString());
@@ -117,6 +119,7 @@ class AuthRepository extends CrudApiService {
 
   Future<bool> signOutFromFirebase() async {
     await auth.signOut();
+    ref.read(appOpenTrackerProvider).onSignedOut();
     ref.invalidate(seasonRecapsProvider);
     ref.invalidate(pendingSeasonRecapProvider);
     return true;
@@ -168,6 +171,7 @@ class AuthRepository extends CrudApiService {
     await firebaseUser!.updateDisplayName(name);
     await signUpWithEmailToServer(name);
     await getCurrentUserData();
+    ref.read(appOpenTrackerProvider).recordStart();
     return true;
   }
 
