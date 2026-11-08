@@ -828,6 +828,7 @@ class _QuestionComposer extends StatelessWidget {
               Expanded(
                 child: TextField(
                   controller: controller,
+                  textCapitalization: TextCapitalization.sentences,
                   focusNode: focusNode,
                   enabled: enabled,
                   minLines: 3,

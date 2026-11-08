@@ -89,6 +89,7 @@ class _AppSearchFilterBarState extends State<AppSearchFilterBar> {
                 const SizedBox(width: 9),
                 Expanded(
                   child: TextField(
+                    textCapitalization: TextCapitalization.sentences,
                     autocorrect: false,
                     enableSuggestions: false,
                     spellCheckConfiguration:

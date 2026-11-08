@@ -72,6 +72,14 @@ class CustomTextField extends StatelessWidget {
       ),
       textAlign: TextAlign.left,
       obscureText: password,
+      textCapitalization:
+          password ||
+              number ||
+              keyboardType == TextInputType.emailAddress ||
+              labelText.toLowerCase().contains('mail') ||
+              labelText.toLowerCase().contains('kód')
+          ? TextCapitalization.none
+          : TextCapitalization.sentences,
       autofillHints: autofillHints,
       keyboardType:
           keyboardType ?? (number ? TextInputType.number : TextInputType.text),

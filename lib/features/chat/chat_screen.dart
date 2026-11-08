@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:image/image.dart' as image_lib;
+import 'package:intl/intl.dart';
 import 'package:trus_app/common/widgets/screen/custom_consumer_stateful_widget.dart';
 import 'package:trus_app/features/ai/widgets/trusbot_markdown_text.dart';
 import 'package:trus_app/services/push/push_permission_prompt.dart';
@@ -22,19 +23,189 @@ class ChatScreen extends CustomConsumerStatefulWidget {
   ConsumerState<ChatScreen> createState() => _ChatScreenState();
 }
 
+Future<void> showChatMembersSheet(
+  BuildContext context,
+  ChatRepository repository,
+  String kind,
+  String title,
+) => showModalBottomSheet<void>(
+  context: context,
+  isScrollControlled: true,
+  showDragHandle: true,
+  backgroundColor: Theme.of(context).colorScheme.surface,
+  shape: const RoundedRectangleBorder(
+    borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+  ),
+  clipBehavior: Clip.antiAlias,
+  builder: (context) => SafeArea(
+    child: SizedBox(
+      height: MediaQuery.sizeOf(context).height * 0.65,
+      child: FutureBuilder<List<ChatMember>>(
+        future: repository.members(kind),
+        builder: (context, snapshot) {
+          if (snapshot.hasError) {
+            return const Center(
+              child: Text('Členy chatu se nepodařilo načíst.'),
+            );
+          }
+          if (!snapshot.hasData) {
+            return const Center(child: CircularProgressIndicator());
+          }
+          final members = snapshot.data!;
+          final format = DateFormat('d. M. yyyy HH:mm');
+          return Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Container(
+                width: double.infinity,
+                color: Theme.of(context).colorScheme.surfaceContainer,
+                padding: const EdgeInsets.fromLTRB(20, 12, 20, 16),
+                child: Text(
+                  '$title · ${members.length} členů',
+                  style: Theme.of(context).textTheme.titleLarge,
+                ),
+              ),
+              Expanded(
+                child: ListView.builder(
+                  itemCount: members.length,
+                  itemBuilder: (context, index) {
+                    final member = members[index];
+                    return ListTile(
+                      title: Row(
+                        children: [
+                          Flexible(child: Text(member.name)),
+                          const SizedBox(width: 8),
+                          CircleAvatar(
+                            radius: 4,
+                            backgroundColor: member.online
+                                ? Colors.green
+                                : Colors.red,
+                          ),
+                        ],
+                      ),
+                      subtitle: Text(
+                        member.lastReadMessageAt == null
+                            ? 'Naposledy aktivní: neaktivní'
+                            : 'Naposledy aktivní: ${format.format(member.lastReadMessageAt!)}',
+                      ),
+                    );
+                  },
+                ),
+              ),
+            ],
+          );
+        },
+      ),
+    ),
+  ),
+);
+
+class ChatOnlineStatus extends ConsumerStatefulWidget {
+  const ChatOnlineStatus({super.key});
+
+  @override
+  ConsumerState<ChatOnlineStatus> createState() => _ChatOnlineStatusState();
+}
+
+class _ChatOnlineStatusState extends ConsumerState<ChatOnlineStatus> {
+  bool _showNames = false;
+
+  @override
+  Widget build(BuildContext context) {
+    final online = ref.watch(
+      chatControllerProvider.select((state) => state.online),
+    );
+    final colors = Theme.of(context).colorScheme;
+    return SizedBox(
+      height: 28,
+      child: Row(
+        children: [
+          CircleAvatar(
+            radius: 4,
+            backgroundColor: online.isEmpty ? Colors.red : Colors.green,
+          ),
+          const SizedBox(width: 6),
+          Text(
+            online.isEmpty ? 'Pouze ty online' : '${online.length} online',
+            style: Theme.of(context).textTheme.labelSmall,
+          ),
+          if (online.isNotEmpty) const SizedBox(width: 8),
+          if (_showNames && online.isNotEmpty) ...[
+            Expanded(
+              child: InkWell(
+                key: const ValueKey('chat-online-names'),
+                onTap: () => setState(() => _showNames = false),
+                child: SingleChildScrollView(
+                  scrollDirection: Axis.horizontal,
+                  child: Text(
+                    online.map((user) => user.name).join(', '),
+                    maxLines: 1,
+                    style: Theme.of(context).textTheme.labelSmall,
+                  ),
+                ),
+              ),
+            ),
+          ] else if (online.isNotEmpty)
+            InkWell(
+              key: const ValueKey('chat-online-avatars'),
+              borderRadius: BorderRadius.circular(16),
+              onTap: online.isEmpty
+                  ? null
+                  : () => setState(() => _showNames = true),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  for (final user in online.take(3))
+                    Padding(
+                      padding: const EdgeInsets.only(right: 3),
+                      child: CircleAvatar(
+                        radius: 11,
+                        backgroundColor: colors.primaryContainer,
+                        child: Text(
+                          user.name.trim().isEmpty
+                              ? '?'
+                              : user.name.trim()[0].toUpperCase(),
+                          style: TextStyle(
+                            fontSize: 11,
+                            color: colors.onPrimaryContainer,
+                          ),
+                        ),
+                      ),
+                    ),
+                  if (online.length > 3)
+                    Text(
+                      '+${online.length - 3}',
+                      style: Theme.of(context).textTheme.labelSmall,
+                    ),
+                ],
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+}
+
 class _ChatScreenState extends ConsumerState<ChatScreen> {
   final _text = TextEditingController();
+  final _inputFocus = FocusNode();
+  bool _showComposerActions = true;
   final _messagesScroll = ScrollController();
   final _jumpAnchor = GlobalKey();
   int? _jumpTargetId;
   bool _jumping = false;
   bool _sending = false;
+  String? _pendingText;
+  Uint8List? _pendingImage;
+  String? _pendingRoom;
   bool _loadingOlder = false;
   ChatMessage? _replyTo;
   String? _replyRoom;
   final Set<String> _pushUpdating = {};
   int? _selectedMessageId;
   String? _selectedMessageRoom;
+  int? _selectedAtPointerDown;
+  String? _selectedRoomAtPointerDown;
   OverlayEntry? _reactionOverlay;
 
   void _removeReactionOverlay() {
@@ -45,6 +216,13 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
   }
 
   void _toggleMessage(String kind, int id) {
+    if (_selectedRoomAtPointerDown == kind && _selectedAtPointerDown == id) {
+      _selectedAtPointerDown = null;
+      _selectedRoomAtPointerDown = null;
+      return;
+    }
+    _selectedAtPointerDown = null;
+    _selectedRoomAtPointerDown = null;
     setState(() {
       if (_selectedMessageRoom == kind && _selectedMessageId == id) {
         _selectedMessageId = null;
@@ -54,6 +232,20 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
         _selectedMessageRoom = kind;
       }
     });
+  }
+
+  void _clearSelectedMessage() {
+    if (_selectedMessageId == null) return;
+    setState(() {
+      _selectedMessageId = null;
+      _selectedMessageRoom = null;
+    });
+  }
+
+  void _dismissSelectedOnPointerDown(PointerDownEvent event) {
+    _selectedAtPointerDown = _selectedMessageId;
+    _selectedRoomAtPointerDown = _selectedMessageRoom;
+    _clearSelectedMessage();
   }
 
   Future<void> _jumpToReply(String kind, int id) async {
@@ -305,6 +497,12 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
   @override
   void initState() {
     super.initState();
+    _text.addListener(_onTextChanged);
+    _inputFocus.addListener(() {
+      if (_inputFocus.hasFocus && mounted) {
+        setState(() => _showComposerActions = false);
+      }
+    });
     _messagesScroll.addListener(() {
       if (_messagesScroll.hasClients) {
         if (_reactionOverlay != null) _removeReactionOverlay();
@@ -318,34 +516,60 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
   @override
   void dispose() {
     _removeReactionOverlay();
+    _text.removeListener(_onTextChanged);
     _text.dispose();
+    _inputFocus.dispose();
     _messagesScroll.dispose();
     super.dispose();
   }
 
-  Future<void> _send(String kind, {Uint8List? image}) async {
-    if (_sending || (_text.text.trim().isEmpty && image == null)) return;
-    setState(() => _sending = true);
+  void _onTextChanged() {
+    if (mounted) {
+      final kind = ref.read(chatControllerProvider).activeRoom;
+      if (kind != null && kind.isNotEmpty) {
+        ref
+            .read(chatControllerProvider.notifier)
+            .composerTextChanged(kind, _text.text);
+      }
+      setState(() {
+        if (_text.text.isNotEmpty) _showComposerActions = false;
+      });
+    }
+  }
+
+  Future<void> _send(String kind, {Uint8List? image, String? quickText}) async {
+    if (_sending ||
+        ((quickText ?? _text.text).trim().isEmpty && image == null)) {
+      return;
+    }
+    final text = (quickText ?? _text.text).trim();
+    ref.read(chatControllerProvider.notifier).stopLocalTyping();
+    final replyToId = _replyRoom == kind ? _replyTo?.id : null;
+    setState(() {
+      _sending = true;
+      _pendingText = text;
+      _pendingImage = image;
+      _pendingRoom = kind;
+    });
     try {
       final repo = ref.read(chatRepositoryProvider);
-      image == null
-          ? await repo.send(
-              kind,
-              _text.text.trim(),
-              replyToId: _replyRoom == kind ? _replyTo?.id : null,
-            )
-          : await repo.sendImage(
-              kind,
-              image,
-              _text.text.trim(),
-              replyToId: _replyRoom == kind ? _replyTo?.id : null,
-            );
-      _text.clear();
+      final sent = image == null
+          ? await repo.send(kind, text, replyToId: replyToId)
+          : await repo.sendImage(kind, image, text, replyToId: replyToId);
+      if (!mounted) return;
+      ref.read(chatControllerProvider.notifier).addSentMessage(kind, sent);
+      if (quickText == null && _text.text.trim() == text) _text.clear();
       setState(() {
-        _replyTo = null;
-        _replyRoom = null;
+        if (_pendingRoom == kind) {
+          _pendingRoom = null;
+          _pendingText = null;
+          _pendingImage = null;
+        }
+        if (_replyRoom == kind && _replyTo?.id == replyToId) {
+          _replyTo = null;
+          _replyRoom = null;
+        }
       });
-      await ref.read(chatControllerProvider.notifier).load(kind);
     } catch (error) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -353,7 +577,16 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
         );
       }
     } finally {
-      if (mounted) setState(() => _sending = false);
+      if (mounted) {
+        setState(() {
+          _sending = false;
+          if (_pendingRoom == kind) {
+            _pendingRoom = null;
+            _pendingText = null;
+            _pendingImage = null;
+          }
+        });
+      }
     }
   }
 
@@ -470,182 +703,341 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
       );
     }
     final detail = chat.detail;
-    final currentRoom = chat.rooms
-        .where((room) => room.kind == kind)
-        .firstOrNull;
-    return Column(
-      children: [
-        ListTile(
-          leading: IconButton(
-            icon: const Icon(Icons.arrow_back),
-            onPressed: () {
-              setState(() {
-                _replyTo = null;
-                _replyRoom = null;
-              });
-              ref.read(chatControllerProvider.notifier).closeRoom();
-            },
-          ),
-          title: Text(
-            chat.rooms
-                    .where((room) => room.kind == kind)
-                    .map((room) => room.title)
-                    .firstOrNull ??
-                'Chat',
-          ),
-          trailing: currentRoom == null ? null : _pushButton(currentRoom),
-        ),
-        Expanded(
-          child: detail == null
-              ? chat.error == null
-                    ? const Center(child: CircularProgressIndicator())
-                    : Center(
-                        child: Column(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            const Text('Chat se nepodařilo načíst'),
-                            const SizedBox(height: 8),
-                            FilledButton.tonal(
-                              onPressed: () => ref
-                                  .read(chatControllerProvider.notifier)
-                                  .load(kind),
-                              child: const Text('Zkusit znovu'),
-                            ),
-                          ],
-                        ),
-                      )
-              : ListView.builder(
-                  controller: _messagesScroll,
-                  key: ValueKey('chat-messages-$kind'),
-                  reverse: true,
-                  itemCount:
-                      detail.messages.length +
-                      (detail.messages.length >= 50 ? 1 : 0) +
-                      (ref.read(chatControllerProvider.notifier).historyWindow
-                          ? 1
-                          : 0),
-                  itemBuilder: (context, index) {
-                    if (ref
-                            .read(chatControllerProvider.notifier)
-                            .historyWindow &&
-                        index == 0) {
-                      return TextButton(
-                        onPressed: () => _backToLatest(kind),
-                        child: const Text('Zpět na nejnovější zprávy'),
-                      );
-                    }
-                    if (ref
-                        .read(chatControllerProvider.notifier)
-                        .historyWindow) {
-                      index--;
-                    }
-                    if (index == detail.messages.length) {
-                      return TextButton(
-                        onPressed: _loadingOlder
-                            ? null
-                            : () async {
-                                setState(() => _loadingOlder = true);
-                                try {
-                                  await ref
-                                      .read(chatControllerProvider.notifier)
-                                      .older();
-                                } finally {
-                                  if (mounted) {
-                                    setState(() => _loadingOlder = false);
-                                  }
-                                }
-                              },
-                        child: const Text('Načíst starší zprávy'),
-                      );
-                    }
-                    final message = detail.messages[index];
-                    final own = message.authorId == chat.myId;
-                    final seen = seenAtMessage(detail, index, chat.myId);
-                    final selected =
-                        _selectedMessageRoom == kind &&
-                        _selectedMessageId == message.id;
-                    return Column(
-                      key: message.id == _jumpTargetId ? _jumpAnchor : null,
-                      children: [
-                        if (beginsConversationAfterPause(detail, index))
-                          ChatDateSeparator(message: message),
-                        ChatMessageTile(
-                          message: message,
-                          room: kind,
-                          own: own,
-                          selected: selected,
-                          seen: seen,
-                          onTap: () => _toggleMessage(kind, message.id),
-                          onDoubleTap: () => _applyReaction(
-                            kind,
-                            message,
-                            '❤️',
-                            toggleSame: false,
+    final typingNames = chat.typing.entries
+        .where(
+          (entry) =>
+              entry.key.startsWith('$kind/') &&
+              entry.value.authorId != chat.myId,
+        )
+        .map((entry) => entry.value.author)
+        .toSet()
+        .toList();
+    return Listener(
+      onPointerDown: _dismissSelectedOnPointerDown,
+      onPointerMove: (_) => _clearSelectedMessage(),
+      onPointerSignal: (_) => _clearSelectedMessage(),
+      child: Column(
+        children: [
+          Expanded(
+            child: detail == null
+                ? chat.error == null
+                      ? const Center(child: CircularProgressIndicator())
+                      : Center(
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              const Text('Chat se nepodařilo načíst'),
+                              const SizedBox(height: 8),
+                              FilledButton.tonal(
+                                onPressed: () => ref
+                                    .read(chatControllerProvider.notifier)
+                                    .load(kind),
+                                child: const Text('Zkusit znovu'),
+                              ),
+                            ],
                           ),
-                          onLongPress: (anchor) =>
-                              _openReactionPicker(kind, message, anchor),
-                          onReactionsTap: () =>
-                              _showReactions(message.reactions),
-                          onReplyTap: message.replyTo == null
+                        )
+                : ListView.builder(
+                    controller: _messagesScroll,
+                    key: ValueKey('chat-messages-$kind'),
+                    reverse: true,
+                    itemCount:
+                        detail.messages.length +
+                        (typingNames.isNotEmpty ? 1 : 0) +
+                        (_pendingRoom == kind ? 1 : 0) +
+                        (detail.messages.length >= 50 ? 1 : 0) +
+                        (ref.read(chatControllerProvider.notifier).historyWindow
+                            ? 1
+                            : 0),
+                    itemBuilder: (context, index) {
+                      if (ref
+                              .read(chatControllerProvider.notifier)
+                              .historyWindow &&
+                          index == 0) {
+                        return TextButton(
+                          onPressed: () => _backToLatest(kind),
+                          child: const Text('Zpět na nejnovější zprávy'),
+                        );
+                      }
+                      if (ref
+                          .read(chatControllerProvider.notifier)
+                          .historyWindow) {
+                        index--;
+                      }
+                      if (typingNames.isNotEmpty) {
+                        if (index == 0) {
+                          return _ChatTypingIndicator(names: typingNames);
+                        }
+                        index--;
+                      }
+                      if (_pendingRoom == kind) {
+                        if (index == 0) {
+                          return _PendingChatMessage(
+                            text: _pendingText ?? '',
+                            image: _pendingImage,
+                          );
+                        }
+                        index--;
+                      }
+                      if (index == detail.messages.length) {
+                        return TextButton(
+                          onPressed: _loadingOlder
                               ? null
-                              : () => _jumpToReply(kind, message.replyTo!.id),
+                              : () async {
+                                  setState(() => _loadingOlder = true);
+                                  try {
+                                    await ref
+                                        .read(chatControllerProvider.notifier)
+                                        .older();
+                                  } finally {
+                                    if (mounted) {
+                                      setState(() => _loadingOlder = false);
+                                    }
+                                  }
+                                },
+                          child: const Text('Načíst starší zprávy'),
+                        );
+                      }
+                      final message = detail.messages[index];
+                      final own = message.authorId == chat.myId;
+                      final seen = seenAtMessage(detail, index, chat.myId);
+                      final readers = readersAtMessage(
+                        detail,
+                        index,
+                        chat.myId,
+                      );
+                      final selected =
+                          _selectedMessageRoom == kind &&
+                          _selectedMessageId == message.id;
+                      final hasDateSeparator = beginsConversationAfterPause(
+                        detail,
+                        index,
+                      );
+                      return Column(
+                        key: message.id == _jumpTargetId ? _jumpAnchor : null,
+                        children: [
+                          if (hasDateSeparator)
+                            ChatDateSeparator(message: message),
+                          ChatMessageTile(
+                            message: message,
+                            room: kind,
+                            own: own,
+                            selected: selected,
+                            showSelectedTime: !hasDateSeparator,
+                            seen: seen,
+                            readers: readers,
+                            onTap: () => _toggleMessage(kind, message.id),
+                            onDoubleTap: () => _applyReaction(
+                              kind,
+                              message,
+                              '❤️',
+                              toggleSame: false,
+                            ),
+                            onLongPress: (anchor) =>
+                                _openReactionPicker(kind, message, anchor),
+                            onReactionsTap: () =>
+                                _showReactions(message.reactions),
+                            onReplyTap: message.replyTo == null
+                                ? null
+                                : () => _jumpToReply(kind, message.replyTo!.id),
+                          ),
+                        ],
+                      );
+                    },
+                  ),
+          ),
+          if (_replyTo != null && _replyRoom == kind)
+            ListTile(
+              leading: const Icon(Icons.reply),
+              title: Text(_replyTo!.author),
+              subtitle: Text(
+                _replyTo!.text ?? 'Obrázek',
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
+              trailing: IconButton(
+                tooltip: 'Zrušit odpověď',
+                onPressed: () => setState(() {
+                  _replyTo = null;
+                  _replyRoom = null;
+                }),
+                icon: const Icon(Icons.close),
+              ),
+            ),
+          Container(
+            decoration: BoxDecoration(
+              color: Theme.of(context).colorScheme.surface,
+              border: Border(
+                top: BorderSide(
+                  color: Theme.of(context).colorScheme.outlineVariant,
+                ),
+              ),
+            ),
+            child: SafeArea(
+              top: false,
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 6),
+                child: Row(
+                  children: [
+                    AnimatedSize(
+                      duration: const Duration(milliseconds: 200),
+                      curve: Curves.easeInOut,
+                      child: _showComposerActions
+                          ? Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                IconButton(
+                                  tooltip: 'Smajlíky',
+                                  color: Theme.of(context).colorScheme.primary,
+                                  icon: const Icon(
+                                    Icons.emoji_emotions_outlined,
+                                  ),
+                                  onPressed: _emoji,
+                                ),
+                                IconButton(
+                                  tooltip: 'Přidat obrázek',
+                                  color: Theme.of(context).colorScheme.primary,
+                                  icon: const Icon(Icons.image_outlined),
+                                  onPressed: _sending
+                                      ? null
+                                      : () => _pickImage(kind),
+                                ),
+                              ],
+                            )
+                          : IconButton(
+                              tooltip: 'Zobrazit možnosti',
+                              color: Theme.of(context).colorScheme.primary,
+                              icon: const Icon(Icons.chevron_right),
+                              onPressed: () =>
+                                  setState(() => _showComposerActions = true),
+                            ),
+                    ),
+                    Expanded(
+                      child: TextField(
+                        controller: _text,
+                        textCapitalization: TextCapitalization.sentences,
+                        focusNode: _inputFocus,
+                        onTap: () {
+                          if (_showComposerActions) {
+                            setState(() => _showComposerActions = false);
+                          }
+                        },
+                        minLines: 1,
+                        maxLines: 4,
+                        decoration: const InputDecoration(
+                          hintText: 'Napsat zprávu…',
                         ),
-                      ],
-                    );
-                  },
-                ),
-        ),
-        if (_replyTo != null && _replyRoom == kind)
-          ListTile(
-            leading: const Icon(Icons.reply),
-            title: Text(_replyTo!.author),
-            subtitle: Text(
-              _replyTo!.text ?? 'Obrázek',
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-            ),
-            trailing: IconButton(
-              tooltip: 'Zrušit odpověď',
-              onPressed: () => setState(() {
-                _replyTo = null;
-                _replyRoom = null;
-              }),
-              icon: const Icon(Icons.close),
-            ),
-          ),
-        SafeArea(
-          top: false,
-          child: Row(
-            children: [
-              IconButton(
-                tooltip: 'Smajlíky',
-                icon: const Icon(Icons.emoji_emotions_outlined),
-                onPressed: _emoji,
-              ),
-              IconButton(
-                tooltip: 'Přidat obrázek',
-                icon: const Icon(Icons.image_outlined),
-                onPressed: _sending ? null : () => _pickImage(kind),
-              ),
-              Expanded(
-                child: TextField(
-                  controller: _text,
-                  minLines: 1,
-                  maxLines: 4,
-                  decoration: const InputDecoration(hintText: 'Napsat zprávu…'),
+                      ),
+                    ),
+                    IconButton(
+                      tooltip: _text.text.trim().isEmpty
+                          ? 'Poslat pivo'
+                          : 'Odeslat',
+                      color: Theme.of(context).colorScheme.primary,
+                      icon: _text.text.trim().isEmpty
+                          ? const Text('🍻', style: TextStyle(fontSize: 25))
+                          : const Icon(Icons.send),
+                      onPressed: () => _text.text.trim().isEmpty
+                          ? _send(kind, quickText: '🍻')
+                          : _send(kind),
+                    ),
+                  ],
                 ),
               ),
-              IconButton(
-                tooltip: 'Odeslat',
-                icon: const Icon(Icons.send),
-                onPressed: _sending ? null : () => _send(kind),
-              ),
-            ],
+            ),
           ),
-        ),
-      ],
+        ],
+      ),
     );
   }
+}
+
+class _ChatTypingIndicator extends StatelessWidget {
+  final List<String> names;
+
+  const _ChatTypingIndicator({required this.names});
+
+  @override
+  Widget build(BuildContext context) => Align(
+    key: const ValueKey('chat-typing-indicator'),
+    alignment: Alignment.centerLeft,
+    child: Padding(
+      padding: const EdgeInsets.fromLTRB(12, 5, 12, 10),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          for (final name in names)
+            Text(
+              '$name píše…',
+              style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                color: Theme.of(context).colorScheme.onSurfaceVariant,
+                fontStyle: FontStyle.italic,
+              ),
+            ),
+        ],
+      ),
+    ),
+  );
+}
+
+class _PendingChatMessage extends StatelessWidget {
+  final String text;
+  final Uint8List? image;
+
+  const _PendingChatMessage({required this.text, required this.image});
+
+  @override
+  Widget build(BuildContext context) => TweenAnimationBuilder<double>(
+    key: const ValueKey('chat-pending-message'),
+    tween: Tween(begin: 0, end: 1),
+    duration: const Duration(milliseconds: 240),
+    curve: Curves.easeOutCubic,
+    builder: (context, progress, child) => Opacity(
+      opacity: progress,
+      child: Transform.translate(
+        offset: Offset(0, 12 * (1 - progress)),
+        child: child,
+      ),
+    ),
+    child: Align(
+      alignment: Alignment.centerRight,
+      child: ConstrainedBox(
+        constraints: BoxConstraints(
+          maxWidth: MediaQuery.sizeOf(context).width * .82,
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.end,
+          children: [
+            if (text.isNotEmpty)
+              Card(
+                color: Theme.of(context).colorScheme.primaryContainer,
+                child: Padding(
+                  padding: const EdgeInsets.all(10),
+                  child: Text(text),
+                ),
+              ),
+            if (image != null)
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 3),
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(12),
+                  child: Image.memory(image!, height: 180, fit: BoxFit.cover),
+                ),
+              ),
+            Padding(
+              padding: const EdgeInsets.only(right: 8, bottom: 8),
+              child: Text(
+                'Odesílání…',
+                style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                  color: Theme.of(context).colorScheme.onSurfaceVariant,
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    ),
+  );
 }
 
 class ChatPushBell extends StatelessWidget {
@@ -679,7 +1071,9 @@ class ChatMessageTile extends StatelessWidget {
   final ChatMessage message;
   final String room;
   final bool own, selected;
+  final bool showSelectedTime;
   final List<ChatReceipt> seen;
+  final List<ChatReceipt> readers;
   final VoidCallback onTap, onReactionsTap;
   final VoidCallback? onDoubleTap;
   final VoidCallback? onReplyTap;
@@ -692,7 +1086,9 @@ class ChatMessageTile extends StatelessWidget {
     required this.room,
     required this.own,
     required this.selected,
+    this.showSelectedTime = true,
     required this.seen,
+    this.readers = const [],
     required this.onTap,
     this.onDoubleTap,
     this.onReplyTap,
@@ -704,7 +1100,7 @@ class ChatMessageTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) => Column(
     children: [
-      if (selected)
+      if (selected && showSelectedTime)
         Padding(
           key: ValueKey('chat-time-${message.id}'),
           padding: const EdgeInsets.symmetric(vertical: 8),
@@ -858,7 +1254,19 @@ class ChatMessageTile extends StatelessWidget {
                     ),
                   ),
                 ),
-              if (seen.isNotEmpty) _SeenAvatars(receipts: seen),
+              if (selected && readers.isEmpty)
+                Padding(
+                  padding: const EdgeInsets.only(right: 7, bottom: 5),
+                  child: Text(
+                    'Zatím nikdo nepřečetl',
+                    style: Theme.of(context).textTheme.labelSmall,
+                  ),
+                )
+              else if (selected || seen.isNotEmpty)
+                _SeenAvatars(
+                  receipts: selected ? readers : seen,
+                  showNames: selected,
+                ),
             ],
           ),
         ),
@@ -903,9 +1311,34 @@ List<ChatReceipt> seenAtMessage(ChatDetail detail, int index, int? myId) {
   }).toList();
 }
 
-class _SeenAvatars extends StatelessWidget {
+List<ChatReceipt> readersAtMessage(ChatDetail detail, int index, int? myId) {
+  if (index < 0 || index >= detail.messages.length) return const [];
+  final messageId = detail.messages[index].id;
+  return detail.receipts.where((receipt) {
+    final lastSeen = receipt.lastMessageId;
+    return receipt.userId != myId && lastSeen != null && lastSeen >= messageId;
+  }).toList();
+}
+
+class _SeenAvatars extends StatefulWidget {
   final List<ChatReceipt> receipts;
-  const _SeenAvatars({required this.receipts});
+  final bool showNames;
+  const _SeenAvatars({required this.receipts, this.showNames = false});
+
+  @override
+  State<_SeenAvatars> createState() => _SeenAvatarsState();
+}
+
+class _SeenAvatarsState extends State<_SeenAvatars> {
+  late bool _showNames = widget.showNames;
+
+  @override
+  void didUpdateWidget(covariant _SeenAvatars oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.showNames != widget.showNames) {
+      _showNames = widget.showNames;
+    }
+  }
 
   String _initials(String name) {
     final words = name
@@ -921,64 +1354,61 @@ class _SeenAvatars extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final visible = receipts.take(4).toList();
-    final overflow = receipts.length - visible.length;
+    final visible = widget.receipts.take(4).toList();
+    final overflow = widget.receipts.length - visible.length;
     return Padding(
-      padding: const EdgeInsets.only(right: 7, bottom: 5),
-      child: Tooltip(
-        message: receipts.map((receipt) => receipt.name).join(', '),
-        child: InkWell(
-          key: const ValueKey('chat_seen_avatars'),
-          borderRadius: BorderRadius.circular(20),
-          onTap: () => showModalBottomSheet<void>(
-            context: context,
-            builder: (context) => SafeArea(
-              child: ListView(
-                shrinkWrap: true,
-                children: [
-                  const ListTile(title: Text('Zobrazeno')),
-                  for (final receipt in receipts)
-                    ListTile(
-                      leading: CircleAvatar(
-                        child: Text(_initials(receipt.name)),
+      padding: const EdgeInsets.only(left: 12, right: 7, bottom: 5),
+      child: InkWell(
+        key: const ValueKey('chat_seen_avatars'),
+        borderRadius: BorderRadius.circular(20),
+        onTap: () => setState(() => _showNames = !_showNames),
+        child: _showNames
+            ? ConstrainedBox(
+                constraints: BoxConstraints(
+                  maxWidth: MediaQuery.sizeOf(context).width * .75,
+                ),
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 5,
+                    vertical: 4,
+                  ),
+                  child: Text(
+                    'Zobrazeno: ${widget.receipts.map((receipt) => receipt.name).join(', ')}',
+                    key: const ValueKey('chat_seen_names'),
+                    style: Theme.of(context).textTheme.labelSmall,
+                  ),
+                ),
+              )
+            : SizedBox(
+                height: 28,
+                width: (visible.length + (overflow > 0 ? 1 : 0)) * 21.0 + 7,
+                child: Stack(
+                  children: [
+                    for (var i = 0; i < visible.length; i++)
+                      Positioned(
+                        left: i * 21.0,
+                        child: CircleAvatar(
+                          radius: 13,
+                          child: Text(
+                            _initials(visible[i].name),
+                            style: const TextStyle(fontSize: 10),
+                          ),
+                        ),
                       ),
-                      title: Text(receipt.name),
-                    ),
-                ],
+                    if (overflow > 0)
+                      Positioned(
+                        left: visible.length * 21.0,
+                        child: CircleAvatar(
+                          radius: 13,
+                          child: Text(
+                            '+$overflow',
+                            style: const TextStyle(fontSize: 9),
+                          ),
+                        ),
+                      ),
+                  ],
+                ),
               ),
-            ),
-          ),
-          child: SizedBox(
-            height: 28,
-            width: (visible.length + (overflow > 0 ? 1 : 0)) * 21.0 + 7,
-            child: Stack(
-              children: [
-                for (var i = 0; i < visible.length; i++)
-                  Positioned(
-                    left: i * 21.0,
-                    child: CircleAvatar(
-                      radius: 13,
-                      child: Text(
-                        _initials(visible[i].name),
-                        style: const TextStyle(fontSize: 10),
-                      ),
-                    ),
-                  ),
-                if (overflow > 0)
-                  Positioned(
-                    left: visible.length * 21.0,
-                    child: CircleAvatar(
-                      radius: 13,
-                      child: Text(
-                        '+$overflow',
-                        style: const TextStyle(fontSize: 9),
-                      ),
-                    ),
-                  ),
-              ],
-            ),
-          ),
-        ),
       ),
     );
   }

@@ -10,6 +10,10 @@ void main() {
   testWidgets(
     'discussion header has finite width with the global button theme',
     (tester) async {
+      final commentController = TextEditingController();
+      final commentFocus = FocusNode();
+      addTearDown(commentController.dispose);
+      addTearDown(commentFocus.dispose);
       final player = PlayerApiModel(
         id: 7,
         name: 'Matěj',
@@ -36,10 +40,13 @@ void main() {
               width: 328,
               child: ParticipationDiscussionSection(
                 comments: [comment],
+                mentionNames: const [],
+                commentController: commentController,
+                commentFocus: commentFocus,
+                onSendComment: () async {},
                 canAddComment: true,
                 canDiscuss: true,
                 currentPlayerId: player.id,
-                onAddComment: () {},
                 onReply: (_) async {},
                 onReact: (_, MatchParticipationReaction reaction) async {},
                 onDelete: (_) async {},

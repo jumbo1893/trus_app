@@ -322,6 +322,7 @@ class _ChatBotQuestionSheetState extends State<ChatBotQuestionSheet> {
             const SizedBox(height: 12),
             TextField(
               controller: _question,
+              textCapitalization: TextCapitalization.sentences,
               maxLines: 3,
               maxLength: 300,
               decoration: const InputDecoration(

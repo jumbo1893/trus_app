@@ -38,6 +38,7 @@ class _ParticipationCommentDialogState
       title: Text(widget.title),
       content: TextField(
         controller: _controller,
+        textCapitalization: TextCapitalization.sentences,
         autofocus: true,
         minLines: 2,
         maxLines: 5,

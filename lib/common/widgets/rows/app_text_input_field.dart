@@ -49,11 +49,14 @@ class _AppTextInputFieldState extends State<AppTextInputField> {
   Widget build(BuildContext context) {
     return TextField(
       keyboardType: widget.keyboardType,
+      textCapitalization:
+          widget.keyboardType == TextInputType.emailAddress ||
+              widget.keyboardType == TextInputType.number
+          ? TextCapitalization.none
+          : TextCapitalization.sentences,
       controller: _controller,
       onChanged: widget.onChanged,
-      decoration: InputDecoration(
-        hintText: widget.hintText,
-      ),
+      decoration: InputDecoration(hintText: widget.hintText),
     );
   }
 }

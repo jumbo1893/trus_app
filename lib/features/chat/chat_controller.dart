@@ -31,18 +31,35 @@ final chatControllerProvider = StateNotifierProvider<ChatController, ChatState>(
   },
 );
 
+class ChatTypingEvent {
+  final String activityId;
+  final int authorId;
+  final String author;
+  final bool typing;
+
+  ChatTypingEvent.fromJson(Map<String, dynamic> json)
+    : activityId = json['activityId'] as String,
+      authorId = (json['authorId'] as num).toInt(),
+      author = json['author'] as String,
+      typing = json['typing'] as bool;
+}
+
 class ChatState {
   final List<ChatRoom> rooms;
   final String? activeRoom;
   final ChatDetail? detail;
   final int? myId;
   final String? error;
+  final Map<String, ChatTypingEvent> typing;
+  final List<ChatOnlineUser> online;
   const ChatState({
     this.rooms = const [],
     this.activeRoom,
     this.detail,
     this.myId,
     this.error,
+    this.typing = const {},
+    this.online = const [],
   });
   int get unread => rooms.fold(0, (sum, room) => sum + room.unread);
   ChatState copyWith({
@@ -51,6 +68,8 @@ class ChatState {
     ChatDetail? detail,
     int? myId,
     String? error,
+    Map<String, ChatTypingEvent>? typing,
+    List<ChatOnlineUser>? online,
     bool clearDetail = false,
   }) => ChatState(
     rooms: rooms ?? this.rooms,
@@ -58,6 +77,8 @@ class ChatState {
     detail: clearDetail ? null : detail ?? this.detail,
     myId: myId ?? this.myId,
     error: error,
+    typing: typing ?? this.typing,
+    online: online ?? this.online,
   );
 }
 
@@ -72,6 +93,17 @@ class ChatController extends StateNotifier<ChatState> {
   bool _historyWindow = false;
   bool get historyWindow => _historyWindow;
   final Map<String, int> _lastReadRequest = {};
+  final Map<String, Timer> _typingExpiry = {};
+  final String _presenceSessionId = DateTime.now().microsecondsSinceEpoch
+      .toString();
+  Timer? _presenceTimer;
+  bool _appActive = true;
+  final String _localActivityId = DateTime.now().microsecondsSinceEpoch
+      .toString();
+  String? _localTypingRoom;
+  Timer? _typingIdle;
+  DateTime? _lastTypingPublished;
+  Future<void> _typingRequests = Future<void>.value();
   int _loadRevision = 0;
   ChatController(this.ref) : super(const ChatState()) {
     _authSubscription = FirebaseAuth.instance.idTokenChanges().listen((
@@ -98,14 +130,21 @@ class ChatController extends StateNotifier<ChatState> {
 
   Future<void> switchTeam(int? teamId) async {
     if (_teamId == teamId) return;
+    _stopPresence();
+    stopLocalTyping();
     _loadRevision++;
     _socket?.deactivate();
     _socket = null;
     _socketToken = null;
     _teamId = teamId;
     _lastReadRequest.clear();
+    for (final timer in _typingExpiry.values) {
+      timer.cancel();
+    }
+    _typingExpiry.clear();
     state = const ChatState();
     if (teamId == null) return;
+    if (_appActive) _startPresence();
     await refresh();
     if (!mounted || _teamId != teamId) return;
     try {
@@ -167,6 +206,18 @@ class ChatController extends StateNotifier<ChatState> {
                 },
               );
               _socket?.subscribe(
+                destination: '/topic/chat/$teamId/${room.kind}/typing',
+                callback: (frame) {
+                  if (frame.body == null || !mounted || _teamId != teamId) {
+                    return;
+                  }
+                  final event = ChatTypingEvent.fromJson(
+                    jsonDecode(frame.body!) as Map<String, dynamic>,
+                  );
+                  _updateTyping(room.kind, event);
+                },
+              );
+              _socket?.subscribe(
                 destination: '/topic/chat/$teamId/${room.kind}/reactions',
                 callback: (frame) {
                   if (!mounted ||
@@ -189,6 +240,26 @@ class ChatController extends StateNotifier<ChatState> {
     } catch (e) {
       if (mounted) state = state.copyWith(error: '$e');
     }
+  }
+
+  void _updateTyping(String kind, ChatTypingEvent event) {
+    final key = '$kind/${event.activityId}';
+    _typingExpiry.remove(key)?.cancel();
+    final typing = {...state.typing};
+    if (event.typing) {
+      typing[key] = event;
+      _typingExpiry[key] = Timer(
+        Duration(seconds: event.authorId == 0 ? 90 : 8),
+        () {
+          _typingExpiry.remove(key);
+          if (!mounted) return;
+          state = state.copyWith(typing: {...state.typing}..remove(key));
+        },
+      );
+    } else {
+      typing.remove(key);
+    }
+    state = state.copyWith(typing: typing);
   }
 
   Future<void> refresh() async {
@@ -232,6 +303,7 @@ class ChatController extends StateNotifier<ChatState> {
   }
 
   Future<void> load(String kind) async {
+    if (_localTypingRoom != kind) stopLocalTyping();
     final team = _teamId;
     final revision = ++_loadRevision;
     _viewingLatest = true;
@@ -241,12 +313,23 @@ class ChatController extends StateNotifier<ChatState> {
       final detail = await ref.read(chatRepositoryProvider).detail(kind);
       if (!mounted || _teamId != team || _loadRevision != revision) return;
       state = state.copyWith(detail: detail);
+      _refreshOnline();
       _markLatestIfVisible();
     } catch (e) {
       if (mounted && _teamId == team && _loadRevision == revision) {
         state = state.copyWith(error: '$e');
       }
     }
+  }
+
+  void addSentMessage(String kind, ChatMessage message) {
+    if (state.activeRoom != kind || state.detail == null) return;
+    final detail = state.detail!;
+    if (detail.messages.any((item) => item.id == message.id)) return;
+    state = state.copyWith(
+      detail: ChatDetail([message, ...detail.messages], detail.receipts),
+    );
+    _markLatestIfVisible();
   }
 
   Future<bool> jumpTo(String kind, int id) async {
@@ -320,7 +403,10 @@ class ChatController extends StateNotifier<ChatState> {
   void setScreenVisible(bool visible) {
     final wasVisible = _screenVisible;
     _screenVisible = visible;
-    if (!visible) return;
+    if (!visible) {
+      stopLocalTyping();
+      return;
+    }
     final kind = state.activeRoom;
     if (!wasVisible && _viewingLatest && kind != null && kind.isNotEmpty) {
       load(kind);
@@ -361,16 +447,115 @@ class ChatController extends StateNotifier<ChatState> {
   }
 
   void closeRoom() {
+    stopLocalTyping();
     _loadRevision++;
     _historyWindow = false;
-    state = state.copyWith(activeRoom: '', clearDetail: true);
+    state = state.copyWith(activeRoom: '', clearDetail: true, online: const []);
     refresh();
+  }
+
+  void setAppActive(bool active) {
+    if (_appActive == active) return;
+    _appActive = active;
+    if (active) {
+      _startPresence();
+    } else {
+      _stopPresence();
+    }
+  }
+
+  void _startPresence() {
+    if (_teamId == null || !_appActive) return;
+    _presenceTimer?.cancel();
+    _heartbeatPresence();
+    _presenceTimer = Timer.periodic(const Duration(seconds: 15), (_) {
+      _heartbeatPresence();
+    });
+  }
+
+  Future<void> _heartbeatPresence() async {
+    if (!mounted || !_appActive || _teamId == null) return;
+    try {
+      await ref
+          .read(chatRepositoryProvider)
+          .setPresence(_presenceSessionId, true);
+      await _refreshOnline();
+    } catch (_) {
+      // The next heartbeat retries; old presence expires on the server.
+    }
+  }
+
+  Future<void> _refreshOnline() async {
+    final kind = state.activeRoom;
+    final team = _teamId;
+    if (!_appActive || kind == null || kind.isEmpty || team == null) return;
+    try {
+      final online = await ref.read(chatRepositoryProvider).online(kind);
+      if (mounted && _teamId == team && state.activeRoom == kind) {
+        state = state.copyWith(online: online);
+      }
+    } catch (_) {
+      // Keep the last known list until the next poll.
+    }
+  }
+
+  void _stopPresence() {
+    _presenceTimer?.cancel();
+    _presenceTimer = null;
+    if (_teamId == null) return;
+    final repo = ref.read(chatRepositoryProvider);
+    repo.setPresence(_presenceSessionId, false).catchError((_) => false);
+  }
+
+  void composerTextChanged(String kind, String text) {
+    if (!_screenVisible || state.activeRoom != kind || text.trim().isEmpty) {
+      stopLocalTyping();
+      return;
+    }
+    if (_localTypingRoom != kind) {
+      stopLocalTyping();
+      _localTypingRoom = kind;
+      _lastTypingPublished = null;
+    }
+    final now = DateTime.now();
+    if (_lastTypingPublished == null ||
+        now.difference(_lastTypingPublished!) >= const Duration(seconds: 2)) {
+      _lastTypingPublished = now;
+      _publishLocalTyping(kind, true);
+    }
+    _typingIdle?.cancel();
+    _typingIdle = Timer(const Duration(seconds: 4), stopLocalTyping);
+  }
+
+  void stopLocalTyping() {
+    _typingIdle?.cancel();
+    _typingIdle = null;
+    final kind = _localTypingRoom;
+    _localTypingRoom = null;
+    _lastTypingPublished = null;
+    if (kind != null && mounted) _publishLocalTyping(kind, false);
+  }
+
+  void _publishLocalTyping(String kind, bool typing) {
+    final repo = ref.read(chatRepositoryProvider);
+    _typingRequests = _typingRequests.then((_) async {
+      try {
+        await repo.setTyping(kind, _localActivityId, typing);
+      } catch (_) {
+        // Typing is temporary; a failed request must not block later updates.
+      }
+    });
   }
 
   @override
   void dispose() {
+    _presenceTimer?.cancel();
+    _typingIdle?.cancel();
     _socket?.deactivate();
     _authSubscription?.cancel();
+    for (final timer in _typingExpiry.values) {
+      timer.cancel();
+    }
     super.dispose();
   }
 }

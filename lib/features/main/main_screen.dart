@@ -7,6 +7,7 @@ import '../chat/chat_controller.dart';
 import 'controller/navigation_guard.dart';
 import '../beer/controller/beer_notifier.dart';
 import 'package:flutter/material.dart';
+import 'package:trus_app/features/chat/chat_repository.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:trus_app/common/widgets/bottomsheet/fine_stats_detail_bottom_sheet.dart';
 import 'package:trus_app/common/widgets/bottomsheet/loading_bottom_sheet.dart';
@@ -72,6 +73,7 @@ class _MainScreenState extends ConsumerState<MainScreen>
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
+    ref.read(chatControllerProvider.notifier).setAppActive(true);
     _unregisterNavigationGuard = ref
         .read(navigationGuardProvider)
         .register(_confirmLeave);
@@ -282,6 +284,7 @@ class _MainScreenState extends ConsumerState<MainScreen>
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
     _appActive = state == AppLifecycleState.resumed;
+    ref.read(chatControllerProvider.notifier).setAppActive(_appActive);
     _updateChatVisibility(ref.read(screenNotifierProvider).currentScreenId);
     if (_appActive) ref.read(chatControllerProvider.notifier).refresh();
   }
@@ -305,6 +308,7 @@ class _MainScreenState extends ConsumerState<MainScreen>
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
     ref.read(chatControllerProvider.notifier).setScreenVisible(false);
+    ref.read(chatControllerProvider.notifier).setAppActive(false);
     _unregisterNavigationGuard();
     pageController.dispose();
     _mainSub.close();
@@ -462,6 +466,11 @@ class _MainScreenState extends ConsumerState<MainScreen>
   }
 
   void _handleBack() {
+    if (ref.read(screenNotifierProvider).currentScreenId == ChatScreen.id &&
+        (ref.read(chatControllerProvider).activeRoom?.isNotEmpty ?? false)) {
+      ref.read(chatControllerProvider.notifier).closeRoom();
+      return;
+    }
     final handler = ref.read(backHandlerProvider);
 
     if (ref.read(screenNotifierProvider).currentScreenId !=
@@ -484,12 +493,20 @@ class _MainScreenState extends ConsumerState<MainScreen>
     final chatUnread = ref.watch(
       chatControllerProvider.select((state) => state.unread),
     );
+    final chatState = ref.watch(chatControllerProvider);
     final notifier = ref.read(mainNotifierProvider.notifier);
     final screenNotifier = ref.read(screenNotifierProvider.notifier);
     final uiState = ref.watch(uiFeedbackProvider);
     final teamName = ref.watch(globalVariablesControllerProvider).appTeam?.name;
     final pageTitle = screenState.currentScreenId == HomeScreen.id
         ? 'Přehled'
+        : screenState.currentScreenId == ChatScreen.id &&
+              (chatState.activeRoom?.isNotEmpty ?? false)
+        ? chatState.rooms
+                  .where((room) => room.kind == chatState.activeRoom)
+                  .map((room) => room.title)
+                  .firstOrNull ??
+              'Chat'
         : screenState.appBarTitleText;
 
     return Stack(
@@ -509,6 +526,21 @@ class _MainScreenState extends ConsumerState<MainScreen>
             child: NavigationShell(
               screenId: screenState.currentScreenId,
               title: pageTitle,
+              onTitleTap:
+                  screenState.currentScreenId == ChatScreen.id &&
+                      (chatState.activeRoom?.isNotEmpty ?? false)
+                  ? () => showChatMembersSheet(
+                      context,
+                      ref.read(chatRepositoryProvider),
+                      chatState.activeRoom!,
+                      pageTitle,
+                    )
+                  : null,
+              subtitleWidget:
+                  screenState.currentScreenId == ChatScreen.id &&
+                      (chatState.activeRoom?.isNotEmpty ?? false)
+                  ? const ChatOnlineStatus()
+                  : null,
               titleWidget: screenState.showPlayerStatsTitle
                   ? mainState.playerStats.when(
                       data: (stats) => PlayerStatsAppBarText(

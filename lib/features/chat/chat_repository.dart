@@ -12,6 +12,30 @@ import 'chat_image_cache.dart';
 
 final chatRepositoryProvider = Provider((ref) => ChatRepository(ref));
 
+class ChatOnlineUser {
+  final int id;
+  final String name;
+
+  ChatOnlineUser.fromJson(Map<String, dynamic> json)
+    : id = (json['id'] as num).toInt(),
+      name = json['name'] as String;
+}
+
+class ChatMember {
+  final int id;
+  final String name;
+  final bool online;
+  final DateTime? lastReadMessageAt;
+
+  ChatMember.fromJson(Map<String, dynamic> json)
+    : id = (json['id'] as num).toInt(),
+      name = json['name'] as String,
+      online = json['online'] as bool,
+      lastReadMessageAt = json['lastReadMessageAt'] == null
+          ? null
+          : DateTime.parse(json['lastReadMessageAt'] as String).toLocal();
+}
+
 class ChatRoom {
   final String kind, title;
   final int unread;
@@ -133,6 +157,29 @@ class ChatRepository extends RequestExecutor {
   ChatRepository(super.ref);
   final ChatImageCache _images = ChatImageCache();
 
+  Future<bool> setPresence(String sessionId, bool online) => executePostRequest(
+    Uri.parse('$serverUrl/chat/presence'),
+    (json) => json as bool,
+    jsonEncode({'sessionId': sessionId, 'online': online}),
+    queueOnFailure: false,
+  );
+
+  Future<List<ChatOnlineUser>> online(String kind) => executeGetRequest(
+    Uri.parse('$serverUrl/chat/$kind/online'),
+    (json) => (json as List)
+        .map((item) => ChatOnlineUser.fromJson(item as Map<String, dynamic>))
+        .toList(),
+    null,
+  );
+
+  Future<List<ChatMember>> members(String kind) => executeGetRequest(
+    Uri.parse('$serverUrl/chat/$kind/members'),
+    (json) => (json as List)
+        .map((item) => ChatMember.fromJson(item as Map<String, dynamic>))
+        .toList(),
+    null,
+  );
+
   Future<List<ChatRoom>> rooms() => executeGetRequest(
     Uri.parse('$serverUrl/chat/rooms'),
     (json) => (json as List)
@@ -168,6 +215,14 @@ class ChatRepository extends RequestExecutor {
           'text': text,
           if (replyToId != null) 'replyToId': replyToId,
         }),
+        queueOnFailure: false,
+      );
+
+  Future<bool> setTyping(String kind, String activityId, bool typing) =>
+      executePostRequest(
+        Uri.parse('$serverUrl/chat/$kind/typing'),
+        (json) => json as bool,
+        jsonEncode({'activityId': activityId, 'typing': typing}),
         queueOnFailure: false,
       );
 

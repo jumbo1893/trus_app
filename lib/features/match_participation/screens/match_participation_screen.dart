@@ -664,7 +664,8 @@ class _MemberTile extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final colors = context.appColors;
-    final respondedByOther = member.respondedBy != null &&
+    final respondedByOther =
+        member.respondedBy != null &&
         member.respondedBy!.id != member.player.id;
     final tile = Padding(
       padding: const EdgeInsets.symmetric(vertical: 3),
@@ -836,6 +837,7 @@ class ParticipationDiscussionSection extends StatelessWidget {
                   Expanded(
                     child: TextField(
                       controller: commentController,
+                      textCapitalization: TextCapitalization.sentences,
                       focusNode: commentFocus,
                       minLines: 1,
                       maxLines: 4,

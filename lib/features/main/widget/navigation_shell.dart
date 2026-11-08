@@ -7,6 +7,8 @@ class NavigationShell extends StatelessWidget {
   final String screenId;
   final String title;
   final Widget? titleWidget;
+  final Widget? subtitleWidget;
+  final VoidCallback? onTitleTap;
   final String? teamName;
   final int selectedIndex;
   final VoidCallback onBack, onHome, onAccount, onNotifications;
@@ -20,6 +22,8 @@ class NavigationShell extends StatelessWidget {
     required this.screenId,
     required this.title,
     this.titleWidget,
+    this.subtitleWidget,
+    this.onTitleTap,
     this.teamName,
     required this.selectedIndex,
     required this.onBack,
@@ -38,6 +42,7 @@ class NavigationShell extends StatelessWidget {
     return Scaffold(
       resizeToAvoidBottomInset: true,
       appBar: AppBar(
+        toolbarHeight: subtitleWidget == null ? null : 72,
         automaticallyImplyLeading: false,
         leading: isRoot ? null : BackButton(onPressed: onBack),
         title: Row(
@@ -48,11 +53,15 @@ class NavigationShell extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Text(
-                    isRoot ? teamName ?? title : title,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
+                  GestureDetector(
+                    onTap: onTitleTap,
+                    child: Text(
+                      isRoot ? teamName ?? title : title,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
                   ),
+                  if (subtitleWidget != null) subtitleWidget!,
                   if (isRoot &&
                       titleWidget != null &&
                       MediaQuery.sizeOf(context).width >= 360 &&

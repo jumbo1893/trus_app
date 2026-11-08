@@ -221,6 +221,7 @@ class _ParticipationResponseBottomSheetState
         const SizedBox(height: 18),
         TextField(
           controller: _commentController,
+          textCapitalization: TextCapitalization.sentences,
           maxLength: 1000,
           maxLines: 3,
           minLines: 1,

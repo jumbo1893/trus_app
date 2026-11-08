@@ -22,7 +22,7 @@ class ChatReactionPicker extends StatefulWidget {
 }
 
 class _ChatReactionPickerState extends State<ChatReactionPicker>
-    with SingleTickerProviderStateMixin {
+    with TickerProviderStateMixin {
   static const _quick = ['❤️', '😂', '😮', '😢', '😡'];
   static const _all = [
     '❤️',
@@ -44,6 +44,15 @@ class _ChatReactionPickerState extends State<ChatReactionPicker>
     duration: const Duration(milliseconds: 190),
     reverseDuration: const Duration(milliseconds: 140),
   )..forward();
+  late final AnimationController _actionsAnimation = AnimationController(
+    vsync: this,
+    duration: const Duration(milliseconds: 300),
+    reverseDuration: const Duration(milliseconds: 100),
+  )..forward();
+  late final AnimationController _emojiAnimation = AnimationController(
+    vsync: this,
+    duration: Duration(milliseconds: _quick.length * 100 + 180),
+  )..forward();
   bool _expanded = false;
   bool _closing = false;
   String? _pressedEmoji;
@@ -51,6 +60,8 @@ class _ChatReactionPickerState extends State<ChatReactionPicker>
   @override
   void dispose() {
     _animation.dispose();
+    _actionsAnimation.dispose();
+    _emojiAnimation.dispose();
     super.dispose();
   }
 
@@ -62,7 +73,7 @@ class _ChatReactionPickerState extends State<ChatReactionPicker>
       await Future<void>.delayed(const Duration(milliseconds: 110));
     }
     if (!mounted) return;
-    await _animation.reverse();
+    await Future.wait([_animation.reverse(), _actionsAnimation.reverse()]);
     if (!mounted) return;
     if (selected != null) widget.onSelected(selected);
     widget.onDismiss();
@@ -143,19 +154,30 @@ class _ChatReactionPickerState extends State<ChatReactionPicker>
                             spacing: 2,
                             runSpacing: 2,
                             children: [
-                              for (final emoji in _all) _choice(emoji),
+                              for (var index = 0; index < _all.length; index++)
+                                _choice(_all[index], index),
                             ],
                           )
                         : Row(
                             key: const ValueKey('reaction_picker_quick'),
                             mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                             children: [
-                              for (final emoji in _quick) _choice(emoji),
+                              for (
+                                var index = 0;
+                                index < _quick.length;
+                                index++
+                              )
+                                _choice(_quick[index], index),
                               IconButton(
                                 key: const ValueKey('reaction_picker_more'),
                                 tooltip: 'Další reakce',
-                                onPressed: () =>
-                                    setState(() => _expanded = true),
+                                onPressed: () {
+                                  setState(() => _expanded = true);
+                                  _emojiAnimation.duration = Duration(
+                                    milliseconds: _all.length * 100 + 180,
+                                  );
+                                  _emojiAnimation.forward(from: 0);
+                                },
                                 icon: const Icon(Icons.add_circle_outline),
                               ),
                             ],
@@ -171,39 +193,51 @@ class _ChatReactionPickerState extends State<ChatReactionPicker>
             left: 12,
             right: 12,
             bottom: padding.bottom + 12,
-            child: Material(
-              key: const ValueKey('chat_message_actions'),
-              borderRadius: BorderRadius.circular(20),
-              color: Theme.of(context).colorScheme.surface,
-              child: SizedBox(
-                height: actionHeight,
-                child: Row(
-                  children: [
-                    if (widget.onReply != null)
-                      Expanded(
-                        child: _actionButton(
-                          Icons.reply,
-                          'Odpovědět',
-                          widget.onReply!,
+            child: SlideTransition(
+              position:
+                  Tween<Offset>(
+                    begin: const Offset(0, 1),
+                    end: Offset.zero,
+                  ).animate(
+                    CurvedAnimation(
+                      parent: _actionsAnimation,
+                      curve: Curves.easeOutCubic,
+                    ),
+                  ),
+              child: Material(
+                key: const ValueKey('chat_message_actions'),
+                borderRadius: BorderRadius.circular(20),
+                color: Theme.of(context).colorScheme.surface,
+                child: SizedBox(
+                  height: actionHeight,
+                  child: Row(
+                    children: [
+                      if (widget.onReply != null)
+                        Expanded(
+                          child: _actionButton(
+                            Icons.reply,
+                            'Odpovědět',
+                            widget.onReply!,
+                          ),
                         ),
-                      ),
-                    if (widget.onCopy != null)
-                      Expanded(
-                        child: _actionButton(
-                          Icons.copy,
-                          'Kopírovat',
-                          widget.onCopy!,
+                      if (widget.onCopy != null)
+                        Expanded(
+                          child: _actionButton(
+                            Icons.copy,
+                            'Kopírovat',
+                            widget.onCopy!,
+                          ),
                         ),
-                      ),
-                    if (widget.onAskBot != null)
-                      Expanded(
-                        child: _actionButton(
-                          Icons.smart_toy_outlined,
-                          'TrusBot',
-                          widget.onAskBot!,
+                      if (widget.onAskBot != null)
+                        Expanded(
+                          child: _actionButton(
+                            Icons.smart_toy_outlined,
+                            'TrusBot',
+                            widget.onAskBot!,
+                          ),
                         ),
-                      ),
-                  ],
+                    ],
+                  ),
                 ),
               ),
             ),
@@ -226,16 +260,33 @@ class _ChatReactionPickerState extends State<ChatReactionPicker>
         ),
       );
 
-  Widget _choice(String emoji) => AnimatedScale(
-    scale: _pressedEmoji == emoji ? 1.3 : 1,
-    duration: const Duration(milliseconds: 110),
-    curve: Curves.easeOutBack,
-    child: IconButton(
-      key: ValueKey('reaction_choice_$emoji'),
-      tooltip: emoji,
-      visualDensity: VisualDensity.compact,
-      onPressed: () => _close(emoji),
-      icon: Text(emoji, style: const TextStyle(fontSize: 25)),
+  Widget _choice(String emoji, int index) => AnimatedBuilder(
+    animation: _emojiAnimation,
+    builder: (context, child) {
+      final duration = _emojiAnimation.duration!.inMilliseconds;
+      final progress = ((_emojiAnimation.value * duration - index * 100) / 180)
+          .clamp(0.0, 1.0);
+      final eased = Curves.easeOutCubic.transform(progress);
+      return Opacity(
+        key: ValueKey('reaction_entry_$emoji'),
+        opacity: eased,
+        child: Transform.translate(
+          offset: Offset(0, 12 * (1 - eased)),
+          child: IgnorePointer(ignoring: progress < 1, child: child),
+        ),
+      );
+    },
+    child: AnimatedScale(
+      scale: _pressedEmoji == emoji ? 1.3 : 1,
+      duration: const Duration(milliseconds: 110),
+      curve: Curves.easeOutBack,
+      child: IconButton(
+        key: ValueKey('reaction_choice_$emoji'),
+        tooltip: emoji,
+        visualDensity: VisualDensity.compact,
+        onPressed: () => _close(emoji),
+        icon: Text(emoji, style: const TextStyle(fontSize: 25)),
+      ),
     ),
   );
 }

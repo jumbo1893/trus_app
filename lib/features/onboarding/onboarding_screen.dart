@@ -265,14 +265,20 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
     if (await askForBackgroundSteps(context) && mounted) {
       bool allowed;
       try {
-        allowed = await ref.read(onboardingPermissionsProvider).backgroundSteps();
+        allowed = await ref
+            .read(onboardingPermissionsProvider)
+            .backgroundSteps();
       } catch (_) {
         allowed = false;
       }
       if (!allowed && mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-          content: Text('Aktualizace na pozadí nebyla povolena. Kroky se budou aktualizovat při používání aplikace.'),
-        ));
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text(
+              'Aktualizace na pozadí nebyla povolena. Kroky se budou aktualizovat při používání aplikace.',
+            ),
+          ),
+        );
       }
     }
     if (!mounted) return;
@@ -580,6 +586,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
       if (!_create) ...[
         TextField(
           controller: _search,
+          textCapitalization: TextCapitalization.sentences,
           autocorrect: false,
           enableSuggestions: false,
           spellCheckConfiguration: const SpellCheckConfiguration.disabled(),
@@ -638,6 +645,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
       if (_create) ...[
         TextField(
           controller: _name,
+          textCapitalization: TextCapitalization.sentences,
           enabled: !_busy,
           maxLength: 100,
           key: const ValueKey('onboarding-player-name'),

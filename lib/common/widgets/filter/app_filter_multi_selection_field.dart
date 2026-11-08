@@ -218,6 +218,7 @@ class _FilterMultiSelectionSheetState<T>
               Padding(
                 padding: const EdgeInsets.fromLTRB(20, 0, 20, 12),
                 child: TextField(
+                  textCapitalization: TextCapitalization.sentences,
                   autocorrect: false,
                   enableSuggestions: false,
                   spellCheckConfiguration:

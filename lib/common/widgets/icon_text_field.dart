@@ -7,7 +7,6 @@ class IconTextField extends StatelessWidget {
   final String labelText;
   final Icon icon;
 
-
   const IconTextField({
     Key? key,
     required this.textController,
@@ -20,34 +19,22 @@ class IconTextField extends StatelessWidget {
   Widget build(BuildContext context) {
     return TextField(
       controller: textController,
+      textCapitalization: TextCapitalization.sentences,
       decoration: InputDecoration(
-          labelText: labelText,
-          border: UnderlineInputBorder(
-            borderSide: BorderSide(
-                color: context.appColors.buttonForeground
-            ),
-          ),
-          enabledBorder: UnderlineInputBorder(
-            borderSide: BorderSide(
-                color: context.appColors.buttonForeground
-            ),
-          ),
-          focusedBorder: UnderlineInputBorder(
-            borderSide: BorderSide(
-                color: context.appColors.buttonForeground
-            ),
-          ),
-          labelStyle: const TextStyle(
-            fontSize: 12,
-          ),
-          floatingLabelStyle: TextStyle(
-              color: context.appColors.fieldTextAccent
-          ),
-          contentPadding: const EdgeInsets.only(left: 10, top: 10),
-          suffixIcon: IconButton(
-              onPressed: onIconPressed,
-              icon: icon
-          )
+        labelText: labelText,
+        border: UnderlineInputBorder(
+          borderSide: BorderSide(color: context.appColors.buttonForeground),
+        ),
+        enabledBorder: UnderlineInputBorder(
+          borderSide: BorderSide(color: context.appColors.buttonForeground),
+        ),
+        focusedBorder: UnderlineInputBorder(
+          borderSide: BorderSide(color: context.appColors.buttonForeground),
+        ),
+        labelStyle: const TextStyle(fontSize: 12),
+        floatingLabelStyle: TextStyle(color: context.appColors.fieldTextAccent),
+        contentPadding: const EdgeInsets.only(left: 10, top: 10),
+        suffixIcon: IconButton(onPressed: onIconPressed, icon: icon),
       ),
       textAlign: TextAlign.right,
     );

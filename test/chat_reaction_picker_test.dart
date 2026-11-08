@@ -3,6 +3,41 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:trus_app/features/chat/chat_reaction_picker.dart';
 
 void main() {
+  testWidgets('actions slide up and reactions appear one after another', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: ChatReactionPicker(
+            anchor: const Rect.fromLTWH(100, 250, 150, 50),
+            onSelected: (_) {},
+            onDismiss: () {},
+            onReply: () {},
+          ),
+        ),
+      ),
+    );
+    final actions = find.byKey(const ValueKey('chat_message_actions'));
+    final first = find.byKey(const ValueKey('reaction_entry_❤️'));
+    final second = find.byKey(const ValueKey('reaction_entry_😂'));
+    final startingBottom = tester.getBottomLeft(actions).dy;
+    expect(tester.widget<Opacity>(first).opacity, 0);
+    expect(tester.widget<Opacity>(second).opacity, 0);
+
+    await tester.pump(const Duration(milliseconds: 100));
+    final after100ms = tester.getBottomLeft(actions).dy;
+    expect(after100ms, lessThan(startingBottom));
+    expect(tester.widget<Opacity>(first).opacity, greaterThan(0));
+    expect(tester.widget<Opacity>(second).opacity, 0);
+    await tester.pump(const Duration(milliseconds: 100));
+    expect(tester.widget<Opacity>(second).opacity, greaterThan(0));
+    final after200ms = tester.getBottomLeft(actions).dy;
+    expect(after200ms, lessThan(after100ms));
+    await tester.pump(const Duration(milliseconds: 100));
+    expect(tester.getBottomLeft(actions).dy, lessThan(after200ms));
+  });
+
   testWidgets('long press menu offers reply, copy and TrusBot actions', (
     tester,
   ) async {
