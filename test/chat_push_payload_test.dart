@@ -17,15 +17,27 @@ void main() {
   test('beer and fine push skip the foreground sheet', () {
     for (final type in ['BEER', 'FINE']) {
       expect(
-        PushPayload.fromData({'notificationType': type})
-            .suppressForegroundSheet,
+        PushPayload.fromData({
+          'notificationType': type,
+        }).suppressForegroundSheet,
         isTrue,
       );
     }
     expect(
-      PushPayload.fromData({'title': 'Obecné oznámení'})
-          .suppressForegroundSheet,
+      PushPayload.fromData({
+        'title': 'Obecné oznámení',
+      }).suppressForegroundSheet,
       isFalse,
     );
+  });
+
+  test('new member push points to one team role', () {
+    final push = PushPayload.fromData({
+      'screenId': 'team-administration-screen',
+      'appTeamId': '12',
+      'userTeamRoleId': '40',
+    });
+    expect(push.appTeamId, 12);
+    expect(push.userTeamRoleId, 40);
   });
 }

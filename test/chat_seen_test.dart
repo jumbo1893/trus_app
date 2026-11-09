@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:trus_app/features/chat/chat_repository.dart';
 import 'package:trus_app/features/chat/chat_screen.dart';
 
@@ -56,17 +57,19 @@ void main() {
       ChatReceipt.fromJson({'userId': 2, 'name': 'Pavel', 'lastMessageId': 6}),
     ];
     await tester.pumpWidget(
-      MaterialApp(
-        home: Scaffold(
-          body: ChatMessageTile(
-            message: message,
-            room: 'all',
-            own: true,
-            selected: false,
-            seen: seen,
-            onTap: () {},
-            onLongPress: (_) {},
-            onReactionsTap: () {},
+      ProviderScope(
+        child: MaterialApp(
+          home: Scaffold(
+            body: ChatMessageTile(
+              message: message,
+              room: 'all',
+              own: true,
+              selected: false,
+              seen: seen,
+              onTap: () {},
+              onLongPress: (_) {},
+              onReactionsTap: () {},
+            ),
           ),
         ),
       ),
@@ -79,6 +82,45 @@ void main() {
     await tester.tap(find.byKey(const ValueKey('chat_seen_avatars')));
     await tester.pump();
     expect(find.byKey(const ValueKey('chat_seen_names')), findsNothing);
+  });
+
+  testWidgets('read avatars align to the right for incoming messages', (
+    tester,
+  ) async {
+    final message = ChatMessage.fromJson({
+      'id': 7,
+      'authorId': 2,
+      'author': 'Pavel',
+      'text': 'Ahoj',
+      'createdAt': '2026-10-13T10:00:00Z',
+    });
+    final seen = [
+      ChatReceipt.fromJson({'userId': 3, 'name': 'Eva', 'lastMessageId': 7}),
+    ];
+    await tester.pumpWidget(
+      ProviderScope(
+        child: MaterialApp(
+          home: Scaffold(
+            body: ChatMessageTile(
+              message: message,
+              room: 'all',
+              own: false,
+              selected: false,
+              seen: seen,
+              onTap: () {},
+              onLongPress: (_) {},
+              onReactionsTap: () {},
+            ),
+          ),
+        ),
+      ),
+    );
+
+    final avatars = tester.getRect(
+      find.byKey(const ValueKey('chat_seen_avatars')),
+    );
+    final tile = tester.getRect(find.byType(ChatMessageTile));
+    expect(avatars.right, closeTo(tile.right - 7, 1));
   });
 
   testWidgets('selected message shows readers even without cursor avatars', (
@@ -95,18 +137,20 @@ void main() {
       ChatReceipt.fromJson({'userId': 2, 'name': 'Pavel', 'lastMessageId': 8}),
     ];
     await tester.pumpWidget(
-      MaterialApp(
-        home: Scaffold(
-          body: ChatMessageTile(
-            message: message,
-            room: 'all',
-            own: true,
-            selected: true,
-            seen: const [],
-            readers: readers,
-            onTap: () {},
-            onLongPress: (_) {},
-            onReactionsTap: () {},
+      ProviderScope(
+        child: MaterialApp(
+          home: Scaffold(
+            body: ChatMessageTile(
+              message: message,
+              room: 'all',
+              own: true,
+              selected: true,
+              seen: const [],
+              readers: readers,
+              onTap: () {},
+              onLongPress: (_) {},
+              onReactionsTap: () {},
+            ),
           ),
         ),
       ),

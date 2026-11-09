@@ -44,6 +44,16 @@ class _Home implements HomeRepository {
 }
 
 void main() {
+  test('dashboard parses pending team members', () {
+    final setup = HomeSetup.fromJson({
+      'pendingTeamMembers': [
+        {'userTeamRoleId': 40, 'userName': 'Petr'},
+      ],
+    });
+    expect(setup.pendingTeamMembers.single.userTeamRoleId, 40);
+    expect(setup.pendingTeamMembers.single.userName, 'Petr');
+  });
+
   test(
     'resume requests share a fetch and failure preserves data without UI errors',
     () async {

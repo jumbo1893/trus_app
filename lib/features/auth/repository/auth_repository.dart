@@ -1,4 +1,8 @@
 import 'dart:convert';
+import 'dart:typed_data';
+import 'package:http/http.dart' as http;
+import 'package:http_parser/http_parser.dart';
+import 'package:trus_app/common/repository/header/cookies/header_provider.dart';
 import 'package:trus_app/features/season_recap/season_recap_data.dart';
 import 'package:trus_app/services/app_open_tracker.dart';
 
@@ -28,6 +32,36 @@ final authRepositoryProvider = Provider<AuthRepository>((ref) {
 
 class AuthRepository extends CrudApiService {
   AuthRepository({required Ref ref}) : super(ref);
+
+  Future<void> uploadAvatar(Uint8List bytes) async {
+    final client = getClient();
+    try {
+      final request = http.MultipartRequest(
+        'POST',
+        Uri.parse('$serverUrl/user/avatar'),
+      );
+      request.headers.addAll(
+        await HeaderProvider(ref).getHeaders()
+          ..remove('Content-Type'),
+      );
+      request.files.add(
+        http.MultipartFile.fromBytes(
+          'image',
+          bytes,
+          filename: 'avatar.jpg',
+          contentType: MediaType('image', 'jpeg'),
+        ),
+      );
+      final response = await http.Response.fromStream(
+        await client.send(request),
+      );
+      if (response.statusCode != 200) {
+        throw Exception('Fotku se nepodařilo uložit (${response.statusCode})');
+      }
+    } finally {
+      client.close();
+    }
+  }
 
   Future<UserApiModel?> fastLogin() async {
     UserApiModel userApiModel;
@@ -241,9 +275,6 @@ class AuthRepository extends CrudApiService {
     String? name,
     int? playerId,
   ) async {
-    if (name != null) {
-      await auth.currentUser!.updateDisplayName(name);
-    }
     UserApiModel user = UserApiModel();
     var url = Uri.parse("$serverUrl/$authApi/update");
     user.admin = admin;
@@ -254,6 +285,13 @@ class AuthRepository extends CrudApiService {
       (dynamic json) => UserApiModel.fromJson(json),
       jsonEncode(user.toJson()),
     );
+    if (name != null) {
+      try {
+        await auth.currentUser?.updateDisplayName(name);
+      } catch (error) {
+        debugPrint('Firebase display name update failed: $error');
+      }
+    }
     return userApiModel;
   }
 

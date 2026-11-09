@@ -68,4 +68,18 @@ void main() {
     expect(member.roleLabel, 'Může editovat');
     expect(role.roleToString(), 'pro editaci');
   });
+
+  test('new player stays pending until administrator confirms the role', () {
+    final member = TeamMemberApiModel.fromJson({
+      'userTeamRoleId': 21,
+      'userId': 8,
+      'userName': 'Nový hráč',
+      'role': 'VIEWER',
+      'roleApproved': false,
+      'owner': false,
+    });
+
+    expect(member.roleLabel, 'Bez práv');
+    expect(member.roleApproved, isFalse);
+  });
 }

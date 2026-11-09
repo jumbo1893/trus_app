@@ -12,6 +12,8 @@ import 'package:trus_app/common/widgets/home/birthday_text.dart';
 import 'package:trus_app/features/app_notice/widgets/app_notice_bottom_sheet.dart';
 import 'package:trus_app/features/general/global_variables_controller.dart';
 import 'package:trus_app/features/home/screens/rotating_stats_widget.dart';
+import 'package:trus_app/features/team_administration/screens/team_administration_screen.dart';
+import 'package:trus_app/features/team_administration/controller/team_administration_provider.dart';
 import 'package:trus_app/models/api/app_notice/app_notice.dart';
 import 'package:trus_app/models/api/home/home_setup.dart';
 import 'package:trus_app/services/permissions/authenticated_permissions_provider.dart';
@@ -199,6 +201,28 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
                       width: 331,
                     ),
                     const SizedBox(height: sectionSpacing),
+                    for (final member in setup.pendingTeamMembers)
+                      Card(
+                        child: ListTile(
+                          leading: Icon(
+                            Icons.error,
+                            color: Theme.of(context).colorScheme.error,
+                          ),
+                          title: Text('Nový hráč: ${member.userName}'),
+                          subtitle: const Text('Čeká na potvrzení práv'),
+                          trailing: const Icon(Icons.chevron_right),
+                          onTap: () {
+                            ref
+                                .read(pendingTeamMemberTargetProvider.notifier)
+                                .state = member
+                                .userTeamRoleId;
+                            ref.invalidate(teamAdministrationProvider);
+                            notifier.changeFragment(
+                              TeamAdministrationScreen.id,
+                            );
+                          },
+                        ),
+                      ),
                     for (final isNext
                         in setup.lastMatch?.needsEntry == true
                             ? [false, true]

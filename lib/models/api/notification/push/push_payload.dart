@@ -10,6 +10,7 @@ class PushPayload {
   final int? appTeamId;
   final int? playerAchievementId;
   final int? recapId;
+  final int? userTeamRoleId;
   final String? room;
 
   const PushPayload({
@@ -24,6 +25,7 @@ class PushPayload {
     this.appTeamId,
     this.playerAchievementId,
     this.recapId,
+    this.userTeamRoleId,
     this.room,
   });
 
@@ -39,6 +41,7 @@ class PushPayload {
       appTeamId: _toInt(data['appTeamId']),
       playerAchievementId: _toInt(data['playerAchievementId']),
       recapId: _toInt(data['recapId']),
+      userTeamRoleId: _toInt(data['userTeamRoleId']),
       room: data['room']?.toString(),
       navigateText: data['navigateText']?.toString(),
     );

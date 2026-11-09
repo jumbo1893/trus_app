@@ -4,6 +4,7 @@ import android.content.Intent
 import android.net.Uri
 import android.os.CancellationSignal
 import android.os.Bundle
+import android.util.Log
 import androidx.activity.enableEdgeToEdge
 import androidx.core.content.ContextCompat
 import androidx.credentials.CreateCredentialResponse
@@ -15,6 +16,7 @@ import androidx.credentials.exceptions.CreateCredentialException
 import io.flutter.embedding.android.FlutterFragmentActivity
 import io.flutter.embedding.engine.FlutterEngine
 import io.flutter.plugin.common.MethodChannel
+import io.flutter.plugins.camera.CameraPlugin
 
 class MainActivity: FlutterFragmentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -34,6 +36,13 @@ class MainActivity: FlutterFragmentActivity() {
 
     override fun configureFlutterEngine(flutterEngine: FlutterEngine) {
         super.configureFlutterEngine(flutterEngine)
+
+        // Register the Camera2 implementation even if the local generated
+        // plugin registrant has not been refreshed yet.
+        if (!flutterEngine.plugins.has(CameraPlugin::class.java)) {
+            flutterEngine.plugins.add(CameraPlugin())
+        }
+        Log.i("AvatarCamera", "Camera2 plugin registered: ${flutterEngine.plugins.has(CameraPlugin::class.java)}")
 
         MethodChannel(
             flutterEngine.dartExecutor.binaryMessenger,

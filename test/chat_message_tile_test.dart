@@ -1,10 +1,43 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_markdown_plus/flutter_markdown_plus.dart';
 import 'package:trus_app/features/chat/chat_repository.dart';
 import 'package:trus_app/features/chat/chat_screen.dart';
+import 'package:trus_app/features/user/widgets/user_avatar.dart';
 
 void main() {
+  testWidgets('own message has no sender avatar', (tester) async {
+    final message = ChatMessage.fromJson({
+      'id': 21,
+      'authorId': 1,
+      'author': 'Já',
+      'text': 'Moje zpráva',
+      'createdAt': '2026-10-13T10:00:00Z',
+    });
+    await tester.pumpWidget(
+      ProviderScope(
+        child: MaterialApp(
+          home: Scaffold(
+            body: ChatMessageTile(
+              message: message,
+              room: 'all',
+              own: true,
+              selected: false,
+              seen: const [],
+              onTap: () {},
+              onLongPress: (_) {},
+              onReactionsTap: () {},
+            ),
+          ),
+        ),
+      ),
+    );
+
+    expect(find.byType(UserAvatar), findsNothing);
+    expect(find.byKey(const ValueKey('chat-bubble-21')), findsOneWidget);
+  });
+
   testWidgets('double tap reacts and reply preview shows original message', (
     tester,
   ) async {
@@ -24,24 +57,35 @@ void main() {
       },
     });
     await tester.pumpWidget(
-      MaterialApp(
-        home: Scaffold(
-          body: ChatMessageTile(
-            message: message,
-            room: 'all',
-            own: false,
-            selected: false,
-            seen: const [],
-            onTap: () {},
-            onDoubleTap: () => hearts++,
-            onReplyTap: () => replyTaps++,
-            onLongPress: (_) {},
-            onReactionsTap: () {},
+      ProviderScope(
+        child: MaterialApp(
+          home: Scaffold(
+            body: ChatMessageTile(
+              message: message,
+              room: 'all',
+              own: false,
+              isOnline: true,
+              selected: false,
+              seen: const [],
+              onTap: () {},
+              onDoubleTap: () => hearts++,
+              onReplyTap: () => replyTaps++,
+              onLongPress: (_) {},
+              onReactionsTap: () {},
+            ),
           ),
         ),
       ),
     );
     expect(find.text('Platí to?'), findsOneWidget);
+    expect(find.byType(UserAvatar), findsOneWidget);
+    expect(find.byKey(const ValueKey('chat-online-dot-2')), findsOneWidget);
+    expect(
+      tester.getCenter(find.byType(UserAvatar)).dx,
+      lessThan(
+        tester.getTopLeft(find.byKey(const ValueKey('chat-bubble-20'))).dx,
+      ),
+    );
     await tester.tap(find.byKey(const ValueKey('chat-reply-20')));
     await tester.pump();
     expect(replyTaps, 1);
@@ -64,17 +108,19 @@ void main() {
       'createdAt': '2026-10-13T10:00:00Z',
     });
     await tester.pumpWidget(
-      MaterialApp(
-        home: Scaffold(
-          body: ChatMessageTile(
-            message: message,
-            room: 'all',
-            own: false,
-            selected: false,
-            seen: const [],
-            onTap: () => taps++,
-            onLongPress: (_) => longPresses++,
-            onReactionsTap: () {},
+      ProviderScope(
+        child: MaterialApp(
+          home: Scaffold(
+            body: ChatMessageTile(
+              message: message,
+              room: 'all',
+              own: false,
+              selected: false,
+              seen: const [],
+              onTap: () => taps++,
+              onLongPress: (_) => longPresses++,
+              onReactionsTap: () {},
+            ),
           ),
         ),
       ),
@@ -105,24 +151,26 @@ void main() {
     });
     int? selected;
     await tester.pumpWidget(
-      MaterialApp(
-        home: Scaffold(
-          body: StatefulBuilder(
-            builder: (context, setState) => Column(
-              children: [
-                for (final id in [1, 2])
-                  ChatMessageTile(
-                    message: message(id, id == 1 ? 'Kuba' : 'Petr'),
-                    room: 'players',
-                    own: false,
-                    selected: selected == id,
-                    seen: const [],
-                    onTap: () =>
-                        setState(() => selected = selected == id ? null : id),
-                    onLongPress: (_) {},
-                    onReactionsTap: () {},
-                  ),
-              ],
+      ProviderScope(
+        child: MaterialApp(
+          home: Scaffold(
+            body: StatefulBuilder(
+              builder: (context, setState) => Column(
+                children: [
+                  for (final id in [1, 2])
+                    ChatMessageTile(
+                      message: message(id, id == 1 ? 'Kuba' : 'Petr'),
+                      room: 'players',
+                      own: false,
+                      selected: selected == id,
+                      seen: const [],
+                      onTap: () =>
+                          setState(() => selected = selected == id ? null : id),
+                      onLongPress: (_) {},
+                      onReactionsTap: () {},
+                    ),
+                ],
+              ),
             ),
           ),
         ),
@@ -158,21 +206,23 @@ void main() {
       'createdAt': '2026-10-13T10:00:00Z',
     });
     await tester.pumpWidget(
-      MaterialApp(
-        home: Scaffold(
-          body: ChatMessageTile(
-            message: message,
-            room: 'all',
-            own: false,
-            selected: false,
-            seen: const [],
-            onTap: () {},
-            onLongPress: (_) {},
-            onReactionsTap: () {},
-            imageBuilder: (_, __) => const SizedBox(
-              key: ValueKey('fake-image'),
-              width: 80,
-              height: 80,
+      ProviderScope(
+        child: MaterialApp(
+          home: Scaffold(
+            body: ChatMessageTile(
+              message: message,
+              room: 'all',
+              own: false,
+              selected: false,
+              seen: const [],
+              onTap: () {},
+              onLongPress: (_) {},
+              onReactionsTap: () {},
+              imageBuilder: (_, __) => const SizedBox(
+                key: ValueKey('fake-image'),
+                width: 80,
+                height: 80,
+              ),
             ),
           ),
         ),
@@ -211,20 +261,22 @@ void main() {
     var reactionTaps = 0;
     Rect? anchor;
     await tester.pumpWidget(
-      MaterialApp(
-        home: Scaffold(
-          body: ChatMessageTile(
-            message: message,
-            room: 'all',
-            own: false,
-            selected: false,
-            seen: const [],
-            onTap: () {},
-            onLongPress: (rect) {
-              longPresses++;
-              anchor = rect;
-            },
-            onReactionsTap: () => reactionTaps++,
+      ProviderScope(
+        child: MaterialApp(
+          home: Scaffold(
+            body: ChatMessageTile(
+              message: message,
+              room: 'all',
+              own: false,
+              selected: false,
+              seen: const [],
+              onTap: () {},
+              onLongPress: (rect) {
+                longPresses++;
+                anchor = rect;
+              },
+              onReactionsTap: () => reactionTaps++,
+            ),
           ),
         ),
       ),

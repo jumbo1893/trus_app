@@ -10,8 +10,6 @@ import '../../../models/api/interfaces/dropdown_item.dart';
 import '../../auth/repository/auth_repository.dart';
 import '../../general/notifier/safe_state_notifier.dart';
 import '../../general/repository/api_result.dart';
-import '../../home/screens/home_screen.dart';
-import '../../main/controller/screen_notifier.dart';
 
 final viewUserNotifierProvider =
     StateNotifierProvider.autoDispose<ViewUserNotifier, ViewUserState>((ref) {
@@ -24,6 +22,7 @@ final viewUserNotifierProvider =
 class ViewUserNotifier extends SafeStateNotifier<ViewUserState>
     implements IDropdownNotifier {
   final AuthRepository authApiService;
+  bool _savingPlayer = false;
 
   ViewUserNotifier({required Ref ref, required this.authApiService})
     : super(
@@ -81,6 +80,7 @@ class ViewUserNotifier extends SafeStateNotifier<ViewUserState>
 
     state = state.copyWith(
       name: setup.currentUser.name ?? "",
+      userId: setup.currentUser.id,
       email: setup.currentUser.mail ?? "",
       eligiblePlayersToPairWith: AsyncValue.data(
         setup.eligiblePlayersToPairWith,
@@ -93,43 +93,52 @@ class ViewUserNotifier extends SafeStateNotifier<ViewUserState>
     );
   }
 
-  Future<void> commit() async {
-    PlayerApiModel playerApiModel = state.selectedPlayer as PlayerApiModel;
-    bool removedPlayer = playerApiModel.id == 0;
-    String successSnack = removedPlayer
+  Future<void> _savePlayer(
+    PlayerApiModel playerApiModel,
+    PlayerApiModel? previous,
+  ) async {
+    final removedPlayer = playerApiModel.id == 0;
+    final successSnack = removedPlayer
         ? "Z profilu odebrán hráč"
         : "Do profilu přidán hráč ${playerApiModel.name}";
     final globals = ref.read(globalVariablesProvider.notifier);
-    final screen = ref.read(screenNotifierProvider.notifier);
-    final result = await runUi<void>(
-      () => authApiService.setUserPlayerId(
-        state.selectedPlayer as PlayerApiModel,
-      ),
-      showLoading: true,
-      successSnack: successSnack,
-    );
-    if (!mounted) return;
-    if (result case ApiFieldError<void>()) {
-      final fallbackMessage = result.fieldErrors.isEmpty
-          ? 'Hráče se nepodařilo spárovat.'
-          : result.fieldErrors.values.first;
-      ui.showErrorDialog(
-        result.fieldErrors['player'] ?? fallbackMessage,
+    try {
+      final result = await runUi<void>(
+        () => authApiService.setUserPlayerId(playerApiModel),
+        showLoading: true,
+        successSnack: successSnack,
       );
-      return;
+      if (!mounted) return;
+      if (result case ApiFieldError<void>()) {
+        final fallbackMessage = result.fieldErrors.isEmpty
+            ? 'Hráče se nepodařilo spárovat.'
+            : result.fieldErrors.values.first;
+        ui.showErrorDialog(result.fieldErrors['player'] ?? fallbackMessage);
+      }
+      if (result is! ApiSuccess<void>) {
+        if (previous != null) state = state.copyWith(selectedPlayer: previous);
+        return;
+      }
+      globals.setPlayer(removedPlayer ? null : playerApiModel);
+      ref
+          .read(globalVariablesControllerProvider)
+          .setPlayerApiModel(removedPlayer ? null : playerApiModel);
+    } finally {
+      _savingPlayer = false;
     }
-    if (result is! ApiSuccess<void>) return;
+  }
 
-    if (removedPlayer) {
-      globals.setPlayer(null);
-    } else {
-      globals.setPlayer(playerApiModel);
-    }
-    screen.changeFragment(HomeScreen.id);
+  void setName(String name) {
+    state = state.copyWith(name: name);
   }
 
   @override
   selectDropdown(DropdownItem item) {
+    if (_savingPlayer || item is! PlayerApiModel) return;
+    final previous = state.selectedPlayer as PlayerApiModel?;
+    if (previous?.id == item.id) return;
+    _savingPlayer = true;
     state = state.copyWith(selectedPlayer: item);
+    _savePlayer(item, previous);
   }
 }

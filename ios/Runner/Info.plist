@@ -25,7 +25,9 @@
 	<key>NSMicrophoneUsageDescription</key>
 	<string>Aplikace používá mikrofon pro nadiktování dotazu TrusBotovi.</string>
 	<key>NSPhotoLibraryUsageDescription</key>
-	<string>Aplikace umožňuje vybrat obrázek z galerie a poslat ho do týmového chatu.</string>
+	<string>Aplikace umožňuje vybrat obrázek z galerie pro profilovou fotku nebo týmový chat.</string>
+	<key>NSCameraUsageDescription</key>
+	<string>Aplikace umožňuje vyfotit profilovou fotku přední kamerou.</string>
 	<key>NSSpeechRecognitionUsageDescription</key>
 	<string>Aplikace převádí nadiktovaný dotaz pro TrusBota na text.</string>
 	<key>NSHealthShareUsageDescription</key>

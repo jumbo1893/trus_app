@@ -7,6 +7,7 @@ import '../../../models/api/interfaces/dropdown_item.dart';
 class ViewUserState implements IDropdownState {
   final String name;
   final String email;
+  final int? userId;
   final AsyncValue<List<DropdownItem>> eligiblePlayersToPairWith;
   final DropdownItem? selectedPlayer;
   final UserTeamRoleApiModel? userTeamRole;
@@ -15,6 +16,7 @@ class ViewUserState implements IDropdownState {
   const ViewUserState({
     required this.name,
     required this.email,
+    this.userId,
     required this.eligiblePlayersToPairWith,
     this.selectedPlayer,
     this.userTeamRole,
@@ -24,6 +26,7 @@ class ViewUserState implements IDropdownState {
   ViewUserState copyWith({
     String? name,
     String? email,
+    int? userId,
     AsyncValue<List<DropdownItem>>? eligiblePlayersToPairWith,
     DropdownItem? selectedPlayer,
     UserTeamRoleApiModel? userTeamRole,
@@ -32,7 +35,9 @@ class ViewUserState implements IDropdownState {
     return ViewUserState(
       name: name ?? this.name,
       email: email ?? this.email,
-      eligiblePlayersToPairWith: eligiblePlayersToPairWith ?? this.eligiblePlayersToPairWith,
+      userId: userId ?? this.userId,
+      eligiblePlayersToPairWith:
+          eligiblePlayersToPairWith ?? this.eligiblePlayersToPairWith,
       selectedPlayer: selectedPlayer ?? this.selectedPlayer,
       userTeamRole: userTeamRole ?? this.userTeamRole,
       otherRoles: otherRoles ?? this.otherRoles,

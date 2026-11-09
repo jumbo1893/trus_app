@@ -8,3 +8,5 @@ final teamAdministrationProvider =
           .watch(teamAdministrationRepositoryProvider)
           .getAdministration();
     });
+
+final pendingTeamMemberTargetProvider = StateProvider<int?>((ref) => null);

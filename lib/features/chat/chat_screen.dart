@@ -15,6 +15,7 @@ import 'chat_bot_question_sheet.dart';
 import 'chat_controller.dart';
 import 'chat_repository.dart';
 import 'chat_reaction_picker.dart';
+import 'package:trus_app/features/user/widgets/user_avatar.dart';
 
 class ChatScreen extends CustomConsumerStatefulWidget {
   static const id = 'chat-screen';
@@ -71,6 +72,7 @@ Future<void> showChatMembersSheet(
                   itemBuilder: (context, index) {
                     final member = members[index];
                     return ListTile(
+                      leading: UserAvatar(userId: member.id),
                       title: Row(
                         children: [
                           Flexible(child: Text(member.name)),
@@ -158,10 +160,10 @@ class _ChatOnlineStatusState extends ConsumerState<ChatOnlineStatus> {
                   for (final user in online.take(3))
                     Padding(
                       padding: const EdgeInsets.only(right: 3),
-                      child: CircleAvatar(
+                      child: UserAvatar(
+                        userId: user.id,
                         radius: 11,
-                        backgroundColor: colors.primaryContainer,
-                        child: Text(
+                        fallback: Text(
                           user.name.trim().isEmpty
                               ? '?'
                               : user.name.trim()[0].toUpperCase(),
@@ -822,6 +824,9 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                             message: message,
                             room: kind,
                             own: own,
+                            isOnline: chat.online.any(
+                              (user) => user.id == message.authorId,
+                            ),
                             selected: selected,
                             showSelectedTime: !hasDateSeparator,
                             seen: seen,
@@ -1071,6 +1076,7 @@ class ChatMessageTile extends StatelessWidget {
   final ChatMessage message;
   final String room;
   final bool own, selected;
+  final bool isOnline;
   final bool showSelectedTime;
   final List<ChatReceipt> seen;
   final List<ChatReceipt> readers;
@@ -1085,6 +1091,7 @@ class ChatMessageTile extends StatelessWidget {
     required this.message,
     required this.room,
     required this.own,
+    this.isOnline = false,
     required this.selected,
     this.showSelectedTime = true,
     required this.seen,
@@ -1114,163 +1121,235 @@ class ChatMessageTile extends StatelessWidget {
         ),
       Align(
         alignment: own ? Alignment.centerRight : Alignment.centerLeft,
-        child: ConstrainedBox(
-          constraints: BoxConstraints(
-            maxWidth: MediaQuery.sizeOf(context).width * .82,
-          ),
-          child: Column(
-            crossAxisAlignment: own
-                ? CrossAxisAlignment.end
-                : CrossAxisAlignment.start,
-            children: [
+        child: Row(
+          mainAxisAlignment: own
+              ? MainAxisAlignment.end
+              : MainAxisAlignment.start,
+          crossAxisAlignment: CrossAxisAlignment.end,
+          children: [
+            if (!own && !message.bot) ...[
               Padding(
-                padding: const EdgeInsets.only(left: 12, right: 12, top: 7),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
+                padding: const EdgeInsets.only(left: 8, bottom: 8),
+                child: _ChatSenderAvatar(message: message, isOnline: isOnline),
+              ),
+              const SizedBox(width: 4),
+            ],
+            Flexible(
+              child: ConstrainedBox(
+                constraints: BoxConstraints(
+                  maxWidth: MediaQuery.sizeOf(context).width * .73,
+                ),
+                child: Column(
+                  crossAxisAlignment: own
+                      ? CrossAxisAlignment.end
+                      : CrossAxisAlignment.start,
                   children: [
-                    if (message.bot) ...[
-                      Icon(
-                        Icons.smart_toy_outlined,
-                        key: const ValueKey('chat-bot-icon'),
-                        size: 15,
-                        color: Theme.of(context).colorScheme.primary,
+                    Padding(
+                      padding: const EdgeInsets.only(
+                        left: 12,
+                        right: 12,
+                        top: 7,
                       ),
-                      const SizedBox(width: 4),
-                    ],
-                    Text(
-                      message.author,
-                      style: Theme.of(context).textTheme.labelMedium,
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          if (message.bot) ...[
+                            Icon(
+                              Icons.smart_toy_outlined,
+                              key: const ValueKey('chat-bot-icon'),
+                              size: 15,
+                              color: Theme.of(context).colorScheme.primary,
+                            ),
+                            const SizedBox(width: 4),
+                          ],
+                          Text(
+                            message.author,
+                            style: Theme.of(context).textTheme.labelMedium
+                                ?.copyWith(
+                                  color: Theme.of(
+                                    context,
+                                  ).colorScheme.onSurfaceVariant,
+                                ),
+                          ),
+                        ],
+                      ),
                     ),
+                    if (message.replyTo != null)
+                      InkWell(
+                        key: ValueKey('chat-reply-${message.id}'),
+                        onTap: onReplyTap,
+                        borderRadius: BorderRadius.circular(8),
+                        child: Container(
+                          margin: const EdgeInsets.symmetric(
+                            horizontal: 7,
+                            vertical: 3,
+                          ),
+                          padding: const EdgeInsets.all(8),
+                          decoration: BoxDecoration(
+                            color: Theme.of(
+                              context,
+                            ).colorScheme.surfaceContainerHighest,
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                message.replyTo!.author,
+                                style: Theme.of(context).textTheme.labelMedium,
+                              ),
+                              Text(
+                                message.replyTo!.text ?? 'Obrázek',
+                                maxLines: 2,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    if (message.text != null)
+                      Builder(
+                        builder: (bubbleContext) => GestureDetector(
+                          key: ValueKey('chat-bubble-${message.id}'),
+                          onTap: onTap,
+                          onDoubleTap: onDoubleTap,
+                          onLongPressStart: (_) {
+                            final box =
+                                bubbleContext.findRenderObject()! as RenderBox;
+                            final origin = box.localToGlobal(Offset.zero);
+                            onLongPress(origin & box.size);
+                          },
+                          child: Card(
+                            color: own
+                                ? Theme.of(context).colorScheme.primaryContainer
+                                : null,
+                            child: Padding(
+                              padding: const EdgeInsets.all(10),
+                              child: message.bot
+                                  ? TrusBotMarkdownText(
+                                      data: message.displayText!,
+                                      color: Theme.of(
+                                        context,
+                                      ).colorScheme.onSurface,
+                                      selectable: false,
+                                    )
+                                  : Text(message.text!),
+                            ),
+                          ),
+                        ),
+                      ),
+                    if (message.image)
+                      Builder(
+                        builder: (imageContext) => GestureDetector(
+                          key: ValueKey('chat-image-${message.id}'),
+                          onTap: onTap,
+                          onDoubleTap: onDoubleTap,
+                          onLongPressStart: (_) {
+                            final box =
+                                imageContext.findRenderObject()! as RenderBox;
+                            final origin = box.localToGlobal(Offset.zero);
+                            onLongPress(origin & box.size);
+                          },
+                          child: Padding(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 4,
+                              vertical: 3,
+                            ),
+                            child: ClipRRect(
+                              borderRadius: BorderRadius.circular(12),
+                              child:
+                                  imageBuilder?.call(room, message.id) ??
+                                  _ChatImage(kind: room, id: message.id),
+                            ),
+                          ),
+                        ),
+                      ),
+                    if (message.reactions.isNotEmpty)
+                      InkWell(
+                        key: ValueKey('chat-reactions-${message.id}'),
+                        borderRadius: BorderRadius.circular(18),
+                        onTap: onReactionsTap,
+                        child: Container(
+                          margin: const EdgeInsets.only(right: 7, left: 7),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 8,
+                            vertical: 3,
+                          ),
+                          decoration: BoxDecoration(
+                            color: Theme.of(
+                              context,
+                            ).colorScheme.surfaceContainerHighest,
+                            borderRadius: BorderRadius.circular(18),
+                          ),
+                          child: Text(
+                            '${message.reactions.map((reaction) => reaction.emoji).toSet().join()} '
+                            '${message.reactions.length}',
+                          ),
+                        ),
+                      ),
+                    if (selected && readers.isEmpty)
+                      Padding(
+                        padding: const EdgeInsets.only(right: 7, bottom: 5),
+                        child: Text(
+                          'Zatím nikdo nepřečetl',
+                          style: Theme.of(context).textTheme.labelSmall,
+                        ),
+                      ),
                   ],
                 ),
               ),
-              if (message.replyTo != null)
-                InkWell(
-                  key: ValueKey('chat-reply-${message.id}'),
-                  onTap: onReplyTap,
-                  borderRadius: BorderRadius.circular(8),
-                  child: Container(
-                    margin: const EdgeInsets.symmetric(
-                      horizontal: 7,
-                      vertical: 3,
-                    ),
-                    padding: const EdgeInsets.all(8),
-                    decoration: BoxDecoration(
-                      color: Theme.of(
-                        context,
-                      ).colorScheme.surfaceContainerHighest,
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          message.replyTo!.author,
-                          style: Theme.of(context).textTheme.labelMedium,
-                        ),
-                        Text(
-                          message.replyTo!.text ?? 'Obrázek',
-                          maxLines: 2,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-              if (message.text != null)
-                Builder(
-                  builder: (bubbleContext) => GestureDetector(
-                    key: ValueKey('chat-bubble-${message.id}'),
-                    onTap: onTap,
-                    onDoubleTap: onDoubleTap,
-                    onLongPressStart: (_) {
-                      final box =
-                          bubbleContext.findRenderObject()! as RenderBox;
-                      final origin = box.localToGlobal(Offset.zero);
-                      onLongPress(origin & box.size);
-                    },
-                    child: Card(
-                      color: own
-                          ? Theme.of(context).colorScheme.primaryContainer
-                          : null,
-                      child: Padding(
-                        padding: const EdgeInsets.all(10),
-                        child: message.bot
-                            ? TrusBotMarkdownText(
-                                data: message.displayText!,
-                                color: Theme.of(context).colorScheme.onSurface,
-                                selectable: false,
-                              )
-                            : Text(message.text!),
-                      ),
-                    ),
-                  ),
-                ),
-              if (message.image)
-                Builder(
-                  builder: (imageContext) => GestureDetector(
-                    key: ValueKey('chat-image-${message.id}'),
-                    onTap: onTap,
-                    onDoubleTap: onDoubleTap,
-                    onLongPressStart: (_) {
-                      final box = imageContext.findRenderObject()! as RenderBox;
-                      final origin = box.localToGlobal(Offset.zero);
-                      onLongPress(origin & box.size);
-                    },
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 4,
-                        vertical: 3,
-                      ),
-                      child: ClipRRect(
-                        borderRadius: BorderRadius.circular(12),
-                        child:
-                            imageBuilder?.call(room, message.id) ??
-                            _ChatImage(kind: room, id: message.id),
-                      ),
-                    ),
-                  ),
-                ),
-              if (message.reactions.isNotEmpty)
-                InkWell(
-                  key: ValueKey('chat-reactions-${message.id}'),
-                  borderRadius: BorderRadius.circular(18),
-                  onTap: onReactionsTap,
-                  child: Container(
-                    margin: const EdgeInsets.only(right: 7, left: 7),
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 8,
-                      vertical: 3,
-                    ),
-                    decoration: BoxDecoration(
-                      color: Theme.of(
-                        context,
-                      ).colorScheme.surfaceContainerHighest,
-                      borderRadius: BorderRadius.circular(18),
-                    ),
-                    child: Text(
-                      '${message.reactions.map((reaction) => reaction.emoji).toSet().join()} '
-                      '${message.reactions.length}',
-                    ),
-                  ),
-                ),
-              if (selected && readers.isEmpty)
-                Padding(
-                  padding: const EdgeInsets.only(right: 7, bottom: 5),
-                  child: Text(
-                    'Zatím nikdo nepřečetl',
-                    style: Theme.of(context).textTheme.labelSmall,
-                  ),
-                )
-              else if (selected || seen.isNotEmpty)
-                _SeenAvatars(
-                  receipts: selected ? readers : seen,
-                  showNames: selected,
-                ),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
+      if ((selected || seen.isNotEmpty) && !(selected && readers.isEmpty))
+        Align(
+          alignment: Alignment.centerRight,
+          child: _SeenAvatars(
+            receipts: selected ? readers : seen,
+            showNames: selected,
+          ),
+        ),
+    ],
+  );
+}
+
+class _ChatSenderAvatar extends StatelessWidget {
+  final ChatMessage message;
+  final bool isOnline;
+
+  const _ChatSenderAvatar({required this.message, required this.isOnline});
+
+  @override
+  Widget build(BuildContext context) => Stack(
+    clipBehavior: Clip.none,
+    children: [
+      UserAvatar(
+        userId: message.authorId,
+        radius: 17,
+        fallback: Text(
+          message.author.isEmpty ? '?' : message.author[0].toUpperCase(),
+          style: const TextStyle(fontSize: 12),
+        ),
+      ),
+      if (isOnline)
+        Positioned(
+          right: -1,
+          bottom: -1,
+          child: Container(
+            key: ValueKey('chat-online-dot-${message.authorId}'),
+            width: 11,
+            height: 11,
+            decoration: BoxDecoration(
+              color: Colors.green,
+              shape: BoxShape.circle,
+              border: Border.all(
+                color: Theme.of(context).colorScheme.surface,
+                width: 2,
+              ),
+            ),
+          ),
+        ),
     ],
   );
 }
@@ -1387,9 +1466,10 @@ class _SeenAvatarsState extends State<_SeenAvatars> {
                     for (var i = 0; i < visible.length; i++)
                       Positioned(
                         left: i * 21.0,
-                        child: CircleAvatar(
+                        child: UserAvatar(
+                          userId: visible[i].userId,
                           radius: 13,
-                          child: Text(
+                          fallback: Text(
                             _initials(visible[i].name),
                             style: const TextStyle(fontSize: 10),
                           ),

@@ -25,6 +25,8 @@ class UserTeamRoleApiModel {
       return "pro editaci";
     } else if (role == "READER") {
       return "pro čtení";
+    } else if (role == "VIEWER") {
+      return "bez práv";
     }
     return role!;
   }

@@ -5,6 +5,7 @@ import 'package:trus_app/features/main/controller/screen_variables_notifier.dart
 import 'package:trus_app/features/match_participation/controller/match_participation_notifier.dart';
 import 'package:trus_app/features/match_participation/widgets/participation_response_bottom_sheet.dart';
 import 'package:trus_app/features/match_participation/widgets/participation_comment_dialog.dart';
+import 'package:trus_app/features/user/widgets/user_avatar.dart';
 import 'package:trus_app/models/api/participation/match_participation_comment.dart';
 import 'package:trus_app/models/api/participation/match_participation_detail.dart';
 import 'package:trus_app/models/api/participation/match_participation_member.dart';
@@ -934,19 +935,34 @@ class _CommentTile extends StatelessWidget {
           Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              CircleAvatar(
-                radius: 16,
-                backgroundColor: colors.accentSoft,
-                child: Text(
-                  comment.author.name.isEmpty
-                      ? '?'
-                      : comment.author.name.substring(0, 1).toUpperCase(),
-                  style: TextStyle(
-                    color: colors.accent,
-                    fontWeight: FontWeight.w700,
+              if (comment.authorUserId != null)
+                UserAvatar(
+                  userId: comment.authorUserId!,
+                  radius: 16,
+                  fallback: Text(
+                    comment.author.name.isEmpty
+                        ? '?'
+                        : comment.author.name.substring(0, 1).toUpperCase(),
+                    style: TextStyle(
+                      color: colors.accent,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                )
+              else
+                CircleAvatar(
+                  radius: 16,
+                  backgroundColor: colors.accentSoft,
+                  child: Text(
+                    comment.author.name.isEmpty
+                        ? '?'
+                        : comment.author.name.substring(0, 1).toUpperCase(),
+                    style: TextStyle(
+                      color: colors.accent,
+                      fontWeight: FontWeight.w700,
+                    ),
                   ),
                 ),
-              ),
               const SizedBox(width: 8),
               Expanded(
                 child: Column(

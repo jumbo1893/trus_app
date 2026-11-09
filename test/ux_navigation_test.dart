@@ -116,11 +116,15 @@ void main() {
 
   testWidgets('account deletion is hidden in user settings', (tester) async {
     var deleteRequested = false;
+    var renameRequested = false;
     await tester.pumpWidget(
       MaterialApp(
         theme: previewTheme(),
         home: Scaffold(
-          body: AccountDeletionOptions(onDelete: () => deleteRequested = true),
+          body: AccountDeletionOptions(
+            onDelete: () => deleteRequested = true,
+            onRename: () => renameRequested = true,
+          ),
         ),
       ),
     );
@@ -128,12 +132,15 @@ void main() {
     final moreOptions = find.text('Další možnosti účtu');
     expect(moreOptions, findsOneWidget);
     expect(find.text('Smazat účet'), findsNothing);
+    expect(find.text('Změnit jméno'), findsNothing);
 
     await tester.ensureVisible(moreOptions);
     await tester.tap(moreOptions);
     await tester.pumpAndSettle();
 
     expect(find.text('Smazat účet'), findsOneWidget);
+    await tester.tap(find.text('Změnit jméno'));
+    expect(renameRequested, isTrue);
     await tester.tap(find.text('Smazat účet'));
     expect(deleteRequested, isTrue);
     expect(tester.takeException(), isNull);

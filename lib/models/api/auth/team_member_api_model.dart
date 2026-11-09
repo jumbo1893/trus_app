@@ -5,6 +5,9 @@ class TeamMemberApiModel {
   final String mail;
   final String role;
   final bool owner;
+  final DateTime? lastLoginAt;
+  final bool hidden;
+  final bool roleApproved;
 
   const TeamMemberApiModel({
     required this.userTeamRoleId,
@@ -13,6 +16,9 @@ class TeamMemberApiModel {
     required this.mail,
     required this.role,
     required this.owner,
+    this.lastLoginAt,
+    this.hidden = false,
+    this.roleApproved = true,
   });
 
   bool get isAdministrator => role == 'ADMIN';
@@ -25,6 +31,8 @@ class TeamMemberApiModel {
         return 'Může editovat';
       case 'READER':
         return 'Pouze čtení';
+      case 'VIEWER':
+        return 'Bez práv';
       default:
         return role;
     }
@@ -38,6 +46,11 @@ class TeamMemberApiModel {
       mail: json['mail'] as String? ?? '',
       role: json['role'] as String? ?? 'READER',
       owner: json['owner'] as bool? ?? false,
+      lastLoginAt: DateTime.tryParse(
+        json['lastLoginAt'] as String? ?? '',
+      )?.toLocal(),
+      hidden: json['hidden'] as bool? ?? false,
+      roleApproved: json['roleApproved'] as bool? ?? true,
     );
   }
 }

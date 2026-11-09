@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:trus_app/features/chat/chat_repository.dart';
 import 'package:trus_app/features/chat/chat_screen.dart';
 
@@ -29,22 +30,24 @@ void main() {
   testWidgets('date separator is centered above its message', (tester) async {
     final item = message(2, '2026-10-13T11:00:00Z');
     await tester.pumpWidget(
-      MaterialApp(
-        home: Scaffold(
-          body: Column(
-            children: [
-              ChatDateSeparator(message: item),
-              ChatMessageTile(
-                message: item,
-                room: 'all',
-                own: false,
-                selected: false,
-                seen: const [],
-                onTap: () {},
-                onLongPress: (_) {},
-                onReactionsTap: () {},
-              ),
-            ],
+      ProviderScope(
+        child: MaterialApp(
+          home: Scaffold(
+            body: Column(
+              children: [
+                ChatDateSeparator(message: item),
+                ChatMessageTile(
+                  message: item,
+                  room: 'all',
+                  own: false,
+                  selected: false,
+                  seen: const [],
+                  onTap: () {},
+                  onLongPress: (_) {},
+                  onReactionsTap: () {},
+                ),
+              ],
+            ),
           ),
         ),
       ),

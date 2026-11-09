@@ -41,4 +41,15 @@ class TeamAdministrationRepository extends RequestExecutor {
       jsonEncode({'role': role}),
     );
   }
+
+  Future<TeamAdministrationApiModel> updateMemberVisibility(
+    int userTeamRoleId,
+    bool hidden,
+  ) {
+    return executePutRequest(
+      Uri.parse('$_administrationUrl/members/$userTeamRoleId/visibility'),
+      (json) => TeamAdministrationApiModel.fromJson(json),
+      jsonEncode({'hidden': hidden}),
+    );
+  }
 }

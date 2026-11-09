@@ -11,6 +11,7 @@ class HomeSetup implements IEndpointId {
   final DashboardMatch? lastMatch;
   final MatchParticipationPrompt? participationPrompt;
   final String? footbarWarning;
+  final List<PendingTeamMember> pendingTeamMembers;
 
   final List<StatsBoardData> statsBoards;
 
@@ -24,12 +25,20 @@ class HomeSetup implements IEndpointId {
     required this.participationPrompt,
     required this.statsBoards,
     this.footbarWarning,
+    this.pendingTeamMembers = const [],
   });
 
   factory HomeSetup.fromJson(Map<String, dynamic> json) {
     return HomeSetup(
       nextBirthday: json["nextBirthday"] ?? "",
       footbarWarning: json['footbarWarning'] as String?,
+      pendingTeamMembers:
+          (json['pendingTeamMembers'] as List<dynamic>? ?? const [])
+              .map(
+                (item) =>
+                    PendingTeamMember.fromJson(item as Map<String, dynamic>),
+              )
+              .toList(),
 
       randomFacts: List<String>.from(json['randomFacts'] ?? []),
 
@@ -56,4 +65,20 @@ class HomeSetup implements IEndpointId {
   String getEndpointId() {
     return endpointId;
   }
+}
+
+class PendingTeamMember {
+  final int userTeamRoleId;
+  final String userName;
+
+  const PendingTeamMember({
+    required this.userTeamRoleId,
+    required this.userName,
+  });
+
+  factory PendingTeamMember.fromJson(Map<String, dynamic> json) =>
+      PendingTeamMember(
+        userTeamRoleId: json['userTeamRoleId'] as int,
+        userName: json['userName'] as String? ?? '',
+      );
 }

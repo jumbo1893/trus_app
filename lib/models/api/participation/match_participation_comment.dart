@@ -4,6 +4,7 @@ import 'package:trus_app/models/api/player/player_api_model.dart';
 class MatchParticipationComment {
   final int id;
   final PlayerApiModel author;
+  final int? authorUserId;
   final String text;
   final DateTime createdAt;
   final int upVotes;
@@ -14,6 +15,7 @@ class MatchParticipationComment {
   const MatchParticipationComment({
     required this.id,
     required this.author,
+    this.authorUserId,
     required this.text,
     required this.createdAt,
     required this.upVotes,
@@ -26,6 +28,7 @@ class MatchParticipationComment {
     return MatchParticipationComment(
       id: json['id'],
       author: PlayerApiModel.fromJson(json['author']),
+      authorUserId: (json['authorUserId'] as num?)?.toInt(),
       text: json['text'] ?? '',
       createdAt: DateTime.parse(json['createdAt']),
       upVotes: json['upVotes'] ?? 0,

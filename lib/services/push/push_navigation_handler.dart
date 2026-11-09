@@ -1,6 +1,10 @@
 import 'package:flutter/widgets.dart';
 import 'package:trus_app/features/season_recap/season_recap_data.dart';
 import 'package:trus_app/features/home/screens/home_screen.dart';
+import 'package:trus_app/features/team_administration/screens/team_administration_screen.dart';
+import 'package:trus_app/features/team_administration/controller/team_administration_provider.dart';
+import 'package:trus_app/features/auth/controller/auth_controller.dart';
+import 'package:trus_app/features/general/notifier/global_variables_notifier.dart';
 import 'package:trus_app/features/chat/chat_screen.dart';
 import 'package:trus_app/features/chat/chat_controller.dart';
 import 'package:trus_app/features/achievement/screens/view_player_achievement_detail_screen.dart';
@@ -69,6 +73,48 @@ class PushNavigationHandler {
     final variables = ref.read(screenVariablesNotifierProvider.notifier);
 
     switch (payload.screenId) {
+      case TeamAdministrationScreen.id:
+        if (payload.userTeamRoleId == null) return;
+        if (payload.appTeamId != null &&
+            ref.read(globalVariablesControllerProvider).appTeam?.id !=
+                payload.appTeamId) {
+          final controller = ref.read(authControllerProvider);
+          controller
+              .getUserData()
+              .then((user) {
+                for (final role in user?.teamRoles ?? []) {
+                  if (role.appTeam.id == payload.appTeamId &&
+                      role.role == 'ADMIN') {
+                    controller.saveAppTeam(role.appTeam);
+                    ref
+                        .read(globalVariablesControllerProvider)
+                        .setPlayerApiModel(null);
+                    ref.read(globalVariablesProvider.notifier).setPlayer(null);
+                    ref.read(pendingTeamMemberTargetProvider.notifier).state =
+                        payload.userTeamRoleId;
+                    ref.invalidate(teamAdministrationProvider);
+                    screenNotifier.changeByFragmentId(
+                      TeamAdministrationScreen.id,
+                    );
+                    return;
+                  }
+                }
+                ref
+                    .read(uiFeedbackProvider.notifier)
+                    .showErrorDialog('Administrace tohoto týmu není dostupná.');
+              })
+              .catchError((Object _) {
+                ref
+                    .read(uiFeedbackProvider.notifier)
+                    .showErrorDialog('Tým se nepodařilo načíst.');
+              });
+          return;
+        }
+        ref.read(pendingTeamMemberTargetProvider.notifier).state =
+            payload.userTeamRoleId;
+        ref.invalidate(teamAdministrationProvider);
+        screenNotifier.changeByFragmentId(TeamAdministrationScreen.id);
+        return;
       case ChatScreen.id:
         if (payload.appTeamId != null &&
             ref.read(globalVariablesControllerProvider).appTeam?.id !=
