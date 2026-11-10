@@ -17,6 +17,7 @@ class TableTeamApiModel implements JsonAndHttpConverter, ModelToString {
   final int points;
   final int teamId;
   final String teamName;
+  final String? teamLogoUrl;
   final LeagueApiModel league;
   final FootballTableZone? tableZone;
 
@@ -33,25 +34,27 @@ class TableTeamApiModel implements JsonAndHttpConverter, ModelToString {
     required this.points,
     required this.teamId,
     required this.teamName,
+    this.teamLogoUrl,
     required this.league,
     this.tableZone,
   });
 
   TableTeamApiModel.dummy()
-      : id = -100,
-        rank = 0,
-        matches = 0,
-        wins = 0,
-        draws = 0,
-        losses = 0,
-        goalsScored = 0,
-        goalsReceived = 0,
-        penalty = "",
-        points = 0,
-        teamId = 0,
-        teamName = "",
-        league = LeagueApiModel.dummy(),
-        tableZone = null;
+    : id = -100,
+      rank = 0,
+      matches = 0,
+      wins = 0,
+      draws = 0,
+      losses = 0,
+      goalsScored = 0,
+      goalsReceived = 0,
+      penalty = "",
+      points = 0,
+      teamId = 0,
+      teamName = "",
+      teamLogoUrl = null,
+      league = LeagueApiModel.dummy(),
+      tableZone = null;
 
   @override
   Map<String, dynamic> toJson() {
@@ -69,6 +72,7 @@ class TableTeamApiModel implements JsonAndHttpConverter, ModelToString {
       "teamId": teamId,
       "league": league,
       "teamName": teamName,
+      "teamLogoUrl": teamLogoUrl,
       "tableZone": tableZone?.toJson(),
     };
   }
@@ -87,6 +91,7 @@ class TableTeamApiModel implements JsonAndHttpConverter, ModelToString {
       points: json["points"],
       teamId: json["teamId"],
       teamName: json["teamName"],
+      teamLogoUrl: json["teamLogoUrl"] as String?,
       league: LeagueApiModel.fromJson(json["league"]),
       tableZone: FootballTableZone.fromJson(json["tableZone"]),
     );
@@ -96,7 +101,6 @@ class TableTeamApiModel implements JsonAndHttpConverter, ModelToString {
     return "počet bodů: $points, počet zápasů: $matches, V/R/P: $wins/$draws/$losses, skóre: $goalsScored:$goalsReceived";
   }
 
-
   @override
   String toString() {
     return 'TableTeamApiModel{id: $id, rank: $rank, matches: $matches, wins: $wins, draws: $draws, losses: $losses, goalsScored: $goalsScored, goalsReceived: $goalsReceived, penalty: $penalty, points: $points, teamId: $teamId, teamName: $teamName, league: $league}';
@@ -104,7 +108,7 @@ class TableTeamApiModel implements JsonAndHttpConverter, ModelToString {
 
   @override
   int getId() {
-    return id?? -1;
+    return id ?? -1;
   }
 
   @override

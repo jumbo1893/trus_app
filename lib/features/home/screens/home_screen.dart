@@ -243,12 +243,20 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
                         dashboardMatch: isNext
                             ? setup.nextMatch
                             : setup.lastMatch,
+                        participationStatus: isNext
+                            ? setup.currentParticipationStatus
+                            : null,
+                        attendingPlayerCount: isNext
+                            ? setup.attendingPlayerCount
+                            : null,
                         appTeamApiModel: appTeam,
                         onAddPlayers: notifier.onButtonAddPlayersClick,
                         onAddGoals: notifier.onButtonAddGoalsClick,
                         onAddFine: notifier.onButtonAddFineClick,
                         onDetailMatch: notifier.onButtonDetailMatchClick,
                         onParticipation: notifier.onParticipationClick,
+                        onRespondToParticipation:
+                            notifier.respondToParticipation,
                         onCommonMatches: notifier.onCommonMatchesClick,
                         onRedirect: notifier.onRedirect,
                       ),

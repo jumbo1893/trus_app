@@ -6,7 +6,9 @@ import 'package:trus_app/models/api/helper/redirect/redirect_api_model.dart';
 import 'package:trus_app/models/api/helper/redirect/text_with_redirect.dart';
 import 'package:trus_app/models/api/helper/warning_type.dart';
 import 'package:trus_app/models/api/home/dashboard_match.dart';
+import 'package:trus_app/models/api/participation/match_participation_status.dart';
 import 'package:trus_app/theme/app_colors.dart';
+import 'package:trus_app/common/widgets/football/team_logo.dart';
 
 import '../../../features/home/widget/home_section_card.dart';
 import '../../../models/api/football/detail/football_match_detail.dart';
@@ -16,18 +18,23 @@ class FootballMatchBox extends StatelessWidget {
     super.key,
     required this.isNextMatch,
     required this.dashboardMatch,
+    this.participationStatus,
+    this.attendingPlayerCount,
     required this.appTeamApiModel,
     required this.onAddPlayers,
     required this.onAddGoals,
     required this.onAddFine,
     required this.onDetailMatch,
     required this.onParticipation,
+    required this.onRespondToParticipation,
     required this.onCommonMatches,
     required this.onRedirect,
   });
 
   final bool isNextMatch;
   final DashboardMatch? dashboardMatch;
+  final MatchParticipationStatus? participationStatus;
+  final int? attendingPlayerCount;
   final AppTeamApiModel? appTeamApiModel;
 
   final void Function(FootballMatchApiModel match) onAddPlayers;
@@ -35,6 +42,11 @@ class FootballMatchBox extends StatelessWidget {
   final void Function(FootballMatchApiModel match) onAddFine;
   final void Function(FootballMatchApiModel match) onDetailMatch;
   final void Function(FootballMatchApiModel match) onParticipation;
+  final Future<void> Function(
+    FootballMatchApiModel match,
+    MatchParticipationStatus status,
+  )
+  onRespondToParticipation;
   final void Function(FootballMatchApiModel match) onCommonMatches;
   final void Function(RedirectApiModel redirect) onRedirect;
 
@@ -88,6 +100,20 @@ class FootballMatchBox extends StatelessWidget {
 
     final warnings = <_WarningItem>[];
 
+    for (final textWithRedirect in matchInfoList) {
+      if (isNextMatch &&
+          (textWithRedirect.text ?? '').trimLeft().startsWith('Účast:')) {
+        continue;
+      }
+      warnings.add(
+        _WarningItem(
+          text: textWithRedirect.text ?? "",
+          warningType: textWithRedirect.warningType ?? WarningType.info,
+          redirectApiModel: textWithRedirect.redirect,
+        ),
+      );
+    }
+
     if (isNextMatch) {
       final currentTeamId = appTeamApiModel?.team.id;
       final match = detail.footballMatch;
@@ -130,16 +156,6 @@ class FootballMatchBox extends StatelessWidget {
       }
     }
 
-    for (final textWithRedirect in matchInfoList) {
-      warnings.add(
-        _WarningItem(
-          text: textWithRedirect.text ?? "",
-          warningType: textWithRedirect.warningType ?? WarningType.info,
-          redirectApiModel: textWithRedirect.redirect,
-        ),
-      );
-    }
-
     return warnings;
   }
 
@@ -161,6 +177,35 @@ class FootballMatchBox extends StatelessWidget {
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
+                if (isNextMatch)
+                  _BottomSheetActionTile(
+                    icon: Icons.how_to_reg_outlined,
+                    title: "Detail účasti",
+                    enabled: true,
+                    onTap: () {
+                      Navigator.of(context).pop();
+                      onParticipation(match);
+                    },
+                  ),
+                if (!isNextMatch)
+                  _BottomSheetActionTile(
+                    icon: Icons.person_add_alt_1,
+                    title: "Přidat hráče",
+                    enabled: true,
+                    onTap: () {
+                      Navigator.of(context).pop();
+                      onAddPlayers(match);
+                    },
+                  ),
+                _BottomSheetActionTile(
+                  icon: Icons.sports_soccer,
+                  title: "Přidat góly",
+                  enabled: matchActionsEnabled,
+                  onTap: () {
+                    Navigator.of(context).pop();
+                    onAddGoals(match);
+                  },
+                ),
                 _BottomSheetActionTile(
                   icon: Icons.description_outlined,
                   title: "Detail",
@@ -243,6 +288,311 @@ class FootballMatchBox extends StatelessWidget {
     );
   }
 
+  Widget _buildCompactCard(
+    BuildContext context,
+    FootballMatchApiModel match,
+    bool matchActionsEnabled,
+    List<_WarningItem> warnings,
+  ) {
+    final colors = context.appColors;
+    final date = match.date.toLocal();
+    const weekdays = ['PO', 'ÚT', 'ST', 'ČT', 'PÁ', 'SO', 'NE'];
+    String two(int value) => value.toString().padLeft(2, '0');
+    final statusColor = switch (participationStatus) {
+      MatchParticipationStatus.attending => colors.successSolid,
+      MatchParticipationStatus.maybe => colors.warningSolid,
+      MatchParticipationStatus.notAttending => colors.errorSolid,
+      null => colors.accent,
+    };
+    final statusLabel = switch (participationStatus) {
+      MatchParticipationStatus.attending => 'Jdu',
+      MatchParticipationStatus.maybe => 'Možná',
+      MatchParticipationStatus.notAttending => 'Nejdu',
+      null => 'Účast',
+    };
+    final statusIcon = switch (participationStatus) {
+      MatchParticipationStatus.attending => Icons.check,
+      MatchParticipationStatus.maybe => Icons.question_mark,
+      MatchParticipationStatus.notAttending => Icons.close,
+      null => Icons.how_to_reg_outlined,
+    };
+    final score = match.simpleResultToString();
+    final ranking = match.opponentsTeamRanking();
+    final currentTeamId = appTeamApiModel?.team.id;
+    final opponent = currentTeamId == match.homeTeam?.id
+        ? match.awayTeam
+        : currentTeamId == match.awayTeam?.id
+        ? match.homeTeam
+        : match.awayTeam;
+    final visibleWarnings = warnings.take(isNextMatch ? 3 : 1).toList();
+    void detailTap() =>
+        isNextMatch ? onParticipation(match) : onDetailMatch(match);
+
+    return HomeSectionCard(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 12),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              SizedBox(
+                width: 53,
+                child: InkWell(
+                  borderRadius: BorderRadius.circular(10),
+                  onTap: detailTap,
+                  child: Column(
+                    children: [
+                      TeamLogo(url: opponent?.logoUrl, size: 32),
+                      const SizedBox(height: 4),
+                      Text(
+                        weekdays[date.weekday - 1],
+                        style: TextStyle(
+                          fontSize: 11,
+                          fontWeight: FontWeight.w700,
+                          color: colors.textSecondary,
+                        ),
+                      ),
+                      Text(
+                        '${two(date.day)}.${two(date.month)}.',
+                        style: TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w700,
+                          color: colors.textPrimary,
+                        ),
+                      ),
+                      Text(
+                        '${two(date.hour)}:${two(date.minute)}',
+                        style: TextStyle(
+                          fontSize: 11,
+                          color: colors.textSecondary,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              const SizedBox(width: 9),
+              Expanded(
+                child: InkWell(
+                  borderRadius: BorderRadius.circular(8),
+                  onTap: detailTap,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        _sectionTitle(match),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w800,
+                          color: colors.accent,
+                        ),
+                      ),
+                      const SizedBox(height: 3),
+                      Text(
+                        '${match.toStringNameWithOpponent()}${score.isEmpty ? '' : '  $score'}',
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w700,
+                          color: colors.textPrimary,
+                        ),
+                      ),
+                      if (match.stadium?.trim().isNotEmpty == true)
+                        _compactMeta(
+                          Icons.location_on_outlined,
+                          match.stadium!.trim(),
+                          colors.textSecondary,
+                        ),
+                      if (ranking.isNotEmpty)
+                        _compactMeta(
+                          Icons.leaderboard_outlined,
+                          ranking,
+                          colors.textSecondary,
+                        ),
+                      _compactMeta(
+                        Icons.sports_outlined,
+                        match.referee?.trim().isNotEmpty == true
+                            ? match.referee!.trim()
+                            : 'Neznámý rozhodčí',
+                        colors.textSecondary,
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              const SizedBox(width: 7),
+              SizedBox(
+                width: 92,
+                child: Column(
+                  children: [
+                    if (!isNextMatch)
+                      FilledButton.icon(
+                        onPressed: () => onAddPlayers(match),
+                        icon: const Icon(Icons.edit_outlined, size: 14),
+                        label: const Text(
+                          'Upravit',
+                          style: TextStyle(fontSize: 11),
+                        ),
+                        style: FilledButton.styleFrom(
+                          padding: const EdgeInsets.symmetric(horizontal: 5),
+                          minimumSize: const Size(70, 30),
+                        ),
+                      ),
+                    if (isNextMatch)
+                      PopupMenuButton<MatchParticipationStatus>(
+                        tooltip: 'Změnit účast',
+                        onSelected: (status) =>
+                            onRespondToParticipation(match, status),
+                        itemBuilder: (_) => const [
+                          PopupMenuItem(
+                            value: MatchParticipationStatus.attending,
+                            child: Text('✓ Jdu'),
+                          ),
+                          PopupMenuItem(
+                            value: MatchParticipationStatus.maybe,
+                            child: Text('? Možná'),
+                          ),
+                          PopupMenuItem(
+                            value: MatchParticipationStatus.notAttending,
+                            child: Text('✕ Nejdu'),
+                          ),
+                        ],
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 8,
+                            vertical: 7,
+                          ),
+                          decoration: BoxDecoration(
+                            color: statusColor,
+                            borderRadius: BorderRadius.circular(16),
+                          ),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Icon(statusIcon, size: 13, color: Colors.white),
+                              const SizedBox(width: 4),
+                              Flexible(
+                                child: Text(
+                                  statusLabel,
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: const TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 11,
+                                    fontWeight: FontWeight.w700,
+                                  ),
+                                ),
+                              ),
+                              const Icon(
+                                Icons.keyboard_arrow_down,
+                                size: 14,
+                                color: Colors.white,
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    if (isNextMatch) ...[
+                      const SizedBox(height: 8),
+                      InkWell(
+                        onTap: detailTap,
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(
+                              Icons.group_outlined,
+                              size: 15,
+                              color: colors.textSecondary,
+                            ),
+                            const SizedBox(width: 3),
+                            Text(
+                              '${attendingPlayerCount ?? 0}',
+                              style: TextStyle(
+                                fontWeight: FontWeight.w700,
+                                color: colors.textPrimary,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                    const SizedBox(height: 8),
+                    TextButton(
+                      onPressed: () => _showMoreActionsSheet(
+                        context,
+                        match,
+                        matchActionsEnabled,
+                      ),
+                      style: TextButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(horizontal: 3),
+                        minimumSize: const Size(60, 28),
+                        tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                      ),
+                      child: const Text(
+                        'Více...',
+                        style: TextStyle(fontSize: 12),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          if (visibleWarnings.isNotEmpty) ...[
+            const SizedBox(height: 8),
+            const Divider(height: 1),
+            const SizedBox(height: 8),
+            ...visibleWarnings.map(
+              (warning) => Padding(
+                padding: const EdgeInsets.only(bottom: 6),
+                child: _CompactWarningCard(
+                  warning: warning,
+                  onRedirect: onRedirect,
+                ),
+              ),
+            ),
+            if (warnings.length > visibleWarnings.length)
+              TextButton(
+                onPressed: () => _showWarningsSheet(
+                  context,
+                  warnings: warnings,
+                  onRedirect: (redirect) {
+                    Navigator.of(context).pop();
+                    onRedirect(redirect);
+                  },
+                ),
+                child: Text(
+                  'Zobrazit další (${warnings.length - visibleWarnings.length})',
+                ),
+              ),
+          ],
+        ],
+      ),
+    );
+  }
+
+  Widget _compactMeta(IconData icon, String text, Color color) => Padding(
+    padding: const EdgeInsets.only(top: 4),
+    child: Row(
+      children: [
+        Icon(icon, size: 12, color: color),
+        const SizedBox(width: 3),
+        Expanded(
+          child: Text(
+            text,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: TextStyle(fontSize: 11, color: color),
+          ),
+        ),
+      ],
+    ),
+  );
+
   @override
   Widget build(BuildContext context) {
     final appColors = context.appColors;
@@ -253,6 +603,26 @@ class FootballMatchBox extends StatelessWidget {
       dashboardMatch?.match,
       dashboardMatch?.matchInfoList ?? [],
     );
+    if (match != null) {
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          _buildCompactCard(context, match, matchActionsEnabled, warnings),
+          if (!isNextMatch &&
+              match.id != null &&
+              (match.alreadyPlayed ||
+                  (match.homeGoalNumber != null &&
+                      match.awayGoalNumber != null)) &&
+              match.date.isBefore(DateTime.now())) ...[
+            const SizedBox(height: 14),
+            MatchReportCard(
+              key: ValueKey('${appTeamApiModel?.id}-${match.id}'),
+              matchId: match.id!,
+            ),
+          ],
+        ],
+      );
+    }
 
     final header = _buildHeaderData(match);
     final visibleWarnings = warnings.take(isNextMatch ? 3 : 1).toList();
@@ -261,31 +631,150 @@ class FootballMatchBox extends StatelessWidget {
     final secondActionIcon = matchActionsEnabled
         ? Icons.sports_soccer
         : Icons.description_outlined;
+    final participationColor = switch (participationStatus) {
+      MatchParticipationStatus.attending => appColors.successSolid,
+      MatchParticipationStatus.maybe => appColors.warningSolid,
+      MatchParticipationStatus.notAttending => appColors.errorSolid,
+      null => null,
+    };
+    final participationIcon = switch (participationStatus) {
+      MatchParticipationStatus.attending => Icons.check,
+      MatchParticipationStatus.maybe => Icons.question_mark,
+      MatchParticipationStatus.notAttending => Icons.close,
+      null => Icons.how_to_reg_outlined,
+    };
 
     return HomeSectionCard(
       padding: const EdgeInsets.all(16),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          _CompactMatchHeader(
-            sectionTitle: _sectionTitle(match),
-            data: header,
-            onMatchTap: match != null ? () => onDetailMatch(match) : null,
-          ),
+          if (isNextMatch && match != null)
+            Row(
+              children: [
+                InkWell(
+                  borderRadius: BorderRadius.circular(12),
+                  onTap: () => onParticipation(match),
+                  child: Padding(
+                    padding: const EdgeInsets.all(8),
+                    child: Icon(
+                      Icons.shield_outlined,
+                      size: 32,
+                      color: appColors.accent,
+                    ),
+                  ),
+                ),
+                Expanded(
+                  child: InkWell(
+                    borderRadius: BorderRadius.circular(12),
+                    onTap: () => onParticipation(match),
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 5),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'ZÁPAS · ${match.league.name} · ${match.round}. kolo',
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: TextStyle(
+                              fontWeight: FontWeight.bold,
+                              color: appColors.textPrimary,
+                            ),
+                          ),
+                          Text(
+                            match.toStringNameWithOpponent(),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: TextStyle(color: appColors.textSecondary),
+                          ),
+                          Text(
+                            header.subtitle,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: appColors.textMuted,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+                InkWell(
+                  onTap: () => onParticipation(match),
+                  child: Padding(
+                    padding: const EdgeInsets.all(8),
+                    child: Column(
+                      children: [
+                        Icon(
+                          Icons.group_outlined,
+                          size: 18,
+                          color: appColors.textSecondary,
+                        ),
+                        Text(
+                          '${attendingPlayerCount ?? 0}',
+                          style: const TextStyle(
+                            fontSize: 20,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ],
+            )
+          else
+            _CompactMatchHeader(
+              sectionTitle: _sectionTitle(match),
+              data: header,
+              onMatchTap: match != null ? () => onDetailMatch(match) : null,
+            ),
           if (match != null) ...[
             const SizedBox(height: 14),
             Row(
               children: [
                 Expanded(
-                  child: _PrimaryActionButton(
-                    label: isNextMatch ? "Účast" : "Přidat hráče",
-                    icon: isNextMatch
-                        ? Icons.how_to_reg_outlined
-                        : Icons.person_add_alt_1,
-                    onTap: () => isNextMatch
-                        ? onParticipation(match)
-                        : onAddPlayers(match),
-                  ),
+                  child: isNextMatch
+                      ? PopupMenuButton<MatchParticipationStatus>(
+                          tooltip: 'Změnit účast',
+                          onSelected: (status) =>
+                              onRespondToParticipation(match, status),
+                          itemBuilder: (_) => const [
+                            PopupMenuItem(
+                              value: MatchParticipationStatus.attending,
+                              child: Text('✓ Zúčastním se'),
+                            ),
+                            PopupMenuItem(
+                              value: MatchParticipationStatus.maybe,
+                              child: Text('? Možná'),
+                            ),
+                            PopupMenuItem(
+                              value: MatchParticipationStatus.notAttending,
+                              child: Text('✕ Nezúčastním se'),
+                            ),
+                          ],
+                          child: _PrimaryActionButton(
+                            label: switch (participationStatus) {
+                              MatchParticipationStatus.attending => 'Jdu',
+                              MatchParticipationStatus.maybe => 'Možná',
+                              MatchParticipationStatus.notAttending => 'Nejdu',
+                              null => 'Účast',
+                            },
+                            icon: participationIcon,
+                            color: participationColor,
+                            onTap: null,
+                          ),
+                        )
+                      : _PrimaryActionButton(
+                          label: "Přidat hráče",
+                          icon: isNextMatch
+                              ? participationIcon
+                              : Icons.person_add_alt_1,
+                          onTap: () => onAddPlayers(match),
+                        ),
                 ),
                 const SizedBox(width: 10),
                 Expanded(
@@ -500,18 +989,20 @@ class _PrimaryActionButton extends StatelessWidget {
     required this.label,
     required this.icon,
     required this.onTap,
+    this.color,
   });
 
   final String label;
   final IconData icon;
-  final VoidCallback onTap;
+  final VoidCallback? onTap;
+  final Color? color;
 
   @override
   Widget build(BuildContext context) {
     final appColors = context.appColors;
 
     return Material(
-      color: appColors.backgroundSecondary,
+      color: color ?? appColors.backgroundSecondary,
       borderRadius: BorderRadius.circular(14),
       child: InkWell(
         borderRadius: BorderRadius.circular(14),
@@ -525,10 +1016,14 @@ class _PrimaryActionButton extends StatelessWidget {
                 width: 34,
                 height: 34,
                 decoration: BoxDecoration(
-                  color: appColors.accentSoft,
+                  color: color == null ? appColors.accentSoft : Colors.white24,
                   shape: BoxShape.circle,
                 ),
-                child: Icon(icon, size: 18, color: appColors.accent),
+                child: Icon(
+                  icon,
+                  size: 18,
+                  color: color == null ? appColors.accent : Colors.white,
+                ),
               ),
               const SizedBox(height: 6),
               Text(
@@ -539,7 +1034,7 @@ class _PrimaryActionButton extends StatelessWidget {
                 style: TextStyle(
                   fontSize: 10,
                   fontWeight: FontWeight.w600,
-                  color: appColors.textPrimary,
+                  color: color == null ? appColors.textPrimary : Colors.white,
                 ),
               ),
             ],

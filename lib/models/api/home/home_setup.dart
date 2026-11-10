@@ -2,6 +2,7 @@ import 'package:trus_app/features/general/cache/i_endpoint_id.dart';
 
 import 'dashboard_match.dart';
 import '../participation/match_participation_prompt.dart';
+import '../participation/match_participation_status.dart';
 import 'stats_board_data.dart';
 
 class HomeSetup implements IEndpointId {
@@ -10,6 +11,8 @@ class HomeSetup implements IEndpointId {
   final DashboardMatch? nextMatch;
   final DashboardMatch? lastMatch;
   final MatchParticipationPrompt? participationPrompt;
+  final MatchParticipationStatus? currentParticipationStatus;
+  final int? attendingPlayerCount;
   final String? footbarWarning;
   final List<PendingTeamMember> pendingTeamMembers;
 
@@ -23,6 +26,8 @@ class HomeSetup implements IEndpointId {
     required this.nextMatch,
     required this.lastMatch,
     required this.participationPrompt,
+    required this.currentParticipationStatus,
+    required this.attendingPlayerCount,
     required this.statsBoards,
     this.footbarWarning,
     this.pendingTeamMembers = const [],
@@ -52,6 +57,10 @@ class HomeSetup implements IEndpointId {
       participationPrompt: json["participationPrompt"] != null
           ? MatchParticipationPrompt.fromJson(json["participationPrompt"])
           : null,
+      currentParticipationStatus: MatchParticipationStatusExtension.fromJson(
+        json['currentParticipationStatus'],
+      ),
+      attendingPlayerCount: json['attendingPlayerCount'] as int?,
 
       statsBoards: List<StatsBoardData>.from(
         (json['statsBoards'] as List<dynamic>? ?? []).map(

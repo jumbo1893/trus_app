@@ -186,7 +186,7 @@ class FootballMatchApiModel implements JsonAndHttpConverter, ModelToString {
 
   String opponentsTeamRanking() {
     if (homeTeam != null && awayTeam != null && homeTeam!.currentTableTeam != null && awayTeam!.currentTableTeam != null) {
-      return "${homeTeam!.currentTableTeam!.rank}. (${homeTeam!.currentTableTeam!.points} bodů) s ${awayTeam!.currentTableTeam!.rank}. (${awayTeam!.currentTableTeam!.points} bodů)";
+      return "${homeTeam!.currentTableTeam!.rank}. (${homeTeam!.currentTableTeam!.points} b.) s ${awayTeam!.currentTableTeam!.rank}. (${awayTeam!.currentTableTeam!.points} b.)";
     }
     return "";
   }

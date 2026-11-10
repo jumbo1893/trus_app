@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:trus_app/models/api/football/table_team_api_model.dart';
+import 'package:trus_app/common/widgets/football/team_logo.dart';
 import 'package:trus_app/theme/app_colors.dart';
 import 'package:trus_app/theme/app_widget_values.dart';
 
@@ -19,8 +20,8 @@ class FootballTableTeamListTile extends StatelessWidget {
   Widget build(BuildContext context) {
     final zone = team.tableZone ?? _fallbackZone();
     final style = _TableZoneStyle.fromZone(context, zone);
-    final hasPenalty = team.penalty.trim().isNotEmpty &&
-        team.penalty.trim() != '0';
+    final hasPenalty =
+        team.penalty.trim().isNotEmpty && team.penalty.trim() != '0';
 
     return Material(
       color: context.appColors.cardBackground,
@@ -37,11 +38,8 @@ class FootballTableTeamListTile extends StatelessWidget {
           ),
           child: Row(
             children: [
-              _RankBadge(
-                rank: team.rank,
-                style: style,
-              ),
-              const SizedBox(width: 14),
+              TeamLogo(url: team.teamLogoUrl, size: 72),
+              const SizedBox(width: 12),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -57,24 +55,20 @@ class FootballTableTeamListTile extends StatelessWidget {
                       ),
                     ),
                     const SizedBox(height: 9),
-                    Row(
+                    Wrap(
+                      spacing: 12,
+                      runSpacing: 6,
                       children: [
                         _ValueItem(
                           label: 'B',
                           value: '${team.points}',
                           highlighted: true,
                         ),
-                        const SizedBox(width: 14),
-                        _ValueItem(
-                          label: 'Z',
-                          value: '${team.matches}',
-                        ),
-                        const SizedBox(width: 14),
+                        _ValueItem(label: 'Z', value: '${team.matches}'),
                         _ValueItem(
                           label: 'V-R-P',
                           value: '${team.wins}-${team.draws}-${team.losses}',
                         ),
-                        const SizedBox(width: 14),
                         _ValueItem(
                           label: 'SKÓRE',
                           value: '${team.goalsScored}:${team.goalsReceived}',
@@ -83,13 +77,13 @@ class FootballTableTeamListTile extends StatelessWidget {
                     ),
                     if (hasPenalty) ...[
                       const SizedBox(height: 9),
-                      _PenaltyChip(
-                        penalty: team.penalty,
-                      ),
+                      _PenaltyChip(penalty: team.penalty),
                     ],
                   ],
                 ),
               ),
+              const SizedBox(width: 8),
+              _RankBadge(rank: team.rank, style: style),
               if (onTap != null) ...[
                 const SizedBox(width: 8),
                 Icon(
@@ -122,26 +116,23 @@ class _RankBadge extends StatelessWidget {
   final int rank;
   final _TableZoneStyle style;
 
-  const _RankBadge({
-    required this.rank,
-    required this.style,
-  });
+  const _RankBadge({required this.rank, required this.style});
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      width: 56,
-      height: 58,
+      width: 36,
+      height: 34,
       decoration: BoxDecoration(
         color: style.background,
-        borderRadius: BorderRadius.circular(18),
+        borderRadius: BorderRadius.circular(10),
       ),
       alignment: Alignment.center,
       child: Text(
         '$rank.',
         style: TextStyle(
           color: style.foreground,
-          fontSize: 20,
+          fontSize: 14,
           fontWeight: FontWeight.w800,
         ),
       ),
@@ -182,9 +173,7 @@ class _ValueItem extends StatelessWidget {
                 ? context.appColors.accent
                 : context.appColors.textSecondary,
             fontSize: 13,
-            fontWeight: highlighted
-                ? FontWeight.w800
-                : FontWeight.w600,
+            fontWeight: highlighted ? FontWeight.w800 : FontWeight.w600,
           ),
         ),
       ],
@@ -195,17 +184,12 @@ class _ValueItem extends StatelessWidget {
 class _PenaltyChip extends StatelessWidget {
   final String penalty;
 
-  const _PenaltyChip({
-    required this.penalty,
-  });
+  const _PenaltyChip({required this.penalty});
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(
-        horizontal: 8,
-        vertical: 4,
-      ),
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
       decoration: BoxDecoration(
         color: context.appColors.warningBackground,
         borderRadius: BorderRadius.circular(999),
@@ -226,15 +210,12 @@ class _TableZoneStyle {
   final Color background;
   final Color foreground;
 
-  const _TableZoneStyle({
-    required this.background,
-    required this.foreground,
-  });
+  const _TableZoneStyle({required this.background, required this.foreground});
 
   factory _TableZoneStyle.fromZone(
-      BuildContext context,
-      FootballTableZone zone,
-      ) {
+    BuildContext context,
+    FootballTableZone zone,
+  ) {
     switch (zone) {
       case FootballTableZone.promotion:
         return _TableZoneStyle(

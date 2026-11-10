@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:trus_app/common/utils/calendar.dart';
 import 'package:trus_app/common/widgets/football/match_outcome.dart';
+import 'package:trus_app/common/widgets/football/team_logo.dart';
 import 'package:trus_app/models/api/match/match_api_model.dart';
 import 'package:trus_app/theme/app_colors.dart';
 import 'package:trus_app/theme/app_widget_values.dart';
@@ -9,17 +10,17 @@ class MatchListTile extends StatelessWidget {
   final MatchApiModel match;
   final VoidCallback? onTap;
 
-  const MatchListTile({
-    super.key,
-    required this.match,
-    this.onTap,
-  });
+  const MatchListTile({super.key, required this.match, this.onTap});
 
   @override
   Widget build(BuildContext context) {
     final footballMatch = match.footballMatch;
+    final opponentLogoUrl = match.home
+        ? footballMatch?.awayTeam?.logoUrl
+        : footballMatch?.homeTeam?.logoUrl;
 
-    final hasResult = footballMatch?.homeGoalNumber != null &&
+    final hasResult =
+        footballMatch?.homeGoalNumber != null &&
         footballMatch?.awayGoalNumber != null;
 
     final score = hasResult
@@ -49,24 +50,15 @@ class MatchListTile extends StatelessWidget {
           ),
           child: Row(
             children: [
-              _ScoreBadge(
-                score: score,
-                outcome: outcome,
-              ),
-              const SizedBox(width: 14),
+              TeamLogo(url: opponentLogoUrl, size: 72),
+              const SizedBox(width: 12),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    _TeamRow(
-                      name: homeTeamName,
-                      isUserTeam: match.home,
-                    ),
+                    _TeamRow(name: homeTeamName, isUserTeam: match.home),
                     const SizedBox(height: 5),
-                    _TeamRow(
-                      name: awayTeamName,
-                      isUserTeam: !match.home,
-                    ),
+                    _TeamRow(name: awayTeamName, isUserTeam: !match.home),
                     const SizedBox(height: 10),
                     Wrap(
                       crossAxisAlignment: WrapCrossAlignment.center,
@@ -87,14 +79,14 @@ class MatchListTile extends StatelessWidget {
                           ),
                         ),
                         const SizedBox(width: 10),
-                        _MetaChip(
-                          label: match.home ? 'DOMA' : 'VENKU',
-                        ),
+                        _MetaChip(label: match.home ? 'DOMA' : 'VENKU'),
                       ],
                     ),
                   ],
                 ),
               ),
+              const SizedBox(width: 8),
+              _ScoreBadge(score: score, outcome: outcome),
               if (onTap != null)
                 Icon(
                   Icons.chevron_right_rounded,
@@ -112,33 +104,42 @@ class _ScoreBadge extends StatelessWidget {
   final String score;
   final MatchOutcome? outcome;
 
-  const _ScoreBadge({
-    required this.score,
-    required this.outcome,
-  });
+  const _ScoreBadge({required this.score, required this.outcome});
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      width: 68,
-      height: 70,
+      width: 48,
+      height: 44,
       decoration: BoxDecoration(
-        color: outcome?.background(context.appColors) ??
+        color:
+            outcome?.background(context.appColors) ??
             context.appColors.backgroundSecondary,
-        borderRadius: BorderRadius.circular(18),
+        borderRadius: BorderRadius.circular(12),
       ),
       alignment: Alignment.center,
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Text(score, style: TextStyle(
-            color: outcome?.foreground(context.appColors) ?? context.appColors.textMuted,
-            fontSize: 20, fontWeight: FontWeight.w800,
-          )),
-          if (outcome != null) Text(outcome!.label, style: TextStyle(
-            color: outcome!.foreground(context.appColors),
-            fontSize: 10, fontWeight: FontWeight.w800,
-          )),
+          Text(
+            score,
+            style: TextStyle(
+              color:
+                  outcome?.foreground(context.appColors) ??
+                  context.appColors.textMuted,
+              fontSize: 15,
+              fontWeight: FontWeight.w800,
+            ),
+          ),
+          if (outcome != null)
+            Text(
+              outcome!.label,
+              style: TextStyle(
+                color: outcome!.foreground(context.appColors),
+                fontSize: 8,
+                fontWeight: FontWeight.w800,
+              ),
+            ),
         ],
       ),
     );
@@ -149,10 +150,7 @@ class _TeamRow extends StatelessWidget {
   final String name;
   final bool isUserTeam;
 
-  const _TeamRow({
-    required this.name,
-    required this.isUserTeam,
-  });
+  const _TeamRow({required this.name, required this.isUserTeam});
 
   @override
   Widget build(BuildContext context) {
@@ -172,17 +170,12 @@ class _TeamRow extends StatelessWidget {
 class _MetaChip extends StatelessWidget {
   final String label;
 
-  const _MetaChip({
-    required this.label,
-  });
+  const _MetaChip({required this.label});
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(
-        horizontal: 8,
-        vertical: 3,
-      ),
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
       decoration: BoxDecoration(
         color: context.appColors.accentSoft,
         borderRadius: BorderRadius.circular(999),

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:trus_app/common/utils/calendar.dart';
 import 'package:trus_app/common/widgets/football/match_outcome.dart';
+import 'package:trus_app/common/widgets/football/team_logo.dart';
 import 'package:trus_app/models/api/football/football_match_api_model.dart';
 import 'package:trus_app/theme/app_colors.dart';
 import 'package:trus_app/theme/app_widget_values.dart';
@@ -20,9 +21,12 @@ class FootballFixtureListTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final opponentName = _opponentName();
-    final isHome = userTeamId == null
-        ? null
-        : match.isHomeMatch(userTeamId!);
+    final opponent = userTeamId == match.homeTeam?.id
+        ? match.awayTeam
+        : userTeamId == match.awayTeam?.id
+        ? match.homeTeam
+        : match.awayTeam;
+    final isHome = userTeamId == null ? null : match.isHomeMatch(userTeamId!);
 
     final score = match.simpleResultToString();
     final outcome = MatchOutcome.fromScore(
@@ -31,8 +35,8 @@ class FootballFixtureListTile extends StatelessWidget {
       isHome: userTeamId != null && userTeamId == match.homeTeam?.id
           ? true
           : userTeamId != null && userTeamId == match.awayTeam?.id
-              ? false
-              : null,
+          ? false
+          : null,
     );
 
     return Material(
@@ -50,9 +54,16 @@ class FootballFixtureListTile extends StatelessWidget {
           ),
           child: Row(
             children: [
-              _OpponentBadge(
-                initials: _initials(opponentName),
-              ),
+              if (opponent?.logoUrl != null)
+                SizedBox(
+                  width: 58,
+                  height: 64,
+                  child: Center(
+                    child: TeamLogo(url: opponent?.logoUrl, size: 46),
+                  ),
+                )
+              else
+                _OpponentBadge(initials: _initials(opponentName)),
               const SizedBox(width: 14),
               Expanded(
                 child: Column(
@@ -159,20 +170,11 @@ class FootballFixtureListTile extends StatelessWidget {
       }
     }
 
-    return match.awayTeam?.name ??
-        match.homeTeam?.name ??
-        'Neznámý soupeř';
+    return match.awayTeam?.name ?? match.homeTeam?.name ?? 'Neznámý soupeř';
   }
 
   String _initials(String name) {
-    final ignoredWords = {
-      'fc',
-      'fk',
-      'sk',
-      'tj',
-      'afk',
-      'sc',
-    };
+    final ignoredWords = {'fc', 'fk', 'sk', 'tj', 'afk', 'sc'};
 
     final words = name
         .trim()
@@ -197,9 +199,7 @@ class FootballFixtureListTile extends StatelessWidget {
 class _OpponentBadge extends StatelessWidget {
   final String initials;
 
-  const _OpponentBadge({
-    required this.initials,
-  });
+  const _OpponentBadge({required this.initials});
 
   @override
   Widget build(BuildContext context) {
@@ -227,33 +227,40 @@ class _ScoreChip extends StatelessWidget {
   final String score;
   final MatchOutcome? outcome;
 
-  const _ScoreChip({
-    required this.score,
-    required this.outcome,
-  });
+  const _ScoreChip({required this.score, required this.outcome});
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(
-        horizontal: 10,
-        vertical: 7,
-      ),
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
       decoration: BoxDecoration(
-        color: outcome?.background(context.appColors) ?? context.appColors.accentSoft,
+        color:
+            outcome?.background(context.appColors) ??
+            context.appColors.accentSoft,
         borderRadius: BorderRadius.circular(12),
       ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Text(score, style: TextStyle(
-            color: outcome?.foreground(context.appColors) ?? context.appColors.accent,
-            fontSize: 14, fontWeight: FontWeight.w800,
-          )),
-          if (outcome != null) Text(outcome!.label, style: TextStyle(
-            color: outcome!.foreground(context.appColors),
-            fontSize: 9, fontWeight: FontWeight.w800,
-          )),
+          Text(
+            score,
+            style: TextStyle(
+              color:
+                  outcome?.foreground(context.appColors) ??
+                  context.appColors.accent,
+              fontSize: 14,
+              fontWeight: FontWeight.w800,
+            ),
+          ),
+          if (outcome != null)
+            Text(
+              outcome!.label,
+              style: TextStyle(
+                color: outcome!.foreground(context.appColors),
+                fontSize: 9,
+                fontWeight: FontWeight.w800,
+              ),
+            ),
         ],
       ),
     );
@@ -274,10 +281,7 @@ class _FixtureChip extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(
-        horizontal: 8,
-        vertical: 3,
-      ),
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
       decoration: BoxDecoration(
         color: background,
         borderRadius: BorderRadius.circular(999),

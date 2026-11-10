@@ -347,6 +347,17 @@ class _ParticipationContentState extends State<_ParticipationContent> {
                   textAlign: TextAlign.center,
                   style: TextStyle(color: colors.textSecondary),
                 ),
+                const SizedBox(height: 5),
+                Text(
+                  detail.footballMatch.toStringForMeta(),
+                  textAlign: TextAlign.center,
+                  style: TextStyle(color: colors.textMuted, fontSize: 12),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  'Potvrzení hráči: ${detail.attendingPlayers.length}',
+                  style: TextStyle(color: colors.textPrimary, fontWeight: FontWeight.w600),
+                ),
                 const SizedBox(height: 14),
                 Text(
                   detail.currentStatus == null
