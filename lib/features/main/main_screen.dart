@@ -37,6 +37,7 @@ import '../auth/controller/auth_controller.dart';
 import '../beer/screens/beer_simple_screen.dart';
 import '../general/error/api_executor.dart';
 import '../home/screens/home_screen.dart';
+import '../match/screens/match_detail_screen.dart';
 import '../notification/screen/notification_screen.dart';
 import '../steps/service/step_sync_scheduler.dart';
 import 'menu/bottom_sheet_navigation_manager.dart';
@@ -541,7 +542,9 @@ class _MainScreenState extends ConsumerState<MainScreen>
                       (chatState.activeRoom?.isNotEmpty ?? false)
                   ? const ChatOnlineStatus()
                   : null,
-              titleWidget: screenState.showPlayerStatsTitle
+              titleWidget: screenState.currentScreenId == MatchDetailScreen.id
+                  ? const MatchScoreAppBarTitle()
+                  : screenState.showPlayerStatsTitle
                   ? mainState.playerStats.when(
                       data: (stats) => PlayerStatsAppBarText(
                         stats: stats,

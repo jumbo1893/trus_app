@@ -10,9 +10,81 @@ import 'package:trus_app/theme/app_theme.dart';
 
 void main() {
   for (final fan in [false, true]) {
-    testWidgets('playing defaults for fan=$fan and can be changed', (
-      tester,
-    ) async {
+    testWidgets('Možná defaults to player role fan=$fan', (tester) async {
+      ParticipationChoice? choice;
+      await tester.pumpWidget(
+        MaterialApp(
+          theme: AppTheme.light(),
+          home: Builder(
+            builder: (context) => Scaffold(
+              body: TextButton(
+                child: const Text('Otevřít'),
+                onPressed: () async =>
+                    choice = await ParticipationResponseBottomSheet.show(
+                      context,
+                      footballMatch: footballMatch(),
+                      eligiblePlayers: [],
+                      currentPlayer: PlayerApiModel(
+                        id: 7,
+                        name: 'Test',
+                        birthday: DateTime(2000),
+                        fan: fan,
+                        active: true,
+                      ),
+                    ),
+              ),
+            ),
+          ),
+        ),
+      );
+      await tester.tap(find.text('Otevřít'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Možná'));
+      await tester.pumpAndSettle();
+      expect(choice?.status, MatchParticipationStatus.maybe);
+      expect(choice?.playing, !fan);
+    });
+  }
+
+  testWidgets('Možná menu can select fan role for a player', (tester) async {
+    ParticipationChoice? choice;
+    await tester.pumpWidget(
+      MaterialApp(
+        theme: AppTheme.light(),
+        home: Builder(
+          builder: (context) => Scaffold(
+            body: TextButton(
+              child: const Text('Otevřít'),
+              onPressed: () async =>
+                  choice = await ParticipationResponseBottomSheet.show(
+                    context,
+                    footballMatch: footballMatch(),
+                    eligiblePlayers: [],
+                    currentPlayer: PlayerApiModel(
+                      id: 7,
+                      name: 'Test',
+                      birthday: DateTime(2000),
+                      fan: false,
+                      active: true,
+                    ),
+                  ),
+            ),
+          ),
+        ),
+      ),
+    );
+    await tester.tap(find.text('Otevřít'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byTooltip('Vybrat možnost Možná'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Možná jako fanoušek'));
+    await tester.pumpAndSettle();
+    expect(choice?.status, MatchParticipationStatus.maybe);
+    expect(choice?.playing, false);
+  });
+
+  for (final playing in [true, false]) {
+    testWidgets('attendance explicitly saves playing=$playing', (tester) async {
       ParticipationChoice? choice;
       await tester.pumpWidget(
         MaterialApp(
@@ -30,7 +102,7 @@ void main() {
                       id: 7,
                       name: 'Test',
                       birthday: DateTime(2000),
-                      fan: fan,
+                      fan: false,
                       active: true,
                     ),
                   );
@@ -42,17 +114,14 @@ void main() {
       );
       await tester.tap(find.text('Otevřít'));
       await tester.pumpAndSettle();
-      expect(find.byType(SwitchListTile), findsNothing);
-      await tester.tap(find.text('Zúčastním se'));
+      await tester.tap(find.byTooltip('Vybrat možnost Jdu'));
       await tester.pumpAndSettle();
-      expect(
-        tester.widget<SwitchListTile>(find.byType(SwitchListTile)).value,
-        !fan,
+      await tester.tap(
+        find.text(playing ? 'Jdu a hraju' : 'Jdu jako fanoušek'),
       );
-      await tester.tap(find.byType(SwitchListTile));
-      await tester.tap(find.text('Potvrdit účast'));
       await tester.pumpAndSettle();
-      expect(choice?.playing, fan);
+      expect(choice?.status, MatchParticipationStatus.attending);
+      expect(choice?.playing, playing);
     });
   }
   testWidgets('unpaired response remembers status while player is selected', (
@@ -91,7 +160,7 @@ void main() {
     await tester.tap(find.text('Otevřít'));
     await tester.pumpAndSettle();
     await tester.enterText(find.byType(TextField), 'Jsem mimo Prahu.');
-    await tester.tap(find.text('Nezúčastním se'));
+    await tester.tap(find.text('Nejdu'));
     await tester.pumpAndSettle();
 
     expect(find.text('Kdo jsi?'), findsOneWidget);

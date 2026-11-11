@@ -19,6 +19,7 @@ class FootballMatchBox extends StatelessWidget {
     required this.isNextMatch,
     required this.dashboardMatch,
     this.participationStatus,
+    this.participationPlaying,
     this.attendingPlayerCount,
     required this.appTeamApiModel,
     required this.onAddPlayers,
@@ -34,6 +35,7 @@ class FootballMatchBox extends StatelessWidget {
   final bool isNextMatch;
   final DashboardMatch? dashboardMatch;
   final MatchParticipationStatus? participationStatus;
+  final bool? participationPlaying;
   final int? attendingPlayerCount;
   final AppTeamApiModel? appTeamApiModel;
 
@@ -44,8 +46,9 @@ class FootballMatchBox extends StatelessWidget {
   final void Function(FootballMatchApiModel match) onParticipation;
   final Future<void> Function(
     FootballMatchApiModel match,
-    MatchParticipationStatus status,
-  )
+    MatchParticipationStatus status, {
+    bool? playing,
+  })
   onRespondToParticipation;
   final void Function(FootballMatchApiModel match) onCommonMatches;
   final void Function(RedirectApiModel redirect) onRedirect;
@@ -299,13 +302,17 @@ class FootballMatchBox extends StatelessWidget {
     const weekdays = ['PO', 'ÚT', 'ST', 'ČT', 'PÁ', 'SO', 'NE'];
     String two(int value) => value.toString().padLeft(2, '0');
     final statusColor = switch (participationStatus) {
-      MatchParticipationStatus.attending => colors.successSolid,
+      MatchParticipationStatus.attending =>
+        participationPlaying == false
+            ? const Color(0xFF218C83)
+            : colors.successSolid,
       MatchParticipationStatus.maybe => colors.warningSolid,
       MatchParticipationStatus.notAttending => colors.errorSolid,
       null => colors.accent,
     };
     final statusLabel = switch (participationStatus) {
-      MatchParticipationStatus.attending => 'Jdu',
+      MatchParticipationStatus.attending =>
+        participationPlaying == false ? 'Fanoušek' : 'Jdu',
       MatchParticipationStatus.maybe => 'Možná',
       MatchParticipationStatus.notAttending => 'Nejdu',
       null => 'Účast',
@@ -443,23 +450,29 @@ class FootballMatchBox extends StatelessWidget {
                         ),
                       ),
                     if (isNextMatch)
-                      PopupMenuButton<MatchParticipationStatus>(
+                      PopupMenuButton<int>(
                         tooltip: 'Změnit účast',
-                        onSelected: (status) =>
-                            onRespondToParticipation(match, status),
+                        onSelected: (choice) => onRespondToParticipation(
+                          match,
+                          choice < 2
+                              ? MatchParticipationStatus.attending
+                              : choice == 2
+                              ? MatchParticipationStatus.maybe
+                              : MatchParticipationStatus.notAttending,
+                          playing: choice == 0
+                              ? true
+                              : choice == 1
+                              ? false
+                              : null,
+                        ),
                         itemBuilder: (_) => const [
+                          PopupMenuItem(value: 0, child: Text('✓ Jdu a hraju')),
                           PopupMenuItem(
-                            value: MatchParticipationStatus.attending,
-                            child: Text('✓ Jdu'),
+                            value: 1,
+                            child: Text('✓ Jdu jako fanoušek'),
                           ),
-                          PopupMenuItem(
-                            value: MatchParticipationStatus.maybe,
-                            child: Text('? Možná'),
-                          ),
-                          PopupMenuItem(
-                            value: MatchParticipationStatus.notAttending,
-                            child: Text('✕ Nejdu'),
-                          ),
+                          PopupMenuItem(value: 2, child: Text('? Možná')),
+                          PopupMenuItem(value: 3, child: Text('✕ Nejdu')),
                         ],
                         child: Container(
                           padding: const EdgeInsets.symmetric(
@@ -632,7 +645,10 @@ class FootballMatchBox extends StatelessWidget {
         ? Icons.sports_soccer
         : Icons.description_outlined;
     final participationColor = switch (participationStatus) {
-      MatchParticipationStatus.attending => appColors.successSolid,
+      MatchParticipationStatus.attending =>
+        participationPlaying == false
+            ? const Color(0xFF218C83)
+            : appColors.successSolid,
       MatchParticipationStatus.maybe => appColors.warningSolid,
       MatchParticipationStatus.notAttending => appColors.errorSolid,
       null => null,
@@ -738,27 +754,42 @@ class FootballMatchBox extends StatelessWidget {
               children: [
                 Expanded(
                   child: isNextMatch
-                      ? PopupMenuButton<MatchParticipationStatus>(
+                      ? PopupMenuButton<int>(
                           tooltip: 'Změnit účast',
-                          onSelected: (status) =>
-                              onRespondToParticipation(match, status),
+                          onSelected: (choice) => onRespondToParticipation(
+                            match,
+                            choice < 2
+                                ? MatchParticipationStatus.attending
+                                : choice == 2
+                                ? MatchParticipationStatus.maybe
+                                : MatchParticipationStatus.notAttending,
+                            playing: choice == 0
+                                ? true
+                                : choice == 1
+                                ? false
+                                : null,
+                          ),
                           itemBuilder: (_) => const [
                             PopupMenuItem(
-                              value: MatchParticipationStatus.attending,
-                              child: Text('✓ Zúčastním se'),
+                              value: 0,
+                              child: Text('✓ Jdu a hraju'),
                             ),
                             PopupMenuItem(
-                              value: MatchParticipationStatus.maybe,
-                              child: Text('? Možná'),
+                              value: 1,
+                              child: Text('✓ Jdu jako fanoušek'),
                             ),
+                            PopupMenuItem(value: 2, child: Text('? Možná')),
                             PopupMenuItem(
-                              value: MatchParticipationStatus.notAttending,
+                              value: 3,
                               child: Text('✕ Nezúčastním se'),
                             ),
                           ],
                           child: _PrimaryActionButton(
                             label: switch (participationStatus) {
-                              MatchParticipationStatus.attending => 'Jdu',
+                              MatchParticipationStatus.attending =>
+                                participationPlaying == false
+                                    ? 'Fanoušek'
+                                    : 'Jdu',
                               MatchParticipationStatus.maybe => 'Možná',
                               MatchParticipationStatus.notAttending => 'Nejdu',
                               null => 'Účast',

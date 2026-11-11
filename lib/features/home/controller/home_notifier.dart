@@ -9,7 +9,6 @@ import 'package:trus_app/features/home/state/home_state.dart';
 import 'package:trus_app/features/player/repository/player_repository.dart';
 import 'package:trus_app/features/match_participation/participation_flow.dart';
 import 'package:trus_app/features/match_participation/repository/match_participation_repository.dart';
-import 'package:trus_app/features/match_participation/screens/match_participation_screen.dart';
 import 'package:trus_app/models/api/app_notice/app_notice.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:trus_app/services/crash_reporting_service.dart';
@@ -221,6 +220,18 @@ class HomeNotifier extends SafeStateNotifier<HomeState> {
   }
 
   void onButtonDetailMatchClick(FootballMatchApiModel footballMatch) {
+    final appTeam = ref.read(globalVariablesControllerProvider).appTeam;
+    final matchId = footballMatch
+        .findMatchIdForCurrentAppTeamInMatchIdAndAppTeamIdList(appTeam);
+    if (footballMatch.alreadyPlayed && matchId == null) {
+      ref
+          .read(screenVariablesNotifierProvider.notifier)
+          .setMatchNotifierArgs(
+            MatchNotifierArgs.newByFootballMatch(footballMatch),
+          );
+      changeFragment(AddMatchScreen.id);
+      return;
+    }
     ref
         .read(screenVariablesNotifierProvider.notifier)
         .setMatchNotifierArgs(
@@ -237,11 +248,7 @@ class HomeNotifier extends SafeStateNotifier<HomeState> {
   }
 
   void onParticipationClick(FootballMatchApiModel footballMatch) {
-    if (footballMatch.id == null) return;
-    ref
-        .read(screenVariablesNotifierProvider.notifier)
-        .setFootballMatchId(footballMatch.id!);
-    changeFragment(MatchParticipationScreen.id);
+    onButtonDetailMatchClick(footballMatch);
   }
 
   Future<void> respondToParticipation(
@@ -249,6 +256,7 @@ class HomeNotifier extends SafeStateNotifier<HomeState> {
     MatchParticipationStatus status, {
     PlayerApiModel? player,
     String? comment,
+    bool? playing,
   }) async {
     if (footballMatch.id == null) return;
     late final ApiResult<MatchParticipationDetail> result;
@@ -259,6 +267,7 @@ class HomeNotifier extends SafeStateNotifier<HomeState> {
           status: status,
           playerId: player?.id,
           comment: comment,
+          playing: playing,
         ),
         loadingMessage: 'Ukládám účast…',
         successSnack: 'Odpověď byla uložena',

@@ -32,6 +32,7 @@ class ParticipationResponseBottomSheet extends StatefulWidget {
   final List<PlayerApiModel> eligiblePlayers;
   final bool reconsideration;
   final bool? initialPlaying;
+  final String? initialComment;
 
   const ParticipationResponseBottomSheet({
     super.key,
@@ -40,6 +41,7 @@ class ParticipationResponseBottomSheet extends StatefulWidget {
     required this.eligiblePlayers,
     required this.reconsideration,
     this.initialPlaying,
+    this.initialComment,
   });
 
   static Future<ParticipationChoice?> show(
@@ -49,6 +51,7 @@ class ParticipationResponseBottomSheet extends StatefulWidget {
     required List<PlayerApiModel> eligiblePlayers,
     bool reconsideration = false,
     bool? initialPlaying,
+    String? initialComment,
   }) {
     return showModalBottomSheet<ParticipationChoice>(
       context: context,
@@ -61,6 +64,7 @@ class ParticipationResponseBottomSheet extends StatefulWidget {
         eligiblePlayers: eligiblePlayers,
         reconsideration: reconsideration,
         initialPlaying: initialPlaying,
+        initialComment: initialComment,
       ),
     );
   }
@@ -74,12 +78,14 @@ class _ParticipationResponseBottomSheetState
     extends State<ParticipationResponseBottomSheet> {
   MatchParticipationStatus? _selectedStatus;
   bool _playing = true;
+  bool? _selectedPlaying;
   final TextEditingController _commentController = TextEditingController();
 
   @override
   void initState() {
     super.initState();
     _playing = widget.initialPlaying ?? !(widget.currentPlayer?.fan ?? false);
+    _commentController.text = widget.initialComment ?? '';
   }
 
   String? get _comment {
@@ -93,7 +99,9 @@ class _ParticipationResponseBottomSheetState
     super.dispose();
   }
 
-  void _onStatusSelected(MatchParticipationStatus status) {
+  void _onStatusSelected(MatchParticipationStatus status, {bool? playing}) {
+    _selectedPlaying = playing;
+    if (playing != null) _playing = playing;
     if (widget.currentPlayer != null) {
       _finish(status, widget.currentPlayer);
       return;
@@ -106,11 +114,13 @@ class _ParticipationResponseBottomSheetState
     PlayerApiModel? player, {
     bool create = false,
   }) async {
-    final bool? playing = status == MatchParticipationStatus.attending
-        ? (player?.id == widget.currentPlayer?.id
-              ? _playing
-              : widget.initialPlaying ?? !(player?.fan ?? false))
-        : null;
+    final bool? playing = switch (status) {
+      MatchParticipationStatus.attending =>
+        _selectedPlaying ?? (player == null ? _playing : !player.fan),
+      MatchParticipationStatus.maybe =>
+        _selectedPlaying ?? (player == null ? _playing : !player.fan),
+      MatchParticipationStatus.notAttending => null,
+    };
     if (!mounted) return;
     Navigator.pop(
       context,
@@ -136,29 +146,26 @@ class _ParticipationResponseBottomSheetState
 
     return Padding(
       padding: EdgeInsets.fromLTRB(
-        12,
-        12,
-        12,
-        12 + MediaQuery.viewInsetsOf(context).bottom,
+        0,
+        0,
+        0,
+        MediaQuery.viewInsetsOf(context).bottom,
       ),
       child: Container(
         constraints: BoxConstraints(
-          maxHeight: MediaQuery.sizeOf(context).height * 0.88,
+          maxHeight: MediaQuery.sizeOf(context).height * 0.78,
         ),
         decoration: BoxDecoration(
           color: colors.cardBackground,
-          borderRadius: BorderRadius.circular(24),
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(22)),
         ),
         child: SafeArea(
           top: false,
           child: SingleChildScrollView(
-            padding: const EdgeInsets.fromLTRB(20, 14, 20, 20),
-            child: AnimatedSwitcher(
-              duration: const Duration(milliseconds: 180),
-              child: selectedStatus == null
-                  ? _buildStatusStep(context)
-                  : _buildPlayerStep(context, selectedStatus),
-            ),
+            padding: const EdgeInsets.fromLTRB(16, 10, 16, 18),
+            child: selectedStatus == null
+                ? _buildStatusStep(context)
+                : _buildPlayerStep(context, selectedStatus),
           ),
         ),
       ),
@@ -183,86 +190,106 @@ class _ParticipationResponseBottomSheetState
             ),
           ),
         ),
-        Icon(Icons.sports_soccer, size: 38, color: colors.accent),
-        const SizedBox(height: 10),
         Text(
-          widget.reconsideration
-              ? 'Už ses rozhodl?'
-              : 'Dorazíš na příští zápas?',
-          textAlign: TextAlign.center,
-          style: Theme.of(context).textTheme.titleLarge?.copyWith(
+          widget.footballMatch.toStringNameWithOpponent(),
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+          style: Theme.of(context).textTheme.titleMedium?.copyWith(
             fontWeight: FontWeight.w800,
-            color: colors.textPrimary,
-          ),
-        ),
-        const SizedBox(height: 8),
-        Text(
-          widget.footballMatch.toStringForTitle(),
-          textAlign: TextAlign.center,
-          style: TextStyle(
-            fontWeight: FontWeight.w700,
             color: colors.textPrimary,
           ),
         ),
         const SizedBox(height: 3),
         Text(
           widget.footballMatch.toStringForDateSubtitle(),
-          textAlign: TextAlign.center,
-          style: TextStyle(color: colors.textSecondary),
+          style: TextStyle(color: colors.textSecondary, fontSize: 12),
         ),
         if (widget.currentPlayer != null) ...[
-          const SizedBox(height: 8),
+          const SizedBox(height: 4),
           Text(
             'Odpovídáš jako ${widget.currentPlayer!.name}',
-            textAlign: TextAlign.center,
             style: TextStyle(color: colors.textMuted, fontSize: 12),
           ),
         ],
-        const SizedBox(height: 18),
+        const SizedBox(height: 12),
+        Text(
+          'POZNÁMKA',
+          style: TextStyle(
+            color: colors.textMuted,
+            fontSize: 11,
+            fontWeight: FontWeight.w800,
+          ),
+        ),
+        const SizedBox(height: 5),
         TextField(
           controller: _commentController,
           textCapitalization: TextCapitalization.sentences,
-          maxLength: 1000,
-          maxLines: 3,
+          maxLength: 140,
+          maxLines: 2,
           minLines: 1,
-          decoration: const InputDecoration(
-            labelText: 'Komentář (volitelné)',
-            hintText: 'Třeba důvod, proč nemůžeš dorazit…',
-            prefixIcon: Icon(Icons.chat_bubble_outline),
+          decoration: InputDecoration(
+            hintText: 'Např. přijdu o 15 min později…',
+            isDense: true,
+            contentPadding: const EdgeInsets.symmetric(
+              horizontal: 12,
+              vertical: 10,
+            ),
+            border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
           ),
         ),
-        const SizedBox(height: 10),
-        if (widget.currentPlayer != null) ...[
-          SwitchListTile.adaptive(
-            contentPadding: EdgeInsets.zero,
-            title: const Text('Jdu hrát'),
-            subtitle: Text(_playing ? 'Hrající' : 'Nehrající'),
-            value: _playing,
-            onChanged: (value) => setState(() => _playing = value),
+        const SizedBox(height: 3),
+        Text(
+          'JDU ZA',
+          style: TextStyle(
+            color: colors.textMuted,
+            fontSize: 11,
+            fontWeight: FontWeight.w800,
           ),
-          const SizedBox(height: 8),
-        ],
-        _StatusButton(
-          label: 'Zúčastním se',
+        ),
+        const SizedBox(height: 5),
+        _SplitChoice(
+          label: 'Jdu',
           icon: Icons.check_circle_outline,
-          color: Colors.green.shade700,
+          color: const Color(0xFF2F8B46),
           onPressed: () =>
               _onStatusSelected(MatchParticipationStatus.attending),
+          onSelected: (playing) => _onStatusSelected(
+            MatchParticipationStatus.attending,
+            playing: playing,
+          ),
+          playerOption: 'Jdu a hraju',
+          fanOption: 'Jdu jako fanoušek',
         ),
         const SizedBox(height: 10),
-        _StatusButton(
-          label: 'Možná',
-          icon: Icons.help_outline,
-          color: Colors.orange.shade700,
-          onPressed: () => _onStatusSelected(MatchParticipationStatus.maybe),
-        ),
-        const SizedBox(height: 10),
-        _StatusButton(
-          label: 'Nezúčastním se',
-          icon: Icons.cancel_outlined,
-          color: colors.errorForeground,
-          onPressed: () =>
-              _onStatusSelected(MatchParticipationStatus.notAttending),
+        Row(
+          children: [
+            Expanded(
+              child: _SplitChoice(
+                label: 'Možná',
+                icon: Icons.help_outline,
+                color: const Color(0xFFE78A24),
+                compact: true,
+                onPressed: () =>
+                    _onStatusSelected(MatchParticipationStatus.maybe),
+                onSelected: (playing) => _onStatusSelected(
+                  MatchParticipationStatus.maybe,
+                  playing: playing,
+                ),
+                playerOption: 'Možná jako hráč',
+                fanOption: 'Možná jako fanoušek',
+              ),
+            ),
+            const SizedBox(width: 8),
+            Expanded(
+              child: _SmallChoice(
+                label: 'Nejdu',
+                icon: Icons.cancel_outlined,
+                color: const Color(0xFF6B7280),
+                onPressed: () =>
+                    _onStatusSelected(MatchParticipationStatus.notAttending),
+              ),
+            ),
+          ],
         ),
       ],
     );
@@ -339,13 +366,12 @@ class _ParticipationResponseBottomSheetState
   }
 }
 
-class _StatusButton extends StatelessWidget {
+class _SmallChoice extends StatelessWidget {
   final String label;
   final IconData icon;
   final Color color;
   final VoidCallback onPressed;
-
-  const _StatusButton({
+  const _SmallChoice({
     required this.label,
     required this.icon,
     required this.color,
@@ -353,16 +379,108 @@ class _StatusButton extends StatelessWidget {
   });
 
   @override
-  Widget build(BuildContext context) {
-    return OutlinedButton.icon(
-      style: OutlinedButton.styleFrom(
-        foregroundColor: color,
-        side: BorderSide(color: color.withAlpha(120)),
-        padding: const EdgeInsets.symmetric(vertical: 14),
-      ),
-      onPressed: onPressed,
-      icon: Icon(icon),
-      label: Text(label, style: const TextStyle(fontWeight: FontWeight.w700)),
-    );
-  }
+  Widget build(BuildContext context) => FilledButton(
+    onPressed: onPressed,
+    style: FilledButton.styleFrom(
+      backgroundColor: color,
+      minimumSize: const Size(0, 46),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(11)),
+    ),
+    child: Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Icon(icon, size: 18),
+        Text(
+          label,
+          style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700),
+        ),
+      ],
+    ),
+  );
+}
+
+class _SplitChoice extends StatelessWidget {
+  final String label;
+  final IconData icon;
+  final Color color;
+  final bool compact;
+  final VoidCallback onPressed;
+  final ValueChanged<bool> onSelected;
+  final String playerOption;
+  final String fanOption;
+
+  const _SplitChoice({
+    required this.label,
+    required this.icon,
+    required this.color,
+    required this.onPressed,
+    required this.onSelected,
+    required this.playerOption,
+    required this.fanOption,
+    this.compact = false,
+  });
+
+  @override
+  Widget build(BuildContext context) => Material(
+    color: color,
+    borderRadius: BorderRadius.circular(11),
+    child: Row(
+      children: [
+        Expanded(
+          child: InkWell(
+            onTap: onPressed,
+            borderRadius: const BorderRadius.horizontal(
+              left: Radius.circular(11),
+            ),
+            child: SizedBox(
+              height: 46,
+              child: compact
+                  ? Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(icon, size: 18, color: Colors.white),
+                        Text(
+                          label,
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 12,
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                      ],
+                    )
+                  : Row(
+                      children: [
+                        const SizedBox(width: 12),
+                        Icon(icon, size: 20, color: Colors.white),
+                        const SizedBox(width: 9),
+                        Text(
+                          label,
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                      ],
+                    ),
+            ),
+          ),
+        ),
+        Container(width: 1, height: 28, color: Colors.white70),
+        PopupMenuButton<bool>(
+          tooltip: 'Vybrat možnost $label',
+          onSelected: onSelected,
+          icon: const Icon(
+            Icons.keyboard_arrow_down,
+            color: Colors.white,
+            size: 20,
+          ),
+          itemBuilder: (_) => [
+            PopupMenuItem(value: true, child: Text(playerOption)),
+            PopupMenuItem(value: false, child: Text(fanOption)),
+          ],
+        ),
+      ],
+    ),
+  );
 }

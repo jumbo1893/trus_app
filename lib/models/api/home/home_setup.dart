@@ -12,6 +12,7 @@ class HomeSetup implements IEndpointId {
   final DashboardMatch? lastMatch;
   final MatchParticipationPrompt? participationPrompt;
   final MatchParticipationStatus? currentParticipationStatus;
+  final bool? currentParticipationPlaying;
   final int? attendingPlayerCount;
   final String? footbarWarning;
   final List<PendingTeamMember> pendingTeamMembers;
@@ -27,6 +28,7 @@ class HomeSetup implements IEndpointId {
     required this.lastMatch,
     required this.participationPrompt,
     required this.currentParticipationStatus,
+    this.currentParticipationPlaying,
     required this.attendingPlayerCount,
     required this.statsBoards,
     this.footbarWarning,
@@ -60,6 +62,7 @@ class HomeSetup implements IEndpointId {
       currentParticipationStatus: MatchParticipationStatusExtension.fromJson(
         json['currentParticipationStatus'],
       ),
+      currentParticipationPlaying: json['currentParticipationPlaying'] as bool?,
       attendingPlayerCount: json['attendingPlayerCount'] as int?,
 
       statsBoards: List<StatsBoardData>.from(

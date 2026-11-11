@@ -6,6 +6,8 @@ class MatchParticipationMember {
   final List<MatchParticipationComment> comments;
   final bool? playing;
   final PlayerApiModel? respondedBy;
+  final String? note;
+  final int? avatarUserId;
   final bool canDelete;
   bool get isPlaying => playing ?? !player.fan;
 
@@ -14,6 +16,8 @@ class MatchParticipationMember {
     required this.comments,
     this.playing,
     this.respondedBy,
+    this.note,
+    this.avatarUserId,
     this.canDelete = false,
   });
 
@@ -24,6 +28,8 @@ class MatchParticipationMember {
       respondedBy: json['respondedBy'] == null
           ? null
           : PlayerApiModel.fromJson(json['respondedBy']),
+      note: json['note'] as String?,
+      avatarUserId: (json['avatarUserId'] as num?)?.toInt(),
       canDelete: json['canDelete'] == true,
       comments: (json['comments'] as List<dynamic>? ?? const [])
           .map((item) => MatchParticipationComment.fromJson(item))

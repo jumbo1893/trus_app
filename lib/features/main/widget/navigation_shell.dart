@@ -53,14 +53,17 @@ class NavigationShell extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  GestureDetector(
-                    onTap: onTitleTap,
-                    child: Text(
-                      isRoot ? teamName ?? title : title,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
+                  if (!isRoot && titleWidget != null)
+                    titleWidget!
+                  else
+                    GestureDetector(
+                      onTap: onTitleTap,
+                      child: Text(
+                        isRoot ? teamName ?? title : title,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
                     ),
-                  ),
                   if (subtitleWidget != null) subtitleWidget!,
                   if (isRoot &&
                       titleWidget != null &&

@@ -17,10 +17,10 @@ class MatchOptionsBuilder {
   }
 
   List<MatchDetailOptions> fromFootballDetail(
-      FootballMatchDetail? detail, {
-        required bool includeEditTab,
-        required bool includeStatsTab,
-      }) {
+    FootballMatchDetail? detail, {
+    required bool includeEditTab,
+    required bool includeStatsTab,
+  }) {
     final set = <MatchDetailOptions>{};
 
     if (includeEditTab) {
@@ -43,9 +43,9 @@ class MatchOptionsBuilder {
   }
 
   List<MatchDetailOptions> mergeOrdered(
-      List<MatchDetailOptions> current,
-      List<MatchDetailOptions> add,
-      ) {
+    List<MatchDetailOptions> current,
+    List<MatchDetailOptions> add,
+  ) {
     return orderOptions({...current, ...add});
   }
 }

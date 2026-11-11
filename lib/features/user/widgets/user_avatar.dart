@@ -20,12 +20,14 @@ class UserAvatar extends ConsumerWidget {
   final int userId;
   final double radius;
   final Widget? fallback;
+  final Color? backgroundColor;
 
   const UserAvatar({
     super.key,
     required this.userId,
     this.radius = 20,
     this.fallback,
+    this.backgroundColor,
   });
 
   @override
@@ -33,6 +35,7 @@ class UserAvatar extends ConsumerWidget {
     final bytes = ref.watch(userAvatarProvider(userId)).valueOrNull;
     return CircleAvatar(
       radius: radius,
+      backgroundColor: backgroundColor,
       backgroundImage: bytes == null ? null : MemoryImage(bytes),
       child: bytes == null
           ? (fallback ?? const Icon(Icons.person_outline))

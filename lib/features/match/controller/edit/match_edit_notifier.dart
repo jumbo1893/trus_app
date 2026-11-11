@@ -457,7 +457,7 @@ class MatchEditNotifier extends BaseCrudNotifier<MatchApiModel, MatchEditState>
     final computed = optionsBuilder.fromFootballDetail(
       detail,
       includeEditTab: includeEditTab,
-      includeStatsTab: includeStatsTab,
+      includeStatsTab: includeStatsTab && _hasFootballStatistics(),
     );
 
     state = state.copyWith(
@@ -475,7 +475,7 @@ class MatchEditNotifier extends BaseCrudNotifier<MatchApiModel, MatchEditState>
     final computed = optionsBuilder.fromFootballDetail(
       null,
       includeEditTab: includeEditTab,
-      includeStatsTab: true,
+      includeStatsTab: _hasMatchStatistics(),
     );
 
     state = state.copyWith(
@@ -483,6 +483,32 @@ class MatchEditNotifier extends BaseCrudNotifier<MatchApiModel, MatchEditState>
     );
 
     _ensureInitialTabExists();
+  }
+
+  bool _hasFootballStatistics() {
+    final detail = state.footballMatchDetailState;
+    return [
+      detail.homeBestPlayer,
+      detail.awayBestPlayer,
+      detail.homeGoalScorers,
+      detail.awayGoalScorers,
+      detail.homeOwnGoals,
+      detail.awayOwnGoals,
+      detail.homeYellowCards,
+      detail.awayYellowCards,
+      detail.homeRedCards,
+      detail.awayRedCards,
+    ].any((value) => value.trim().isNotEmpty);
+  }
+
+  bool _hasMatchStatistics() {
+    final stats = state.matchStatsState;
+    return [
+      stats.goals,
+      stats.assists,
+      stats.beers,
+      stats.fines,
+    ].any((value) => value.trim().isNotEmpty);
   }
 
   void _ensureInitialTabExists() {

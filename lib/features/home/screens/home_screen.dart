@@ -246,6 +246,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
                         participationStatus: isNext
                             ? setup.currentParticipationStatus
                             : null,
+                        participationPlaying: isNext
+                            ? setup.currentParticipationPlaying
+                            : null,
                         attendingPlayerCount: isNext
                             ? setup.attendingPlayerCount
                             : null,
