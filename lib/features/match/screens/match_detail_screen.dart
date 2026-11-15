@@ -11,58 +11,75 @@ import 'package:trus_app/features/general/global_variables_controller.dart';
 import 'package:trus_app/features/main/controller/screen_notifier.dart';
 import 'package:trus_app/features/match/match_notifier_args.dart';
 import 'package:trus_app/features/match_participation/screens/match_participation_screen.dart';
+import 'package:trus_app/features/match_participation/widgets/participation_pitch.dart';
+import 'package:trus_app/models/api/football/football_match_api_model.dart';
 
 import '../../main/controller/screen_variables_notifier.dart';
 import 'edit_match_screen.dart';
 import 'football_mutual_matches_screen.dart';
 import 'match_stats_screen.dart';
 
+final _lineupTabActiveProvider = StateProvider.autoDispose<bool>((ref) => true);
+
 class MatchScoreAppBarTitle extends ConsumerWidget {
   const MatchScoreAppBarTitle({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final progress = ref.watch(_lineupTabActiveProvider)
+        ? ref.watch(lineupHeaderProgressProvider)
+        : 1.0;
     final args = ref.watch(matchNotifierArgsProvider);
     final match =
         ref.watch(matchEditNotifierProvider(args)).footballMatch ??
         args.footballMatchApiModel;
-    if (match == null) return const Text('Detail zápasu');
-    return Row(
-      children: [
-        TeamLogo(url: match.homeTeam?.logoUrl, size: 26),
-        const SizedBox(width: 4),
-        Expanded(
-          child: Text(
-            match.homeTeam?.name ?? '',
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            textAlign: TextAlign.center,
-            style: Theme.of(context).textTheme.labelMedium,
-          ),
-        ),
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 5),
-          child: Text(
-            match.homeGoalNumber == null || match.awayGoalNumber == null
-                ? '–'
-                : '${match.homeGoalNumber}:${match.awayGoalNumber}',
-            style: Theme.of(context).textTheme.titleMedium,
-          ),
-        ),
-        Expanded(
-          child: Text(
-            match.awayTeam?.name ?? '',
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            textAlign: TextAlign.center,
-            style: Theme.of(context).textTheme.labelMedium,
-          ),
-        ),
-        const SizedBox(width: 4),
-        TeamLogo(url: match.awayTeam?.logoUrl, size: 26),
-      ],
+    if (match == null) return const SizedBox.shrink();
+    return Opacity(
+      opacity: progress,
+      child: Transform.translate(
+        offset: Offset(0, 8 * (1 - progress)),
+        child: _compactScore(context, match),
+      ),
     );
   }
+
+  Widget _compactScore(BuildContext context, FootballMatchApiModel match) =>
+      Row(
+        key: const ValueKey('compact-lineup-score'),
+        children: [
+          TeamLogo(url: match.homeTeam?.logoUrl, size: 26),
+          const SizedBox(width: 4),
+          Expanded(
+            child: Text(
+              match.homeTeam?.name ?? '',
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              textAlign: TextAlign.center,
+              style: Theme.of(context).textTheme.labelMedium,
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 5),
+            child: Text(
+              match.homeGoalNumber == null || match.awayGoalNumber == null
+                  ? '–'
+                  : '${match.homeGoalNumber}:${match.awayGoalNumber}',
+              style: Theme.of(context).textTheme.titleMedium,
+            ),
+          ),
+          Expanded(
+            child: Text(
+              match.awayTeam?.name ?? '',
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              textAlign: TextAlign.center,
+              style: Theme.of(context).textTheme.labelMedium,
+            ),
+          ),
+          const SizedBox(width: 4),
+          TeamLogo(url: match.awayTeam?.logoUrl, size: 26),
+        ],
+      );
 }
 
 class MatchDetailScreen extends CustomConsumerStatefulWidget {
@@ -114,6 +131,20 @@ class _MatchDetailScreenState extends ConsumerState<MatchDetailScreen>
         length: length,
         initialIndex: safeInitial,
       );
+      _tabController!.addListener(() {
+        if (_tabController!.indexIsChanging) return;
+        final active =
+            orderedOptions[_tabController!.index] ==
+            MatchDetailOptions.footballMatchDetail;
+        ref.read(_lineupTabActiveProvider.notifier).state = active;
+      });
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) {
+          ref.read(_lineupTabActiveProvider.notifier).state =
+              orderedOptions[safeInitial] ==
+              MatchDetailOptions.footballMatchDetail;
+        }
+      });
       _currentOptions = List.of(orderedOptions);
       return;
     }
@@ -143,13 +174,32 @@ class _MatchDetailScreenState extends ConsumerState<MatchDetailScreen>
 
   Tab _fittedTab(String text) => Tab(text: text);
 
-  Widget _screenFor(MatchDetailOptions o, int? footballMatchId) {
+  Widget _screenFor(
+    MatchDetailOptions o,
+    FootballMatchApiModel? footballMatch,
+    String comment,
+  ) {
     switch (o) {
       case MatchDetailOptions.editMatch:
         return const EditMatchScreen();
 
       case MatchDetailOptions.footballMatchDetail:
-        return MatchParticipationScreen(matchId: footballMatchId);
+        if (footballMatch?.alreadyPlayed == true) {
+          final team = ref.read(globalVariablesControllerProvider).appTeam;
+          final matchId = footballMatch!
+              .findMatchIdForCurrentAppTeamInMatchIdAndAppTeamIdList(team);
+          if (matchId != null) {
+            return PlayedMatchPitch(
+              matchId: matchId,
+              comment: comment,
+              onEditMatch: () => _editMatch(matchId),
+            );
+          }
+          return const Center(
+            child: Text('Sestava pro tento zápas není zapsaná.'),
+          );
+        }
+        return MatchParticipationScreen(matchId: footballMatch?.id);
 
       case MatchDetailOptions.matchStats:
         return const MatchStatsScreen();
@@ -157,6 +207,15 @@ class _MatchDetailScreenState extends ConsumerState<MatchDetailScreen>
       case MatchDetailOptions.mutualMatches:
         return const FootballMutualMatchesScreen();
     }
+  }
+
+  void _editMatch(int matchId) {
+    ref
+        .read(screenVariablesNotifierProvider.notifier)
+        .setMatchNotifierArgs(MatchNotifierArgs.edit(matchId));
+    ref
+        .read(screenNotifierProvider.notifier)
+        .changeByFragmentId(MatchDetailScreen.id);
   }
 
   @override
@@ -221,11 +280,15 @@ class _MatchDetailScreenState extends ConsumerState<MatchDetailScreen>
               controller: controller,
               children: options.map((option) {
                 if (option != MatchDetailOptions.footballMatchDetail) {
-                  return _screenFor(option, fm?.id);
+                  return _screenFor(
+                    option,
+                    fm,
+                    state.footballMatchDetailState.refereeComment,
+                  );
                 }
                 return Column(
                   children: [
-                    if (fm != null)
+                    if (fm != null && fm.alreadyPlayed != true)
                       Padding(
                         padding: const EdgeInsets.fromLTRB(18, 4, 18, 2),
                         child: Column(
@@ -300,9 +363,11 @@ class _MatchDetailScreenState extends ConsumerState<MatchDetailScreen>
                           ],
                         ),
                       ),
-                    if (state.footballMatchDetailState.refereeComment
-                        .trim()
-                        .isNotEmpty)
+                    if ((option != MatchDetailOptions.footballMatchDetail ||
+                            fm?.alreadyPlayed != true) &&
+                        state.footballMatchDetailState.refereeComment
+                            .trim()
+                            .isNotEmpty)
                       Padding(
                         padding: const EdgeInsets.symmetric(
                           horizontal: 20,
@@ -312,7 +377,13 @@ class _MatchDetailScreenState extends ConsumerState<MatchDetailScreen>
                           state.footballMatchDetailState.refereeComment,
                         ),
                       ),
-                    Expanded(child: _screenFor(option, fm?.id)),
+                    Expanded(
+                      child: _screenFor(
+                        option,
+                        fm,
+                        state.footballMatchDetailState.refereeComment,
+                      ),
+                    ),
                   ],
                 );
               }).toList(),

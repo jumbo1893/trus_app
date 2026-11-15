@@ -11,12 +11,17 @@ class MatchStats implements JsonAndHttpConverter {
   final GoalDetailedResponse goals;
   final BeerDetailedResponse beers;
   final ReceivedFineDetailedResponse fines;
-
+  final Map<int, double> playerRatings;
+  final Map<int, List<String>> playerAchievements;
+  final RefereeStats? refereeStats;
 
   MatchStats({
     required this.goals,
     required this.beers,
     required this.fines,
+    required this.playerRatings,
+    this.playerAchievements = const {},
+    this.refereeStats,
   });
 
   @override
@@ -25,6 +30,13 @@ class MatchStats implements JsonAndHttpConverter {
       "goals": goals,
       "beers": beers,
       "fines": fines,
+      "playerRatings": playerRatings.map(
+        (key, value) => MapEntry(key.toString(), value),
+      ),
+      "playerAchievements": playerAchievements.map(
+        (key, value) => MapEntry(key.toString(), value),
+      ),
+      "refereeStats": refereeStats?.toJson(),
     };
   }
 
@@ -33,6 +45,17 @@ class MatchStats implements JsonAndHttpConverter {
       goals: GoalDetailedResponse.fromJson(json["goals"]),
       beers: BeerDetailedResponse.fromJson(json["beers"]),
       fines: ReceivedFineDetailedResponse.fromJson(json["fines"]),
+      playerRatings:
+          (json['playerRatings'] as Map<String, dynamic>? ?? const {}).map(
+            (key, value) => MapEntry(int.parse(key), (value as num).toDouble()),
+          ),
+      playerAchievements:
+          (json['playerAchievements'] as Map<String, dynamic>? ?? const {}).map(
+            (key, value) => MapEntry(int.parse(key), List<String>.from(value)),
+          ),
+      refereeStats: json['refereeStats'] == null
+          ? null
+          : RefereeStats.fromJson(json['refereeStats']),
     );
   }
 
@@ -44,7 +67,7 @@ class MatchStats implements JsonAndHttpConverter {
   String returnGoals() {
     return _returnPlayerStatsText(
       goals.goalList,
-          (goal) => goal.goalNumber,
+      (goal) => goal.goalNumber,
       _goalText,
     );
   }
@@ -52,7 +75,7 @@ class MatchStats implements JsonAndHttpConverter {
   String returnAssists() {
     return _returnPlayerStatsText(
       goals.goalList,
-          (goal) => goal.assistNumber,
+      (goal) => goal.assistNumber,
       _assistText,
     );
   }
@@ -61,20 +84,20 @@ class MatchStats implements JsonAndHttpConverter {
     return beers.beerList
         .where((beer) => beer.beerNumber > 0 || beer.liquorNumber > 0)
         .map((beer) {
-      final playerName = beer.player?.name ?? "Neznámý hráč";
+          final playerName = beer.player?.name ?? "Neznámý hráč";
 
-      final parts = <String>[];
+          final parts = <String>[];
 
-      if (beer.beerNumber > 0) {
-        parts.add("${beer.beerNumber} ${_beerText(beer.beerNumber)}");
-      }
+          if (beer.beerNumber > 0) {
+            parts.add("${beer.beerNumber} ${_beerText(beer.beerNumber)}");
+          }
 
-      if (beer.liquorNumber > 0) {
-        parts.add("${beer.liquorNumber} ${_liquorText(beer.liquorNumber)}");
-      }
+          if (beer.liquorNumber > 0) {
+            parts.add("${beer.liquorNumber} ${_liquorText(beer.liquorNumber)}");
+          }
 
-      return "$playerName: ${parts.join(", ")}";
-    })
+          return "$playerName: ${parts.join(", ")}";
+        })
         .join("\n");
   }
 
@@ -124,7 +147,7 @@ class MatchStats implements JsonAndHttpConverter {
 
       groupedPlayerFines.putIfAbsent(
         groupKey,
-            () => _GroupedPlayerFines(
+        () => _GroupedPlayerFines(
           totalAmount: playerTotalAmount,
           fineDescriptions: fineDescriptions,
         ),
@@ -136,28 +159,30 @@ class MatchStats implements JsonAndHttpConverter {
     final groups = groupedPlayerFines.values.toList()
       ..sort((a, b) => b.totalAmount.compareTo(a.totalAmount));
 
-    return groups.map((group) {
-      group.playerNames.sort();
+    return groups
+        .map((group) {
+          group.playerNames.sort();
 
-      final players = group.playerNames.join(", ");
-      final descriptions = group.fineDescriptions.join(", ");
-      return "$players: ${group.totalAmount} Kč ($descriptions)";
-    }).join("\n");
+          final players = group.playerNames.join(", ");
+          final descriptions = group.fineDescriptions.join(", ");
+          return "$players: ${group.totalAmount} Kč ($descriptions)";
+        })
+        .join("\n");
   }
 
   String _returnPlayerStatsText(
-      List<GoalDetailedModel> list,
-      int Function(GoalDetailedModel goal) valueGetter,
-      String Function(int count) labelGetter,
-      ) {
+    List<GoalDetailedModel> list,
+    int Function(GoalDetailedModel goal) valueGetter,
+    String Function(int count) labelGetter,
+  ) {
     return list
         .where((goal) => valueGetter(goal) > 0)
         .map((goal) {
-      final playerName = goal.player?.name ?? "Neznámý hráč";
-      final count = valueGetter(goal);
+          final playerName = goal.player?.name ?? "Neznámý hráč";
+          final count = valueGetter(goal);
 
-      return "$playerName: $count ${labelGetter(count)}";
-    })
+          return "$playerName: $count ${labelGetter(count)}";
+        })
         .join("\n");
   }
 
@@ -213,6 +238,46 @@ class MatchStats implements JsonAndHttpConverter {
     return "Celkem: ${goals.totalGoals} gólů, ${goals.totalAssists} asistencí,"
         " ${beers.totalBeers} piv, ${beers.totalLiquors} panáků a ${fines.finesAmount} Kč pokut";
   }
+}
+
+class RefereeStats {
+  final String name;
+  final int matchCount;
+  final double winPercentage;
+  final String? mostStarredPlayer;
+  final int mostStarredCount;
+  final double yellowCardsPerMatch;
+  final double redCardsPerMatch;
+
+  const RefereeStats({
+    required this.name,
+    required this.matchCount,
+    required this.winPercentage,
+    required this.mostStarredPlayer,
+    required this.mostStarredCount,
+    required this.yellowCardsPerMatch,
+    required this.redCardsPerMatch,
+  });
+
+  factory RefereeStats.fromJson(Map<String, dynamic> json) => RefereeStats(
+    name: json['name'] ?? '',
+    matchCount: json['matchCount'] ?? 0,
+    winPercentage: (json['winPercentage'] as num?)?.toDouble() ?? 0,
+    mostStarredPlayer: json['mostStarredPlayer'],
+    mostStarredCount: json['mostStarredCount'] ?? 0,
+    yellowCardsPerMatch: (json['yellowCardsPerMatch'] as num?)?.toDouble() ?? 0,
+    redCardsPerMatch: (json['redCardsPerMatch'] as num?)?.toDouble() ?? 0,
+  );
+
+  Map<String, dynamic> toJson() => {
+    'name': name,
+    'matchCount': matchCount,
+    'winPercentage': winPercentage,
+    'mostStarredPlayer': mostStarredPlayer,
+    'mostStarredCount': mostStarredCount,
+    'yellowCardsPerMatch': yellowCardsPerMatch,
+    'redCardsPerMatch': redCardsPerMatch,
+  };
 }
 
 class _GroupedPlayerFines {

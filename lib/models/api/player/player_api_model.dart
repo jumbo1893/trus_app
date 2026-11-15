@@ -6,12 +6,14 @@ import 'package:trus_app/models/api/interfaces/dropdown_item.dart';
 import 'package:trus_app/models/api/interfaces/json_and_http_converter.dart';
 import 'package:trus_app/models/api/interfaces/model_to_string.dart';
 
-class PlayerApiModel implements ModelToString, JsonAndHttpConverter, DropdownItem {
+class PlayerApiModel
+    implements ModelToString, JsonAndHttpConverter, DropdownItem {
   int? id;
   final String name;
   final DateTime birthday;
   final bool fan;
   final bool active;
+  final int? avatarUserId;
   FootballPlayerApiModel? footballPlayer;
 
   PlayerApiModel({
@@ -19,16 +21,18 @@ class PlayerApiModel implements ModelToString, JsonAndHttpConverter, DropdownIte
     required this.birthday,
     required this.fan,
     required this.active,
+    this.avatarUserId,
     this.id,
-    this.footballPlayer
+    this.footballPlayer,
   });
 
   PlayerApiModel.dummy()
-      : id = 0,
-        name = "neznámý hráč",
-        birthday = DateTime.fromMicrosecondsSinceEpoch(0),
-        fan = false,
-        active = false;
+    : id = 0,
+      name = "neznámý hráč",
+      birthday = DateTime.fromMicrosecondsSinceEpoch(0),
+      fan = false,
+      active = false,
+      avatarUserId = null;
 
   int calculateAge() {
     return AgeCalculator.age(birthday).years;
@@ -104,7 +108,6 @@ class PlayerApiModel implements ModelToString, JsonAndHttpConverter, DropdownIte
     }
   }
 
-
   @override
   String toString() {
     return 'PlayerApiModel{id: $id, name: $name, birthday: $birthday, fan: $fan, active: $active}';
@@ -118,11 +121,11 @@ class PlayerApiModel implements ModelToString, JsonAndHttpConverter, DropdownIte
       "birthday": formatDateForJson(birthday),
       "fan": fan,
       "active": active,
+      "avatarUserId": avatarUserId,
       "footballPlayer": footballPlayer,
     };
   }
 
-  @override
   factory PlayerApiModel.fromJson(Map<String, dynamic> json) {
     return PlayerApiModel(
       birthday: DateTime.parse(json['birthday']),
@@ -130,8 +133,10 @@ class PlayerApiModel implements ModelToString, JsonAndHttpConverter, DropdownIte
       id: json["id"] ?? 0,
       fan: json["fan"] ?? false,
       active: json['active'] ?? true,
-      footballPlayer: json["footballPlayer"] != null ? FootballPlayerApiModel.fromJson(
-          json["footballPlayer"]) : null,
+      avatarUserId: (json['avatarUserId'] as num?)?.toInt(),
+      footballPlayer: json["footballPlayer"] != null
+          ? FootballPlayerApiModel.fromJson(json["footballPlayer"])
+          : null,
     );
   }
 
