@@ -14,6 +14,17 @@ final matchApiServiceProvider = Provider<MatchApiService>(
 class MatchApiService extends CrudApiService {
   MatchApiService(super.ref);
 
+  Future<Map<int, int>> getAttendancePercentages() async {
+    final data = await executeGetRequest(
+      Uri.parse('$serverUrl/$matchApi/attendance-percentages'),
+      (dynamic json) => Map<String, dynamic>.from(json as Map),
+      null,
+    );
+    return data.map(
+      (id, value) => MapEntry(int.parse(id), (value as num).toInt()),
+    );
+  }
+
   Future<List<MatchApiModel>> getMatches() async {
     final decodedBody = await getModels<JsonAndHttpConverter>(matchApi, null);
     return decodedBody.map((model) => model as MatchApiModel).toList();

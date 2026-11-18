@@ -2,12 +2,15 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:trus_app/features/match/repository/match_repository.dart';
+import 'package:trus_app/features/match/controller/edit/match_edit_notifier.dart';
+import 'package:trus_app/features/goal/repository/goal_api_service.dart';
 import 'package:trus_app/models/api/match/match_setup.dart';
 import 'package:trus_app/models/api/match/match_api_model.dart';
 import 'package:trus_app/models/api/football/football_match_api_model.dart';
 import 'package:trus_app/models/api/match/match_stats.dart';
 import 'package:trus_app/models/api/beer/beer_detailed_model.dart';
 import 'package:trus_app/models/api/goal/goal_detailed_model.dart';
+import 'package:trus_app/models/api/goal/goal_setup.dart';
 import 'package:trus_app/models/api/receivedfine/received_fine_detailed_model.dart';
 import 'package:trus_app/models/api/player/player_api_model.dart';
 import 'package:trus_app/features/user/widgets/user_avatar.dart';
@@ -23,16 +26,26 @@ final lineupHeaderProgressProvider = StateProvider.autoDispose<double>(
 );
 
 final _playedMatchSetupProvider = FutureProvider.autoDispose
-    .family<({MatchSetup setup, MatchStats? stats}), int>((ref, matchId) async {
+    .family<
+      ({MatchSetup setup, MatchStats? stats, List<GoalSetup> goalSetups}),
+      int
+    >((ref, matchId) async {
       final repository = ref.read(matchRepositoryProvider);
       final setup = await repository.fetchMatchSetup(matchId);
       MatchStats? stats;
+      List<GoalSetup> goalSetups = [];
       try {
         stats = await repository.fetchMatchStats(matchId);
       } catch (_) {
         // The lineup is still useful if the optional statistics fail to load.
       }
-      return (setup: setup, stats: stats);
+      try {
+        // This is the same source used by the Goals screen for minutes in goal.
+        goalSetups = await ref.read(goalApiServiceProvider).setupGoal(matchId);
+      } catch (_) {
+        // Keep the lineup visible when the optional goal setup is unavailable.
+      }
+      return (setup: setup, stats: stats, goalSetups: goalSetups);
     });
 
 /// Actual match roster, taken from the saved match rather than RSVP responses.
@@ -40,11 +53,13 @@ class PlayedMatchPitch extends ConsumerStatefulWidget {
   final int matchId;
   final String comment;
   final VoidCallback? onEditMatch;
+  final VoidCallback? onOpenMatchDetail;
   const PlayedMatchPitch({
     super.key,
     required this.matchId,
     this.comment = '',
     this.onEditMatch,
+    this.onOpenMatchDetail,
   });
 
   @override
@@ -53,6 +68,7 @@ class PlayedMatchPitch extends ConsumerStatefulWidget {
 
 class _PlayedMatchPitchState extends ConsumerState<PlayedMatchPitch> {
   final ScrollController _scrollController = ScrollController();
+  bool _showList = true;
 
   @override
   void initState() {
@@ -75,6 +91,7 @@ class _PlayedMatchPitchState extends ConsumerState<PlayedMatchPitch> {
   void didUpdateWidget(covariant PlayedMatchPitch oldWidget) {
     super.didUpdateWidget(oldWidget);
     if (oldWidget.matchId != widget.matchId) {
+      _showList = true;
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (!mounted) return;
         if (_scrollController.hasClients) _scrollController.jumpTo(0);
@@ -87,6 +104,20 @@ class _PlayedMatchPitchState extends ConsumerState<PlayedMatchPitch> {
   void dispose() {
     _scrollController.dispose();
     super.dispose();
+  }
+
+  void _showPeopleSheet(MatchSetup setup) {
+    showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      useSafeArea: true,
+      showDragHandle: true,
+      backgroundColor: context.appColors.cardBackground,
+      builder: (sheetContext) => SizedBox(
+        height: MediaQuery.sizeOf(sheetContext).height * .8,
+        child: _MatchRosterPicker(matchId: widget.matchId, setup: setup),
+      ),
+    );
   }
 
   @override
@@ -164,12 +195,18 @@ class _PlayedMatchPitchState extends ConsumerState<PlayedMatchPitch> {
             if (id == null) continue;
             final current = playerStats.putIfAbsent(id, _PlayerStats.new);
             current.bestPlayer |= result.bestPlayer;
-            if (result.goalkeepingMinutes > 0) {
-              goalkeepers.add(id);
-              if (result.goalkeepingMinutes > goalkeeperMinutes) {
-                goalkeeperMinutes = result.goalkeepingMinutes;
-                goalkeeperId = id;
-              }
+          }
+          for (final goal in data.goalSetups) {
+            final id = goal.player.id;
+            if (id == null ||
+                !present.contains(id) ||
+                goal.goalkeepingMinutes <= 0) {
+              continue;
+            }
+            goalkeepers.add(id);
+            if (goal.goalkeepingMinutes > goalkeeperMinutes) {
+              goalkeeperMinutes = goal.goalkeepingMinutes;
+              goalkeeperId = id;
             }
           }
           return ListView(
@@ -182,7 +219,10 @@ class _PlayedMatchPitchState extends ConsumerState<PlayedMatchPitch> {
                     opacity: 1 - ref.watch(lineupHeaderProgressProvider),
                     child: Column(
                       children: [
-                        _LineupScoreHeader(match: footballMatch),
+                        _LineupScoreHeader(
+                          match: footballMatch,
+                          onTap: widget.onOpenMatchDetail,
+                        ),
                         _LineupMatchDetails(
                           match: footballMatch,
                           onEditMatch: widget.onEditMatch,
@@ -192,6 +232,27 @@ class _PlayedMatchPitchState extends ConsumerState<PlayedMatchPitch> {
                   ),
                 ),
               const SizedBox(height: 10),
+              Center(
+                child: SegmentedButton<bool>(
+                  showSelectedIcon: false,
+                  segments: const [
+                    ButtonSegment(
+                      value: true,
+                      icon: Icon(Icons.list),
+                      label: Text('Seznam'),
+                    ),
+                    ButtonSegment(
+                      value: false,
+                      icon: Icon(Icons.grid_on),
+                      label: Text('Hřiště'),
+                    ),
+                  ],
+                  selected: {_showList},
+                  onSelectionChanged: (selection) =>
+                      setState(() => _showList = selection.first),
+                ),
+              ),
+              const SizedBox(height: 12),
               _LineupField(
                 matchId: widget.matchId,
                 players: players,
@@ -203,11 +264,16 @@ class _PlayedMatchPitchState extends ConsumerState<PlayedMatchPitch> {
                     : footballMatch?.awayTeam?.logoUrl,
                 goalkeeperId: goalkeeperId,
                 goalkeeperIds: goalkeepers,
+                listView: _showList,
+                onAddPeople: setup.match == null
+                    ? null
+                    : () => _showPeopleSheet(setup),
               ),
               _RefereeProfile(
                 stats: data.stats?.refereeStats,
                 name: footballMatch?.referee,
                 comment: widget.comment,
+                listView: _showList,
               ),
             ],
           );
@@ -215,57 +281,471 @@ class _PlayedMatchPitchState extends ConsumerState<PlayedMatchPitch> {
       );
 }
 
-class _LineupScoreHeader extends StatelessWidget {
-  final FootballMatchApiModel match;
-  const _LineupScoreHeader({required this.match});
+class _MatchRosterPicker extends ConsumerStatefulWidget {
+  final int matchId;
+  final MatchSetup setup;
+
+  const _MatchRosterPicker({required this.matchId, required this.setup});
 
   @override
-  Widget build(BuildContext context) => Padding(
-    padding: const EdgeInsets.only(top: 8, bottom: 8),
-    child: Row(
-      children: [
-        Expanded(
-          child: Column(
+  ConsumerState<_MatchRosterPicker> createState() => _MatchRosterPickerState();
+}
+
+class _MatchRosterPickerState extends ConsumerState<_MatchRosterPicker> {
+  late final Set<int> _selectedIds = widget.setup.match!.playerIdList.toSet();
+  int? _savingId;
+  bool _showInactivePlayers = false;
+  bool _showInactiveFans = false;
+  Map<int, int>? _attendancePercentages;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadAttendancePercentages();
+  }
+
+  Future<void> _loadAttendancePercentages() async {
+    try {
+      final values = await ref
+          .read(matchRepositoryProvider)
+          .api
+          .getAttendancePercentages();
+      if (mounted) setState(() => _attendancePercentages = values);
+    } catch (_) {
+      // The picker remains usable if attendance statistics are unavailable.
+    }
+  }
+
+  Color _attendanceColor(int percentage) {
+    if (percentage >= 85) return const Color(0xFF8E44AD);
+    if (percentage >= 70) return const Color(0xFF287FC6);
+    if (percentage >= 55) return const Color(0xFF3FA73B);
+    if (percentage >= 40) return const Color(0xFFF4C542);
+    if (percentage >= 25) return const Color(0xFFF28C28);
+    if (percentage >= 10) return const Color(0xFFE57373);
+    return const Color(0xFF99252C);
+  }
+
+  List<PlayerApiModel> _ordered(List<PlayerApiModel> people) =>
+      [...people]..sort((a, b) {
+        final bySelection = (_selectedIds.contains(b.id) ? 1 : 0).compareTo(
+          _selectedIds.contains(a.id) ? 1 : 0,
+        );
+        return bySelection != 0
+            ? bySelection
+            : a.name.toLowerCase().compareTo(b.name.toLowerCase());
+      });
+
+  Future<void> _toggle(PlayerApiModel player) async {
+    final id = player.id;
+    final match = widget.setup.match;
+    if (id == null || match == null || _savingId != null) {
+      return;
+    }
+    final wasSelected = _selectedIds.contains(id);
+    final updatedIds = {..._selectedIds};
+    if (wasSelected) {
+      updatedIds.remove(id);
+    } else {
+      updatedIds.add(id);
+    }
+    setState(() => _savingId = id);
+    final updated = MatchApiModel(
+      id: match.id,
+      name: match.name,
+      date: match.date,
+      seasonId: match.seasonId,
+      home: match.home,
+      playerIdList: updatedIds.toList(),
+      homeGoalNumber: match.homeGoalNumber,
+      awayGoalNumber: match.awayGoalNumber,
+      footballMatch: match.footballMatch,
+      weather: match.weather,
+    );
+    try {
+      final repository = ref.read(matchRepositoryProvider);
+      await repository.api.editMatch(updated, widget.matchId);
+      repository.invalidateMatchSetup(widget.matchId);
+      repository.invalidateMatchStats(widget.matchId);
+      if (!mounted) return;
+      setState(() {
+        _selectedIds
+          ..clear()
+          ..addAll(updatedIds);
+        if (wasSelected && !player.active) {
+          if (player.fan) {
+            _showInactiveFans = true;
+          } else {
+            _showInactivePlayers = true;
+          }
+        }
+        _savingId = null;
+      });
+      ref.invalidate(_playedMatchSetupProvider(widget.matchId));
+      ref.invalidate(
+        matchEditNotifierProvider(ref.read(matchNotifierArgsProvider)),
+      );
+      _loadAttendancePercentages();
+    } catch (_) {
+      if (!mounted) return;
+      setState(() => _savingId = null);
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Účast se nepodařilo změnit.')),
+      );
+    }
+  }
+
+  Widget _group(
+    String title,
+    List<PlayerApiModel> people, {
+    required bool fans,
+  }) => Padding(
+    padding: const EdgeInsets.symmetric(horizontal: 16),
+    child: LayoutBuilder(
+      builder: (context, constraints) {
+        const spacing = 4.0;
+        final width = (constraints.maxWidth - spacing * 4) / 5;
+        final height = width * 100 / 90;
+        final showInactive = fans ? _showInactiveFans : _showInactivePlayers;
+        final visible = _ordered(people)
+            .where(
+              (person) =>
+                  showInactive ||
+                  person.active ||
+                  _selectedIds.contains(person.id),
+            )
+            .toList();
+        final showMore =
+            showInactive ||
+            people.any(
+              (person) => !person.active && !_selectedIds.contains(person.id),
+            );
+        final itemCount = visible.length + (showMore ? 1 : 0);
+        final rows = (itemCount + 4) ~/ 5;
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(title, style: Theme.of(context).textTheme.titleMedium),
+            const SizedBox(height: 8),
+            AnimatedSize(
+              duration: const Duration(milliseconds: 320),
+              curve: Curves.easeInOut,
+              child: SizedBox(
+                width: constraints.maxWidth,
+                height: rows == 0 ? 0 : rows * height + (rows - 1) * spacing,
+                child: Stack(
+                  children: [
+                    for (var i = 0; i < visible.length; i++)
+                      AnimatedPositioned(
+                        key: ValueKey('person-${visible[i].id}'),
+                        duration: const Duration(milliseconds: 320),
+                        curve: Curves.easeInOutCubic,
+                        left: (i % 5) * (width + spacing),
+                        top: (i ~/ 5) * (height + spacing),
+                        width: width,
+                        height: height,
+                        child: FittedBox(
+                          fit: BoxFit.contain,
+                          child: _personTile(visible[i]),
+                        ),
+                      ),
+                    if (showMore)
+                      AnimatedPositioned(
+                        key: ValueKey('more-$fans'),
+                        duration: const Duration(milliseconds: 320),
+                        curve: Curves.easeInOutCubic,
+                        left: (visible.length % 5) * (width + spacing),
+                        top: (visible.length ~/ 5) * (height + spacing),
+                        width: width,
+                        height: height,
+                        child: FittedBox(
+                          fit: BoxFit.contain,
+                          child: _moreTile(
+                            showInactive: showInactive,
+                            onTap: () => setState(() {
+                              if (fans) {
+                                _showInactiveFans = !_showInactiveFans;
+                              } else {
+                                _showInactivePlayers = !_showInactivePlayers;
+                              }
+                            }),
+                          ),
+                        ),
+                      ),
+                  ],
+                ),
+              ),
+            ),
+          ],
+        );
+      },
+    ),
+  );
+
+  Widget _personTile(PlayerApiModel person) {
+    final selected = _selectedIds.contains(person.id);
+    final percentage = _attendancePercentages?[person.id] ?? 0;
+    final attendanceColor = _attendanceColor(percentage);
+    final avatar = person.avatarUserId == null
+        ? CircleAvatar(
+            radius: 17,
+            backgroundColor: context.appColors.backgroundSecondary,
+            child: Text(person.name.isEmpty ? '?' : person.name[0]),
+          )
+        : UserAvatar(
+            userId: person.avatarUserId!,
+            radius: 17,
+            backgroundColor: context.appColors.backgroundSecondary,
+            fallback: Text(person.name.isEmpty ? '?' : person.name[0]),
+          );
+    return InkWell(
+      onTap: _savingId != null ? null : () => _toggle(person),
+      child: SizedBox(
+        width: 90,
+        height: 100,
+        child: Stack(
+          children: [
+            Positioned(
+              left: 24,
+              top: 21,
+              child: SizedBox(
+                width: 42,
+                height: 42,
+                child: Stack(
+                  alignment: Alignment.center,
+                  children: [
+                    if (_attendancePercentages != null)
+                      SizedBox(
+                        width: 42,
+                        height: 42,
+                        child: CircularProgressIndicator(
+                          value: percentage / 100,
+                          strokeWidth: 3,
+                          color: const Color(0xFF3FA73B),
+                          backgroundColor: context.appColors.border,
+                        ),
+                      ),
+                    avatar,
+                  ],
+                ),
+              ),
+            ),
+            if (_attendancePercentages != null)
+              Positioned(
+                right: 5,
+                top: 55,
+                child: Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 3,
+                    vertical: 1,
+                  ),
+                  decoration: BoxDecoration(
+                    color: attendanceColor,
+                    borderRadius: BorderRadius.circular(4),
+                  ),
+                  child: Text(
+                    '$percentage %',
+                    style: TextStyle(
+                      color: attendanceColor.computeLuminance() > .45
+                          ? Colors.black
+                          : Colors.white,
+                      fontSize: 10,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+              ),
+            if (selected)
+              const Positioned(
+                right: 10,
+                top: 24,
+                child: Icon(
+                  Icons.check_circle,
+                  size: 17,
+                  color: Color(0xFF3F8752),
+                ),
+              ),
+            if (_savingId == person.id)
+              const Positioned(
+                right: 10,
+                top: 24,
+                child: SizedBox(
+                  width: 17,
+                  height: 17,
+                  child: CircularProgressIndicator(strokeWidth: 2),
+                ),
+              ),
+            Positioned(
+              left: 2,
+              right: 2,
+              top: 78,
+              child: Center(
+                child: Container(
+                  constraints: const BoxConstraints(maxWidth: 86),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 3,
+                    vertical: 1,
+                  ),
+                  decoration: BoxDecoration(
+                    color: context.appColors.cardBackground,
+                    border: Border.all(color: context.appColors.border),
+                    borderRadius: BorderRadius.circular(3),
+                  ),
+                  child: Text(
+                    person.name,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    textAlign: TextAlign.center,
+                    style: const TextStyle(
+                      fontSize: 9,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _moreTile({required bool showInactive, required VoidCallback onTap}) =>
+      InkWell(
+        onTap: onTap,
+        child: SizedBox(
+          width: 90,
+          height: 100,
+          child: Stack(
             children: [
-              TeamLogo(url: match.homeTeam?.logoUrl, size: 52),
-              const SizedBox(height: 6),
-              Text(
-                match.homeTeam?.name ?? '',
-                maxLines: 2,
-                textAlign: TextAlign.center,
-                overflow: TextOverflow.ellipsis,
-                style: Theme.of(context).textTheme.titleSmall,
+              Positioned(
+                left: 28,
+                top: 28,
+                child: CircleAvatar(
+                  radius: 17,
+                  backgroundColor: context.appColors.backgroundSecondary,
+                  child: Icon(
+                    Icons.more_horiz,
+                    color: context.appColors.textPrimary,
+                  ),
+                ),
+              ),
+              Positioned(
+                left: 2,
+                right: 2,
+                top: 67,
+                child: Center(
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 3,
+                      vertical: 1,
+                    ),
+                    decoration: BoxDecoration(
+                      color: context.appColors.cardBackground,
+                      border: Border.all(color: context.appColors.border),
+                      borderRadius: BorderRadius.circular(3),
+                    ),
+                    child: Text(
+                      showInactive ? 'méně' : 'více',
+                      style: const TextStyle(
+                        fontSize: 9,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                ),
               ),
             ],
           ),
         ),
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 8),
-          child: Text(
-            match.homeGoalNumber == null || match.awayGoalNumber == null
-                ? '–'
-                : '${match.homeGoalNumber}:${match.awayGoalNumber}',
-            style: Theme.of(
-              context,
-            ).textTheme.headlineMedium?.copyWith(fontWeight: FontWeight.bold),
-          ),
+      );
+
+  @override
+  Widget build(BuildContext context) => Column(
+    children: [
+      Text('Přidat do zápasu', style: Theme.of(context).textTheme.titleLarge),
+      const SizedBox(height: 12),
+      Expanded(
+        child: ListView(
+          children: [
+            _group('Hráči', widget.setup.playerList, fans: false),
+            const SizedBox(height: 16),
+            const Divider(),
+            _group('Fanoušci', widget.setup.fanList, fans: true),
+            const SizedBox(height: 24),
+          ],
         ),
-        Expanded(
-          child: Column(
-            children: [
-              TeamLogo(url: match.awayTeam?.logoUrl, size: 52),
-              const SizedBox(height: 6),
-              Text(
-                match.awayTeam?.name ?? '',
-                maxLines: 2,
-                textAlign: TextAlign.center,
-                overflow: TextOverflow.ellipsis,
-                style: Theme.of(context).textTheme.titleSmall,
-              ),
-            ],
+      ),
+    ],
+  );
+}
+
+class _LineupScoreHeader extends StatelessWidget {
+  final FootballMatchApiModel match;
+  final VoidCallback? onTap;
+  const _LineupScoreHeader({required this.match, this.onTap});
+
+  @override
+  Widget build(BuildContext context) => InkWell(
+    onTap: onTap,
+    borderRadius: BorderRadius.circular(16),
+    child: Padding(
+      padding: const EdgeInsets.only(top: 8, bottom: 8),
+      child: Row(
+        children: [
+          Expanded(
+            child: Column(
+              children: [
+                TeamLogo(url: match.homeTeam?.logoUrl, size: 52),
+                const SizedBox(height: 6),
+                Text(
+                  match.homeTeam?.name ?? '',
+                  maxLines: 2,
+                  textAlign: TextAlign.center,
+                  overflow: TextOverflow.ellipsis,
+                  style: Theme.of(context).textTheme.titleSmall,
+                ),
+              ],
+            ),
           ),
-        ),
-      ],
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 8),
+            child: Column(
+              children: [
+                Text(
+                  match.homeGoalNumber == null || match.awayGoalNumber == null
+                      ? '–'
+                      : '${match.homeGoalNumber}:${match.awayGoalNumber}',
+                  style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                if (onTap != null)
+                  Icon(
+                    Icons.expand_more,
+                    size: 18,
+                    color: context.appColors.textMuted,
+                  ),
+              ],
+            ),
+          ),
+          Expanded(
+            child: Column(
+              children: [
+                TeamLogo(url: match.awayTeam?.logoUrl, size: 52),
+                const SizedBox(height: 6),
+                Text(
+                  match.awayTeam?.name ?? '',
+                  maxLines: 2,
+                  textAlign: TextAlign.center,
+                  overflow: TextOverflow.ellipsis,
+                  style: Theme.of(context).textTheme.titleSmall,
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
     ),
   );
 }
@@ -323,6 +803,45 @@ class _PlayerStats {
   double? rating;
 }
 
+class _RatingBreakdown extends StatefulWidget {
+  final List<(String, int)> parts;
+
+  const _RatingBreakdown({required this.parts});
+
+  @override
+  State<_RatingBreakdown> createState() => _RatingBreakdownState();
+}
+
+class _RatingBreakdownState extends State<_RatingBreakdown> {
+  bool expanded = false;
+
+  @override
+  Widget build(BuildContext context) => Column(
+    crossAxisAlignment: CrossAxisAlignment.start,
+    children: [
+      TextButton.icon(
+        onPressed: () => setState(() => expanded = !expanded),
+        icon: Icon(expanded ? Icons.expand_less : Icons.expand_more),
+        label: Text(
+          expanded ? 'Skrýt důvod hodnocení' : 'Zobrazit důvod hodnocení',
+        ),
+      ),
+      if (expanded) ...[
+        for (final part in widget.parts)
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Flexible(child: Text(part.$1)),
+              Text(
+                '${part.$2 > 0 ? '+' : ''}${(part.$2 / 10).toStringAsFixed(1)}',
+              ),
+            ],
+          ),
+      ],
+    ],
+  );
+}
+
 class _LineupField extends StatefulWidget {
   final int matchId;
   final List<PlayerApiModel> players;
@@ -332,6 +851,8 @@ class _LineupField extends StatefulWidget {
   final String? teamLogoUrl;
   final int? goalkeeperId;
   final Set<int> goalkeeperIds;
+  final bool listView;
+  final VoidCallback? onAddPeople;
   const _LineupField({
     required this.matchId,
     required this.players,
@@ -341,6 +862,8 @@ class _LineupField extends StatefulWidget {
     required this.teamLogoUrl,
     required this.goalkeeperId,
     required this.goalkeeperIds,
+    required this.listView,
+    this.onAddPeople,
   });
 
   @override
@@ -464,6 +987,7 @@ class _LineupFieldState extends State<_LineupField> {
 
   @override
   Widget build(BuildContext context) {
+    if (widget.listView) return _listView();
     if (!loaded) {
       return const SizedBox(
         height: 350,
@@ -533,6 +1057,110 @@ class _LineupFieldState extends State<_LineupField> {
       ],
     );
   }
+
+  Widget _listView() {
+    final players = [...widget.players]
+      ..sort((a, b) {
+        final aRating = widget.playerStats[a.id]?.rating;
+        final bRating = widget.playerStats[b.id]?.rating;
+        if (aRating == null && bRating != null) return 1;
+        if (bRating == null && aRating != null) return -1;
+        final byRating = (bRating ?? 0).compareTo(aRating ?? 0);
+        return byRating != 0
+            ? byRating
+            : a.name.toLowerCase().compareTo(b.name.toLowerCase());
+      });
+    final fans = [...widget.fans]
+      ..sort((a, b) => a.name.toLowerCase().compareTo(b.name.toLowerCase()));
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        const spacing = 4.0;
+        final tileWidth = (constraints.maxWidth - spacing * 3) / 4;
+        Widget grid(List<PlayerApiModel> people, {required bool fans}) {
+          final tileHeight = tileWidth * 100 / 90;
+          final rowStep = tileWidth * (fans ? 70 : 92) / 90;
+          final count = people.length + (widget.onAddPeople == null ? 0 : 1);
+          final rows = (count + 3) ~/ 4;
+          Widget placed(int index, Widget child) => Positioned(
+            left: (index % 4) * (tileWidth + spacing),
+            top: (index ~/ 4) * rowStep,
+            width: tileWidth,
+            height: tileHeight,
+            child: FittedBox(fit: BoxFit.contain, child: child),
+          );
+          return SizedBox(
+            width: constraints.maxWidth,
+            height: rows == 0 ? 0 : (rows - 1) * rowStep + tileHeight,
+            child: Stack(
+              children: [
+                for (var i = 0; i < people.length; i++)
+                  placed(i, _tile(people[i], listTile: true)),
+                if (widget.onAddPeople != null)
+                  placed(people.length, _listAddTile()),
+              ],
+            ),
+          );
+        }
+
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text('Hráči', style: Theme.of(context).textTheme.titleSmall),
+            grid(players, fans: false),
+            const SizedBox(height: 12),
+            const Divider(),
+            Text('Fanoušci', style: Theme.of(context).textTheme.titleSmall),
+            grid(fans, fans: true),
+          ],
+        );
+      },
+    );
+  }
+
+  Widget _listAddTile() => SizedBox(
+    width: 90,
+    height: 100,
+    child: InkWell(
+      onTap: widget.onAddPeople,
+      borderRadius: BorderRadius.circular(12),
+      child: Stack(
+        children: [
+          Positioned(
+            left: 28,
+            top: 32,
+            child: CircleAvatar(
+              radius: 17,
+              backgroundColor: context.appColors.cardBackground,
+              child: Icon(Icons.add, color: context.appColors.textPrimary),
+            ),
+          ),
+          Positioned(
+            left: 0,
+            right: 0,
+            top: 67,
+            child: Center(
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 3, vertical: 1),
+                decoration: BoxDecoration(
+                  color: context.appColors.cardBackground,
+                  border: Border.all(color: context.appColors.border),
+                  borderRadius: BorderRadius.circular(3),
+                ),
+                child: Text(
+                  'Přidat',
+                  style: TextStyle(
+                    fontSize: 9,
+                    fontWeight: FontWeight.bold,
+                    color: context.appColors.textPrimary,
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    ),
+  );
 
   Widget _sideline(
     List<PlayerApiModel> substitutes,
@@ -653,7 +1281,7 @@ class _LineupFieldState extends State<_LineupField> {
     );
   }
 
-  Widget _tile(PlayerApiModel? player) {
+  Widget _tile(PlayerApiModel? player, {bool listTile = false}) {
     if (player == null) {
       return const Center(
         child: CircleAvatar(
@@ -774,21 +1402,18 @@ class _LineupFieldState extends State<_LineupField> {
                 ),
               ),
             ),
-          if (widget.goalkeeperIds.length > 1 &&
+          if ((listTile || widget.goalkeeperIds.length > 1) &&
               widget.goalkeeperIds.contains(player.id))
             Positioned(
-              right: 5,
-              top: 5,
-              child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 2),
-                color: const Color(0xFF183D2D),
-                child: const Text(
-                  'GK',
-                  style: TextStyle(
-                    fontSize: 8,
-                    color: Colors.white,
-                    fontWeight: FontWeight.bold,
-                  ),
+              left: stats?.bestPlayer == true ? 67 : 57,
+              top: stats?.bestPlayer == true ? 25 : 27,
+              child: const Tooltip(
+                message: 'Brankář',
+                child: Icon(
+                  Icons.back_hand_outlined,
+                  size: 16,
+                  color: Colors.white,
+                  shadows: [Shadow(color: Colors.black87, blurRadius: 3)],
                 ),
               ),
             ),
@@ -839,7 +1464,9 @@ class _LineupFieldState extends State<_LineupField> {
       ),
     );
     final id = player.id;
-    if (id == null || player.fan || id == widget.goalkeeperId) return child;
+    if (listTile || id == null || player.fan || id == widget.goalkeeperId) {
+      return child;
+    }
     return LongPressDraggable<int>(
       data: id,
       feedback: Material(
@@ -1004,21 +1631,11 @@ class _LineupFieldState extends State<_LineupField> {
                 if (stats.rating == null)
                   const Text('Hodnocení není k dispozici')
                 else ...[
-                  for (final part in breakdown)
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Flexible(child: Text(part.$1)),
-                        Text(
-                          '${part.$2 > 0 ? '+' : ''}${(part.$2 / 10).toStringAsFixed(1)}',
-                        ),
-                      ],
-                    ),
-                  const Divider(),
                   Text(
                     'Celkem: ${stats.rating!.toStringAsFixed(1)}',
                     style: Theme.of(sheetContext).textTheme.titleMedium,
                   ),
+                  _RatingBreakdown(parts: breakdown),
                 ],
               ],
               const SizedBox(height: 12),
@@ -1176,11 +1793,13 @@ class _RefereeProfile extends StatelessWidget {
   final RefereeStats? stats;
   final String? name;
   final String comment;
+  final bool listView;
 
   const _RefereeProfile({
     required this.stats,
     required this.name,
     required this.comment,
+    this.listView = false,
   });
 
   @override
@@ -1188,6 +1807,57 @@ class _RefereeProfile extends StatelessWidget {
     final refereeName = stats?.name ?? name?.trim() ?? '';
     if (refereeName.isEmpty) return const SizedBox.shrink();
     final hasComment = comment.trim().isNotEmpty;
+    if (listView) {
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const SizedBox(height: 12),
+          const Divider(),
+          Text('Rozhodčí', style: Theme.of(context).textTheme.titleSmall),
+          InkWell(
+            onTap: () => _showDetail(context, refereeName),
+            child: SizedBox(
+              width: 90,
+              height: 100,
+              child: Stack(
+                children: [
+                  Positioned(
+                    left: 25,
+                    top: 24,
+                    child: CircleAvatar(
+                      radius: 20,
+                      backgroundColor: context.appColors.cardBackground,
+                      child: Icon(
+                        Icons.sports,
+                        color: context.appColors.textPrimary,
+                      ),
+                    ),
+                  ),
+                  if (hasComment)
+                    const Positioned(
+                      right: 4,
+                      top: 20,
+                      child: Icon(Icons.mode_comment, size: 18),
+                    ),
+                  Positioned(
+                    left: 0,
+                    right: 0,
+                    top: 67,
+                    child: Text(
+                      refereeName,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      textAlign: TextAlign.center,
+                      style: Theme.of(context).textTheme.labelMedium,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ],
+      );
+    }
     return Padding(
       padding: const EdgeInsets.only(top: 16),
       child: Center(

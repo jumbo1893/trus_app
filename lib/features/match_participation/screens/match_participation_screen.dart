@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:trus_app/common/widgets/screen/custom_consumer_widget.dart';
 import 'package:trus_app/features/main/controller/screen_variables_notifier.dart';
+import 'package:trus_app/features/main/controller/screen_notifier.dart';
+import 'package:trus_app/features/player/screens/view_player_screen.dart';
 import 'package:trus_app/features/match_participation/controller/match_participation_notifier.dart';
 import 'package:trus_app/features/match_participation/widgets/participation_response_bottom_sheet.dart';
 import 'package:trus_app/features/user/widgets/user_avatar.dart';
@@ -593,102 +595,93 @@ class _ParticipationRosterState extends State<_ParticipationRoster> {
                       key: ValueKey('removed-${members[i].$1.player.id}'),
                       width: double.infinity,
                     )
-                  : ListTile(
+                  : Dismissible(
                       key: ValueKey('member-${members[i].$1.player.id}'),
-                      dense: true,
-                      leading: PopupMenuButton<_AvatarAction>(
-                        tooltip: 'Možnosti hráče',
-                        onSelected: (action) {
-                          if (action == _AvatarAction.delete) {
-                            _removeAttendance(members[i].$1);
-                          }
-                        },
-                        itemBuilder: (_) => [
-                          const PopupMenuItem(
-                            value: _AvatarAction.profile,
-                            child: Text('Zobrazit profil'),
-                          ),
-                          if (members[i].$1.canDelete &&
-                              members[i].$1.player.id != null)
-                            const PopupMenuItem(
-                              value: _AvatarAction.delete,
-                              child: Text('Smazat účast'),
-                            ),
-                        ],
-                        child: SizedBox(
-                          width: 46,
-                          height: 46,
-                          child: Stack(
-                            children: [
-                              Positioned.fill(
-                                child: Center(child: _avatar(members[i].$1)),
-                              ),
-                              const Positioned(
-                                right: 0,
-                                bottom: 0,
-                                child: IgnorePointer(
-                                  child: Icon(
-                                    Icons.delete,
-                                    size: 18,
-                                    color: _ParticipationRoster._avatarInitial,
-                                  ),
-                                ),
-                              ),
-                            ],
+                      direction:
+                          members[i].$1.canDelete &&
+                              members[i].$1.player.id != null
+                          ? DismissDirection.endToStart
+                          : DismissDirection.none,
+                      background: Container(
+                        color: Theme.of(context).colorScheme.error,
+                        alignment: Alignment.centerRight,
+                        padding: const EdgeInsets.only(right: 20),
+                        child: const Icon(Icons.delete, color: Colors.white),
+                      ),
+                      confirmDismiss: (_) async {
+                        await _removeAttendance(members[i].$1);
+                        return false;
+                      },
+                      child: ListTile(
+                        dense: true,
+                        leading: Consumer(
+                          builder: (context, ref, _) => InkWell(
+                            onTap: () {
+                              ref
+                                  .read(
+                                    screenVariablesNotifierProvider.notifier,
+                                  )
+                                  .setPlayer(members[i].$1.player);
+                              ref
+                                  .read(screenNotifierProvider.notifier)
+                                  .changeByFragmentId(ViewPlayerScreen.id);
+                            },
+                            customBorder: const CircleBorder(),
+                            child: _avatar(members[i].$1),
                           ),
                         ),
-                      ),
-                      title: Text(
-                        members[i].$1.player.name,
-                        style: const TextStyle(fontWeight: FontWeight.w700),
-                      ),
-                      subtitle: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 7,
-                              vertical: 3,
-                            ),
-                            decoration: BoxDecoration(
-                              color: members[i].$3.withAlpha(32),
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                            child: Text(
-                              members[i].$2,
-                              style: TextStyle(
-                                color: members[i].$3,
-                                fontSize: 12,
-                                fontWeight: FontWeight.w800,
+                        title: Text(
+                          members[i].$1.player.name,
+                          style: const TextStyle(fontWeight: FontWeight.w700),
+                        ),
+                        subtitle: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 7,
+                                vertical: 3,
+                              ),
+                              decoration: BoxDecoration(
+                                color: members[i].$3.withAlpha(32),
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                              child: Text(
+                                members[i].$2,
+                                style: TextStyle(
+                                  color: members[i].$3,
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.w800,
+                                ),
                               ),
                             ),
-                          ),
-                          if (_memberNote(members[i].$1) case final note?)
-                            Padding(
-                              padding: const EdgeInsets.only(top: 3),
-                              child: Row(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  const Icon(
-                                    Icons.chat_bubble_outline,
-                                    size: 12,
-                                  ),
-                                  const SizedBox(width: 4),
-                                  Expanded(
-                                    child: Text(
-                                      note,
-                                      style: const TextStyle(fontSize: 12),
+                            if (_memberNote(members[i].$1) case final note?)
+                              Padding(
+                                padding: const EdgeInsets.only(top: 3),
+                                child: Row(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    const Icon(
+                                      Icons.chat_bubble_outline,
+                                      size: 12,
                                     ),
-                                  ),
-                                ],
+                                    const SizedBox(width: 4),
+                                    Expanded(
+                                      child: Text(
+                                        note,
+                                        style: const TextStyle(fontSize: 12),
+                                      ),
+                                    ),
+                                  ],
+                                ),
                               ),
-                            ),
-                        ],
-                      ),
-                      trailing: Icon(
-                        members[i].$4,
-                        color: members[i].$3,
-                        size: 20,
+                          ],
+                        ),
+                        trailing: Icon(
+                          members[i].$4,
+                          color: members[i].$3,
+                          size: 20,
+                        ),
                       ),
                     ),
             ),
@@ -748,5 +741,3 @@ class _ParticipationRosterState extends State<_ParticipationRoster> {
     return null;
   }
 }
-
-enum _AvatarAction { profile, delete }

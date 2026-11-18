@@ -13,6 +13,7 @@ import 'package:trus_app/features/match/match_notifier_args.dart';
 import 'package:trus_app/features/match_participation/screens/match_participation_screen.dart';
 import 'package:trus_app/features/match_participation/widgets/participation_pitch.dart';
 import 'package:trus_app/models/api/football/football_match_api_model.dart';
+import 'package:trus_app/features/match/state/footbal_match_detail_state.dart';
 
 import '../../main/controller/screen_variables_notifier.dart';
 import 'edit_match_screen.dart';
@@ -20,6 +21,11 @@ import 'football_mutual_matches_screen.dart';
 import 'match_stats_screen.dart';
 
 final _lineupTabActiveProvider = StateProvider.autoDispose<bool>((ref) => true);
+final matchEditReturnArgsProvider = StateProvider<MatchNotifierArgs?>(
+  (ref) => null,
+);
+final _openMatchDetailProvider =
+    StateProvider.autoDispose<void Function(BuildContext)?>((ref) => null);
 
 class MatchScoreAppBarTitle extends ConsumerWidget {
   const MatchScoreAppBarTitle({super.key});
@@ -34,11 +40,16 @@ class MatchScoreAppBarTitle extends ConsumerWidget {
         ref.watch(matchEditNotifierProvider(args)).footballMatch ??
         args.footballMatchApiModel;
     if (match == null) return const SizedBox.shrink();
+    final openDetail = ref.watch(_openMatchDetailProvider);
     return Opacity(
-      opacity: progress,
+      opacity: match.alreadyPlayed ? progress : 1.0,
       child: Transform.translate(
         offset: Offset(0, 8 * (1 - progress)),
-        child: _compactScore(context, match),
+        child: InkWell(
+          borderRadius: BorderRadius.circular(8),
+          onTap: openDetail == null ? null : () => openDetail(context),
+          child: _compactScore(context, match),
+        ),
       ),
     );
   }
@@ -60,11 +71,17 @@ class MatchScoreAppBarTitle extends ConsumerWidget {
           ),
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 5),
-            child: Text(
-              match.homeGoalNumber == null || match.awayGoalNumber == null
-                  ? '–'
-                  : '${match.homeGoalNumber}:${match.awayGoalNumber}',
-              style: Theme.of(context).textTheme.titleMedium,
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  match.homeGoalNumber == null || match.awayGoalNumber == null
+                      ? '–'
+                      : '${match.homeGoalNumber}:${match.awayGoalNumber}',
+                  style: Theme.of(context).textTheme.titleMedium,
+                ),
+                const Icon(Icons.expand_more, size: 16),
+              ],
             ),
           ),
           Expanded(
@@ -92,88 +109,7 @@ class MatchDetailScreen extends CustomConsumerStatefulWidget {
   ConsumerState<MatchDetailScreen> createState() => _MatchDetailScreenState();
 }
 
-class _MatchDetailScreenState extends ConsumerState<MatchDetailScreen>
-    with TickerProviderStateMixin {
-  TabController? _tabController;
-  List<MatchDetailOptions> _currentOptions = const [];
-
-  static const List<MatchDetailOptions> _order = [
-    MatchDetailOptions.footballMatchDetail,
-    MatchDetailOptions.matchStats,
-    MatchDetailOptions.mutualMatches,
-  ];
-
-  @override
-  void dispose() {
-    _tabController?.dispose();
-    super.dispose();
-  }
-
-  void _syncTabController({
-    required List<MatchDetailOptions> orderedOptions,
-    required MatchDetailOptions preferredInitial,
-  }) {
-    final length = orderedOptions.length;
-    if (length == 0) return;
-
-    final initialIndex = orderedOptions.indexOf(preferredInitial);
-    final safeInitial = initialIndex >= 0 ? initialIndex : 0;
-
-    final needsRecreate =
-        _tabController == null ||
-        _tabController!.length != length ||
-        !_sameOptions(_currentOptions, orderedOptions);
-
-    if (needsRecreate) {
-      _tabController?.dispose();
-      _tabController = TabController(
-        vsync: this,
-        length: length,
-        initialIndex: safeInitial,
-      );
-      _tabController!.addListener(() {
-        if (_tabController!.indexIsChanging) return;
-        final active =
-            orderedOptions[_tabController!.index] ==
-            MatchDetailOptions.footballMatchDetail;
-        ref.read(_lineupTabActiveProvider.notifier).state = active;
-      });
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (mounted) {
-          ref.read(_lineupTabActiveProvider.notifier).state =
-              orderedOptions[safeInitial] ==
-              MatchDetailOptions.footballMatchDetail;
-        }
-      });
-      _currentOptions = List.of(orderedOptions);
-      return;
-    }
-  }
-
-  bool _sameOptions(List<MatchDetailOptions> a, List<MatchDetailOptions> b) =>
-      a.length == b.length &&
-      List.generate(a.length, (i) => a[i] == b[i]).every((same) => same);
-
-  List<MatchDetailOptions> _orderedOptions(List<MatchDetailOptions> raw) {
-    final set = raw.toSet();
-    return _order.where(set.contains).toList();
-  }
-
-  Tab _tabLabel(MatchDetailOptions o) {
-    switch (o) {
-      case MatchDetailOptions.editMatch:
-        return _fittedTab("Upravit");
-      case MatchDetailOptions.footballMatchDetail:
-        return _fittedTab("Sestava");
-      case MatchDetailOptions.matchStats:
-        return _fittedTab("Statistiky");
-      case MatchDetailOptions.mutualMatches:
-        return _fittedTab("H2H");
-    }
-  }
-
-  Tab _fittedTab(String text) => Tab(text: text);
-
+class _MatchDetailScreenState extends ConsumerState<MatchDetailScreen> {
   Widget _screenFor(
     MatchDetailOptions o,
     FootballMatchApiModel? footballMatch,
@@ -193,6 +129,15 @@ class _MatchDetailScreenState extends ConsumerState<MatchDetailScreen>
               matchId: matchId,
               comment: comment,
               onEditMatch: () => _editMatch(matchId),
+              onOpenMatchDetail: () {
+                final args = ref.read(matchNotifierArgsProvider);
+                final current = ref.read(matchEditNotifierProvider(args));
+                _showOptions(
+                  context,
+                  current.footballMatch ?? args.footballMatchApiModel,
+                  current.matchOptions,
+                );
+              },
             );
           }
           return const Center(
@@ -210,6 +155,9 @@ class _MatchDetailScreenState extends ConsumerState<MatchDetailScreen>
   }
 
   void _editMatch(int matchId) {
+    ref.read(matchEditReturnArgsProvider.notifier).state = ref.read(
+      matchNotifierArgsProvider,
+    );
     ref
         .read(screenVariablesNotifierProvider.notifier)
         .setMatchNotifierArgs(MatchNotifierArgs.edit(matchId));
@@ -218,74 +166,167 @@ class _MatchDetailScreenState extends ConsumerState<MatchDetailScreen>
         .changeByFragmentId(MatchDetailScreen.id);
   }
 
+  Future<void> _showOptions(
+    BuildContext context,
+    FootballMatchApiModel? match,
+    List<MatchDetailOptions> options,
+  ) async {
+    final team = ref.read(globalVariablesControllerProvider).appTeam;
+    final matchId = match
+        ?.findMatchIdForCurrentAppTeamInMatchIdAndAppTeamIdList(team);
+    final choice = await showModalBottomSheet<String>(
+      context: context,
+      useSafeArea: true,
+      showDragHandle: true,
+      backgroundColor: context.appColors.cardBackground,
+      builder: (sheetContext) => SafeArea(
+        top: false,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              'Detail zápasu',
+              style: Theme.of(sheetContext).textTheme.titleLarge,
+            ),
+            const SizedBox(height: 8),
+            if (options.contains(MatchDetailOptions.matchStats)) ...[
+              ListTile(
+                leading: const Icon(Icons.home_outlined),
+                title: const Text('Statistiky domácích'),
+                trailing: const Icon(Icons.chevron_right),
+                onTap: () => Navigator.pop(sheetContext, 'home'),
+              ),
+              ListTile(
+                leading: const Icon(Icons.flight_outlined),
+                title: const Text('Statistiky hostů'),
+                trailing: const Icon(Icons.chevron_right),
+                onTap: () => Navigator.pop(sheetContext, 'away'),
+              ),
+            ],
+            if (options.contains(MatchDetailOptions.mutualMatches))
+              ListTile(
+                leading: const Icon(Icons.compare_arrows),
+                title: const Text('H2H · vzájemné zápasy'),
+                trailing: const Icon(Icons.chevron_right),
+                onTap: () => Navigator.pop(sheetContext, 'h2h'),
+              ),
+            if (matchId != null)
+              ListTile(
+                leading: const Icon(Icons.edit_outlined),
+                title: const Text('Upravit zápas'),
+                trailing: const Icon(Icons.chevron_right),
+                onTap: () => Navigator.pop(sheetContext, 'edit'),
+              ),
+            const SizedBox(height: 12),
+          ],
+        ),
+      ),
+    );
+    if (!mounted || !context.mounted) return;
+    if (choice == 'edit' && matchId != null) {
+      _editMatch(matchId);
+    } else if (choice != null) {
+      _showDetailSheet(context, choice);
+    }
+  }
+
+  void _showDetailSheet(BuildContext context, String choice) {
+    showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      useSafeArea: true,
+      showDragHandle: true,
+      backgroundColor: context.appColors.cardBackground,
+      builder: (sheetContext) {
+        final args = ref.read(matchNotifierArgsProvider);
+        final detail = ref
+            .read(matchEditNotifierProvider(args))
+            .footballMatchDetailState;
+        final isHome = choice == 'home';
+        final title = choice == 'h2h'
+            ? 'Vzájemné zápasy'
+            : isHome
+            ? 'Statistiky domácích'
+            : 'Statistiky hostů';
+        return SizedBox(
+          height: MediaQuery.sizeOf(sheetContext).height * 0.82,
+          child: Column(
+            children: [
+              Text(title, style: Theme.of(sheetContext).textTheme.titleLarge),
+              const SizedBox(height: 12),
+              Expanded(
+                child: choice == 'h2h'
+                    ? const FootballMutualMatchesScreen()
+                    : _teamStatistics(sheetContext, detail, isHome),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _teamStatistics(
+    BuildContext context,
+    FootballMatchDetailState detail,
+    bool home,
+  ) {
+    final entries = <(String, String)>[
+      ('Hvězda zápasu', home ? detail.homeBestPlayer : detail.awayBestPlayer),
+      ('Střelci', home ? detail.homeGoalScorers : detail.awayGoalScorers),
+      ('Vlastní góly', home ? detail.homeOwnGoals : detail.awayOwnGoals),
+      ('Žluté karty', home ? detail.homeYellowCards : detail.awayYellowCards),
+      ('Červené karty', home ? detail.homeRedCards : detail.awayRedCards),
+    ].where((entry) => entry.$2.trim().isNotEmpty).toList();
+    if (entries.isEmpty) {
+      return const Center(child: Text('Statistiky zatím nejsou zapsané.'));
+    }
+    return ListView.separated(
+      padding: const EdgeInsets.fromLTRB(16, 0, 16, 24),
+      itemCount: entries.length,
+      separatorBuilder: (_, _) => const Divider(),
+      itemBuilder: (context, index) => ListTile(
+        title: Text(entries[index].$1),
+        subtitle: Text(entries[index].$2),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final colors = context.appColors;
     final args = ref.watch(matchNotifierArgsProvider);
     final state = ref.watch(matchEditNotifierProvider(args));
 
-    final options = _orderedOptions(state.matchOptions);
     if (args.preferredScreen == MatchDetailOptions.editMatch) {
       return const EditMatchScreen();
     }
 
     final fm = state.footballMatch ?? args.footballMatchApiModel;
 
-    _syncTabController(
-      orderedOptions: options,
-      preferredInitial: state.initialTab,
-    );
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      ref.read(_openMatchDetailProvider.notifier).state = (tapContext) {
+        final current = ref.read(matchEditNotifierProvider(args));
+        _showOptions(
+          tapContext,
+          current.footballMatch ?? args.footballMatchApiModel,
+          current.matchOptions,
+        );
+      };
+    });
 
-    final controller = _tabController;
-    if (controller == null || options.isEmpty) {
+    if (state.matchOptions.isEmpty) {
       return const Loader();
     }
-
     return Scaffold(
       backgroundColor: colors.backgroundPrimary,
       body: Column(
         children: [
-          if (options.length > 1)
-            Padding(
-              padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
-              child: ClipRRect(
-                borderRadius: BorderRadius.circular(16),
-                child: Container(
-                  height: 44,
-                  padding: const EdgeInsets.all(3),
-                  decoration: BoxDecoration(
-                    color: colors.backgroundSecondary,
-                    borderRadius: BorderRadius.circular(16),
-                  ),
-                  child: TabBar(
-                    controller: controller,
-                    isScrollable: false,
-                    dividerColor: Colors.transparent,
-                    indicatorSize: TabBarIndicatorSize.tab,
-                    labelPadding: EdgeInsets.zero,
-                    indicatorPadding: EdgeInsets.zero,
-                    indicator: BoxDecoration(
-                      color: colors.cardBackground,
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    labelColor: colors.textPrimary,
-                    unselectedLabelColor: colors.textMuted,
-                    tabs: options.map(_tabLabel).toList(),
-                  ),
-                ),
-              ),
-            ),
           Expanded(
-            child: TabBarView(
-              controller: controller,
-              children: options.map((option) {
-                if (option != MatchDetailOptions.footballMatchDetail) {
-                  return _screenFor(
-                    option,
-                    fm,
-                    state.footballMatchDetailState.refereeComment,
-                  );
-                }
+            child: Builder(
+              builder: (context) {
+                const option = MatchDetailOptions.footballMatchDetail;
                 return Column(
                   children: [
                     if (fm != null && fm.alreadyPlayed != true)
@@ -386,7 +427,7 @@ class _MatchDetailScreenState extends ConsumerState<MatchDetailScreen>
                     ),
                   ],
                 );
-              }).toList(),
+              },
             ),
           ),
         ],

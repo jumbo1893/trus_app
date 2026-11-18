@@ -38,6 +38,7 @@ import '../beer/screens/beer_simple_screen.dart';
 import '../general/error/api_executor.dart';
 import '../home/screens/home_screen.dart';
 import '../match/screens/match_detail_screen.dart';
+import '../../models/enum/match_detail_options.dart';
 import '../notification/screen/notification_screen.dart';
 import '../steps/service/step_sync_scheduler.dart';
 import 'menu/bottom_sheet_navigation_manager.dart';
@@ -481,11 +482,29 @@ class _MainScreenState extends ConsumerState<MainScreen>
       return;
     }
 
+    final returnArgs = ref.read(matchEditReturnArgsProvider);
+    if (ref.read(screenNotifierProvider).currentScreenId ==
+            MatchDetailScreen.id &&
+        ref.read(matchNotifierArgsProvider).preferredScreen ==
+            MatchDetailOptions.editMatch &&
+        returnArgs != null) {
+      ref.read(matchEditReturnArgsProvider.notifier).state = null;
+      ref
+          .read(screenVariablesNotifierProvider.notifier)
+          .setMatchNotifierArgs(returnArgs);
+      return;
+    }
+
     ref.read(screenNotifierProvider.notifier).onBackButtonTap();
   }
 
   @override
   Widget build(BuildContext context) {
+    ref.listen(screenNotifierProvider, (_, next) {
+      if (next.currentScreenId != MatchDetailScreen.id) {
+        ref.read(matchEditReturnArgsProvider.notifier).state = null;
+      }
+    });
     final appColors = context.appColors;
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
