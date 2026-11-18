@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:trus_app/common/widgets/screen/custom_consumer_widget.dart';
 import 'package:trus_app/features/match_participation/widgets/participation_pitch.dart';
+import 'package:trus_app/features/match_participation/widgets/participation_help.dart';
+import 'package:trus_app/features/general/notifier/global_variables_notifier.dart';
 import 'package:trus_app/features/main/controller/screen_variables_notifier.dart';
 import 'package:trus_app/features/main/controller/screen_notifier.dart';
 import 'package:trus_app/features/player/screens/view_player_screen.dart';
@@ -57,6 +59,7 @@ class MatchParticipationScreen extends CustomConsumerWidget {
           ),
           data: (detail) => _ParticipationContent(
             detail: detail,
+            teamId: ref.watch(globalVariablesProvider).appTeam?.id,
             onRespondFor: (player) async {
               await notifier.respond(
                 MatchParticipationStatus.attending,
@@ -122,12 +125,14 @@ String? _noteFor(MatchParticipationDetail detail, int? id) {
 
 class _ParticipationContent extends StatefulWidget {
   final MatchParticipationDetail detail;
+  final int? teamId;
   final Future<void> Function() onRespond;
   final Future<void> Function(PlayerApiModel) onRespondFor;
   final Future<void> Function(int playerId) onDeleteResponse;
 
   const _ParticipationContent({
     required this.detail,
+    required this.teamId,
     required this.onRespond,
     required this.onRespondFor,
     required this.onDeleteResponse,
@@ -139,6 +144,34 @@ class _ParticipationContent extends StatefulWidget {
 
 class _ParticipationContentState extends State<_ParticipationContent> {
   final _scrollController = ScrollController();
+  bool _checkingHelp = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _scheduleHelp();
+  }
+
+  @override
+  void didUpdateWidget(covariant _ParticipationContent oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    _scheduleHelp();
+  }
+
+  void _scheduleHelp() {
+    if (_checkingHelp || widget.teamId == null) return;
+    _checkingHelp = true;
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      if (mounted) {
+        await ParticipationHelp.showIfNeeded(
+          context,
+          widget.detail,
+          widget.teamId!,
+        );
+      }
+      _checkingHelp = false;
+    });
+  }
 
   @override
   void dispose() {
