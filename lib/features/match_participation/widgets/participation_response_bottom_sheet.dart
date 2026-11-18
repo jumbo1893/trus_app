@@ -3,6 +3,7 @@ import 'package:trus_app/models/api/football/football_match_api_model.dart';
 import 'package:trus_app/models/api/participation/match_participation_status.dart';
 import 'package:trus_app/models/api/player/player_api_model.dart';
 import 'package:trus_app/theme/app_colors.dart';
+import 'package:trus_app/common/widgets/bottomsheet/player_selection_grid.dart';
 
 class ParticipationChoice {
   final MatchParticipationStatus status;
@@ -313,7 +314,7 @@ class _ParticipationResponseBottomSheetState
             ),
             Expanded(
               child: Text(
-                'Kdo jsi?',
+                'Za koho odpovídáš?',
                 textAlign: TextAlign.center,
                 style: Theme.of(context).textTheme.titleLarge?.copyWith(
                   fontWeight: FontWeight.w800,
@@ -326,35 +327,16 @@ class _ParticipationResponseBottomSheetState
         ),
         const SizedBox(height: 6),
         Text(
-          'Účet zatím není spárovaný s hráčem ani fanouškem. Vyber se ze seznamu; odpověď „${status.label}“ i komentář si zapamatujeme.',
+          'Vyber hráče nebo fanouška ze seznamu. Odpověď „${status.label}“ i komentář uložíme k vybrané osobě.',
           textAlign: TextAlign.center,
           style: TextStyle(color: colors.textSecondary, height: 1.4),
         ),
         const SizedBox(height: 14),
-        for (final player in widget.eligiblePlayers)
-          Card(
-            margin: const EdgeInsets.only(bottom: 8),
-            color: colors.backgroundSecondary,
-            child: ListTile(
-              leading: CircleAvatar(
-                backgroundColor: colors.accentSoft,
-                child: Icon(Icons.person_outline, color: colors.accent),
-              ),
-              title: Text(
-                player.name,
-                style: TextStyle(
-                  color: colors.textPrimary,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-              subtitle: Text(
-                '${player.fan ? "Fanoušek" : "Hráč"}${player.active ? "" : " · neaktivní"}',
-                style: TextStyle(color: colors.textMuted, fontSize: 12),
-              ),
-              trailing: Icon(Icons.chevron_right, color: colors.accent),
-              onTap: () => _finish(status, player),
-            ),
-          ),
+        PlayerSelectionGrid(
+          players: widget.eligiblePlayers,
+          shrinkWrap: true,
+          onTap: (player) => _finish(status, player),
+        ),
         const SizedBox(height: 4),
         OutlinedButton.icon(
           onPressed: () => _finish(status, null, create: true),

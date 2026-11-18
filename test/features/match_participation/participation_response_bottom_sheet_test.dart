@@ -163,7 +163,7 @@ void main() {
     await tester.tap(find.text('Nejdu'));
     await tester.pumpAndSettle();
 
-    expect(find.text('Kdo jsi?'), findsOneWidget);
+    expect(find.text('Za koho odpovídáš?'), findsOneWidget);
     expect(
       find.textContaining('odpověď „Nezúčastním se“ i komentář'),
       findsOneWidget,

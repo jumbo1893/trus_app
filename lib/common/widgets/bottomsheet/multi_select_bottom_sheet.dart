@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:trus_app/theme/app_colors.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:trus_app/models/api/interfaces/model_to_string.dart';
+import 'package:trus_app/models/api/player/player_api_model.dart';
+import 'player_selection_grid.dart';
 
 class MultiSelectBottomSheet<T extends ModelToString>
     extends ConsumerStatefulWidget {
@@ -9,6 +11,7 @@ class MultiSelectBottomSheet<T extends ModelToString>
   final List<T> models;
   final List<T> selectedModels;
   final ValueChanged<List<T>> onChanged;
+  final bool singleSelection;
   final bool Function(T model)? isInitiallyHidden;
   final String hiddenItemsButtonText;
 
@@ -18,6 +21,7 @@ class MultiSelectBottomSheet<T extends ModelToString>
     required this.models,
     required this.selectedModels,
     required this.onChanged,
+    this.singleSelection = false,
     this.isInitiallyHidden,
     this.hiddenItemsButtonText = "Zobrazit skryté položky",
   });
@@ -68,6 +72,10 @@ class _MultiSelectBottomSheetState<T extends ModelToString>
   }
 
   void _toggleSelection(T item) {
+    if (widget.singleSelection) {
+      Navigator.pop(context, item);
+      return;
+    }
     setState(() {
       if (_isSelected(item)) {
         _tempSelected.removeWhere((e) => e.getId() == item.getId());
@@ -105,38 +113,47 @@ class _MultiSelectBottomSheetState<T extends ModelToString>
             Divider(color: context.appColors.border, height: 1),
 
             Expanded(
-              child: GridView.builder(
-                controller: scrollController,
-                padding: const EdgeInsets.only(top: 8),
-                itemCount: _visibleModels.length,
-                gridDelegate:
-                const SliverGridDelegateWithFixedCrossAxisCount(
-                  crossAxisCount: 2,
-                  childAspectRatio: 3.8,
-                ),
-                itemBuilder: (context, index) {
-                  final item = _visibleModels[index];
-                  final selected = _isSelected(item);
-
-                  return InkWell(
-                    onTap: () => _toggleSelection(item),
-                    child: Row(
-                      children: [
-                        Checkbox(
-                          value: selected,
-                          onChanged: (_) => _toggleSelection(item),
-                        ),
-                        Expanded(
-                          child: Text(
-                            item.listViewTitle(),
-                            overflow: TextOverflow.ellipsis,
+              child: T == PlayerApiModel
+                  ? PlayerSelectionGrid(
+                      controller: scrollController,
+                      players: _visibleModels.cast<PlayerApiModel>(),
+                      isSelected: !widget.singleSelection
+                          ? (player) => _isSelected(player as T)
+                          : null,
+                      onTap: (player) => _toggleSelection(player as T),
+                    )
+                  : GridView.builder(
+                      controller: scrollController,
+                      padding: const EdgeInsets.only(top: 8),
+                      itemCount: _visibleModels.length,
+                      gridDelegate:
+                          const SliverGridDelegateWithFixedCrossAxisCount(
+                            crossAxisCount: 2,
+                            childAspectRatio: 3.8,
                           ),
-                        ),
-                      ],
+                      itemBuilder: (context, index) {
+                        final item = _visibleModels[index];
+                        final selected = _isSelected(item);
+
+                        return InkWell(
+                          onTap: () => _toggleSelection(item),
+                          child: Row(
+                            children: [
+                              Checkbox(
+                                value: selected,
+                                onChanged: (_) => _toggleSelection(item),
+                              ),
+                              Expanded(
+                                child: Text(
+                                  item.listViewTitle(),
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                              ),
+                            ],
+                          ),
+                        );
+                      },
                     ),
-                  );
-                },
-              ),
             ),
 
             if (hiddenModelsCount > 0)
@@ -162,36 +179,41 @@ class _MultiSelectBottomSheetState<T extends ModelToString>
                 ),
               ),
 
-            SafeArea(
-              top: false,
-              child: Padding(
-                padding: const EdgeInsets.all(16.0),
-                child: SizedBox(
-                  width: double.infinity,
-                  child: ElevatedButton(
-                    style: ButtonStyle(
-                      backgroundColor:
-                      WidgetStateProperty.all<Color>(context.appColors.legacyAccent),
-                      shape:
-                      WidgetStateProperty.all<RoundedRectangleBorder>(
-                        RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(18.0),
-                          side: BorderSide(color: context.appColors.legacyAccent),
+            if (!widget.singleSelection)
+              SafeArea(
+                top: false,
+                child: Padding(
+                  padding: const EdgeInsets.all(16.0),
+                  child: SizedBox(
+                    width: double.infinity,
+                    child: ElevatedButton(
+                      style: ButtonStyle(
+                        backgroundColor: WidgetStateProperty.all<Color>(
+                          context.appColors.legacyAccent,
+                        ),
+                        shape: WidgetStateProperty.all<RoundedRectangleBorder>(
+                          RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(18.0),
+                            side: BorderSide(
+                              color: context.appColors.legacyAccent,
+                            ),
+                          ),
                         ),
                       ),
-                    ),
-                    onPressed: () {
-                      widget.onChanged(_tempSelected);
-                      Navigator.pop(context);
-                    },
-                    child: Text(
-                      "Použít výběr",
-                      style: TextStyle(color: context.appColors.buttonForeground),
+                      onPressed: () {
+                        widget.onChanged(_tempSelected);
+                        Navigator.pop(context);
+                      },
+                      child: Text(
+                        "Použít výběr",
+                        style: TextStyle(
+                          color: context.appColors.buttonForeground,
+                        ),
+                      ),
                     ),
                   ),
                 ),
               ),
-            ),
           ],
         );
       },

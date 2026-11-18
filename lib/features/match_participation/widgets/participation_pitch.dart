@@ -115,7 +115,7 @@ class _PlayedMatchPitchState extends ConsumerState<PlayedMatchPitch> {
       backgroundColor: context.appColors.cardBackground,
       builder: (sheetContext) => SizedBox(
         height: MediaQuery.sizeOf(sheetContext).height * .8,
-        child: _MatchRosterPicker(matchId: widget.matchId, setup: setup),
+        child: MatchRosterPicker(matchId: widget.matchId, setup: setup),
       ),
     );
   }
@@ -281,18 +281,35 @@ class _PlayedMatchPitchState extends ConsumerState<PlayedMatchPitch> {
       );
 }
 
-class _MatchRosterPicker extends ConsumerStatefulWidget {
-  final int matchId;
-  final MatchSetup setup;
+class MatchRosterPicker extends ConsumerStatefulWidget {
+  final int? matchId;
+  final MatchSetup? setup;
+  final List<PlayerApiModel>? availablePeople;
+  final ValueChanged<PlayerApiModel>? onPersonSelected;
 
-  const _MatchRosterPicker({required this.matchId, required this.setup});
+  const MatchRosterPicker({
+    super.key,
+    required this.matchId,
+    required this.setup,
+  }) : availablePeople = null,
+       onPersonSelected = null;
+
+  const MatchRosterPicker.select({
+    super.key,
+    required List<PlayerApiModel> people,
+    required ValueChanged<PlayerApiModel> onSelected,
+  }) : matchId = null,
+       setup = null,
+       availablePeople = people,
+       onPersonSelected = onSelected;
 
   @override
-  ConsumerState<_MatchRosterPicker> createState() => _MatchRosterPickerState();
+  ConsumerState<MatchRosterPicker> createState() => _MatchRosterPickerState();
 }
 
-class _MatchRosterPickerState extends ConsumerState<_MatchRosterPicker> {
-  late final Set<int> _selectedIds = widget.setup.match!.playerIdList.toSet();
+class _MatchRosterPickerState extends ConsumerState<MatchRosterPicker> {
+  late final Set<int> _selectedIds =
+      widget.setup?.match?.playerIdList.toSet() ?? <int>{};
   int? _savingId;
   bool _showInactivePlayers = false;
   bool _showInactiveFans = false;
@@ -337,9 +354,16 @@ class _MatchRosterPickerState extends ConsumerState<_MatchRosterPicker> {
       });
 
   Future<void> _toggle(PlayerApiModel player) async {
+    if (widget.onPersonSelected != null) {
+      widget.onPersonSelected!(player);
+      return;
+    }
     final id = player.id;
-    final match = widget.setup.match;
-    if (id == null || match == null || _savingId != null) {
+    final match = widget.setup?.match;
+    if (id == null ||
+        match == null ||
+        widget.matchId == null ||
+        _savingId != null) {
       return;
     }
     final wasSelected = _selectedIds.contains(id);
@@ -364,9 +388,9 @@ class _MatchRosterPickerState extends ConsumerState<_MatchRosterPicker> {
     );
     try {
       final repository = ref.read(matchRepositoryProvider);
-      await repository.api.editMatch(updated, widget.matchId);
-      repository.invalidateMatchSetup(widget.matchId);
-      repository.invalidateMatchStats(widget.matchId);
+      await repository.api.editMatch(updated, widget.matchId!);
+      repository.invalidateMatchSetup(widget.matchId!);
+      repository.invalidateMatchStats(widget.matchId!);
       if (!mounted) return;
       setState(() {
         _selectedIds
@@ -381,7 +405,7 @@ class _MatchRosterPickerState extends ConsumerState<_MatchRosterPicker> {
         }
         _savingId = null;
       });
-      ref.invalidate(_playedMatchSetupProvider(widget.matchId));
+      ref.invalidate(_playedMatchSetupProvider(widget.matchId!));
       ref.invalidate(
         matchEditNotifierProvider(ref.read(matchNotifierArgsProvider)),
       );
@@ -663,15 +687,34 @@ class _MatchRosterPickerState extends ConsumerState<_MatchRosterPicker> {
   @override
   Widget build(BuildContext context) => Column(
     children: [
-      Text('Přidat do zápasu', style: Theme.of(context).textTheme.titleLarge),
+      Text(
+        widget.onPersonSelected == null
+            ? 'Přidat do zápasu'
+            : 'Za koho odpovídáš?',
+        style: Theme.of(context).textTheme.titleLarge,
+      ),
       const SizedBox(height: 12),
       Expanded(
         child: ListView(
           children: [
-            _group('Hráči', widget.setup.playerList, fans: false),
+            _group(
+              'Hráči',
+              widget.setup?.playerList ??
+                  widget.availablePeople!
+                      .where((person) => !person.fan)
+                      .toList(),
+              fans: false,
+            ),
             const SizedBox(height: 16),
             const Divider(),
-            _group('Fanoušci', widget.setup.fanList, fans: true),
+            _group(
+              'Fanoušci',
+              widget.setup?.fanList ??
+                  widget.availablePeople!
+                      .where((person) => person.fan)
+                      .toList(),
+              fans: true,
+            ),
             const SizedBox(height: 24),
           ],
         ),

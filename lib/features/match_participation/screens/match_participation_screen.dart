@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:trus_app/common/widgets/screen/custom_consumer_widget.dart';
+import 'package:trus_app/features/match_participation/widgets/participation_pitch.dart';
 import 'package:trus_app/features/main/controller/screen_variables_notifier.dart';
 import 'package:trus_app/features/main/controller/screen_notifier.dart';
 import 'package:trus_app/features/player/screens/view_player_screen.dart';
@@ -57,20 +58,10 @@ class MatchParticipationScreen extends CustomConsumerWidget {
           data: (detail) => _ParticipationContent(
             detail: detail,
             onRespondFor: (player) async {
-              final choice = await ParticipationResponseBottomSheet.show(
-                context,
-                footballMatch: detail.footballMatch,
-                currentPlayer: player,
-                eligiblePlayers: const [],
-                initialPlaying: _playingFor(detail, player.id),
-                initialComment: _noteFor(detail, player.id),
-              );
-              if (choice == null || !context.mounted) return;
               await notifier.respond(
-                choice.status,
+                MatchParticipationStatus.attending,
                 player: player,
-                playing: choice.playing,
-                comment: choice.comment,
+                playing: !player.fan,
               );
             },
             onRespond: () async {
@@ -178,40 +169,30 @@ class _ParticipationContentState extends State<_ParticipationContent> {
               icon: const Icon(Icons.person_add_alt, size: 16),
               label: const Text('Zadat za někoho jiného'),
               onPressed: () async {
+                final respondedIds = _allMembers(
+                  detail,
+                ).map((member) => member.player.id).toSet();
                 final players = detail.eligiblePlayers
-                    .where((player) => player.id != detail.currentPlayer?.id)
+                    .where(
+                      (player) =>
+                          player.id != detail.currentPlayer?.id &&
+                          !respondedIds.contains(player.id),
+                    )
                     .toList();
-                final player = await showDialog<PlayerApiModel>(
+                final player = await showModalBottomSheet<PlayerApiModel>(
                   context: context,
-                  builder: (ctx) => AlertDialog(
-                    title: const Text('Za koho odpovídáš?'),
-                    content: SizedBox(
-                      width: double.maxFinite,
-                      child: ListView.separated(
-                        shrinkWrap: true,
-                        itemCount: players.length,
-                        separatorBuilder: (_, _) => const SizedBox(height: 8),
-                        itemBuilder: (context, index) {
-                          final player = players[index];
-                          return Card(
-                            margin: EdgeInsets.zero,
-                            child: ListTile(
-                              leading: CircleAvatar(
-                                child: Text(
-                                  player.name.isEmpty
-                                      ? '?'
-                                      : player.name
-                                            .substring(0, 1)
-                                            .toUpperCase(),
-                                ),
-                              ),
-                              title: Text(player.name),
-                              subtitle: Text(player.fan ? 'Fanoušek' : 'Hráč'),
-                              onTap: () => Navigator.pop(ctx, player),
-                            ),
-                          );
-                        },
-                      ),
+                  isScrollControlled: true,
+                  useSafeArea: true,
+                  backgroundColor: Theme.of(context).colorScheme.surface,
+                  builder: (sheetContext) => DraggableScrollableSheet(
+                    expand: false,
+                    initialChildSize: 0.66,
+                    minChildSize: 0.4,
+                    maxChildSize: 0.95,
+                    builder: (context, _) => MatchRosterPicker.select(
+                      people: players,
+                      onSelected: (player) =>
+                          Navigator.pop(sheetContext, player),
                     ),
                   ),
                 );
