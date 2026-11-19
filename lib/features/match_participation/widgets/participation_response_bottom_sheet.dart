@@ -32,6 +32,7 @@ class ParticipationResponseBottomSheet extends StatefulWidget {
   final PlayerApiModel? currentPlayer;
   final List<PlayerApiModel> eligiblePlayers;
   final bool reconsideration;
+  final bool respondingForAnother;
   final bool? initialPlaying;
   final String? initialComment;
 
@@ -41,6 +42,7 @@ class ParticipationResponseBottomSheet extends StatefulWidget {
     required this.currentPlayer,
     required this.eligiblePlayers,
     required this.reconsideration,
+    this.respondingForAnother = false,
     this.initialPlaying,
     this.initialComment,
   });
@@ -51,6 +53,7 @@ class ParticipationResponseBottomSheet extends StatefulWidget {
     required PlayerApiModel? currentPlayer,
     required List<PlayerApiModel> eligiblePlayers,
     bool reconsideration = false,
+    bool respondingForAnother = false,
     bool? initialPlaying,
     String? initialComment,
   }) {
@@ -64,6 +67,7 @@ class ParticipationResponseBottomSheet extends StatefulWidget {
         currentPlayer: currentPlayer,
         eligiblePlayers: eligiblePlayers,
         reconsideration: reconsideration,
+        respondingForAnother: respondingForAnother,
         initialPlaying: initialPlaying,
         initialComment: initialComment,
       ),
@@ -208,7 +212,9 @@ class _ParticipationResponseBottomSheetState
         if (widget.currentPlayer != null) ...[
           const SizedBox(height: 4),
           Text(
-            'Odpovídáš jako ${widget.currentPlayer!.name}',
+            widget.respondingForAnother
+                ? 'Odpovídáš za ${widget.currentPlayer!.name}'
+                : 'Odpovídáš jako ${widget.currentPlayer!.name}',
             style: TextStyle(color: colors.textMuted, fontSize: 12),
           ),
         ],

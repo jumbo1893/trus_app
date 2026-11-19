@@ -101,10 +101,19 @@ class MatchParticipationScreen extends CustomConsumerWidget {
                   },
             teamId: ref.watch(globalVariablesProvider).appTeam?.id,
             onRespondFor: (player) async {
+              final choice = await ParticipationResponseBottomSheet.show(
+                context,
+                footballMatch: detail.footballMatch,
+                currentPlayer: player,
+                eligiblePlayers: const [],
+                respondingForAnother: true,
+              );
+              if (choice == null) return;
               await notifier.respond(
-                MatchParticipationStatus.attending,
+                choice.status,
                 player: player,
-                playing: !player.fan,
+                playing: choice.playing,
+                comment: choice.comment,
               );
             },
             onRespond: () async {
