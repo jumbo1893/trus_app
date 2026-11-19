@@ -5,6 +5,7 @@ class AppTextInputField extends StatefulWidget {
   final ValueChanged<String> onChanged;
   final String? hintText;
   final TextInputType? keyboardType;
+  final int maxLines;
 
   const AppTextInputField({
     super.key,
@@ -12,6 +13,7 @@ class AppTextInputField extends StatefulWidget {
     required this.onChanged,
     this.keyboardType,
     this.hintText,
+    this.maxLines = 1,
   });
 
   @override
@@ -49,6 +51,7 @@ class _AppTextInputFieldState extends State<AppTextInputField> {
   Widget build(BuildContext context) {
     return TextField(
       keyboardType: widget.keyboardType,
+      maxLines: widget.maxLines,
       textCapitalization:
           widget.keyboardType == TextInputType.emailAddress ||
               widget.keyboardType == TextInputType.number

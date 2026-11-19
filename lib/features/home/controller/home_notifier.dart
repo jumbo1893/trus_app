@@ -219,7 +219,11 @@ class HomeNotifier extends SafeStateNotifier<HomeState> {
     }
   }
 
-  void onButtonDetailMatchClick(FootballMatchApiModel footballMatch) {
+  void onButtonDetailMatchClick(
+    FootballMatchApiModel footballMatch, {
+    bool showParticipationMatchLink = false,
+    String? plannedDescription,
+  }) {
     final appTeam = ref.read(globalVariablesControllerProvider).appTeam;
     final matchId = footballMatch
         .findMatchIdForCurrentAppTeamInMatchIdAndAppTeamIdList(appTeam);
@@ -235,7 +239,11 @@ class HomeNotifier extends SafeStateNotifier<HomeState> {
     ref
         .read(screenVariablesNotifierProvider.notifier)
         .setMatchNotifierArgs(
-          MatchNotifierArgs.footballMatchDetail(footballMatch),
+          MatchNotifierArgs.footballMatchDetail(
+            footballMatch,
+            showParticipationMatchLink: showParticipationMatchLink,
+            plannedDescription: plannedDescription,
+          ),
         );
     changeFragment(MatchDetailScreen.id);
   }
@@ -248,7 +256,22 @@ class HomeNotifier extends SafeStateNotifier<HomeState> {
   }
 
   void onParticipationClick(FootballMatchApiModel footballMatch) {
-    onButtonDetailMatchClick(footballMatch);
+    final setup = state.setup.asData?.value;
+    final plannedMatches = [
+      setup?.nextMatch?.plannedMatch,
+      setup?.secondNextMatch?.plannedMatch,
+    ];
+    final planned = plannedMatches.firstWhere(
+      (item) => item?.footballMatchId == footballMatch.id,
+      orElse: () => null,
+    );
+    onButtonDetailMatchClick(
+      footballMatch,
+      showParticipationMatchLink: true,
+      plannedDescription: planned?.footballMatchId == footballMatch.id
+          ? planned?.description
+          : null,
+    );
   }
 
   Future<void> respondToParticipation(

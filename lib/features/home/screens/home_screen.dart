@@ -223,47 +223,70 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
                           },
                         ),
                       ),
-                    for (final isNext
+                    for (final slot
                         in setup.lastMatch?.needsEntry == true
-                            ? [false, true]
-                            : [true, false]) ...[
-                      if (!isNext && setup.lastMatch?.needsEntry == true)
-                        Padding(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 16,
-                            vertical: 8,
+                            ? ['last', 'next', 'second']
+                            : ['next', 'second', 'last']) ...[
+                      if (slot != 'second' ||
+                          setup.secondNextMatch != null) ...[
+                        if (slot == 'last' &&
+                            setup.lastMatch?.needsEntry == true)
+                          Padding(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 16,
+                              vertical: 8,
+                            ),
+                            child: Text(
+                              'Dokončit zápis posledního zápasu',
+                              style: Theme.of(context).textTheme.titleMedium,
+                            ),
                           ),
-                          child: Text(
-                            'Dokončit zápis posledního zápasu',
-                            style: Theme.of(context).textTheme.titleMedium,
-                          ),
+                        FootballMatchBox(
+                          isNextMatch: slot != 'last',
+                          nextMatchOrder: slot == 'second' ? 2 : 1,
+                          dashboardMatch: switch (slot) {
+                            'next' => setup.nextMatch,
+                            'second' => setup.secondNextMatch,
+                            _ => setup.lastMatch,
+                          },
+                          participationStatus: slot == 'next'
+                              ? setup.currentParticipationStatus
+                              : slot == 'second'
+                              ? setup.secondParticipationStatus
+                              : null,
+                          participationPlaying: slot == 'next'
+                              ? setup.currentParticipationPlaying
+                              : slot == 'second'
+                              ? setup.secondParticipationPlaying
+                              : null,
+                          attendingPlayerCount: slot == 'next'
+                              ? setup.attendingPlayerCount
+                              : slot == 'second'
+                              ? setup.secondAttendingPlayerCount
+                              : null,
+                          maybePlayerCount: slot == 'next'
+                              ? setup.maybePlayerCount
+                              : slot == 'second'
+                              ? setup.secondMaybePlayerCount
+                              : null,
+                          notAttendingPlayerCount: slot == 'next'
+                              ? setup.notAttendingPlayerCount
+                              : slot == 'second'
+                              ? setup.secondNotAttendingPlayerCount
+                              : null,
+                          appTeamApiModel: appTeam,
+                          onAddPlayers: notifier.onButtonAddPlayersClick,
+                          onAddGoals: notifier.onButtonAddGoalsClick,
+                          onAddFine: notifier.onButtonAddFineClick,
+                          onDetailMatch: notifier.onButtonDetailMatchClick,
+                          onParticipation: notifier.onParticipationClick,
+                          onRespondToParticipation:
+                              notifier.respondToParticipation,
+                          onCommonMatches: notifier.onCommonMatchesClick,
+                          onRedirect: notifier.onRedirect,
                         ),
-                      FootballMatchBox(
-                        isNextMatch: isNext,
-                        dashboardMatch: isNext
-                            ? setup.nextMatch
-                            : setup.lastMatch,
-                        participationStatus: isNext
-                            ? setup.currentParticipationStatus
-                            : null,
-                        participationPlaying: isNext
-                            ? setup.currentParticipationPlaying
-                            : null,
-                        attendingPlayerCount: isNext
-                            ? setup.attendingPlayerCount
-                            : null,
-                        appTeamApiModel: appTeam,
-                        onAddPlayers: notifier.onButtonAddPlayersClick,
-                        onAddGoals: notifier.onButtonAddGoalsClick,
-                        onAddFine: notifier.onButtonAddFineClick,
-                        onDetailMatch: notifier.onButtonDetailMatchClick,
-                        onParticipation: notifier.onParticipationClick,
-                        onRespondToParticipation:
-                            notifier.respondToParticipation,
-                        onCommonMatches: notifier.onCommonMatchesClick,
-                        onRedirect: notifier.onRedirect,
-                      ),
-                      const SizedBox(height: sectionSpacing),
+                        const SizedBox(height: sectionSpacing),
+                      ],
                     ],
                     if (setup.participationPrompt case final prompt?)
                       Card(

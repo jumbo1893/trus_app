@@ -11,6 +11,7 @@ import 'package:trus_app/features/general/global_variables_controller.dart';
 import 'package:trus_app/features/main/controller/screen_notifier.dart';
 import 'package:trus_app/features/match/match_notifier_args.dart';
 import 'package:trus_app/features/match_participation/screens/match_participation_screen.dart';
+import 'package:trus_app/features/football/screens/planned_match_sheet.dart';
 import 'package:trus_app/features/match_participation/widgets/participation_pitch.dart';
 import 'package:trus_app/models/api/football/football_match_api_model.dart';
 import 'package:trus_app/features/match/state/footbal_match_detail_state.dart';
@@ -26,6 +27,22 @@ final matchEditReturnArgsProvider = StateProvider<MatchNotifierArgs?>(
 );
 final _openMatchDetailProvider =
     StateProvider.autoDispose<void Function(BuildContext)?>((ref) => null);
+
+Future<void> _openPlannedMatchSheet(
+  BuildContext context,
+  int footballMatchId,
+) => showModalBottomSheet<void>(
+  context: context,
+  isScrollControlled: true,
+  useSafeArea: true,
+  showDragHandle: true,
+  backgroundColor: context.appColors.backgroundPrimary,
+  builder: (_) => PlannedMatchSheet(
+    footballMatchId: footballMatchId,
+    showParticipationButton: false,
+    showPlannedMatchTab: false,
+  ),
+);
 
 class MatchScoreAppBarTitle extends ConsumerWidget {
   const MatchScoreAppBarTitle({super.key});
@@ -47,14 +64,24 @@ class MatchScoreAppBarTitle extends ConsumerWidget {
         offset: Offset(0, 8 * (1 - progress)),
         child: InkWell(
           borderRadius: BorderRadius.circular(8),
-          onTap: openDetail == null ? null : () => openDetail(context),
-          child: _compactScore(context, match),
+          onTap: args.showParticipationMatchLink && match.id != null
+              ? () => _openPlannedMatchSheet(context, match.id!)
+              : openDetail == null
+              ? null
+              : () => openDetail(context),
+          child: _compactScore(context, match, args.plannedDescription),
         ),
       ),
     );
   }
 
-  Widget _compactScore(BuildContext context, FootballMatchApiModel match) =>
+  Widget _compactScore(
+    BuildContext context,
+    FootballMatchApiModel match,
+    String? plannedDescription,
+  ) => Column(
+    mainAxisSize: MainAxisSize.min,
+    children: [
       Row(
         key: const ValueKey('compact-lineup-score'),
         children: [
@@ -80,7 +107,6 @@ class MatchScoreAppBarTitle extends ConsumerWidget {
                       : '${match.homeGoalNumber}:${match.awayGoalNumber}',
                   style: Theme.of(context).textTheme.titleMedium,
                 ),
-                const Icon(Icons.expand_more, size: 16),
               ],
             ),
           ),
@@ -96,7 +122,19 @@ class MatchScoreAppBarTitle extends ConsumerWidget {
           const SizedBox(width: 4),
           TeamLogo(url: match.awayTeam?.logoUrl, size: 26),
         ],
-      );
+      ),
+      if (plannedDescription?.trim().isNotEmpty == true)
+        Text(
+          plannedDescription!.trim(),
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+          textAlign: TextAlign.center,
+          style: Theme.of(context).textTheme.labelSmall?.copyWith(
+            color: context.appColors.textSecondary,
+          ),
+        ),
+    ],
+  );
 }
 
 class MatchDetailScreen extends CustomConsumerStatefulWidget {
@@ -338,13 +376,67 @@ class _MatchDetailScreenState extends ConsumerState<MatchDetailScreen> {
                             Row(
                               children: [
                                 Expanded(
-                                  child: Text(
-                                    '${fm.round}. kolo · ${fm.league.name} · ${matchDateToString(fm.date, includeTime: true)}',
-                                    maxLines: 1,
-                                    overflow: TextOverflow.ellipsis,
-                                    style: Theme.of(
-                                      context,
-                                    ).textTheme.labelMedium,
+                                  child: InkWell(
+                                    borderRadius: BorderRadius.circular(8),
+                                    onTap:
+                                        args.showParticipationMatchLink &&
+                                            fm.id != null
+                                        ? () => _openPlannedMatchSheet(
+                                            context,
+                                            fm.id!,
+                                          )
+                                        : null,
+                                    child: Padding(
+                                      padding: const EdgeInsets.symmetric(
+                                        vertical: 6,
+                                      ),
+                                      child: Row(
+                                        children: [
+                                          Expanded(
+                                            child: Column(
+                                              crossAxisAlignment:
+                                                  CrossAxisAlignment.start,
+                                              children: [
+                                                Text(
+                                                  '${fm.round}. kolo · ${fm.league.name} · ${matchDateToString(fm.date, includeTime: true)}',
+                                                  maxLines: 1,
+                                                  overflow:
+                                                      TextOverflow.ellipsis,
+                                                  style: Theme.of(
+                                                    context,
+                                                  ).textTheme.labelMedium,
+                                                ),
+                                                if (args.plannedDescription
+                                                        ?.trim()
+                                                        .isNotEmpty ==
+                                                    true)
+                                                  Text(
+                                                    args.plannedDescription!
+                                                        .trim(),
+                                                    maxLines: 2,
+                                                    overflow:
+                                                        TextOverflow.ellipsis,
+                                                    style: Theme.of(context)
+                                                        .textTheme
+                                                        .bodySmall
+                                                        ?.copyWith(
+                                                          color: colors
+                                                              .textSecondary,
+                                                        ),
+                                                  ),
+                                              ],
+                                            ),
+                                          ),
+                                          if (args.showParticipationMatchLink &&
+                                              fm.id != null)
+                                            Icon(
+                                              Icons.chevron_right_rounded,
+                                              color: colors.accent,
+                                              size: 25,
+                                            ),
+                                        ],
+                                      ),
+                                    ),
                                   ),
                                 ),
                                 if (fm.alreadyPlayed &&

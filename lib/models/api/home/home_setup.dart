@@ -9,11 +9,19 @@ class HomeSetup implements IEndpointId {
   String nextBirthday;
   List<String> randomFacts;
   final DashboardMatch? nextMatch;
+  final DashboardMatch? secondNextMatch;
   final DashboardMatch? lastMatch;
   final MatchParticipationPrompt? participationPrompt;
   final MatchParticipationStatus? currentParticipationStatus;
   final bool? currentParticipationPlaying;
   final int? attendingPlayerCount;
+  final int? maybePlayerCount;
+  final int? notAttendingPlayerCount;
+  final MatchParticipationStatus? secondParticipationStatus;
+  final bool? secondParticipationPlaying;
+  final int? secondAttendingPlayerCount;
+  final int? secondMaybePlayerCount;
+  final int? secondNotAttendingPlayerCount;
   final String? footbarWarning;
   final List<PendingTeamMember> pendingTeamMembers;
 
@@ -25,11 +33,19 @@ class HomeSetup implements IEndpointId {
     required this.nextBirthday,
     required this.randomFacts,
     required this.nextMatch,
+    required this.secondNextMatch,
     required this.lastMatch,
     required this.participationPrompt,
     required this.currentParticipationStatus,
     this.currentParticipationPlaying,
     required this.attendingPlayerCount,
+    required this.maybePlayerCount,
+    required this.notAttendingPlayerCount,
+    required this.secondParticipationStatus,
+    required this.secondParticipationPlaying,
+    required this.secondAttendingPlayerCount,
+    required this.secondMaybePlayerCount,
+    required this.secondNotAttendingPlayerCount,
     required this.statsBoards,
     this.footbarWarning,
     this.pendingTeamMembers = const [],
@@ -52,6 +68,9 @@ class HomeSetup implements IEndpointId {
       nextMatch: json["nextMatch"] != null
           ? DashboardMatch.fromJson(json["nextMatch"])
           : null,
+      secondNextMatch: json['secondNextMatch'] != null
+          ? DashboardMatch.fromJson(json['secondNextMatch'])
+          : null,
 
       lastMatch: json["lastMatch"] != null
           ? DashboardMatch.fromJson(json["lastMatch"])
@@ -64,6 +83,16 @@ class HomeSetup implements IEndpointId {
       ),
       currentParticipationPlaying: json['currentParticipationPlaying'] as bool?,
       attendingPlayerCount: json['attendingPlayerCount'] as int?,
+      maybePlayerCount: json['maybePlayerCount'] as int?,
+      notAttendingPlayerCount: json['notAttendingPlayerCount'] as int?,
+      secondParticipationStatus: MatchParticipationStatusExtension.fromJson(
+        json['secondParticipationStatus'],
+      ),
+      secondParticipationPlaying: json['secondParticipationPlaying'] as bool?,
+      secondAttendingPlayerCount: json['secondAttendingPlayerCount'] as int?,
+      secondMaybePlayerCount: json['secondMaybePlayerCount'] as int?,
+      secondNotAttendingPlayerCount:
+          json['secondNotAttendingPlayerCount'] as int?,
 
       statsBoards: List<StatsBoardData>.from(
         (json['statsBoards'] as List<dynamic>? ?? []).map(

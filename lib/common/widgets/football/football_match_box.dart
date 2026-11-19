@@ -7,20 +7,34 @@ import 'package:trus_app/models/api/helper/redirect/text_with_redirect.dart';
 import 'package:trus_app/models/api/helper/warning_type.dart';
 import 'package:trus_app/models/api/home/dashboard_match.dart';
 import 'package:trus_app/models/api/participation/match_participation_status.dart';
+import 'package:trus_app/models/api/match/planned_match_participation.dart';
+import 'package:trus_app/features/home/widget/planned_dashboard_card.dart';
 import 'package:trus_app/theme/app_colors.dart';
 import 'package:trus_app/common/widgets/football/team_logo.dart';
 
 import '../../../features/home/widget/home_section_card.dart';
 import '../../../models/api/football/detail/football_match_detail.dart';
 
+String _eventLabel(String type) => switch (type) {
+  'TRAINING' => 'Trénink',
+  'FRIENDLY' => 'Přípravný zápas',
+  'LEAGUE' => 'Ligový zápas',
+  'CUP' => 'Pohár',
+  'TEAMBUILDING' => 'Teambuilding',
+  _ => type,
+};
+
 class FootballMatchBox extends StatelessWidget {
   const FootballMatchBox({
     super.key,
     required this.isNextMatch,
+    this.nextMatchOrder = 1,
     required this.dashboardMatch,
     this.participationStatus,
     this.participationPlaying,
     this.attendingPlayerCount,
+    this.maybePlayerCount,
+    this.notAttendingPlayerCount,
     required this.appTeamApiModel,
     required this.onAddPlayers,
     required this.onAddGoals,
@@ -33,10 +47,13 @@ class FootballMatchBox extends StatelessWidget {
   });
 
   final bool isNextMatch;
+  final int nextMatchOrder;
   final DashboardMatch? dashboardMatch;
   final MatchParticipationStatus? participationStatus;
   final bool? participationPlaying;
   final int? attendingPlayerCount;
+  final int? maybePlayerCount;
+  final int? notAttendingPlayerCount;
   final AppTeamApiModel? appTeamApiModel;
 
   final void Function(FootballMatchApiModel match) onAddPlayers;
@@ -76,7 +93,11 @@ class FootballMatchBox extends StatelessWidget {
     if (match != null && match.isCurrentlyPlaying()) {
       return "Aktuálně hraný zápas";
     }
-    return isNextMatch ? "Příští zápas" : "Poslední zápas";
+    return isNextMatch
+        ? nextMatchOrder == 1
+              ? 'Příští zápas'
+              : 'Další zápas'
+        : 'Poslední zápas';
   }
 
   _MatchHeaderData _buildHeaderData(FootballMatchApiModel? match) {
@@ -162,134 +183,28 @@ class FootballMatchBox extends StatelessWidget {
     return warnings;
   }
 
-  void _showMoreActionsSheet(
-    BuildContext context,
-    FootballMatchApiModel match,
-    bool matchActionsEnabled,
-  ) {
-    final appColors = context.appColors;
-
-    showModalBottomSheet<void>(
-      context: context,
-      showDragHandle: true,
-      backgroundColor: appColors.cardBackground,
-      builder: (context) {
-        return SafeArea(
-          child: Padding(
-            padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                if (isNextMatch)
-                  _BottomSheetActionTile(
-                    icon: Icons.how_to_reg_outlined,
-                    title: "Detail účasti",
-                    enabled: true,
-                    onTap: () {
-                      Navigator.of(context).pop();
-                      onParticipation(match);
-                    },
-                  ),
-                if (!isNextMatch)
-                  _BottomSheetActionTile(
-                    icon: Icons.person_add_alt_1,
-                    title: "Přidat hráče",
-                    enabled: true,
-                    onTap: () {
-                      Navigator.of(context).pop();
-                      onAddPlayers(match);
-                    },
-                  ),
-                _BottomSheetActionTile(
-                  icon: Icons.sports_soccer,
-                  title: "Přidat góly",
-                  enabled: matchActionsEnabled,
-                  onTap: () {
-                    Navigator.of(context).pop();
-                    onAddGoals(match);
-                  },
-                ),
-                _BottomSheetActionTile(
-                  icon: Icons.description_outlined,
-                  title: "Detail",
-                  enabled: true,
-                  onTap: () {
-                    Navigator.of(context).pop();
-                    onDetailMatch(match);
-                  },
-                ),
-                _BottomSheetActionTile(
-                  icon: Icons.savings,
-                  title: "Přidat pokuty",
-                  enabled: matchActionsEnabled,
-                  onTap: () {
-                    Navigator.of(context).pop();
-                    onAddFine(match);
-                  },
-                ),
-                _BottomSheetActionTile(
-                  icon: Icons.compare_arrows,
-                  title: "Vzájemné zápasy",
-                  enabled: true,
-                  onTap: () {
-                    Navigator.of(context).pop();
-                    onCommonMatches(match);
-                  },
-                ),
-              ],
+  Widget _warningsExpansion(List<_WarningItem> warnings) => ExpansionTile(
+    key: ValueKey(
+      'match-warnings-${dashboardMatch?.plannedMatch?.id ?? dashboardMatch?.recordedMatch?.id}',
+    ),
+    tilePadding: EdgeInsets.zero,
+    childrenPadding: const EdgeInsets.only(bottom: 8),
+    title: const Text(
+      'Zobrazit informace o zápase',
+      style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
+    ),
+    children: warnings
+        .map(
+          (warning) => Padding(
+            padding: const EdgeInsets.only(bottom: 6),
+            child: _CompactWarningCard(
+              warning: warning,
+              onRedirect: onRedirect,
             ),
           ),
-        );
-      },
-    );
-  }
-
-  void _showWarningsSheet(
-    BuildContext context, {
-    required List<_WarningItem> warnings,
-    required void Function(RedirectApiModel redirect) onRedirect,
-  }) {
-    final appColors = context.appColors;
-
-    showModalBottomSheet<void>(
-      context: context,
-      showDragHandle: true,
-      backgroundColor: appColors.cardBackground,
-      isScrollControlled: true,
-      builder: (context) {
-        return SafeArea(
-          child: Padding(
-            padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
-            child: SingleChildScrollView(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    "Důležité informace",
-                    style: TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.w700,
-                      color: appColors.textPrimary,
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-                  ...warnings.map(
-                    (warning) => Padding(
-                      padding: const EdgeInsets.only(bottom: 10),
-                      child: _CompactWarningCard(
-                        warning: warning,
-                        onRedirect: onRedirect,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-        );
-      },
-    );
-  }
+        )
+        .toList(),
+  );
 
   Widget _buildCompactCard(
     BuildContext context,
@@ -298,6 +213,7 @@ class FootballMatchBox extends StatelessWidget {
     List<_WarningItem> warnings,
   ) {
     final colors = context.appColors;
+    final planned = dashboardMatch?.plannedMatch;
     final date = match.date.toLocal();
     const weekdays = ['PO', 'ÚT', 'ST', 'ČT', 'PÁ', 'SO', 'NE'];
     String two(int value) => value.toString().padLeft(2, '0');
@@ -331,7 +247,6 @@ class FootballMatchBox extends StatelessWidget {
         : currentTeamId == match.awayTeam?.id
         ? match.homeTeam
         : match.awayTeam;
-    final visibleWarnings = warnings.take(isNextMatch ? 3 : 1).toList();
     void detailTap() =>
         isNextMatch ? onParticipation(match) : onDetailMatch(match);
 
@@ -427,6 +342,14 @@ class FootballMatchBox extends StatelessWidget {
                             : 'Neznámý rozhodčí',
                         colors.textSecondary,
                       ),
+                      if (isNextMatch &&
+                          planned?.description?.trim().isNotEmpty == true)
+                        _compactMeta(
+                          Icons.notes_outlined,
+                          planned!.description!.trim(),
+                          colors.textSecondary,
+                          maxLines: 3,
+                        ),
                     ],
                   ),
                 ),
@@ -513,82 +436,45 @@ class FootballMatchBox extends StatelessWidget {
                       const SizedBox(height: 8),
                       InkWell(
                         onTap: detailTap,
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
+                        child: Column(
                           children: [
-                            Icon(
-                              Icons.group_outlined,
-                              size: 15,
-                              color: colors.textSecondary,
+                            _ParticipationCount(
+                              status: MatchParticipationStatus.attending,
+                              count: attendingPlayerCount ?? 0,
                             ),
-                            const SizedBox(width: 3),
-                            Text(
-                              '${attendingPlayerCount ?? 0}',
-                              style: TextStyle(
-                                fontWeight: FontWeight.w700,
-                                color: colors.textPrimary,
-                              ),
+                            _ParticipationCount(
+                              status: MatchParticipationStatus.maybe,
+                              count: maybePlayerCount ?? 0,
+                            ),
+                            _ParticipationCount(
+                              status: MatchParticipationStatus.notAttending,
+                              count: notAttendingPlayerCount ?? 0,
                             ),
                           ],
                         ),
                       ),
                     ],
-                    const SizedBox(height: 8),
-                    TextButton(
-                      onPressed: () => _showMoreActionsSheet(
-                        context,
-                        match,
-                        matchActionsEnabled,
-                      ),
-                      style: TextButton.styleFrom(
-                        padding: const EdgeInsets.symmetric(horizontal: 3),
-                        minimumSize: const Size(60, 28),
-                        tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                      ),
-                      child: const Text(
-                        'Více...',
-                        style: TextStyle(fontSize: 12),
-                      ),
-                    ),
                   ],
                 ),
               ),
             ],
           ),
-          if (visibleWarnings.isNotEmpty) ...[
+          if (warnings.isNotEmpty) ...[
             const SizedBox(height: 8),
             const Divider(height: 1),
-            const SizedBox(height: 8),
-            ...visibleWarnings.map(
-              (warning) => Padding(
-                padding: const EdgeInsets.only(bottom: 6),
-                child: _CompactWarningCard(
-                  warning: warning,
-                  onRedirect: onRedirect,
-                ),
-              ),
-            ),
-            if (warnings.length > visibleWarnings.length)
-              TextButton(
-                onPressed: () => _showWarningsSheet(
-                  context,
-                  warnings: warnings,
-                  onRedirect: (redirect) {
-                    Navigator.of(context).pop();
-                    onRedirect(redirect);
-                  },
-                ),
-                child: Text(
-                  'Zobrazit další (${warnings.length - visibleWarnings.length})',
-                ),
-              ),
+            _warningsExpansion(warnings),
           ],
         ],
       ),
     );
   }
 
-  Widget _compactMeta(IconData icon, String text, Color color) => Padding(
+  Widget _compactMeta(
+    IconData icon,
+    String text,
+    Color color, {
+    int maxLines = 1,
+  }) => Padding(
     padding: const EdgeInsets.only(top: 4),
     child: Row(
       children: [
@@ -597,7 +483,7 @@ class FootballMatchBox extends StatelessWidget {
         Expanded(
           child: Text(
             text,
-            maxLines: 1,
+            maxLines: maxLines,
             overflow: TextOverflow.ellipsis,
             style: TextStyle(fontSize: 11, color: color),
           ),
@@ -610,6 +496,57 @@ class FootballMatchBox extends StatelessWidget {
   Widget build(BuildContext context) {
     final appColors = context.appColors;
     final match = _match;
+    final planned = dashboardMatch?.plannedMatch;
+    final recorded = dashboardMatch?.recordedMatch;
+    if (match == null && isNextMatch && planned != null) {
+      return PlannedDashboardCard(
+        match: planned,
+        title: nextMatchOrder == 1 ? 'Příští zápas' : 'Další zápas',
+        initialParticipation: PlannedMatchParticipation(
+          currentStatus: participationStatus,
+          currentPlaying: participationPlaying,
+          attendingPlayerCount: attendingPlayerCount ?? 0,
+          maybePlayerCount: maybePlayerCount ?? 0,
+          notAttendingPlayerCount: notAttendingPlayerCount ?? 0,
+          attendingPlayers: const [],
+          maybePlayers: const [],
+          notAttendingPlayers: const [],
+        ),
+      );
+    }
+    if (match == null && (isNextMatch ? planned != null : recorded != null)) {
+      final date = (isNextMatch ? planned!.date : recorded!.date).toLocal();
+      final title = isNextMatch
+          ? (planned!.opponent?.isNotEmpty == true
+                ? planned.opponent!
+                : _eventLabel(planned.type))
+          : recorded!.name;
+      return HomeSectionCard(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              _sectionTitle(match),
+              style: TextStyle(
+                color: appColors.accent,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            Text(title, style: Theme.of(context).textTheme.titleMedium),
+            Text(
+              '${date.day}.${date.month}.${date.year} ${date.hour.toString().padLeft(2, '0')}:${date.minute.toString().padLeft(2, '0')}',
+            ),
+            if (planned != null) ...[
+              Text(_eventLabel(planned.type)),
+              if (planned.home != null) Text(planned.home! ? 'Doma' : 'Venku'),
+              if (planned.description?.isNotEmpty == true)
+                Text(planned.description!),
+              if (planned.seasonId != null) Text('Sezona ${planned.seasonId}'),
+            ],
+          ],
+        ),
+      );
+    }
     final matchId = _resolveMatchId();
     final matchActionsEnabled = _isMatchButtonEnabled(match, matchId);
     final warnings = _buildWarnings(
@@ -638,7 +575,6 @@ class FootballMatchBox extends StatelessWidget {
     }
 
     final header = _buildHeaderData(match);
-    final visibleWarnings = warnings.take(isNextMatch ? 3 : 1).toList();
 
     final secondActionLabel = matchActionsEnabled ? "Přidat góly" : "Detail";
     final secondActionIcon = matchActionsEnabled
@@ -724,17 +660,17 @@ class FootballMatchBox extends StatelessWidget {
                     padding: const EdgeInsets.all(8),
                     child: Column(
                       children: [
-                        Icon(
-                          Icons.group_outlined,
-                          size: 18,
-                          color: appColors.textSecondary,
+                        _ParticipationCount(
+                          status: MatchParticipationStatus.attending,
+                          count: attendingPlayerCount ?? 0,
                         ),
-                        Text(
-                          '${attendingPlayerCount ?? 0}',
-                          style: const TextStyle(
-                            fontSize: 20,
-                            fontWeight: FontWeight.bold,
-                          ),
+                        _ParticipationCount(
+                          status: MatchParticipationStatus.maybe,
+                          count: maybePlayerCount ?? 0,
+                        ),
+                        _ParticipationCount(
+                          status: MatchParticipationStatus.notAttending,
+                          count: notAttendingPlayerCount ?? 0,
                         ),
                       ],
                     ),
@@ -821,69 +757,12 @@ class FootballMatchBox extends StatelessWidget {
                     },
                   ),
                 ),
-                const SizedBox(width: 10),
-                Expanded(
-                  child: _PrimaryActionButton(
-                    label: "Více",
-                    icon: Icons.more_horiz,
-                    onTap: () => _showMoreActionsSheet(
-                      context,
-                      match,
-                      matchActionsEnabled,
-                    ),
-                  ),
-                ),
               ],
             ),
           ],
-          if (visibleWarnings.isNotEmpty) ...[
+          if (warnings.isNotEmpty) ...[
             const SizedBox(height: 14),
-            const _SectionLabel(text: "Důležité informace"),
-            const SizedBox(height: 8),
-            ...visibleWarnings.map(
-              (warning) => Padding(
-                padding: const EdgeInsets.only(bottom: 8),
-                child: _CompactWarningCard(
-                  warning: warning,
-                  onRedirect: onRedirect,
-                ),
-              ),
-            ),
-            if (warnings.length > 1)
-              Padding(
-                padding: const EdgeInsets.only(top: 2),
-                child: Align(
-                  alignment: Alignment.centerLeft,
-                  child: TextButton(
-                    style: TextButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 4,
-                        vertical: 0,
-                      ),
-                      minimumSize: const Size(0, 32),
-                      tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                    ),
-                    onPressed: () {
-                      _showWarningsSheet(
-                        context,
-                        warnings: warnings,
-                        onRedirect: (redirect) {
-                          Navigator.of(context).pop();
-                          onRedirect(redirect);
-                        },
-                      );
-                    },
-                    child: Text(
-                      "Zobrazit další (${warnings.length - 1})",
-                      style: TextStyle(
-                        fontSize: 12,
-                        fontWeight: FontWeight.w600,
-                        color: appColors.accent,
-                      ),
-                    ),
-                  ),
-                ),
-              ),
+            _warningsExpansion(warnings),
           ],
           if (!isNextMatch &&
               match != null &&
@@ -900,27 +779,6 @@ class FootballMatchBox extends StatelessWidget {
             ),
           ],
         ],
-      ),
-    );
-  }
-}
-
-class _SectionLabel extends StatelessWidget {
-  const _SectionLabel({required this.text});
-
-  final String text;
-
-  @override
-  Widget build(BuildContext context) {
-    final appColors = context.appColors;
-
-    return Text(
-      text,
-      style: TextStyle(
-        fontSize: 11,
-        fontWeight: FontWeight.w700,
-        color: appColors.textMuted,
-        letterSpacing: 0.2,
       ),
     );
   }
@@ -1076,37 +934,34 @@ class _PrimaryActionButton extends StatelessWidget {
   }
 }
 
-class _BottomSheetActionTile extends StatelessWidget {
-  const _BottomSheetActionTile({
-    required this.icon,
-    required this.title,
-    required this.enabled,
-    required this.onTap,
-  });
+class _ParticipationCount extends StatelessWidget {
+  const _ParticipationCount({required this.status, required this.count});
 
-  final IconData icon;
-  final String title;
-  final bool enabled;
-  final VoidCallback onTap;
+  final MatchParticipationStatus status;
+  final int count;
 
   @override
   Widget build(BuildContext context) {
-    final appColors = context.appColors;
-
-    final iconColor = enabled ? appColors.accent : appColors.disabled;
-    final textColor = enabled ? appColors.textPrimary : appColors.disabled;
-    final trailingColor = enabled ? appColors.accent : appColors.disabled;
-
-    return ListTile(
-      enabled: enabled,
-      contentPadding: EdgeInsets.zero,
-      leading: Icon(icon, color: iconColor),
-      trailing: Icon(Icons.chevron_right, color: trailingColor),
-      title: Text(
-        title,
-        style: TextStyle(color: textColor, fontWeight: FontWeight.w600),
-      ),
-      onTap: enabled ? onTap : null,
+    final colors = context.appColors;
+    final color = switch (status) {
+      MatchParticipationStatus.attending => colors.successSolid,
+      MatchParticipationStatus.maybe => colors.warningSolid,
+      MatchParticipationStatus.notAttending => colors.errorSolid,
+    };
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Icon(Icons.group_outlined, size: 15, color: color),
+        const SizedBox(width: 3),
+        Text(
+          '$count',
+          style: TextStyle(
+            fontSize: 11,
+            fontWeight: FontWeight.w700,
+            color: color,
+          ),
+        ),
+      ],
     );
   }
 }
