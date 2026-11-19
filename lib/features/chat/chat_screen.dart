@@ -6,6 +6,7 @@ import 'package:image/image.dart' as image_lib;
 import 'package:intl/intl.dart';
 import 'package:trus_app/common/widgets/screen/custom_consumer_stateful_widget.dart';
 import 'package:trus_app/features/ai/widgets/trusbot_markdown_text.dart';
+import 'package:trus_app/features/ai/screens/ai_assistant_screen.dart';
 import 'package:trus_app/services/push/push_permission_prompt.dart';
 import 'package:trus_app/features/main/controller/screen_notifier.dart';
 import 'package:trus_app/features/notification/push/screen/enabled_notifications_screen.dart';
@@ -204,6 +205,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
   ChatMessage? _replyTo;
   String? _replyRoom;
   final Set<String> _pushUpdating = {};
+  bool _showAllMatchChats = false;
   int? _selectedMessageId;
   String? _selectedMessageRoom;
   int? _selectedAtPointerDown;
@@ -667,6 +669,12 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
     final chat = ref.watch(chatControllerProvider);
     final kind = chat.activeRoom;
     if (kind == null || kind.isEmpty) {
+      final matchRooms = chat.rooms
+          .where((room) => room.kind != 'all' && room.kind != 'players')
+          .toList();
+      final hiddenCount = matchRooms
+          .where((room) => !room.featured && room.unread == 0)
+          .length;
       return RefreshIndicator(
         onRefresh: ref.read(chatControllerProvider.notifier).refresh,
         child: ListView(
@@ -680,7 +688,39 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                   onPressed: ref.read(chatControllerProvider.notifier).refresh,
                 ),
               ),
-            for (final room in chat.rooms)
+            for (final room in chat.rooms.where(
+              (room) => room.kind == 'all' || room.kind == 'players',
+            ))
+              ListTile(
+                leading: Icon(
+                  room.kind == 'players' ? Icons.groups : Icons.forum_outlined,
+                ),
+                title: Text(room.title),
+                trailing: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    if (room.unread > 0)
+                      Badge(
+                        label: Text(room.unread >= 9 ? '9+' : '${room.unread}'),
+                      ),
+                    _pushButton(room),
+                    const Icon(Icons.push_pin),
+                  ],
+                ),
+                onTap: () =>
+                    ref.read(chatControllerProvider.notifier).load(room.kind),
+              ),
+            ListTile(
+              leading: const Icon(Icons.auto_awesome_outlined),
+              title: const Text('TrusBot'),
+              trailing: const Icon(Icons.push_pin),
+              onTap: () => ref
+                  .read(screenNotifierProvider.notifier)
+                  .changeByFragmentId(AiAssistantScreen.id),
+            ),
+            for (final room in matchRooms.where(
+              (room) => _showAllMatchChats || room.featured || room.unread > 0,
+            ))
               ListTile(
                 leading: Icon(
                   room.kind == 'players' ? Icons.groups : Icons.forum_outlined,
@@ -699,6 +739,19 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                 ),
                 onTap: () =>
                     ref.read(chatControllerProvider.notifier).load(room.kind),
+              ),
+            if (hiddenCount > 0)
+              ListTile(
+                leading: Icon(
+                  _showAllMatchChats ? Icons.expand_less : Icons.expand_more,
+                ),
+                title: Text(
+                  _showAllMatchChats
+                      ? 'Skrýt ostatní chaty'
+                      : 'Zobrazit ostatní chaty ($hiddenCount)',
+                ),
+                onTap: () =>
+                    setState(() => _showAllMatchChats = !_showAllMatchChats),
               ),
           ],
         ),
@@ -1105,213 +1158,239 @@ class ChatMessageTile extends StatelessWidget {
   });
 
   @override
-  Widget build(BuildContext context) => Column(
-    children: [
-      if (selected && showSelectedTime)
-        Padding(
-          key: ValueKey('chat-time-${message.id}'),
-          padding: const EdgeInsets.symmetric(vertical: 8),
-          child: Center(
-            child: Text(
-              '${MaterialLocalizations.of(context).formatMediumDate(message.createdAt)} '
-              '${TimeOfDay.fromDateTime(message.createdAt).format(context)}',
-              style: Theme.of(context).textTheme.labelSmall,
+  Widget build(BuildContext context) {
+    if (message.system) {
+      return Padding(
+        key: ValueKey('chat-status-${message.id}'),
+        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
+        child: Center(
+          child: Text(
+            message.text ?? '',
+            textAlign: TextAlign.center,
+            style: Theme.of(context).textTheme.bodySmall?.copyWith(
+              color: Theme.of(context).colorScheme.onSurfaceVariant,
+              fontStyle: FontStyle.italic,
             ),
           ),
         ),
-      Align(
-        alignment: own ? Alignment.centerRight : Alignment.centerLeft,
-        child: Row(
-          mainAxisAlignment: own
-              ? MainAxisAlignment.end
-              : MainAxisAlignment.start,
-          crossAxisAlignment: CrossAxisAlignment.end,
-          children: [
-            if (!own && !message.bot) ...[
-              Padding(
-                padding: const EdgeInsets.only(left: 8, bottom: 8),
-                child: _ChatSenderAvatar(message: message, isOnline: isOnline),
+      );
+    }
+    return Column(
+      children: [
+        if (selected && showSelectedTime)
+          Padding(
+            key: ValueKey('chat-time-${message.id}'),
+            padding: const EdgeInsets.symmetric(vertical: 8),
+            child: Center(
+              child: Text(
+                '${MaterialLocalizations.of(context).formatMediumDate(message.createdAt)} '
+                '${TimeOfDay.fromDateTime(message.createdAt).format(context)}',
+                style: Theme.of(context).textTheme.labelSmall,
               ),
-              const SizedBox(width: 4),
-            ],
-            Flexible(
-              child: ConstrainedBox(
-                constraints: BoxConstraints(
-                  maxWidth: MediaQuery.sizeOf(context).width * .73,
+            ),
+          ),
+        Align(
+          alignment: own ? Alignment.centerRight : Alignment.centerLeft,
+          child: Row(
+            mainAxisAlignment: own
+                ? MainAxisAlignment.end
+                : MainAxisAlignment.start,
+            crossAxisAlignment: CrossAxisAlignment.end,
+            children: [
+              if (!own && !message.bot) ...[
+                Padding(
+                  padding: const EdgeInsets.only(left: 8, bottom: 8),
+                  child: _ChatSenderAvatar(
+                    message: message,
+                    isOnline: isOnline,
+                  ),
                 ),
-                child: Column(
-                  crossAxisAlignment: own
-                      ? CrossAxisAlignment.end
-                      : CrossAxisAlignment.start,
-                  children: [
-                    Padding(
-                      padding: const EdgeInsets.only(
-                        left: 12,
-                        right: 12,
-                        top: 7,
-                      ),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          if (message.bot) ...[
-                            Icon(
-                              Icons.smart_toy_outlined,
-                              key: const ValueKey('chat-bot-icon'),
-                              size: 15,
-                              color: Theme.of(context).colorScheme.primary,
-                            ),
-                            const SizedBox(width: 4),
-                          ],
-                          Text(
-                            message.author,
-                            style: Theme.of(context).textTheme.labelMedium
-                                ?.copyWith(
-                                  color: Theme.of(
-                                    context,
-                                  ).colorScheme.onSurfaceVariant,
-                                ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    if (message.replyTo != null)
-                      InkWell(
-                        key: ValueKey('chat-reply-${message.id}'),
-                        onTap: onReplyTap,
-                        borderRadius: BorderRadius.circular(8),
-                        child: Container(
-                          margin: const EdgeInsets.symmetric(
-                            horizontal: 7,
-                            vertical: 3,
-                          ),
-                          padding: const EdgeInsets.all(8),
-                          decoration: BoxDecoration(
-                            color: Theme.of(
-                              context,
-                            ).colorScheme.surfaceContainerHighest,
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                message.replyTo!.author,
-                                style: Theme.of(context).textTheme.labelMedium,
+                const SizedBox(width: 4),
+              ],
+              Flexible(
+                child: ConstrainedBox(
+                  constraints: BoxConstraints(
+                    maxWidth: MediaQuery.sizeOf(context).width * .73,
+                  ),
+                  child: Column(
+                    crossAxisAlignment: own
+                        ? CrossAxisAlignment.end
+                        : CrossAxisAlignment.start,
+                    children: [
+                      Padding(
+                        padding: const EdgeInsets.only(
+                          left: 12,
+                          right: 12,
+                          top: 7,
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            if (message.bot) ...[
+                              Icon(
+                                Icons.smart_toy_outlined,
+                                key: const ValueKey('chat-bot-icon'),
+                                size: 15,
+                                color: Theme.of(context).colorScheme.primary,
                               ),
-                              Text(
-                                message.replyTo!.text ?? 'Obrázek',
-                                maxLines: 2,
-                                overflow: TextOverflow.ellipsis,
-                              ),
+                              const SizedBox(width: 4),
                             ],
-                          ),
-                        ),
-                      ),
-                    if (message.text != null)
-                      Builder(
-                        builder: (bubbleContext) => GestureDetector(
-                          key: ValueKey('chat-bubble-${message.id}'),
-                          onTap: onTap,
-                          onDoubleTap: onDoubleTap,
-                          onLongPressStart: (_) {
-                            final box =
-                                bubbleContext.findRenderObject()! as RenderBox;
-                            final origin = box.localToGlobal(Offset.zero);
-                            onLongPress(origin & box.size);
-                          },
-                          child: Card(
-                            color: own
-                                ? Theme.of(context).colorScheme.primaryContainer
-                                : null,
-                            child: Padding(
-                              padding: const EdgeInsets.all(10),
-                              child: message.bot
-                                  ? TrusBotMarkdownText(
-                                      data: message.displayText!,
-                                      color: Theme.of(
-                                        context,
-                                      ).colorScheme.onSurface,
-                                      selectable: false,
-                                    )
-                                  : Text(message.text!),
+                            Text(
+                              message.author,
+                              style: Theme.of(context).textTheme.labelMedium
+                                  ?.copyWith(
+                                    color: Theme.of(
+                                      context,
+                                    ).colorScheme.onSurfaceVariant,
+                                  ),
                             ),
-                          ),
+                          ],
                         ),
                       ),
-                    if (message.image)
-                      Builder(
-                        builder: (imageContext) => GestureDetector(
-                          key: ValueKey('chat-image-${message.id}'),
-                          onTap: onTap,
-                          onDoubleTap: onDoubleTap,
-                          onLongPressStart: (_) {
-                            final box =
-                                imageContext.findRenderObject()! as RenderBox;
-                            final origin = box.localToGlobal(Offset.zero);
-                            onLongPress(origin & box.size);
-                          },
-                          child: Padding(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 4,
+                      if (message.replyTo != null)
+                        InkWell(
+                          key: ValueKey('chat-reply-${message.id}'),
+                          onTap: onReplyTap,
+                          borderRadius: BorderRadius.circular(8),
+                          child: Container(
+                            margin: const EdgeInsets.symmetric(
+                              horizontal: 7,
                               vertical: 3,
                             ),
-                            child: ClipRRect(
-                              borderRadius: BorderRadius.circular(12),
-                              child:
-                                  imageBuilder?.call(room, message.id) ??
-                                  _ChatImage(kind: room, id: message.id),
+                            padding: const EdgeInsets.all(8),
+                            decoration: BoxDecoration(
+                              color: Theme.of(
+                                context,
+                              ).colorScheme.surfaceContainerHighest,
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  message.replyTo!.author,
+                                  style: Theme.of(
+                                    context,
+                                  ).textTheme.labelMedium,
+                                ),
+                                Text(
+                                  message.replyTo!.text ?? 'Obrázek',
+                                  maxLines: 2,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                              ],
                             ),
                           ),
                         ),
-                      ),
-                    if (message.reactions.isNotEmpty)
-                      InkWell(
-                        key: ValueKey('chat-reactions-${message.id}'),
-                        borderRadius: BorderRadius.circular(18),
-                        onTap: onReactionsTap,
-                        child: Container(
-                          margin: const EdgeInsets.only(right: 7, left: 7),
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 8,
-                            vertical: 3,
+                      if (message.text != null)
+                        Builder(
+                          builder: (bubbleContext) => GestureDetector(
+                            key: ValueKey('chat-bubble-${message.id}'),
+                            onTap: onTap,
+                            onDoubleTap: onDoubleTap,
+                            onLongPressStart: (_) {
+                              final box =
+                                  bubbleContext.findRenderObject()!
+                                      as RenderBox;
+                              final origin = box.localToGlobal(Offset.zero);
+                              onLongPress(origin & box.size);
+                            },
+                            child: Card(
+                              color: own
+                                  ? Theme.of(
+                                      context,
+                                    ).colorScheme.primaryContainer
+                                  : null,
+                              child: Padding(
+                                padding: const EdgeInsets.all(10),
+                                child: message.bot
+                                    ? TrusBotMarkdownText(
+                                        data: message.displayText!,
+                                        color: Theme.of(
+                                          context,
+                                        ).colorScheme.onSurface,
+                                        selectable: false,
+                                      )
+                                    : Text(message.text!),
+                              ),
+                            ),
                           ),
-                          decoration: BoxDecoration(
-                            color: Theme.of(
-                              context,
-                            ).colorScheme.surfaceContainerHighest,
-                            borderRadius: BorderRadius.circular(18),
+                        ),
+                      if (message.image)
+                        Builder(
+                          builder: (imageContext) => GestureDetector(
+                            key: ValueKey('chat-image-${message.id}'),
+                            onTap: onTap,
+                            onDoubleTap: onDoubleTap,
+                            onLongPressStart: (_) {
+                              final box =
+                                  imageContext.findRenderObject()! as RenderBox;
+                              final origin = box.localToGlobal(Offset.zero);
+                              onLongPress(origin & box.size);
+                            },
+                            child: Padding(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 4,
+                                vertical: 3,
+                              ),
+                              child: ClipRRect(
+                                borderRadius: BorderRadius.circular(12),
+                                child:
+                                    imageBuilder?.call(room, message.id) ??
+                                    _ChatImage(kind: room, id: message.id),
+                              ),
+                            ),
                           ),
+                        ),
+                      if (message.reactions.isNotEmpty)
+                        InkWell(
+                          key: ValueKey('chat-reactions-${message.id}'),
+                          borderRadius: BorderRadius.circular(18),
+                          onTap: onReactionsTap,
+                          child: Container(
+                            margin: const EdgeInsets.only(right: 7, left: 7),
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 8,
+                              vertical: 3,
+                            ),
+                            decoration: BoxDecoration(
+                              color: Theme.of(
+                                context,
+                              ).colorScheme.surfaceContainerHighest,
+                              borderRadius: BorderRadius.circular(18),
+                            ),
+                            child: Text(
+                              '${message.reactions.map((reaction) => reaction.emoji).toSet().join()} '
+                              '${message.reactions.length}',
+                            ),
+                          ),
+                        ),
+                      if (selected && readers.isEmpty)
+                        Padding(
+                          padding: const EdgeInsets.only(right: 7, bottom: 5),
                           child: Text(
-                            '${message.reactions.map((reaction) => reaction.emoji).toSet().join()} '
-                            '${message.reactions.length}',
+                            'Zatím nikdo nepřečetl',
+                            style: Theme.of(context).textTheme.labelSmall,
                           ),
                         ),
-                      ),
-                    if (selected && readers.isEmpty)
-                      Padding(
-                        padding: const EdgeInsets.only(right: 7, bottom: 5),
-                        child: Text(
-                          'Zatím nikdo nepřečetl',
-                          style: Theme.of(context).textTheme.labelSmall,
-                        ),
-                      ),
-                  ],
+                    ],
+                  ),
                 ),
               ),
-            ),
-          ],
-        ),
-      ),
-      if ((selected || seen.isNotEmpty) && !(selected && readers.isEmpty))
-        Align(
-          alignment: Alignment.centerRight,
-          child: _SeenAvatars(
-            receipts: selected ? readers : seen,
-            showNames: selected,
+            ],
           ),
         ),
-    ],
-  );
+        if ((selected || seen.isNotEmpty) && !(selected && readers.isEmpty))
+          Align(
+            alignment: Alignment.centerRight,
+            child: _SeenAvatars(
+              receipts: selected ? readers : seen,
+              showNames: selected,
+            ),
+          ),
+      ],
+    );
+  }
 }
 
 class _ChatSenderAvatar extends StatelessWidget {

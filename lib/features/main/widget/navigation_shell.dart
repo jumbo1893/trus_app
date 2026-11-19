@@ -12,7 +12,6 @@ class NavigationShell extends StatelessWidget {
   final String? teamName;
   final int selectedIndex;
   final VoidCallback onBack, onHome, onAccount, onNotifications;
-  final VoidCallback? onAi;
   final VoidCallback? onChat;
   final int chatUnread;
   final ValueChanged<int> onDestination;
@@ -29,7 +28,6 @@ class NavigationShell extends StatelessWidget {
     required this.onBack,
     required this.onHome,
     required this.onAccount,
-    this.onAi,
     this.onChat,
     this.chatUnread = 0,
     required this.onNotifications,
@@ -88,14 +86,6 @@ class NavigationShell extends StatelessWidget {
                 margin: const EdgeInsets.only(left: 10, right: 4),
                 color: Theme.of(context).dividerColor,
               ),
-            if (isRoot)
-              if (onAi != null)
-                IconButton(
-                  key: const ValueKey('trusbot_button'),
-                  tooltip: 'AI asistent · TrusBot',
-                  onPressed: onAi,
-                  icon: const Icon(Icons.auto_awesome),
-                ),
             if (isRoot && onChat != null)
               IconButton(
                 key: const ValueKey('chat_button'),

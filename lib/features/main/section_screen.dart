@@ -7,7 +7,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../common/widgets/screen/custom_consumer_stateful_widget.dart';
 import '../statistics/screens/unified_statistics_screen.dart';
 import 'controller/screen_notifier.dart';
-import '../ai/screens/ai_assistant_screen.dart';
 import '../player/screens/player_screen.dart';
 
 import '../steps/screens/step_screen.dart';
@@ -133,7 +132,6 @@ class _SectionScreenState extends ConsumerState<SectionScreen> {
           ),
           group([row(Icons.group_outlined, 'Hráči', PlayerScreen.id)]),
           group([
-            row(Icons.auto_awesome_outlined, 'TrusBot', AiAssistantScreen.id),
             row(
               Icons.emoji_events_outlined,
               'Achievementy',

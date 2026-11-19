@@ -2,6 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:trus_app/common/widgets/screen/custom_consumer_widget.dart';
 import 'package:trus_app/features/match_participation/widgets/participation_pitch.dart';
+import 'package:trus_app/features/chat/chat_controller.dart';
+import 'package:trus_app/features/chat/chat_screen.dart';
+import 'package:trus_app/features/football/repository/planned_match_api_service.dart';
 import 'package:trus_app/features/match_participation/widgets/participation_help.dart';
 import 'package:trus_app/features/general/notifier/global_variables_notifier.dart';
 import 'package:trus_app/features/main/controller/screen_variables_notifier.dart';
@@ -15,6 +18,25 @@ import 'package:trus_app/models/api/participation/match_participation_member.dar
 import 'package:trus_app/models/api/participation/match_participation_status.dart';
 import 'package:trus_app/theme/app_colors.dart';
 import 'package:trus_app/models/api/player/player_api_model.dart';
+
+final _plannedChatRoomProvider = FutureProvider.autoDispose
+    .family<String?, int>((ref, footballMatchId) async {
+      if (ref.watch(
+            globalVariablesProvider.select((value) => value.appTeam?.id),
+          ) ==
+          null) {
+        return null;
+      }
+      try {
+        final planned = await ref
+            .read(plannedMatchApiProvider)
+            .getByFootballMatch(footballMatchId);
+        await ref.read(chatControllerProvider.notifier).refresh();
+        return 'planned-${planned.id}';
+      } catch (_) {
+        return null;
+      }
+    });
 
 class MatchParticipationScreen extends CustomConsumerWidget {
   static const String id = 'match-participation-screen';
@@ -34,6 +56,15 @@ class MatchParticipationScreen extends CustomConsumerWidget {
     final provider = matchParticipationNotifierProvider(footballMatchId);
     final state = ref.watch(provider);
     final notifier = ref.read(provider.notifier);
+    final chatKind = ref
+        .watch(_plannedChatRoomProvider(footballMatchId))
+        .asData
+        ?.value;
+    final chatUnread = ref
+        .watch(chatControllerProvider)
+        .rooms
+        .where((room) => room.kind == chatKind)
+        .fold<int>(0, (total, room) => total + room.unread);
 
     return Scaffold(
       body: RefreshIndicator(
@@ -59,6 +90,15 @@ class MatchParticipationScreen extends CustomConsumerWidget {
           ),
           data: (detail) => _ParticipationContent(
             detail: detail,
+            chatUnread: chatUnread,
+            onChat: chatKind == null
+                ? null
+                : () {
+                    ref
+                        .read(screenNotifierProvider.notifier)
+                        .changeByFragmentId(ChatScreen.id);
+                    ref.read(chatControllerProvider.notifier).load(chatKind);
+                  },
             teamId: ref.watch(globalVariablesProvider).appTeam?.id,
             onRespondFor: (player) async {
               await notifier.respond(
@@ -100,6 +140,28 @@ class MatchParticipationScreen extends CustomConsumerWidget {
   }
 }
 
+class ParticipationChatButton extends StatelessWidget {
+  final int unread;
+  final VoidCallback? onPressed;
+
+  const ParticipationChatButton({
+    super.key,
+    required this.unread,
+    this.onPressed,
+  });
+
+  @override
+  Widget build(BuildContext context) => OutlinedButton.icon(
+    style: OutlinedButton.styleFrom(
+      minimumSize: const Size(0, 48),
+      padding: const EdgeInsets.symmetric(horizontal: 12),
+    ),
+    onPressed: onPressed,
+    icon: const Icon(Icons.chat_bubble_outline, size: 18),
+    label: Text(unread > 0 ? 'Chat ($unread)' : 'Chat'),
+  );
+}
+
 List<MatchParticipationMember> _allMembers(MatchParticipationDetail detail) => [
   ...detail.attendingPlayers,
   ...detail.attendingFans,
@@ -125,6 +187,8 @@ String? _noteFor(MatchParticipationDetail detail, int? id) {
 
 class _ParticipationContent extends StatefulWidget {
   final MatchParticipationDetail detail;
+  final int chatUnread;
+  final VoidCallback? onChat;
   final int? teamId;
   final Future<void> Function() onRespond;
   final Future<void> Function(PlayerApiModel) onRespondFor;
@@ -132,6 +196,8 @@ class _ParticipationContent extends StatefulWidget {
 
   const _ParticipationContent({
     required this.detail,
+    required this.chatUnread,
+    required this.onChat,
     required this.teamId,
     required this.onRespond,
     required this.onRespondFor,
@@ -235,6 +301,14 @@ class _ParticipationContentState extends State<_ParticipationContent> {
               },
             ),
           ),
+        const SizedBox(height: 8),
+        SizedBox(
+          width: double.infinity,
+          child: ParticipationChatButton(
+            unread: widget.chatUnread,
+            onPressed: widget.onChat,
+          ),
+        ),
         const SizedBox(height: 12),
         _ParticipationRoster(
           detail: detail,

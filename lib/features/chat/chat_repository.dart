@@ -40,16 +40,19 @@ class ChatRoom {
   final String kind, title;
   final int unread;
   final bool pushEnabled;
+  final bool featured;
   ChatRoom.fromJson(Map<String, dynamic> json)
     : kind = json['kind'] as String,
       title = json['title'] as String,
       unread = (json['unread'] as num).toInt(),
-      pushEnabled = json['pushEnabled'] as bool? ?? false;
+      pushEnabled = json['pushEnabled'] as bool? ?? false,
+      featured = json['featured'] as bool? ?? false;
 
   ChatRoom.withPushEnabled(ChatRoom room, this.pushEnabled)
     : kind = room.kind,
       title = room.title,
-      unread = room.unread;
+      unread = room.unread,
+      featured = room.featured;
 }
 
 class ChatMessage {
@@ -57,7 +60,7 @@ class ChatMessage {
   final String author;
   final String? text;
   final DateTime createdAt;
-  final bool image, bot;
+  final bool image, bot, system;
   final List<ChatReaction> reactions;
   final ChatReply? replyTo;
   String? get displayText {
@@ -81,6 +84,7 @@ class ChatMessage {
       createdAt = DateTime.parse(json['createdAt'] as String).toLocal(),
       image = json['image'] as bool? ?? false,
       bot = json['bot'] as bool? ?? false,
+      system = json['system'] as bool? ?? false,
       replyTo = json['replyTo'] == null
           ? null
           : ChatReply.fromJson(json['replyTo'] as Map<String, dynamic>),
@@ -96,6 +100,7 @@ class ChatMessage {
       createdAt = message.createdAt,
       image = message.image,
       bot = message.bot,
+      system = message.system,
       replyTo = message.replyTo;
 }
 

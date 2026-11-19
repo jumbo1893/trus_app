@@ -7,6 +7,49 @@ import 'package:trus_app/features/chat/chat_screen.dart';
 import 'package:trus_app/features/user/widgets/user_avatar.dart';
 
 void main() {
+  testWidgets('system event is centered italic text without a bubble', (
+    tester,
+  ) async {
+    final message = ChatMessage.fromJson({
+      'id': 30,
+      'authorId': 0,
+      'author': 'Kurvíza',
+      'text': 'Pavel potvrdil účast: přijde',
+      'createdAt': '2026-11-19T10:00:00Z',
+      'bot': true,
+      'system': true,
+    });
+    await tester.pumpWidget(
+      ProviderScope(
+        child: MaterialApp(
+          home: Scaffold(
+            body: ChatMessageTile(
+              message: message,
+              room: 'planned-1',
+              own: false,
+              selected: false,
+              seen: const [],
+              onTap: () {},
+              onLongPress: (_) {},
+              onReactionsTap: () {},
+            ),
+          ),
+        ),
+      ),
+    );
+
+    expect(find.byKey(const ValueKey('chat-status-30')), findsOneWidget);
+    expect(find.byKey(const ValueKey('chat-bubble-30')), findsNothing);
+    expect(find.byType(UserAvatar), findsNothing);
+    expect(
+      tester
+          .widget<Text>(find.text('Pavel potvrdil účast: přijde'))
+          .style
+          ?.fontStyle,
+      FontStyle.italic,
+    );
+  });
+
   testWidgets('own message has no sender avatar', (tester) async {
     final message = ChatMessage.fromJson({
       'id': 21,

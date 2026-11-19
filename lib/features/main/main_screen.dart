@@ -1,7 +1,6 @@
 import '../../common/widgets/entry_draft_scope.dart';
 import 'widget/navigation_shell.dart';
 import '../achievement/screens/achievement_screen.dart';
-import '../ai/screens/ai_assistant_screen.dart';
 import '../chat/chat_screen.dart';
 import '../chat/chat_controller.dart';
 import 'controller/navigation_guard.dart';
@@ -579,8 +578,6 @@ class _MainScreenState extends ConsumerState<MainScreen>
               onBack: _handleBack,
               onHome: () => screenNotifier.changeByFragmentId(HomeScreen.id),
               onAccount: notifier.onUpperMenuTapped,
-              onAi: () =>
-                  screenNotifier.changeByFragmentId(AiAssistantScreen.id),
               onChat: () => screenNotifier.changeByFragmentId(ChatScreen.id),
               chatUnread: chatUnread,
               onNotifications: () =>

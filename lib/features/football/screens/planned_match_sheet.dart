@@ -11,6 +11,8 @@ import 'package:trus_app/features/football/repository/planned_match_api_service.
 import 'package:trus_app/features/football/screens/planned_match_editor.dart';
 import 'package:trus_app/features/football/widgets/planned_match_photo.dart';
 import 'package:trus_app/features/main/controller/screen_notifier.dart';
+import 'package:trus_app/features/chat/chat_controller.dart';
+import 'package:trus_app/features/chat/chat_screen.dart';
 import 'package:trus_app/features/main/controller/screen_variables_notifier.dart';
 import 'package:trus_app/features/match_participation/screens/match_participation_screen.dart';
 import 'package:trus_app/models/api/football/detail/football_match_detail.dart';
@@ -212,6 +214,20 @@ class _PlannedMatchSheetState extends ConsumerState<PlannedMatchSheet> {
   Widget _plannedTab(PlannedMatch match) => Stack(
     children: [
       _cards([
+        ListTile(
+          leading: const Icon(Icons.chat_bubble_outline),
+          title: const Text('Chat plánovaného zápasu'),
+          trailing: const Icon(Icons.chevron_right),
+          onTap: () {
+            Navigator.of(context).pop();
+            ref
+                .read(screenNotifierProvider.notifier)
+                .changeByFragmentId(ChatScreen.id);
+            ref
+                .read(chatControllerProvider.notifier)
+                .load('planned-${match.id}');
+          },
+        ),
         if (match.hasPhoto)
           PlannedMatchPhoto(id: match.id, height: 180, width: double.infinity),
         ListTile(

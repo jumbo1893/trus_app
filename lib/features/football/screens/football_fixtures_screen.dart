@@ -3,6 +3,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:trus_app/features/football/repository/planned_match_api_service.dart';
 import 'package:trus_app/models/api/match/planned_match.dart';
 import 'package:trus_app/features/football/screens/planned_match_sheet.dart';
+import 'package:trus_app/features/chat/chat_controller.dart';
+import 'package:trus_app/features/chat/chat_screen.dart';
+import 'package:trus_app/features/main/controller/screen_notifier.dart';
 import 'package:trus_app/features/football/screens/planned_match_editor.dart';
 import 'package:trus_app/features/football/widgets/planned_match_photo.dart';
 import 'package:trus_app/common/utils/calendar.dart';
@@ -123,6 +126,19 @@ class _PlannedFixtures extends ConsumerWidget {
                 final actions = Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
+                    IconButton(
+                      visualDensity: VisualDensity.compact,
+                      icon: const Icon(Icons.chat_bubble_outline),
+                      tooltip: 'Chat plánovaného zápasu',
+                      onPressed: () {
+                        ref
+                            .read(screenNotifierProvider.notifier)
+                            .changeByFragmentId(ChatScreen.id);
+                        ref
+                            .read(chatControllerProvider.notifier)
+                            .load('planned-${item.id}');
+                      },
+                    ),
                     IconButton(
                       visualDensity: VisualDensity.compact,
                       icon: const Icon(Icons.edit_outlined),

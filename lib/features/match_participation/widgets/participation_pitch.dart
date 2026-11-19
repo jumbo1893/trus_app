@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:trus_app/features/match/repository/match_repository.dart';
+import 'package:trus_app/features/chat/chat_controller.dart';
+import 'package:trus_app/features/chat/chat_screen.dart';
 import 'package:trus_app/features/match/controller/edit/match_edit_notifier.dart';
 import 'package:trus_app/features/goal/repository/goal_api_service.dart';
 import 'package:trus_app/models/api/match/match_setup.dart';
@@ -68,7 +70,6 @@ class PlayedMatchPitch extends ConsumerStatefulWidget {
 
 class _PlayedMatchPitchState extends ConsumerState<PlayedMatchPitch> {
   final ScrollController _scrollController = ScrollController();
-  bool _showList = true;
 
   @override
   void initState() {
@@ -91,7 +92,6 @@ class _PlayedMatchPitchState extends ConsumerState<PlayedMatchPitch> {
   void didUpdateWidget(covariant PlayedMatchPitch oldWidget) {
     super.didUpdateWidget(oldWidget);
     if (oldWidget.matchId != widget.matchId) {
-      _showList = true;
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (!mounted) return;
         if (_scrollController.hasClients) _scrollController.jumpTo(0);
@@ -233,23 +233,27 @@ class _PlayedMatchPitchState extends ConsumerState<PlayedMatchPitch> {
                 ),
               const SizedBox(height: 10),
               Center(
-                child: SegmentedButton<bool>(
-                  showSelectedIcon: false,
-                  segments: const [
-                    ButtonSegment(
-                      value: true,
-                      icon: Icon(Icons.list),
-                      label: Text('Seznam'),
-                    ),
-                    ButtonSegment(
-                      value: false,
-                      icon: Icon(Icons.grid_on),
-                      label: Text('Hřiště'),
-                    ),
-                  ],
-                  selected: {_showList},
-                  onSelectionChanged: (selection) =>
-                      setState(() => _showList = selection.first),
+                child: Builder(
+                  builder: (context) {
+                    final room = 'match-${widget.matchId}';
+                    final unread = ref
+                        .watch(chatControllerProvider)
+                        .rooms
+                        .where((item) => item.kind == room)
+                        .fold<int>(0, (count, item) => count + item.unread);
+                    return OutlinedButton.icon(
+                      icon: const Icon(Icons.chat_bubble_outline),
+                      label: Text(
+                        unread > 0 ? 'Chat zápasu ($unread)' : 'Chat zápasu',
+                      ),
+                      onPressed: () {
+                        ref
+                            .read(screenNotifierProvider.notifier)
+                            .changeByFragmentId(ChatScreen.id);
+                        ref.read(chatControllerProvider.notifier).load(room);
+                      },
+                    );
+                  },
                 ),
               ),
               const SizedBox(height: 12),
@@ -264,7 +268,7 @@ class _PlayedMatchPitchState extends ConsumerState<PlayedMatchPitch> {
                     : footballMatch?.awayTeam?.logoUrl,
                 goalkeeperId: goalkeeperId,
                 goalkeeperIds: goalkeepers,
-                listView: _showList,
+                listView: true,
                 onAddPeople: setup.match == null
                     ? null
                     : () => _showPeopleSheet(setup),
@@ -273,7 +277,7 @@ class _PlayedMatchPitchState extends ConsumerState<PlayedMatchPitch> {
                 stats: data.stats?.refereeStats,
                 name: footballMatch?.referee,
                 comment: widget.comment,
-                listView: _showList,
+                listView: true,
               ),
             ],
           );
