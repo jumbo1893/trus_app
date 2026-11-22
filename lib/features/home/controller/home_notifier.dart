@@ -1,4 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:trus_app/features/match/post_match_flow.dart';
+import 'package:trus_app/features/match/repository/match_repository.dart';
+import 'package:trus_app/models/api/match/match_api_model.dart';
 import 'package:trus_app/features/app_notice/repository/app_notice_repository.dart';
 import 'package:trus_app/features/auth/repository/auth_repository.dart';
 import 'package:trus_app/features/general/global_variables_controller.dart';
@@ -183,7 +186,9 @@ class HomeNotifier extends SafeStateNotifier<HomeState> {
     }
   }
 
-  void onButtonAddGoalsClick(FootballMatchApiModel footballMatch) {
+  Future<void> onButtonAddGoalsClick(
+    FootballMatchApiModel footballMatch,
+  ) async {
     final appTeam = ref.read(globalVariablesControllerProvider).appTeam;
     final matchId =
         footballMatch.findMatchIdForCurrentAppTeamInMatchIdAndAppTeamIdList(
@@ -191,6 +196,19 @@ class HomeNotifier extends SafeStateNotifier<HomeState> {
         ) ??
         -1;
     if (matchId != -1) {
+      try {
+        final saved =
+            (await ref.read(matchRepositoryProvider).fetchMatchSetup(matchId))
+                .match;
+        if (saved == null ||
+            missingMatchResult(saved.homeGoalNumber, saved.awayGoalNumber)) {
+          onButtonDetailMatchClick(footballMatch);
+          return;
+        }
+      } catch (_) {
+        onButtonDetailMatchClick(footballMatch);
+        return;
+      }
       ref.read(screenVariablesNotifierProvider.notifier).setMatchId(matchId);
       changeFragment(GoalScreen.id);
     }
@@ -205,6 +223,9 @@ class HomeNotifier extends SafeStateNotifier<HomeState> {
         -1;
 
     if (matchId == -1) {
+      if (footballMatch.alreadyPlayed) {
+        ref.read(postMatchFlowProvider.notifier).state = -1;
+      }
       ref
           .read(screenVariablesNotifierProvider.notifier)
           .setMatchNotifierArgs(
@@ -228,6 +249,7 @@ class HomeNotifier extends SafeStateNotifier<HomeState> {
     final matchId = footballMatch
         .findMatchIdForCurrentAppTeamInMatchIdAndAppTeamIdList(appTeam);
     if (footballMatch.alreadyPlayed && matchId == null) {
+      ref.read(postMatchFlowProvider.notifier).state = -1;
       ref
           .read(screenVariablesNotifierProvider.notifier)
           .setMatchNotifierArgs(
@@ -246,6 +268,31 @@ class HomeNotifier extends SafeStateNotifier<HomeState> {
           ),
         );
     changeFragment(MatchDetailScreen.id);
+  }
+
+  void onRecordedMatchClick(MatchApiModel match) {
+    ref
+        .read(screenVariablesNotifierProvider.notifier)
+        .setMatchNotifierArgs(
+          MatchNotifierArgs.footballMatchDetailByMatchId(match.id),
+        );
+    changeFragment(MatchDetailScreen.id);
+  }
+
+  Future<void> onClearMatchScore(MatchApiModel match) async {
+    final id = match.id;
+    if (id == null) return;
+    try {
+      final repository = ref.read(matchRepositoryProvider);
+      await repository.api.clearMatchScore(id);
+      repository.invalidateMatchDetailData(id);
+      repository.invalidateList();
+      homeRepository.invalidateSetup();
+      await load();
+      ui.showSnack('Skóre zápasu bylo smazáno');
+    } catch (_) {
+      ui.showSnack('Skóre zápasu se nepodařilo smazat');
+    }
   }
 
   void onCommonMatchesClick(FootballMatchApiModel footballMatch) {

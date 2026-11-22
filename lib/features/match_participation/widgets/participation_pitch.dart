@@ -213,6 +213,11 @@ class _PlayedMatchPitchState extends ConsumerState<PlayedMatchPitch> {
             controller: _scrollController,
             padding: const EdgeInsets.fromLTRB(16, 0, 16, 28),
             children: [
+              if (footballMatch == null && setup.match != null)
+                _RecordedMatchHeader(
+                  match: setup.match!,
+                  onEditMatch: widget.onEditMatch,
+                ),
               if (footballMatch != null)
                 Consumer(
                   builder: (context, ref, _) => Opacity(
@@ -722,6 +727,62 @@ class _MatchRosterPickerState extends ConsumerState<MatchRosterPicker> {
             const SizedBox(height: 24),
           ],
         ),
+      ),
+    ],
+  );
+}
+
+class _RecordedMatchHeader extends StatelessWidget {
+  final MatchApiModel match;
+  final VoidCallback? onEditMatch;
+
+  const _RecordedMatchHeader({required this.match, this.onEditMatch});
+
+  @override
+  Widget build(BuildContext context) => Column(
+    children: [
+      const SizedBox(height: 8),
+      Row(
+        children: [
+          Expanded(
+            child: Text(
+              match.home ? 'Liščí Trus' : match.name,
+              textAlign: TextAlign.center,
+              style: Theme.of(context).textTheme.titleSmall,
+            ),
+          ),
+          Text(
+            match.simpleResultToString().isEmpty
+                ? '–'
+                : match.simpleResultToString(),
+            style: Theme.of(
+              context,
+            ).textTheme.headlineMedium?.copyWith(fontWeight: FontWeight.bold),
+          ),
+          Expanded(
+            child: Text(
+              match.home ? match.name : 'Liščí Trus',
+              textAlign: TextAlign.center,
+              style: Theme.of(context).textTheme.titleSmall,
+            ),
+          ),
+        ],
+      ),
+      Row(
+        children: [
+          Expanded(
+            child: Text(
+              matchDateToString(match.date, includeTime: true),
+              style: Theme.of(context).textTheme.labelMedium,
+            ),
+          ),
+          if (onEditMatch != null)
+            IconButton(
+              tooltip: 'Upravit zápas',
+              onPressed: onEditMatch,
+              icon: const Icon(Icons.edit_outlined),
+            ),
+        ],
       ),
     ],
   );

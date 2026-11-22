@@ -7,6 +7,7 @@ import 'package:trus_app/features/home/screens/home_screen.dart';
 import 'package:trus_app/features/main/controller/screen_variables_notifier.dart';
 import 'package:trus_app/features/match/match_notifier_args.dart';
 import 'package:trus_app/features/match/repository/match_repository.dart';
+import 'package:trus_app/features/match/post_match_flow.dart';
 import 'package:trus_app/features/match/state/match_edit_state.dart';
 import 'package:trus_app/models/api/football/football_match_api_model.dart';
 import 'package:trus_app/models/api/interfaces/model_to_string.dart';
@@ -331,8 +332,11 @@ class MatchEditNotifier extends BaseCrudNotifier<MatchApiModel, MatchEditState>
 
     if (fm == null) {
       state = state.copyWith(
-        matchOptions: const [MatchDetailOptions.editMatch],
-        initialTab: MatchDetailOptions.editMatch,
+        matchOptions: const [
+          MatchDetailOptions.footballMatchDetail,
+          MatchDetailOptions.editMatch,
+        ],
+        initialTab: MatchDetailOptions.footballMatchDetail,
       );
       return;
     }
@@ -600,6 +604,22 @@ class MatchEditNotifier extends BaseCrudNotifier<MatchApiModel, MatchEditState>
   }
 
   void submitCrud(Crud crud, bool goal) {
+    final isPostMatchEntry =
+        (ref.read(postMatchFlowProvider) == -1 &&
+            args.footballMatchApiModel?.alreadyPlayed == true) ||
+        (args.matchId != null &&
+            ref.read(postMatchFlowProvider) == args.matchId);
+    if (crud != Crud.delete &&
+        isPostMatchEntry &&
+        missingMatchResult(state.homeGoalNumber, state.awayGoalNumber)) {
+      state = state.copyWith(
+        errors: {
+          ...state.errors,
+          'homeGoalNumber': 'Vyplň výsledek obou týmů.',
+        },
+      );
+      return;
+    }
     submit(
       crud: crud,
       loadingText: switch (crud) {
@@ -616,6 +636,9 @@ class MatchEditNotifier extends BaseCrudNotifier<MatchApiModel, MatchEditState>
       invalidateProvider: matchNotifierProvider,
       onSuccessAction: (model) {
         if (crud != Crud.delete && goal) {
+          if (isPostMatchEntry) {
+            ref.read(postMatchFlowProvider.notifier).state = model!.id;
+          }
           screenVariablesNotifier.setMatchId(model!.id!);
           screenVariablesNotifier.setMatch(model);
           changeFragment(GoalScreen.id);

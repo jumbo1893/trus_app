@@ -1,5 +1,6 @@
 import 'dart:convert';
 
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:stomp_dart_client/stomp_dart_client.dart';
 import 'package:trus_app/models/api/player/stats/player_stats.dart';
 
@@ -15,9 +16,25 @@ class PlayerUpdatesService {
     void Function()? onConnected,
     void Function()? onDisconnected,
   }) {
+    // Mutable map: token is refreshed before every (re)connect, so reconnects
+    // never send an expired Firebase token.
+    final connectHeaders = <String, String>{};
     _client = StompClient(
       config: StompConfig(
         url: 'wss://$runningUrl/ws',
+        stompConnectHeaders: connectHeaders,
+        beforeConnect: () async {
+          try {
+            final token = await FirebaseAuth.instance.currentUser?.getIdToken();
+            if (token != null) {
+              connectHeaders['Authorization'] = 'Bearer $token';
+            } else {
+              connectHeaders.remove('Authorization');
+            }
+          } catch (e) {
+            connectHeaders.remove('Authorization');
+          }
+        },
         onConnect: (StompFrame frame) {
           _client!.subscribe(
             destination: playerStatsDestination(

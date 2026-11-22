@@ -8,12 +8,13 @@ import '../../../common/widgets/screen/custom_consumer_stateful_widget.dart';
 import '../../../models/enum/crud.dart';
 import '../../main/controller/screen_variables_notifier.dart';
 import '../match_form_fields.dart';
+import '../post_match_flow.dart';
+
 class AddMatchScreen extends CustomConsumerStatefulWidget {
   static const String id = "add-match-screen";
 
-  const AddMatchScreen({
-    Key? key,
-  }) : super(key: key, title: "Přidat zápas", name: id);
+  const AddMatchScreen({Key? key})
+    : super(key: key, title: "Přidat zápas", name: id);
 
   @override
   ConsumerState<AddMatchScreen> createState() => _AddMatchScreenState();
@@ -25,22 +26,28 @@ class _AddMatchScreenState extends ConsumerState<AddMatchScreen> {
     final arg = ref.watch(matchNotifierArgsProvider);
     final notifier = ref.read(matchEditNotifierProvider(arg).notifier);
     final state = ref.watch(matchEditNotifierProvider(arg));
+    final enteringResult =
+        ref.watch(postMatchFlowProvider) == -1 &&
+        arg.footballMatchApiModel?.alreadyPlayed == true;
 
     return BaseFormScreen(
-      headerTitle: "Nový zápas: ${state.name}",
+      headerTitle: enteringResult
+          ? 'Potvrdit sestavu a výsledek'
+          : "Nový zápas: ${state.name}",
       headerText: "datum: ${matchDateToString(state.date)}",
       fields: matchFields(context, state, notifier),
       actions: [
         ActionButtonItem(
-          label: "Uložit zápas",
-          onPressed: () => notifier.submitCrud(Crud.create, false),
+          label: enteringResult ? 'Potvrdit a zapsat góly' : 'Uložit zápas',
+          onPressed: () => notifier.submitCrud(Crud.create, enteringResult),
           type: ActionButtonType.primary,
         ),
-        ActionButtonItem(
-          label: "Uložit a přidat góly",
-          onPressed: () => notifier.submitCrud(Crud.create, true),
-          type: ActionButtonType.secondary,
-        ),
+        if (!enteringResult)
+          ActionButtonItem(
+            label: "Uložit a přidat góly",
+            onPressed: () => notifier.submitCrud(Crud.create, true),
+            type: ActionButtonType.secondary,
+          ),
       ],
     );
   }

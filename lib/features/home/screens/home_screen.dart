@@ -279,6 +279,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
                           onAddGoals: notifier.onButtonAddGoalsClick,
                           onAddFine: notifier.onButtonAddFineClick,
                           onDetailMatch: notifier.onButtonDetailMatchClick,
+                          onRecordedMatch: notifier.onRecordedMatchClick,
+                          onClearScore: notifier.onClearMatchScore,
                           onParticipation: notifier.onParticipationClick,
                           onRespondToParticipation:
                               notifier.respondToParticipation,

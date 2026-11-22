@@ -10,6 +10,8 @@ import 'package:trus_app/common/utils/calendar.dart';
 import 'package:trus_app/features/general/global_variables_controller.dart';
 import 'package:trus_app/features/main/controller/screen_notifier.dart';
 import 'package:trus_app/features/match/match_notifier_args.dart';
+import 'package:trus_app/features/match/post_match_flow.dart';
+import 'package:trus_app/features/match/repository/match_repository.dart';
 import 'package:trus_app/features/match_participation/screens/match_participation_screen.dart';
 import 'package:trus_app/features/football/screens/planned_match_sheet.dart';
 import 'package:trus_app/features/match_participation/widgets/participation_pitch.dart';
@@ -27,6 +29,15 @@ final matchEditReturnArgsProvider = StateProvider<MatchNotifierArgs?>(
 );
 final _openMatchDetailProvider =
     StateProvider.autoDispose<void Function(BuildContext)?>((ref) => null);
+final postMatchResultProvider = FutureProvider.autoDispose.family<bool, int>((
+  ref,
+  matchId,
+) async {
+  final match =
+      (await ref.read(matchRepositoryProvider).fetchMatchSetup(matchId)).match;
+  return match != null &&
+      missingMatchResult(match.homeGoalNumber, match.awayGoalNumber);
+});
 
 Future<void> _openPlannedMatchSheet(
   BuildContext context,
@@ -158,6 +169,16 @@ class _MatchDetailScreenState extends ConsumerState<MatchDetailScreen> {
         return const EditMatchScreen();
 
       case MatchDetailOptions.footballMatchDetail:
+        if (footballMatch == null) {
+          final matchId = ref.read(matchNotifierArgsProvider).matchId;
+          if (matchId != null) {
+            return PlayedMatchPitch(
+              matchId: matchId,
+              comment: comment,
+              onEditMatch: () => _editMatch(matchId),
+            );
+          }
+        }
         if (footballMatch?.alreadyPlayed == true) {
           final team = ref.read(globalVariablesControllerProvider).appTeam;
           final matchId = footballMatch!
@@ -341,6 +362,32 @@ class _MatchDetailScreenState extends ConsumerState<MatchDetailScreen> {
     }
 
     final fm = state.footballMatch ?? args.footballMatchApiModel;
+    final matchId =
+        args.matchId ??
+        fm?.findMatchIdForCurrentAppTeamInMatchIdAndAppTeamIdList(
+          ref.read(globalVariablesControllerProvider).appTeam,
+        );
+    if (matchId != null &&
+        (fm?.alreadyPlayed == true ||
+            (fm == null &&
+                state.model != null &&
+                state.model!.date.isBefore(DateTime.now())))) {
+      final missing = ref.watch(postMatchResultProvider(matchId));
+      if (missing.isLoading) return const Loader();
+      if (missing.hasError) {
+        return const Center(child: Text('Výsledek se nepodařilo načíst.'));
+      }
+      if (missing.asData?.value == true) {
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (!mounted || ref.read(matchNotifierArgsProvider) != args) return;
+          ref.read(postMatchFlowProvider.notifier).state = matchId;
+          ref
+              .read(screenVariablesNotifierProvider.notifier)
+              .setMatchNotifierArgs(MatchNotifierArgs.edit(matchId));
+        });
+        return const Loader();
+      }
+    }
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;

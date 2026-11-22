@@ -10,13 +10,13 @@ import '../../../models/enum/crud.dart';
 import '../../main/controller/screen_variables_notifier.dart';
 import '../controller/edit/match_edit_notifier.dart';
 import '../match_form_fields.dart';
+import '../post_match_flow.dart';
 
 class EditMatchScreen extends CustomConsumerStatefulWidget {
   static const String id = "edit-match-screen";
 
-  const EditMatchScreen({
-    Key? key,
-  }) : super(key: key, title: "Upravit zápas", name: id);
+  const EditMatchScreen({Key? key})
+    : super(key: key, title: "Upravit zápas", name: id);
 
   @override
   ConsumerState<EditMatchScreen> createState() => _EditMatchScreenState();
@@ -28,21 +28,23 @@ class _EditMatchScreenState extends ConsumerState<EditMatchScreen> {
     final arg = ref.watch(matchNotifierArgsProvider);
     final notifier = ref.read(matchEditNotifierProvider(arg).notifier);
     final state = ref.watch(matchEditNotifierProvider(arg));
+    final enteringResult = ref.watch(postMatchFlowProvider) == arg.matchId;
     return BaseFormScreen(
-      headerTitle: state.name,
+      headerTitle: enteringResult ? 'Potvrdit sestavu a výsledek' : state.name,
       headerText: matchDateToString(state.date),
       fields: matchFields(context, state, notifier),
       actions: [
         ActionButtonItem(
-          label: "Uložit zápas",
-          onPressed: () => notifier.submitCrud(Crud.update, false),
+          label: enteringResult ? 'Potvrdit a zapsat góly' : 'Uložit zápas',
+          onPressed: () => notifier.submitCrud(Crud.update, enteringResult),
           type: ActionButtonType.primary,
         ),
-        ActionButtonItem(
-          label: "Uložit a přidat góly",
-          onPressed: () => notifier.submitCrud(Crud.update, true),
-          type: ActionButtonType.secondary,
-        ),
+        if (!enteringResult)
+          ActionButtonItem(
+            label: "Uložit a přidat góly",
+            onPressed: () => notifier.submitCrud(Crud.update, true),
+            type: ActionButtonType.secondary,
+          ),
         ActionButtonItem(
           label: "Smazat",
           onPressed: () {

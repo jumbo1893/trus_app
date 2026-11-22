@@ -6,6 +6,8 @@ import 'package:trus_app/models/api/helper/redirect/redirect_api_model.dart';
 import 'package:trus_app/models/api/helper/redirect/text_with_redirect.dart';
 import 'package:trus_app/models/api/helper/warning_type.dart';
 import 'package:trus_app/models/api/home/dashboard_match.dart';
+import 'package:trus_app/models/api/match/match_api_model.dart';
+import 'package:trus_app/common/widgets/bottomsheet/confirm_action_bottom_sheet.dart';
 import 'package:trus_app/models/api/participation/match_participation_status.dart';
 import 'package:trus_app/models/api/match/planned_match_participation.dart';
 import 'package:trus_app/features/home/widget/planned_dashboard_card.dart';
@@ -40,6 +42,8 @@ class FootballMatchBox extends StatelessWidget {
     required this.onAddGoals,
     required this.onAddFine,
     required this.onDetailMatch,
+    required this.onRecordedMatch,
+    required this.onClearScore,
     required this.onParticipation,
     required this.onRespondToParticipation,
     required this.onCommonMatches,
@@ -60,6 +64,8 @@ class FootballMatchBox extends StatelessWidget {
   final void Function(FootballMatchApiModel match) onAddGoals;
   final void Function(FootballMatchApiModel match) onAddFine;
   final void Function(FootballMatchApiModel match) onDetailMatch;
+  final void Function(MatchApiModel match) onRecordedMatch;
+  final Future<void> Function(MatchApiModel match) onClearScore;
   final void Function(FootballMatchApiModel match) onParticipation;
   final Future<void> Function(
     FootballMatchApiModel match,
@@ -71,6 +77,24 @@ class FootballMatchBox extends StatelessWidget {
   final void Function(RedirectApiModel redirect) onRedirect;
 
   FootballMatchApiModel? get _match => dashboardMatch?.match?.footballMatch;
+
+  Widget _clearScoreButton(BuildContext context, MatchApiModel recorded) =>
+      Align(
+        alignment: Alignment.centerRight,
+        child: TextButton.icon(
+          onPressed: () => ConfirmActionBottomSheet.show(
+            context,
+            title: 'Smazat skóre zápasu',
+            message: 'Sestava a ostatní údaje zápasu zůstanou zachované.',
+            confirmText: 'Smazat skóre',
+            icon: Icons.remove_circle_outline,
+            isDanger: true,
+            onConfirm: () => onClearScore(recorded),
+          ),
+          icon: const Icon(Icons.remove_circle_outline, size: 18),
+          label: const Text('Smazat skóre'),
+        ),
+      );
 
   int _resolveMatchId() {
     if (dashboardMatch?.match?.footballMatch == null) return -1;
@@ -514,6 +538,31 @@ class FootballMatchBox extends StatelessWidget {
         ),
       );
     }
+    if (match == null && !isNextMatch && recorded != null) {
+      final teams = recorded.home
+          ? 'Liščí Trus – ${recorded.name}'
+          : '${recorded.name} – Liščí Trus';
+      final score = recorded.simpleResultToString();
+      return HomeSectionCard(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            _CompactMatchHeader(
+              sectionTitle: 'Poslední zápas',
+              data: _MatchHeaderData(
+                title: teams,
+                subtitle:
+                    '${recorded.date.day}.${recorded.date.month}.${recorded.date.year}',
+                meta: score.isEmpty ? 'Výsledek není zapsaný' : score,
+              ),
+              onMatchTap: () => onRecordedMatch(recorded),
+            ),
+            if (score.isNotEmpty) _clearScoreButton(context, recorded),
+          ],
+        ),
+      );
+    }
     if (match == null && (isNextMatch ? planned != null : recorded != null)) {
       final date = (isNextMatch ? planned!.date : recorded!.date).toLocal();
       final title = isNextMatch
@@ -558,6 +607,10 @@ class FootballMatchBox extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           _buildCompactCard(context, match, matchActionsEnabled, warnings),
+          if (!isNextMatch &&
+              recorded != null &&
+              recorded.simpleResultToString().isNotEmpty)
+            _clearScoreButton(context, recorded),
           if (!isNextMatch &&
               match.id != null &&
               (match.alreadyPlayed ||

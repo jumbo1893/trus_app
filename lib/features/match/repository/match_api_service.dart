@@ -53,6 +53,14 @@ class MatchApiService extends CrudApiService {
     return await deleteModel(id, matchApi);
   }
 
+  Future<MatchApiModel> clearMatchScore(int id) async {
+    return executeDeleteRequest(
+      Uri.parse('$serverUrl/$matchApi/$id/score'),
+      (dynamic json) => MatchApiModel.fromJson(json as Map<String, dynamic>),
+      null,
+    );
+  }
+
   Future<MatchSetup> setupMatch(int? id, {int? footballMatchId}) async {
     final queryParameters = <String, String>{
       if (id != null) 'matchId': id.toString(),

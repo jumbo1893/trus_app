@@ -10,6 +10,9 @@ import 'package:trus_app/features/main/controller/screen_notifier.dart';
 import 'package:trus_app/features/beer/screens/beer_simple_screen.dart';
 import 'package:trus_app/features/fine/match/screens/fine_match_screen.dart';
 import 'package:trus_app/features/home/screens/home_screen.dart';
+import 'package:trus_app/features/match/match_notifier_args.dart';
+import 'package:trus_app/features/match/post_match_flow.dart';
+import 'package:trus_app/features/match/screens/match_detail_screen.dart';
 import 'package:trus_app/theme/app_colors.dart';
 
 class GoalScreen extends CustomConsumerStatefulWidget {
@@ -101,6 +104,8 @@ class _GoalScreenState extends ConsumerState<GoalScreen>
   Widget build(BuildContext context) {
     final sc = ref.read(screenVariablesNotifierProvider);
     final matchId = sc.matchId;
+    final postMatchEntry =
+        matchId != null && ref.watch(postMatchFlowProvider) == matchId;
     final state = ref.watch(goalNotifierProvider);
     final notifier = ref.read(goalNotifierProvider.notifier);
     if (!_initialized && matchId != null) {
@@ -126,8 +131,9 @@ class _GoalScreenState extends ConsumerState<GoalScreen>
               p.yellowCards > 0 ||
               p.redCards > 0 ||
               p.goalkeepingMinutes > 0,
-        ))
+        )) {
           return;
+        }
         _setCorrection(false);
       });
     }
@@ -376,40 +382,93 @@ class _GoalScreenState extends ConsumerState<GoalScreen>
                   const SizedBox(height: 8),
                   Row(
                     children: [
-                      for (final (label, id) in [
-                        ('Do hospody', BeerSimpleScreen.id),
-                        ('K pokutám', FineMatchScreen.id),
-                        ('Přehled', HomeScreen.id),
-                      ])
+                      if (postMatchEntry)
                         Expanded(
-                          child: Padding(
-                            padding: const EdgeInsets.symmetric(horizontal: 2),
-                            child: SizedBox(
-                              height: 40,
-                              child: FilledButton(
-                                style: FilledButton.styleFrom(
-                                  padding: const EdgeInsets.symmetric(
-                                    horizontal: 4,
+                          child: FilledButton.icon(
+                            onPressed: state.saving || state.saveFailed
+                                ? null
+                                : () async {
+                                    try {
+                                      await notifier.changeGoals(
+                                        navigate: false,
+                                      );
+                                    } catch (_) {
+                                      return;
+                                    }
+                                    if (!mounted ||
+                                        ref
+                                            .read(goalNotifierProvider)
+                                            .saveFailed) {
+                                      return;
+                                    }
+                                    ref.invalidate(
+                                      postMatchResultProvider(matchId),
+                                    );
+                                    ref
+                                            .read(
+                                              postMatchFlowProvider.notifier,
+                                            )
+                                            .state =
+                                        null;
+                                    ref
+                                        .read(
+                                          screenVariablesNotifierProvider
+                                              .notifier,
+                                        )
+                                        .setMatchNotifierArgs(
+                                          MatchNotifierArgs.footballMatchDetailByMatchId(
+                                            matchId,
+                                          ),
+                                        );
+                                    ref
+                                        .read(screenNotifierProvider.notifier)
+                                        .changeByFragmentId(
+                                          MatchDetailScreen.id,
+                                        );
+                                  },
+                            icon: const Icon(Icons.check_rounded),
+                            label: const Text('Zobrazit souhrn zápasu'),
+                          ),
+                        ),
+                      if (!postMatchEntry)
+                        for (final (label, id) in [
+                          ('Do hospody', BeerSimpleScreen.id),
+                          ('K pokutám', FineMatchScreen.id),
+                          ('Přehled', HomeScreen.id),
+                        ])
+                          Expanded(
+                            child: Padding(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 2,
+                              ),
+                              child: SizedBox(
+                                height: 40,
+                                child: FilledButton(
+                                  style: FilledButton.styleFrom(
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 4,
+                                    ),
+                                    textStyle: const TextStyle(
+                                      fontSize: 12,
+                                      fontWeight: FontWeight.w700,
+                                    ),
                                   ),
-                                  textStyle: const TextStyle(
-                                    fontSize: 12,
-                                    fontWeight: FontWeight.w700,
+                                  onPressed: state.saving
+                                      ? null
+                                      : () => ref
+                                            .read(
+                                              screenNotifierProvider.notifier,
+                                            )
+                                            .changeByFragmentId(id),
+                                  child: Text(
+                                    label,
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
                                   ),
-                                ),
-                                onPressed: state.saving
-                                    ? null
-                                    : () => ref
-                                          .read(screenNotifierProvider.notifier)
-                                          .changeByFragmentId(id),
-                                child: Text(
-                                  label,
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
                                 ),
                               ),
                             ),
                           ),
-                        ),
                     ],
                   ),
                 ],
