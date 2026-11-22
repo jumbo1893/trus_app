@@ -159,9 +159,26 @@ class PlannedMatchApiService extends RequestExecutor {
     }),
   );
 
-  Future<PlannedMatch> complete(int id) => executePostRequest(
-    Uri.parse('$serverUrl/planned-match/$id/complete'),
+  Future<PlannedMatch> complete(int id) => changeStatus(id, 'COMPLETED');
+
+  Future<List<PlannedMatch>> resettable() => executeGetRequest(
+    Uri.parse('$serverUrl/planned-match/resettable'),
+    (dynamic json) => (json as List<dynamic>)
+        .map((item) => PlannedMatch.fromJson(item as Map<String, dynamic>))
+        .toList(),
+    null,
+  );
+
+  Future<PlannedMatch> reset(int id) => executePostRequest(
+    Uri.parse('$serverUrl/planned-match/$id/reset'),
     (dynamic json) => PlannedMatch.fromJson(json as Map<String, dynamic>),
     '{}',
   );
+
+  Future<PlannedMatch> changeStatus(int id, String status) =>
+      executePostRequest(
+        Uri.parse('$serverUrl/planned-match/$id/status'),
+        (dynamic json) => PlannedMatch.fromJson(json as Map<String, dynamic>),
+        jsonEncode({'status': status}),
+      );
 }

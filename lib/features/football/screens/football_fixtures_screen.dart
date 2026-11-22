@@ -143,7 +143,7 @@ class _PlannedFixtures extends ConsumerWidget {
                       visualDensity: VisualDensity.compact,
                       icon: const Icon(Icons.edit_outlined),
                       tooltip: 'Upravit plánovaný zápas',
-                      onPressed: item.status == 'COMPLETED'
+                      onPressed: item.isCompleted || item.isInProgress
                           ? null
                           : () => open(edit: true),
                     ),
@@ -236,7 +236,9 @@ class _ManualPlannedTile extends StatelessWidget {
                     ),
                     const SizedBox(height: 9),
                     Text(
-                      matchDateToString(match.date, includeTime: true),
+                      match.isInProgress
+                          ? 'Probíhá · ${matchDateToString(match.date, includeTime: true)}'
+                          : matchDateToString(match.date, includeTime: true),
                       style: TextStyle(
                         color: context.appColors.textSecondary,
                         fontSize: 13,

@@ -36,6 +36,7 @@ final postMatchResultProvider = FutureProvider.autoDispose.family<bool, int>((
   final match =
       (await ref.read(matchRepositoryProvider).fetchMatchSetup(matchId)).match;
   return match != null &&
+      !scorelessMatchType(match.type) &&
       missingMatchResult(match.homeGoalNumber, match.awayGoalNumber);
 });
 
@@ -159,6 +160,15 @@ class MatchDetailScreen extends CustomConsumerStatefulWidget {
 }
 
 class _MatchDetailScreenState extends ConsumerState<MatchDetailScreen> {
+  /// A match marked as played (or started) before the league fixture date
+  /// already has the team's recorded match, so it is shown as played.
+  bool _isPlayed(FootballMatchApiModel footballMatch) =>
+      footballMatch.alreadyPlayed ||
+      footballMatch.findMatchIdForCurrentAppTeamInMatchIdAndAppTeamIdList(
+            ref.read(globalVariablesControllerProvider).appTeam,
+          ) !=
+          null;
+
   Widget _screenFor(
     MatchDetailOptions o,
     FootballMatchApiModel? footballMatch,
@@ -179,9 +189,9 @@ class _MatchDetailScreenState extends ConsumerState<MatchDetailScreen> {
             );
           }
         }
-        if (footballMatch?.alreadyPlayed == true) {
+        if (footballMatch != null && _isPlayed(footballMatch)) {
           final team = ref.read(globalVariablesControllerProvider).appTeam;
-          final matchId = footballMatch!
+          final matchId = footballMatch
               .findMatchIdForCurrentAppTeamInMatchIdAndAppTeamIdList(team);
           if (matchId != null) {
             return PlayedMatchPitch(
@@ -368,7 +378,7 @@ class _MatchDetailScreenState extends ConsumerState<MatchDetailScreen> {
           ref.read(globalVariablesControllerProvider).appTeam,
         );
     if (matchId != null &&
-        (fm?.alreadyPlayed == true ||
+        ((fm != null && _isPlayed(fm)) ||
             (fm == null &&
                 state.model != null &&
                 state.model!.date.isBefore(DateTime.now())))) {

@@ -13,6 +13,8 @@ class PlannedMatch {
   final int? matchId;
   final String? description;
   final bool hasPhoto;
+  final int halfMinutes;
+  final int breakMinutes;
 
   PlannedMatch({
     required this.id,
@@ -29,7 +31,20 @@ class PlannedMatch {
     this.matchId,
     this.description,
     this.hasPhoto = false,
+    this.halfMinutes = 30,
+    this.breakMinutes = 5,
   });
+
+  bool get isScheduled => status == 'SCHEDULED';
+  bool get isInProgress => status == 'IN_PROGRESS';
+  bool get isCompleted => status == 'COMPLETED';
+  bool get isCancelled => status == 'CANCELLED';
+
+  /// Training and teambuilding have no score, so they skip the live screen.
+  bool get hasScore => type != 'TRAINING' && type != 'TEAMBUILDING';
+
+  DateTime get endsAt =>
+      date.add(Duration(minutes: 2 * halfMinutes + breakMinutes));
 
   factory PlannedMatch.fromJson(Map<String, dynamic> json) => PlannedMatch(
     id: json['id'] as int,
@@ -46,5 +61,7 @@ class PlannedMatch {
     matchId: json['matchId'] as int?,
     description: json['description'] as String?,
     hasPhoto: json['hasPhoto'] as bool? ?? false,
+    halfMinutes: json['halfMinutes'] as int? ?? 30,
+    breakMinutes: json['breakMinutes'] as int? ?? 5,
   );
 }

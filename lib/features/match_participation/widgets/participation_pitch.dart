@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:trus_app/features/match/repository/match_repository.dart';
+import 'package:trus_app/features/match/post_match_flow.dart';
 import 'package:trus_app/features/chat/chat_controller.dart';
 import 'package:trus_app/features/chat/chat_screen.dart';
 import 'package:trus_app/features/match/controller/edit/match_edit_notifier.dart';
@@ -295,11 +296,13 @@ class MatchRosterPicker extends ConsumerStatefulWidget {
   final MatchSetup? setup;
   final List<PlayerApiModel>? availablePeople;
   final ValueChanged<PlayerApiModel>? onPersonSelected;
+  final String? title;
 
   const MatchRosterPicker({
     super.key,
     required this.matchId,
     required this.setup,
+    this.title,
   }) : availablePeople = null,
        onPersonSelected = null;
 
@@ -309,6 +312,7 @@ class MatchRosterPicker extends ConsumerStatefulWidget {
     required ValueChanged<PlayerApiModel> onSelected,
   }) : matchId = null,
        setup = null,
+       title = null,
        availablePeople = people,
        onPersonSelected = onSelected;
 
@@ -383,6 +387,10 @@ class _MatchRosterPickerState extends ConsumerState<MatchRosterPicker> {
       updatedIds.add(id);
     }
     setState(() => _savingId = id);
+    // The score may have changed on the score bar since the setup was loaded.
+    final score =
+        ref.read(matchScoreProvider(widget.matchId!)) ??
+        (match.homeGoalNumber, match.awayGoalNumber);
     final updated = MatchApiModel(
       id: match.id,
       name: match.name,
@@ -390,8 +398,9 @@ class _MatchRosterPickerState extends ConsumerState<MatchRosterPicker> {
       seasonId: match.seasonId,
       home: match.home,
       playerIdList: updatedIds.toList(),
-      homeGoalNumber: match.homeGoalNumber,
-      awayGoalNumber: match.awayGoalNumber,
+      homeGoalNumber: score.$1,
+      awayGoalNumber: score.$2,
+      type: match.type,
       footballMatch: match.footballMatch,
       weather: match.weather,
     );
@@ -697,9 +706,10 @@ class _MatchRosterPickerState extends ConsumerState<MatchRosterPicker> {
   Widget build(BuildContext context) => Column(
     children: [
       Text(
-        widget.onPersonSelected == null
-            ? 'Přidat do zápasu'
-            : 'Za koho odpovídáš?',
+        widget.title ??
+            (widget.onPersonSelected == null
+                ? 'Přidat do zápasu'
+                : 'Za koho odpovídáš?'),
         style: Theme.of(context).textTheme.titleLarge,
       ),
       const SizedBox(height: 12),

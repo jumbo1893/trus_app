@@ -9,6 +9,8 @@ class TeamAdministrationApiModel {
   final String readerCode;
   final String editorCode;
   final List<TeamMemberApiModel> members;
+  final int matchHalfMinutes;
+  final int matchBreakMinutes;
 
   const TeamAdministrationApiModel({
     required this.appTeamId,
@@ -19,6 +21,8 @@ class TeamAdministrationApiModel {
     required this.readerCode,
     required this.editorCode,
     required this.members,
+    this.matchHalfMinutes = 30,
+    this.matchBreakMinutes = 5,
   });
 
   factory TeamAdministrationApiModel.fromJson(Map<String, dynamic> json) {
@@ -35,6 +39,8 @@ class TeamAdministrationApiModel {
             (item) => TeamMemberApiModel.fromJson(item as Map<String, dynamic>),
           )
           .toList(),
+      matchHalfMinutes: json['matchHalfMinutes'] as int? ?? 30,
+      matchBreakMinutes: json['matchBreakMinutes'] as int? ?? 5,
     );
   }
 }

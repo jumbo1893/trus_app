@@ -286,6 +286,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
                               notifier.respondToParticipation,
                           onCommonMatches: notifier.onCommonMatchesClick,
                           onRedirect: notifier.onRedirect,
+                          onLiveMatch: notifier.onLiveMatchClick,
                         ),
                         const SizedBox(height: sectionSpacing),
                       ],

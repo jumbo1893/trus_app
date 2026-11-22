@@ -235,7 +235,6 @@ void main() {
             onBack: () {},
             onHome: () {},
             onAccount: () {},
-            onAi: () => aiOpened = true,
             onNotifications: () {},
             onDestination: (_) {},
             child: child,

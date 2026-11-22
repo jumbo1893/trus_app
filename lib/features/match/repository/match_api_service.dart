@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:trus_app/config.dart';
 import 'package:trus_app/models/api/match/match_setup.dart';
@@ -58,6 +60,14 @@ class MatchApiService extends CrudApiService {
       Uri.parse('$serverUrl/$matchApi/$id/score'),
       (dynamic json) => MatchApiModel.fromJson(json as Map<String, dynamic>),
       null,
+    );
+  }
+
+  Future<MatchApiModel> updateMatchScore(int id, int? home, int? away) {
+    return executePutRequest(
+      Uri.parse('$serverUrl/$matchApi/$id/score'),
+      (dynamic json) => MatchApiModel.fromJson(json as Map<String, dynamic>),
+      jsonEncode({'homeGoalNumber': home, 'awayGoalNumber': away}),
     );
   }
 

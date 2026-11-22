@@ -11,6 +11,8 @@ import 'package:trus_app/common/widgets/bottomsheet/confirm_action_bottom_sheet.
 import 'package:trus_app/models/api/participation/match_participation_status.dart';
 import 'package:trus_app/models/api/match/planned_match_participation.dart';
 import 'package:trus_app/features/home/widget/planned_dashboard_card.dart';
+import 'package:trus_app/features/home/widget/live_match_card.dart';
+import 'package:trus_app/models/api/match/planned_match.dart';
 import 'package:trus_app/theme/app_colors.dart';
 import 'package:trus_app/common/widgets/football/team_logo.dart';
 
@@ -48,6 +50,7 @@ class FootballMatchBox extends StatelessWidget {
     required this.onRespondToParticipation,
     required this.onCommonMatches,
     required this.onRedirect,
+    this.onLiveMatch,
   });
 
   final bool isNextMatch;
@@ -75,6 +78,7 @@ class FootballMatchBox extends StatelessWidget {
   onRespondToParticipation;
   final void Function(FootballMatchApiModel match) onCommonMatches;
   final void Function(RedirectApiModel redirect) onRedirect;
+  final void Function(PlannedMatch planned)? onLiveMatch;
 
   FootballMatchApiModel? get _match => dashboardMatch?.match?.footballMatch;
 
@@ -522,6 +526,17 @@ class FootballMatchBox extends StatelessWidget {
     final match = _match;
     final planned = dashboardMatch?.plannedMatch;
     final recorded = dashboardMatch?.recordedMatch;
+    if (isNextMatch &&
+        planned != null &&
+        planned.isInProgress &&
+        planned.matchId != null &&
+        onLiveMatch != null) {
+      return LiveMatchCard(
+        planned: planned,
+        recorded: recorded,
+        onOpen: () => onLiveMatch!(planned),
+      );
+    }
     if (match == null && isNextMatch && planned != null) {
       return PlannedDashboardCard(
         match: planned,

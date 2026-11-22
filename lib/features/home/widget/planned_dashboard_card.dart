@@ -3,6 +3,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:trus_app/features/football/repository/planned_match_api_service.dart';
 import 'package:trus_app/features/football/screens/planned_match_sheet.dart';
 import 'package:trus_app/features/football/widgets/planned_match_photo.dart';
+import 'package:trus_app/features/football/widgets/planned_match_status_button.dart';
+import 'package:trus_app/features/home/controller/home_notifier.dart';
+import 'package:trus_app/features/match/widget/match_score_bar.dart';
 import 'package:trus_app/features/home/widget/home_section_card.dart';
 import 'package:trus_app/models/api/match/planned_match.dart';
 import 'package:trus_app/models/api/match/planned_match_participation.dart';
@@ -152,6 +155,16 @@ class _PlannedDashboardCardState extends ConsumerState<PlannedDashboardCard> {
                       title: Text('Změnit účast'),
                       trailing: Icon(Icons.keyboard_arrow_down),
                     ),
+                  ),
+                  const SizedBox(height: 8),
+                  PlannedMatchStatusButton(
+                    match: widget.match,
+                    onChanged: (result) {
+                      Navigator.of(sheetContext).pop();
+                      if (!navigateAfterStatusChange(ref.read, result)) {
+                        ref.read(homeNotifierProvider.notifier).load();
+                      }
+                    },
                   ),
                 ],
               ),

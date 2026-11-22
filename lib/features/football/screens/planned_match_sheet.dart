@@ -10,6 +10,8 @@ import 'package:trus_app/features/football/repository/football_api_service.dart'
 import 'package:trus_app/features/football/repository/planned_match_api_service.dart';
 import 'package:trus_app/features/football/screens/planned_match_editor.dart';
 import 'package:trus_app/features/football/widgets/planned_match_photo.dart';
+import 'package:trus_app/features/football/widgets/planned_match_status_button.dart';
+import 'package:trus_app/features/match/widget/match_score_bar.dart';
 import 'package:trus_app/features/main/controller/screen_notifier.dart';
 import 'package:trus_app/features/chat/chat_controller.dart';
 import 'package:trus_app/features/chat/chat_screen.dart';
@@ -118,8 +120,12 @@ class _PlannedMatchSheetState extends ConsumerState<PlannedMatchSheet> {
                       Expanded(
                         child: TabBarView(
                           children: [
-                            if (detail != null) _footballTab(detail),
-                            editing && match.status != 'COMPLETED'
+                            if (detail != null)
+                              _footballTab(
+                                detail,
+                                participation: match.isScheduled,
+                              ),
+                            editing && (match.isScheduled || match.isCancelled)
                                 ? PlannedMatchEditor(
                                     match: match,
                                     onSaved: (saved) => setState(() {
@@ -262,7 +268,25 @@ class _PlannedMatchSheetState extends ConsumerState<PlannedMatchSheet> {
           subtitle: Text(_statusName(match.status)),
         ),
       ], bottomPadding: 100),
-      if (match.status != 'COMPLETED')
+      if (!match.isScheduled && !match.isCancelled && match.matchId != null)
+        Positioned(
+          left: 16,
+          right: 16,
+          bottom: 16,
+          child: FilledButton.icon(
+            icon: Icon(
+              match.isInProgress ? Icons.sports_soccer : Icons.list_alt,
+            ),
+            label: Text(
+              match.isInProgress ? 'Otevřít živý zápas' : 'Otevřít zápas',
+            ),
+            onPressed: () {
+              Navigator.of(context).pop();
+              openPlannedMatchByStatus(ref.read, match);
+            },
+          ),
+        ),
+      if (match.isScheduled || match.isCancelled)
         Positioned(
           left: 16,
           right: 16,
@@ -285,21 +309,21 @@ class _PlannedMatchSheetState extends ConsumerState<PlannedMatchSheet> {
                       }),
                     ),
                   ),
-                  if (match.status == 'SCHEDULED') ...[
-                    const SizedBox(width: 10),
-                    Expanded(
-                      child: OutlinedButton.icon(
-                        icon: const Icon(Icons.check_circle_outline),
-                        label: const Text('Odehráno'),
-                        onPressed: () async {
-                          await ref
-                              .read(plannedMatchApiProvider)
-                              .complete(match.id);
-                          if (mounted) setState(_reload);
-                        },
-                      ),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: PlannedMatchStatusButton(
+                      match: match,
+                      onChanged: (result) {
+                        if (result.matchId != null &&
+                            (result.isCompleted || result.isInProgress)) {
+                          Navigator.of(context).pop();
+                          navigateAfterStatusChange(ref.read, result);
+                          return;
+                        }
+                        setState(() => planned = Future.value(result));
+                      },
                     ),
-                  ],
+                  ),
                 ],
               ),
             ),
@@ -319,7 +343,7 @@ class _PlannedMatchSheetState extends ConsumerState<PlannedMatchSheet> {
     return 'Sezona $id';
   }
 
-  Widget _footballTab(FootballMatchDetail detail) {
+  Widget _footballTab(FootballMatchDetail detail, {bool participation = true}) {
     final match = detail.footballMatch;
     final meta = [
       if (match.round > 0) '${match.round}. kolo',
@@ -393,7 +417,7 @@ class _PlannedMatchSheetState extends ConsumerState<PlannedMatchSheet> {
             ],
           ],
         ),
-        if (match.id != null && widget.showParticipationButton)
+        if (match.id != null && widget.showParticipationButton && participation)
           Positioned(
             right: 16,
             bottom: 16,
@@ -453,6 +477,7 @@ String _typeName(String type) => switch (type) {
 
 String _statusName(String status) => switch (status) {
   'SCHEDULED' => 'Naplánováno',
+  'IN_PROGRESS' => 'Probíhá',
   'CANCELLED' => 'Zrušeno',
   'COMPLETED' => 'Odehráno',
   _ => status,

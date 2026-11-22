@@ -1,5 +1,8 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:trus_app/features/match/post_match_flow.dart';
+import 'package:trus_app/features/match/widget/match_score_bar.dart';
+import 'package:trus_app/features/football/repository/planned_match_api_service.dart';
+import 'package:trus_app/models/api/match/planned_match.dart';
 import 'package:trus_app/features/match/repository/match_repository.dart';
 import 'package:trus_app/models/api/match/match_api_model.dart';
 import 'package:trus_app/features/app_notice/repository/app_notice_repository.dart';
@@ -201,7 +204,11 @@ class HomeNotifier extends SafeStateNotifier<HomeState> {
             (await ref.read(matchRepositoryProvider).fetchMatchSetup(matchId))
                 .match;
         if (saved == null ||
-            missingMatchResult(saved.homeGoalNumber, saved.awayGoalNumber)) {
+            (!scorelessMatchType(saved.type) &&
+                missingMatchResult(
+                  saved.homeGoalNumber,
+                  saved.awayGoalNumber,
+                ))) {
           onButtonDetailMatchClick(footballMatch);
           return;
         }
@@ -224,7 +231,8 @@ class HomeNotifier extends SafeStateNotifier<HomeState> {
 
     if (matchId == -1) {
       if (footballMatch.alreadyPlayed) {
-        ref.read(postMatchFlowProvider.notifier).state = -1;
+        _confirmPlayedFootballMatch(footballMatch);
+        return;
       }
       ref
           .read(screenVariablesNotifierProvider.notifier)
@@ -249,13 +257,7 @@ class HomeNotifier extends SafeStateNotifier<HomeState> {
     final matchId = footballMatch
         .findMatchIdForCurrentAppTeamInMatchIdAndAppTeamIdList(appTeam);
     if (footballMatch.alreadyPlayed && matchId == null) {
-      ref.read(postMatchFlowProvider.notifier).state = -1;
-      ref
-          .read(screenVariablesNotifierProvider.notifier)
-          .setMatchNotifierArgs(
-            MatchNotifierArgs.newByFootballMatch(footballMatch),
-          );
-      changeFragment(AddMatchScreen.id);
+      _confirmPlayedFootballMatch(footballMatch);
       return;
     }
     ref
@@ -294,6 +296,36 @@ class HomeNotifier extends SafeStateNotifier<HomeState> {
       ui.showSnack('Skóre zápasu se nepodařilo smazat');
     }
   }
+
+  /// A played fixture without a recorded match: the server creates it from the
+  /// planned match (lineup from attendance), so only lineup and score are confirmed.
+  Future<void> _confirmPlayedFootballMatch(
+    FootballMatchApiModel footballMatch,
+  ) async {
+    try {
+      final id = footballMatch.id;
+      final planned = id == null
+          ? null
+          : await ref.read(plannedMatchApiProvider).getByFootballMatch(id);
+      if (planned?.matchId != null) {
+        homeRepository.invalidateSetup();
+        ref.read(matchRepositoryProvider).invalidateList();
+        openLineupConfirmation(ref.read, planned!.matchId!);
+        return;
+      }
+    } catch (_) {
+      // Falls back to the full match form below.
+    }
+    ref
+        .read(screenVariablesNotifierProvider.notifier)
+        .setMatchNotifierArgs(
+          MatchNotifierArgs.newByFootballMatch(footballMatch),
+        );
+    changeFragment(AddMatchScreen.id);
+  }
+
+  void onLiveMatchClick(PlannedMatch planned) =>
+      openPlannedMatchByStatus(ref.read, planned);
 
   void onCommonMatchesClick(FootballMatchApiModel footballMatch) {
     ref

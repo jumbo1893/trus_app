@@ -13,6 +13,7 @@ import 'package:trus_app/features/home/screens/home_screen.dart';
 import 'package:trus_app/features/match/match_notifier_args.dart';
 import 'package:trus_app/features/match/post_match_flow.dart';
 import 'package:trus_app/features/match/screens/match_detail_screen.dart';
+import 'package:trus_app/features/match/widget/match_score_bar.dart';
 import 'package:trus_app/theme/app_colors.dart';
 
 class GoalScreen extends CustomConsumerStatefulWidget {
@@ -106,6 +107,10 @@ class _GoalScreenState extends ConsumerState<GoalScreen>
     final matchId = sc.matchId;
     final postMatchEntry =
         matchId != null && ref.watch(postMatchFlowProvider) == matchId;
+    final live = ref.watch(liveMatchProvider);
+    final liveMatch = matchId != null && live?.matchId == matchId ? live : null;
+    // After the match the score is entered on the lineup confirmation.
+    final showScore = liveMatch != null && liveMatch.hasScore;
     final state = ref.watch(goalNotifierProvider);
     final notifier = ref.read(goalNotifierProvider.notifier);
     if (!_initialized && matchId != null) {
@@ -170,6 +175,12 @@ class _GoalScreenState extends ConsumerState<GoalScreen>
         color: dark ? const Color(0xFF0E0B12) : colors.backgroundPrimary,
         child: Column(
           children: [
+            if (showScore)
+              MatchScoreBar(
+                key: ValueKey('score-bar-$matchId'),
+                matchId: matchId!,
+                live: liveMatch,
+              ),
             if (sc.matchModel.id == matchId)
               MatchContextHeader(
                 match: sc.matchModel,

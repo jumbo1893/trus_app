@@ -8,6 +8,8 @@ import 'package:trus_app/common/widgets/screen/custom_consumer_stateful_widget.d
 import 'package:trus_app/features/team_administration/controller/team_administration_provider.dart';
 import 'package:trus_app/features/home/controller/home_notifier.dart';
 import 'package:trus_app/features/team_administration/repository/team_administration_repository.dart';
+import 'package:trus_app/features/football/repository/planned_match_api_service.dart';
+import 'package:trus_app/models/api/match/planned_match.dart';
 import 'package:trus_app/models/api/auth/team_administration_api_model.dart';
 import 'package:trus_app/models/api/auth/team_member_api_model.dart';
 import 'package:trus_app/features/user/widgets/user_avatar.dart';
@@ -138,6 +140,39 @@ class _TeamAdministrationScreenState
             icon: Icons.edit_outlined,
             onCopy: () => _copyCode(administration.editorCode),
             onEdit: () => _editCode('editor', administration.editorCode),
+          ),
+          const SizedBox(height: 18),
+          Text('Délka zápasu', style: Theme.of(context).textTheme.titleLarge),
+          const SizedBox(height: 6),
+          const Text('Podle ní běží čas u probíhajícího zápasu.'),
+          const SizedBox(height: 10),
+          Card(
+            margin: EdgeInsets.zero,
+            child: ListTile(
+              leading: const Icon(Icons.timer_outlined),
+              title: Text(
+                '2 × ${administration.matchHalfMinutes} min, '
+                'přestávka ${administration.matchBreakMinutes} min',
+              ),
+              trailing: IconButton(
+                tooltip: 'Upravit délku zápasu',
+                icon: const Icon(Icons.edit_outlined),
+                onPressed: () => _editMatchDuration(administration),
+              ),
+            ),
+          ),
+          const SizedBox(height: 8),
+          Card(
+            margin: EdgeInsets.zero,
+            child: ListTile(
+              leading: const Icon(Icons.restore),
+              title: const Text('Obnovit zápasy'),
+              subtitle: const Text(
+                'Vrátí odehraný, zrušený nebo smazaný zápas do plánu.',
+              ),
+              trailing: const Icon(Icons.chevron_right),
+              onTap: _resetPlannedMatches,
+            ),
           ),
           const SizedBox(height: 18),
           Text('Členové týmu', style: Theme.of(context).textTheme.titleLarge),
@@ -334,6 +369,172 @@ class _TeamAdministrationScreenState
       ),
     );
     controller.dispose();
+    if (saved == true) {
+      ref.invalidate(teamAdministrationProvider);
+    }
+  }
+
+  Future<void> _resetPlannedMatches() async {
+    final api = ref.read(plannedMatchApiProvider);
+    final selected = await showModalBottomSheet<PlannedMatch>(
+      context: context,
+      showDragHandle: true,
+      isScrollControlled: true,
+      builder: (sheetContext) => SizedBox(
+        height: MediaQuery.sizeOf(sheetContext).height * .6,
+        child: FutureBuilder<List<PlannedMatch>>(
+          future: api.resettable(),
+          builder: (context, snapshot) {
+            if (snapshot.hasError) {
+              return const Center(child: Text('Zápasy se nepodařilo načíst.'));
+            }
+            final items = snapshot.data;
+            if (items == null) {
+              return const Center(child: CircularProgressIndicator());
+            }
+            if (items.isEmpty) {
+              return const Center(child: Text('Žádný zápas k obnovení.'));
+            }
+            return ListView(
+              children: [
+                for (final item in items)
+                  ListTile(
+                    title: Text(item.opponent ?? 'Událost'),
+                    subtitle: Text(
+                      '${DateFormat('d. M. yyyy HH:mm').format(item.date.toLocal())}'
+                      ' · ${switch (item.status) {
+                        'IN_PROGRESS' => 'probíhá',
+                        'CANCELLED' => 'zrušeno',
+                        _ => 'odehráno',
+                      }}',
+                    ),
+                    trailing: const Icon(Icons.restore),
+                    onTap: () => Navigator.pop(sheetContext, item),
+                  ),
+              ],
+            );
+          },
+        ),
+      ),
+    );
+    if (selected == null || !mounted) return;
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Obnovit zápas?'),
+        content: const Text(
+          'Zapsaný zápas se smaže včetně sestavy, skóre, gólů, piv a pokut '
+          'a událost bude znovu naplánovaná. Akci nelze vrátit.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Zpět'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text('Obnovit'),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true || !mounted) return;
+    try {
+      await api.reset(selected.id);
+      ref.read(homeNotifierProvider.notifier).load();
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Zápas je znovu naplánovaný.')),
+        );
+      }
+    } catch (error) {
+      if (mounted) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(_errorMessage(error))));
+      }
+    }
+  }
+
+  Future<void> _editMatchDuration(TeamAdministrationApiModel current) async {
+    final half = TextEditingController(text: '${current.matchHalfMinutes}');
+    final pause = TextEditingController(text: '${current.matchBreakMinutes}');
+    String? errorText;
+    bool saving = false;
+    final saved = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => StatefulBuilder(
+        builder: (context, setDialogState) => AlertDialog(
+          title: const Text('Délka zápasu'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TextField(
+                controller: half,
+                autofocus: true,
+                keyboardType: TextInputType.number,
+                inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                decoration: const InputDecoration(labelText: 'Poločas (min)'),
+              ),
+              TextField(
+                controller: pause,
+                keyboardType: TextInputType.number,
+                inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                decoration: InputDecoration(
+                  labelText: 'Přestávka (min)',
+                  errorText: errorText,
+                ),
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: saving ? null : () => Navigator.pop(context, false),
+              child: const Text('Zrušit'),
+            ),
+            FilledButton(
+              onPressed: saving
+                  ? null
+                  : () async {
+                      final halfMinutes = int.tryParse(half.text);
+                      final breakMinutes = int.tryParse(pause.text);
+                      if (halfMinutes == null ||
+                          breakMinutes == null ||
+                          halfMinutes < 1 ||
+                          halfMinutes > 90 ||
+                          breakMinutes > 60) {
+                        setDialogState(
+                          () => errorText =
+                              'Poločas 1–90 min, přestávka 0–60 min.',
+                        );
+                        return;
+                      }
+                      setDialogState(() {
+                        saving = true;
+                        errorText = null;
+                      });
+                      try {
+                        await ref
+                            .read(teamAdministrationRepositoryProvider)
+                            .updateMatchDuration(halfMinutes, breakMinutes);
+                        if (dialogContext.mounted) {
+                          Navigator.pop(dialogContext, true);
+                        }
+                      } catch (error) {
+                        setDialogState(() {
+                          saving = false;
+                          errorText = _errorMessage(error);
+                        });
+                      }
+                    },
+              child: const Text('Uložit'),
+            ),
+          ],
+        ),
+      ),
+    );
+    half.dispose();
+    pause.dispose();
     if (saved == true) {
       ref.invalidate(teamAdministrationProvider);
     }

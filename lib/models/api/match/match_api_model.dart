@@ -17,6 +17,7 @@ class MatchApiModel implements ModelToString, JsonAndHttpConverter, DropdownItem
   final List<int> playerIdList;
   final int? homeGoalNumber;
   final int? awayGoalNumber;
+  final String? type;
   FootballMatchApiModel? footballMatch;
   MatchWeatherApiModel? weather;
 
@@ -29,6 +30,7 @@ class MatchApiModel implements ModelToString, JsonAndHttpConverter, DropdownItem
     this.homeGoalNumber,
     this.awayGoalNumber,
     this.id,
+    this.type,
     this.footballMatch,
     this.weather
   });
@@ -42,6 +44,7 @@ class MatchApiModel implements ModelToString, JsonAndHttpConverter, DropdownItem
     required this.awayGoalNumber,
     List<PlayerApiModel>? players,
     this.id,
+    this.type,
     this.footballMatch,
     this.weather
   }) : playerIdList = _getIdsFromPlayers(players ?? []);
@@ -54,7 +57,8 @@ class MatchApiModel implements ModelToString, JsonAndHttpConverter, DropdownItem
         seasonId = 0,
         playerIdList = [],
         homeGoalNumber = null,
-        awayGoalNumber = null;
+        awayGoalNumber = null,
+        type = null;
 
   @override
   Map<String, dynamic> toJson() {
@@ -67,6 +71,7 @@ class MatchApiModel implements ModelToString, JsonAndHttpConverter, DropdownItem
       "playerIdList": playerIdList,
       "homeGoalNumber": homeGoalNumber,
       "awayGoalNumber": awayGoalNumber,
+      "type": type,
       "footballMatch": footballMatch?.toJson(),
     };
   }
@@ -81,6 +86,7 @@ class MatchApiModel implements ModelToString, JsonAndHttpConverter, DropdownItem
       playerIdList: List<int>.from(json['playerIdList']),
       homeGoalNumber: json["homeGoalNumber"],
       awayGoalNumber: json["awayGoalNumber"],
+      type: json["type"],
       footballMatch: json["footballMatch"] != null
           ? FootballMatchApiModel.fromJson(json["footballMatch"])
           : null,

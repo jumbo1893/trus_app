@@ -31,6 +31,17 @@ class TeamAdministrationRepository extends RequestExecutor {
     );
   }
 
+  Future<TeamAdministrationApiModel> updateMatchDuration(
+    int halfMinutes,
+    int breakMinutes,
+  ) {
+    return executePutRequest(
+      Uri.parse('$_administrationUrl/match-duration'),
+      (json) => TeamAdministrationApiModel.fromJson(json),
+      jsonEncode({'halfMinutes': halfMinutes, 'breakMinutes': breakMinutes}),
+    );
+  }
+
   Future<TeamAdministrationApiModel> updateMemberRole(
     int userTeamRoleId,
     String role,

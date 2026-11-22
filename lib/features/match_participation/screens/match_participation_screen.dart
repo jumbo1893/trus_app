@@ -5,6 +5,9 @@ import 'package:trus_app/features/match_participation/widgets/participation_pitc
 import 'package:trus_app/features/chat/chat_controller.dart';
 import 'package:trus_app/features/chat/chat_screen.dart';
 import 'package:trus_app/features/football/repository/planned_match_api_service.dart';
+import 'package:trus_app/features/football/widgets/planned_match_status_button.dart';
+import 'package:trus_app/features/match/widget/match_score_bar.dart';
+import 'package:trus_app/models/api/match/planned_match.dart';
 import 'package:trus_app/features/match_participation/widgets/participation_help.dart';
 import 'package:trus_app/features/general/notifier/global_variables_notifier.dart';
 import 'package:trus_app/features/main/controller/screen_variables_notifier.dart';
@@ -19,8 +22,8 @@ import 'package:trus_app/models/api/participation/match_participation_status.dar
 import 'package:trus_app/theme/app_colors.dart';
 import 'package:trus_app/models/api/player/player_api_model.dart';
 
-final _plannedChatRoomProvider = FutureProvider.autoDispose
-    .family<String?, int>((ref, footballMatchId) async {
+final _plannedMatchProvider = FutureProvider.autoDispose
+    .family<PlannedMatch?, int>((ref, footballMatchId) async {
       if (ref.watch(
             globalVariablesProvider.select((value) => value.appTeam?.id),
           ) ==
@@ -32,7 +35,7 @@ final _plannedChatRoomProvider = FutureProvider.autoDispose
             .read(plannedMatchApiProvider)
             .getByFootballMatch(footballMatchId);
         await ref.read(chatControllerProvider.notifier).refresh();
-        return 'planned-${planned.id}';
+        return planned;
       } catch (_) {
         return null;
       }
@@ -56,10 +59,17 @@ class MatchParticipationScreen extends CustomConsumerWidget {
     final provider = matchParticipationNotifierProvider(footballMatchId);
     final state = ref.watch(provider);
     final notifier = ref.read(provider.notifier);
-    final chatKind = ref
-        .watch(_plannedChatRoomProvider(footballMatchId))
+    final planned = ref
+        .watch(_plannedMatchProvider(footballMatchId))
         .asData
         ?.value;
+    final chatKind = planned == null ? null : 'planned-${planned.id}';
+    if (planned != null && !planned.isScheduled) {
+      return _NotScheduled(
+        planned: planned,
+        onChanged: () => ref.invalidate(_plannedMatchProvider(footballMatchId)),
+      );
+    }
     final chatUnread = ref
         .watch(chatControllerProvider)
         .rooms
@@ -91,6 +101,17 @@ class MatchParticipationScreen extends CustomConsumerWidget {
           data: (detail) => _ParticipationContent(
             detail: detail,
             chatUnread: chatUnread,
+            statusButton: planned == null
+                ? null
+                : PlannedMatchStatusButton(
+                    match: planned,
+                    compact: true,
+                    onChanged: (result) {
+                      if (!navigateAfterStatusChange(ref.read, result)) {
+                        ref.invalidate(_plannedMatchProvider(footballMatchId));
+                      }
+                    },
+                  ),
             onChat: chatKind == null
                 ? null
                 : () {
@@ -149,6 +170,50 @@ class MatchParticipationScreen extends CustomConsumerWidget {
   }
 }
 
+/// Attendance is only collected before kick-off; afterwards the match itself is shown.
+class _NotScheduled extends ConsumerWidget {
+  final PlannedMatch planned;
+  final VoidCallback onChanged;
+
+  const _NotScheduled({required this.planned, required this.onChanged});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) => Scaffold(
+    body: Center(
+      child: Padding(
+        padding: const EdgeInsets.all(24),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              planned.isInProgress
+                  ? 'Zápas právě probíhá.'
+                  : planned.isCancelled
+                  ? 'Zápas je zrušený.'
+                  : 'Zápas je odehraný.',
+              style: Theme.of(context).textTheme.titleMedium,
+            ),
+            const SizedBox(height: 16),
+            if (planned.matchId != null)
+              FilledButton.icon(
+                onPressed: () => openPlannedMatchByStatus(ref.read, planned),
+                icon: const Icon(Icons.sports_soccer),
+                label: Text(
+                  planned.isInProgress ? 'Otevřít živý zápas' : 'Otevřít zápas',
+                ),
+              ),
+            if (planned.isCancelled)
+              PlannedMatchStatusButton(
+                match: planned,
+                onChanged: (_) => onChanged(),
+              ),
+          ],
+        ),
+      ),
+    ),
+  );
+}
+
 class ParticipationChatButton extends StatelessWidget {
   final int unread;
   final VoidCallback? onPressed;
@@ -198,6 +263,7 @@ class _ParticipationContent extends StatefulWidget {
   final MatchParticipationDetail detail;
   final int chatUnread;
   final VoidCallback? onChat;
+  final Widget? statusButton;
   final int? teamId;
   final Future<void> Function() onRespond;
   final Future<void> Function(PlayerApiModel) onRespondFor;
@@ -207,6 +273,7 @@ class _ParticipationContent extends StatefulWidget {
     required this.detail,
     required this.chatUnread,
     required this.onChat,
+    this.statusButton,
     required this.teamId,
     required this.onRespond,
     required this.onRespondFor,
@@ -311,12 +378,16 @@ class _ParticipationContentState extends State<_ParticipationContent> {
             ),
           ),
         const SizedBox(height: 8),
-        SizedBox(
-          width: double.infinity,
-          child: ParticipationChatButton(
-            unread: widget.chatUnread,
-            onPressed: widget.onChat,
-          ),
+        Row(
+          children: [
+            Expanded(
+              child: ParticipationChatButton(
+                unread: widget.chatUnread,
+                onPressed: widget.onChat,
+              ),
+            ),
+            if (widget.statusButton case final statusButton?) statusButton,
+          ],
         ),
         const SizedBox(height: 12),
         _ParticipationRoster(

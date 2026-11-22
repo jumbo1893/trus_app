@@ -11,6 +11,7 @@ import '../../main/controller/screen_variables_notifier.dart';
 import '../controller/edit/match_edit_notifier.dart';
 import '../match_form_fields.dart';
 import '../post_match_flow.dart';
+import 'lineup_confirm_screen.dart';
 
 class EditMatchScreen extends CustomConsumerStatefulWidget {
   static const String id = "edit-match-screen";
@@ -29,6 +30,11 @@ class _EditMatchScreenState extends ConsumerState<EditMatchScreen> {
     final notifier = ref.read(matchEditNotifierProvider(arg).notifier);
     final state = ref.watch(matchEditNotifierProvider(arg));
     final enteringResult = ref.watch(postMatchFlowProvider) == arg.matchId;
+    // After the match only the lineup and score are confirmed; the rest comes
+    // from the planned match and can be edited later.
+    if (enteringResult && arg.matchId != null) {
+      return LineupConfirmScreen(matchId: arg.matchId!);
+    }
     return BaseFormScreen(
       headerTitle: enteringResult ? 'Potvrdit sestavu a výsledek' : state.name,
       headerText: matchDateToString(state.date),
