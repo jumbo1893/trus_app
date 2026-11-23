@@ -10,23 +10,33 @@ import 'features/main/main_screen.dart';
 Route<dynamic> generateRoute(RouteSettings settings) {
   switch (settings.name) {
     case LoginScreen.routeName:
-      return MaterialPageRoute(builder: (context) => const LoginScreen());
+      return MaterialPageRoute(
+        settings: settings,
+        builder: (context) => const LoginScreen(),
+      );
     case RegistrationScreen.routeName:
       return MaterialPageRoute(
+        settings: settings,
         builder: (context) => const RegistrationScreen(),
       );
     case UserInformationScreen.routeName:
       return MaterialPageRoute(
+        settings: settings,
         builder: (context) => const UserInformationScreen(),
       );
     case AppTeamRegistrationScreen.routeName:
       return MaterialPageRoute(
+        settings: settings,
         builder: (context) => const AppTeamRegistrationScreen(),
       );
     case MainScreen.routeName:
-      return MaterialPageRoute(builder: (context) => const MainScreen());
+      return MaterialPageRoute(
+        settings: settings,
+        builder: (context) => const MainScreen(),
+      );
     default:
       return MaterialPageRoute(
+        settings: settings,
         builder: (context) =>
             const Scaffold(body: ErrorScreen(error: "obrazovka nenalezena")),
       );

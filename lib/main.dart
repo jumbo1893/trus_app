@@ -11,6 +11,7 @@ import 'package:trus_app/common/widgets/loader.dart';
 import 'package:trus_app/features/appearance/controller/appearance_notifier.dart';
 import 'package:trus_app/firebase_options.dart';
 import 'package:trus_app/router.dart';
+import 'package:trus_app/services/analytics_service.dart';
 import 'package:trus_app/services/crash_reporting_service.dart';
 import 'package:trus_app/services/push/notification_init_provider.dart';
 import 'package:trus_app/services/app_open_tracker.dart';
@@ -38,6 +39,7 @@ void main() async {
   await Workmanager().initialize(stepBackgroundCallbackDispatcher);
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
   CrashReportingService.initialize();
+  AnalyticsService.initialize();
   final container = ProviderContainer();
 
   WidgetsBinding.instance.addObserver(
@@ -62,6 +64,7 @@ class MyApp extends ConsumerWidget {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
       navigatorKey: navigatorKey,
+      navigatorObservers: AnalyticsService.navigatorObservers,
       title: "Trusí aplikace",
       // Keep built-in dialogs Czech even when the device uses another language.
       locale: const Locale('cs', 'CZ'),

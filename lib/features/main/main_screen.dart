@@ -6,6 +6,7 @@ import '../chat/chat_controller.dart';
 import 'controller/navigation_guard.dart';
 import '../beer/controller/beer_notifier.dart';
 import 'package:flutter/material.dart';
+import 'package:trus_app/services/analytics_service.dart';
 import 'package:trus_app/features/chat/chat_repository.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:trus_app/common/widgets/bottomsheet/fine_stats_detail_bottom_sheet.dart';
@@ -142,9 +143,14 @@ class _MainScreenState extends ConsumerState<MainScreen>
 
     _chatScreenSub = ref.listenManual<String>(
       screenNotifierProvider.select((s) => s.currentScreenId),
-      (_, screenId) => _updateChatVisibility(screenId),
+      (_, screenId) {
+        _updateChatVisibility(screenId);
+        AnalyticsService.logScreen(screenId);
+      },
     );
-    _updateChatVisibility(ref.read(screenNotifierProvider).currentScreenId);
+    final initialScreenId = ref.read(screenNotifierProvider).currentScreenId;
+    _updateChatVisibility(initialScreenId);
+    AnalyticsService.logScreen(initialScreenId);
 
     // ať skočíš i na start (pokud currentPageIndex != 0 nebo chceš jistotu):
     WidgetsBinding.instance.addPostFrameCallback((_) {
