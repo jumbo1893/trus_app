@@ -180,6 +180,7 @@ class _GoalScreenState extends ConsumerState<GoalScreen>
                 key: ValueKey('score-bar-$matchId'),
                 matchId: matchId!,
                 live: liveMatch,
+                onLineupChanged: () => notifier.setupMatch(matchId),
               ),
             if (sc.matchModel.id == matchId)
               MatchContextHeader(

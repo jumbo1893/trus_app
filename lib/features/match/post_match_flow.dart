@@ -22,7 +22,7 @@ bool scorelessMatchType(String? type) =>
 
 /// Live clock label for an in-progress match, e.g. "2. poločas · 41:07".
 String livePhaseLabel(PlannedMatch match, DateTime now) {
-  final elapsed = now.difference(match.date);
+  final elapsed = now.difference(match.startedAt);
   final half = Duration(minutes: match.halfMinutes);
   final pause = Duration(minutes: match.breakMinutes);
   String clock(Duration d) =>

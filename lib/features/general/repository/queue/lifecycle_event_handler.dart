@@ -23,10 +23,12 @@ class LifecycleEventHandler extends WidgetsBindingObserver {
     if (state == AppLifecycleState.resumed) {
       container.read(appOpenTrackerProvider).onResumed();
       container.read(requestExecutorProvider).retryQueuedRequests();
-      container
-          .read(stepSyncSchedulerProvider)
-          .onAppResumed()
-          .whenComplete(() => container.invalidate(stepControllerProvider));
+      final stepScheduler = container.read(stepSyncSchedulerProvider);
+      if (!stepScheduler.permissionFlowActive) {
+        stepScheduler.onAppResumed().whenComplete(
+          () => container.invalidate(stepControllerProvider),
+        );
+      }
     }
   }
 }

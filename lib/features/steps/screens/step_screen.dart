@@ -1,5 +1,3 @@
-import 'dart:io';
-
 import '../repository/step_api_service.dart';
 import '../../../common/widgets/load_failure.dart';
 import 'package:flutter/material.dart';
@@ -12,7 +10,6 @@ import 'package:trus_app/features/steps/controller/step_controller.dart';
 import 'package:trus_app/features/steps/screens/step_history_sheet.dart';
 import 'package:trus_app/features/steps/state/step_state.dart';
 import 'package:trus_app/features/steps/service/step_sync_scheduler.dart';
-import 'package:trus_app/features/steps/screens/background_steps_prompt.dart';
 import 'package:trus_app/models/api/step/step_models.dart';
 import 'package:trus_app/theme/app_colors.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -31,54 +28,93 @@ class StepScreen extends CustomConsumerStatefulWidget {
 }
 
 class _StepScreenState extends ConsumerState<StepScreen> {
+  /// Missing background access is offered at most once per app run, so a
+  /// declined choice is respected and the user is not asked on every visit.
+  static bool _backgroundPromptShown = false;
+
   bool? _backgroundEnabled;
   bool _backgroundBusy = false;
 
   @override
   void initState() {
     super.initState();
-    _loadBackgroundSetting();
+    ref.listenManual(
+      stepControllerProvider.select((state) => state.consent.valueOrNull),
+      (_, consent) {
+        if (consent == true) _loadBackgroundSetting(promptIfMissing: true);
+      },
+      fireImmediately: true,
+    );
   }
 
-  Future<void> _loadBackgroundSetting() async {
-    final enabled = await ref
-        .read(stepSyncSchedulerProvider)
-        .isBackgroundEnabled();
-    if (mounted) setState(() => _backgroundEnabled = enabled);
-  }
-
-  Future<void> _setBackgroundEnabled(bool enabled) async {
-    if (_backgroundBusy) return;
-    if (enabled && !await askForBackgroundSteps(context)) return;
+  Future<void> _loadBackgroundSetting({bool promptIfMissing = false}) async {
+    final scheduler = ref.read(stepSyncSchedulerProvider);
+    final enabled = await scheduler.isBackgroundEnabled();
     if (!mounted) return;
+    setState(() => _backgroundEnabled = enabled);
+    if (enabled ||
+        !promptIfMissing ||
+        _backgroundPromptShown ||
+        scheduler.permissionFlowActive) {
+      return;
+    }
+    _backgroundPromptShown = true;
+    if (await _askForBackground() && mounted) await _enableBackground();
+  }
+
+  Future<bool> _askForBackground() async =>
+      await showDialog<bool>(
+        context: context,
+        builder: (context) => AlertDialog(
+          title: const Text('Aktualizovat kroky i na pozadí?'),
+          content: const Text(
+            'Sdílení kroků máš zapnuté, ale aktualizace na pozadí nejsou povolené. '
+            'S nimi aplikace přibližně každých 6 hodin načte součty kroků za dnešek '
+            'a včerejšek, i když ji nepoužíváš, takže týmový žebříček zůstane '
+            'aktuální. Bez nich se kroky aktualizují jen při používání aplikace.',
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context, false),
+              child: const Text('Teď ne'),
+            ),
+            FilledButton(
+              onPressed: () => Navigator.pop(context, true),
+              child: const Text('Povolit'),
+            ),
+          ],
+        ),
+      ) ??
+      false;
+
+  Future<void> _enableBackground() async {
+    if (_backgroundBusy) return;
     setState(() => _backgroundBusy = true);
-    try {
-      final allowed = await ref
-          .read(stepSyncSchedulerProvider)
-          .setBackgroundEnabled(enabled);
-      if (!mounted) return;
-      setState(() => _backgroundEnabled = enabled && allowed);
-      if (enabled && !allowed) {
-        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-          content: Text('Přístup na pozadí nebyl povolen. Kroky se budou aktualizovat při používání aplikace.'),
-        ));
-      }
-    } catch (_) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-          content: Text('Nastavení aktualizací se nepodařilo změnit. Zkus to znovu.'),
-        ));
-      }
-    } finally {
-      if (mounted) setState(() => _backgroundBusy = false);
+    final scheduler = ref.read(stepSyncSchedulerProvider);
+    final allowed = await scheduler.runPermissionFlow(
+      scheduler.tryEnableBackground,
+    );
+    if (!mounted) return;
+    setState(() {
+      _backgroundEnabled = allowed;
+      _backgroundBusy = false;
+    });
+    if (!allowed) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text(
+            'Přístup na pozadí nebyl povolen. Kroky se budou aktualizovat při používání aplikace.',
+          ),
+        ),
+      );
     }
   }
 
   Future<void> _grantSteps(StepController controller) async {
+    // grantConsent already requests background access; don't ask twice.
+    _backgroundPromptShown = true;
     await controller.grantConsent();
-    if (!mounted ||
-        ref.read(stepControllerProvider).consent.valueOrNull != true) return;
-    await _setBackgroundEnabled(true);
+    if (mounted) await _loadBackgroundSetting();
   }
 
   Future<void> _revokeSteps(StepController controller) async {
@@ -105,7 +141,7 @@ class _StepScreenState extends ConsumerState<StepScreen> {
                   controller: controller,
                   backgroundEnabled: _backgroundEnabled,
                   backgroundBusy: _backgroundBusy,
-                  onBackgroundChanged: _setBackgroundEnabled,
+                  onEnableBackground: _enableBackground,
                   onRevoke: () => _revokeSteps(controller),
                 )
               : _ConsentView(onGrant: () => _grantSteps(controller)),
@@ -146,12 +182,13 @@ class _ConsentView extends StatelessWidget {
             'Apple Health na iOS. Shromažďuje denní součty za posledních 30 dní a '
             'ukládá je k vašemu účtu na serveru. Vaše jméno, denní součty, historii, '
             'průměry a pořadí mohou vidět pouze přihlášení členové stejného týmu.\n\n'
-            'Pokud na Androidu povolíte přístup na pozadí, aplikace synchronizuje '
-            'aktuální a předchozí den přibližně každých 6 hodin, i když je zavřená '
-            'nebo ji právě nepoužíváte. Bez tohoto oprávnění se kroky aktualizují při '
-            'používání aplikace. Na iOS může systém provést obdobnou občasnou '
-            'aktualizaci na pozadí v rámci uděleného přístupu k Apple Health; její '
-            'časování určuje iOS.\n\n'
+            'Součástí souhlasu jsou automatické aktualizace na pozadí: aplikace '
+            'přibližně každých 6 hodin synchronizuje aktuální a předchozí den, i když '
+            'je zavřená nebo ji právě nepoužíváte. Na Androidu o ně Health Connect '
+            'požádá jako o samostatné oprávnění, které můžete odmítnout; na iOS '
+            'časování určuje systém. Bez nich se kroky aktualizují jen při používání '
+            'aplikace. Sdílení kroků včetně aktualizací můžete kdykoli vypnout na '
+            'této obrazovce.\n\n'
             'Aplikace nečte kadenci, trasu, polohu ani jiné zdravotní údaje a data '
             'nepoužívá k reklamě ani je neprodává.',
             textAlign: TextAlign.center,
@@ -183,14 +220,14 @@ class _LeaderboardView extends StatelessWidget {
   final StepController controller;
   final bool? backgroundEnabled;
   final bool backgroundBusy;
-  final ValueChanged<bool> onBackgroundChanged;
+  final VoidCallback onEnableBackground;
   final VoidCallback onRevoke;
   const _LeaderboardView({
     required this.state,
     required this.controller,
     required this.backgroundEnabled,
     required this.backgroundBusy,
-    required this.onBackgroundChanged,
+    required this.onEnableBackground,
     required this.onRevoke,
   });
 
@@ -246,15 +283,23 @@ class _LeaderboardView extends StatelessWidget {
             message: 'Kroky se nepodařilo načíst. Zkus to znovu.',
             onRetry: controller.loadLeaderboard,
           ),
-          data: (leaderboard) => _LeaderboardTable(
-            data: leaderboard,
-            period: state.period,
-            sort: state.currentSort,
-            onEntryTap: (entry) => StepHistorySheet.show(
-              context,
-              controller: controller,
-              userId: entry.userId,
-              initialUserName: entry.userName,
+          // Sorting is local and instant; the fade makes the change visible.
+          data: (leaderboard) => AnimatedSwitcher(
+            duration: const Duration(milliseconds: 250),
+            child: _LeaderboardTable(
+              key: ValueKey(
+                '${state.period}-${state.currentSort.field}-'
+                '${state.currentSort.descending}',
+              ),
+              data: leaderboard,
+              period: state.period,
+              sort: state.currentSort,
+              onEntryTap: (entry) => StepHistorySheet.show(
+                context,
+                controller: controller,
+                userId: entry.userId,
+                initialUserName: entry.userName,
+              ),
             ),
           ),
         ),
@@ -270,27 +315,23 @@ class _LeaderboardView extends StatelessWidget {
             subtitle: Text(
               state.syncing
                   ? 'Právě synchronizuji posledních 30 dní…'
-                  : 'Kroky se aktualizují při používání aplikace.',
+                  : backgroundEnabled == false
+                  ? 'Kroky se aktualizují jen při používání aplikace. '
+                        'Aktualizace na pozadí nejsou povolené.'
+                  : 'Kroky se aktualizují při používání aplikace a přibližně '
+                        'každých 6 hodin i na pozadí.',
             ),
           ),
         ),
-        if (Platform.isAndroid) ...[
-          const SizedBox(height: 10),
-          Card(
-            child: SwitchListTile.adaptive(
-              value: backgroundEnabled ?? false,
-              onChanged: backgroundEnabled == null || backgroundBusy
-                  ? null
-                  : onBackgroundChanged,
-              secondary: const Icon(Icons.update_rounded),
-              title: const Text('Automatické aktualizace na pozadí'),
-              subtitle: const Text(
-                'Volitelné načítání dnešních a včerejších kroků přibližně '
-                'každých 6 hodin, i když aplikaci nepoužíváš.',
-              ),
+        if (backgroundEnabled == false)
+          Align(
+            alignment: Alignment.centerRight,
+            child: TextButton.icon(
+              onPressed: backgroundBusy ? null : onEnableBackground,
+              icon: const Icon(Icons.update_rounded),
+              label: const Text('Povolit aktualizace na pozadí'),
             ),
           ),
-        ],
         const SizedBox(height: 10),
         OutlinedButton.icon(
           onPressed: () =>
@@ -380,6 +421,7 @@ class _LeaderboardTable extends StatelessWidget {
   final ValueChanged<StepLeaderboardEntry> onEntryTap;
 
   const _LeaderboardTable({
+    super.key,
     required this.data,
     required this.period,
     required this.sort,
@@ -429,6 +471,7 @@ class _LeaderboardTable extends StatelessWidget {
                 rank: index + 1,
                 entry: entries[index],
                 showAllTimeStats: period == StepPeriod.allTime,
+                sortField: sort.field,
                 highlightRank:
                     sort.descending && sort.field != StepSortField.name,
                 onTap: () => onEntryTap(entries[index]),
@@ -508,6 +551,7 @@ class _LeaderboardRow extends StatelessWidget {
   final int rank;
   final StepLeaderboardEntry entry;
   final bool showAllTimeStats;
+  final StepSortField sortField;
   final bool highlightRank;
   final VoidCallback onTap;
 
@@ -515,6 +559,7 @@ class _LeaderboardRow extends StatelessWidget {
     required this.rank,
     required this.entry,
     required this.showAllTimeStats,
+    required this.sortField,
     required this.highlightRank,
     required this.onTap,
   });
@@ -530,6 +575,19 @@ class _LeaderboardRow extends StatelessWidget {
         : rank == 3
         ? Colors.brown.shade400
         : context.appColors.textSecondary;
+    final format = NumberFormat.decimalPattern('cs_CZ');
+    final total = '${format.format(entry.stepCount)} kroků';
+    final average = format.format(entry.averageStepsPerDay.round());
+    final days = _formatDayCount(entry.dayCount);
+    // The trailing value is the metric the list is sorted by.
+    final (primary, secondary) = switch (sortField) {
+      StepSortField.averageStepsPerDay => (
+        '$average kroků/den',
+        '$days • celkem $total',
+      ),
+      StepSortField.days => (days, '$total • průměr $average kroků/den'),
+      _ => (total, '$days • průměr $average kroků/den'),
+    };
     return ListTile(
       onTap: onTap,
       leading: CircleAvatar(
@@ -544,17 +602,12 @@ class _LeaderboardRow extends StatelessWidget {
         entry.userName,
         style: const TextStyle(fontWeight: FontWeight.w600),
       ),
-      subtitle: showAllTimeStats
-          ? Text(
-              '${_formatDayCount(entry.dayCount)} • '
-              'průměr ${NumberFormat.decimalPattern('cs_CZ').format(entry.averageStepsPerDay.round())} kroků/den',
-            )
-          : null,
+      subtitle: showAllTimeStats ? Text(secondary) : null,
       trailing: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
           Text(
-            '${NumberFormat.decimalPattern('cs_CZ').format(entry.stepCount)} kroků',
+            showAllTimeStats ? primary : total,
             style: const TextStyle(fontWeight: FontWeight.w700),
           ),
           const SizedBox(width: 4),

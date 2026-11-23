@@ -27,10 +27,13 @@ class HealthStepService {
     return granted;
   }
 
+  /// iOS has no separate background permission: HealthKit read access also
+  /// applies to BGAppRefreshTask, whose timing is controlled by the system.
   Future<bool> requestBackgroundPermission() async {
-    if (!Platform.isAndroid) return false;
+    if (!Platform.isAndroid) return true;
     await _health.configure();
     if (!await _health.isHealthDataInBackgroundAvailable()) return false;
+    if (await _health.isHealthDataInBackgroundAuthorized()) return true;
     return _health.requestHealthDataInBackgroundAuthorization();
   }
 

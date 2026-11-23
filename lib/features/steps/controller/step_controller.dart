@@ -55,7 +55,13 @@ class StepController extends SafeStateNotifier<StepsState> {
     }
   }
 
-  Future<void> grantConsent() async {
+  /// Single consent for reading steps and for background updates.
+  Future<void> grantConsent() {
+    final scheduler = ref.read(stepSyncSchedulerProvider);
+    return scheduler.runPermissionFlow(() => _grantConsent(scheduler));
+  }
+
+  Future<void> _grantConsent(StepSyncScheduler scheduler) async {
     safeSetState(state.copyWith(consent: const AsyncValue.loading()));
     bool granted;
     try {
@@ -88,6 +94,12 @@ class StepController extends SafeStateNotifier<StepsState> {
     );
     if (!mounted) return;
     safeSetState(state.copyWith(consent: AsyncValue.data(enabled)));
+    if (enabled && !await scheduler.tryEnableBackground() && mounted) {
+      ui.showSnack(
+        'Aktualizace na pozadí nebyly povoleny. Kroky se budou aktualizovat při používání aplikace.',
+      );
+    }
+    if (!mounted) return;
     // Znovu načteme celý stav až po návratu ze systémového permission flow.
     // Obrazovka tak okamžitě přejde ze souhlasu na aktuální leaderboard.
     await load();

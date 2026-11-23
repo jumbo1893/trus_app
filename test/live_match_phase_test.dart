@@ -31,6 +31,21 @@ void main() {
     expect(match.endsAt, kickOff.add(const Duration(minutes: 65)));
   });
 
+  test('manual kick-off moves the clock, not the planned date', () {
+    final started = PlannedMatch(
+      id: 2,
+      date: kickOff,
+      kickoffAt: kickOff.add(const Duration(minutes: 20)),
+      type: 'LEAGUE',
+      status: 'IN_PROGRESS',
+    );
+    expect(
+      livePhaseLabel(started, kickOff.add(const Duration(minutes: 25))),
+      '1. poločas · 05:00',
+    );
+    expect(started.endsAt, kickOff.add(const Duration(minutes: 85)));
+  });
+
   test('training and teambuilding have no score', () {
     expect(scorelessMatchType('TRAINING'), isTrue);
     expect(scorelessMatchType('TEAMBUILDING'), isTrue);

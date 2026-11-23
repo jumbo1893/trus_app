@@ -13,6 +13,7 @@ class PlannedMatch {
   final int? matchId;
   final String? description;
   final bool hasPhoto;
+  final DateTime? kickoffAt;
   final int halfMinutes;
   final int breakMinutes;
 
@@ -31,6 +32,7 @@ class PlannedMatch {
     this.matchId,
     this.description,
     this.hasPhoto = false,
+    this.kickoffAt,
     this.halfMinutes = 30,
     this.breakMinutes = 5,
   });
@@ -43,8 +45,11 @@ class PlannedMatch {
   /// Training and teambuilding have no score, so they skip the live screen.
   bool get hasScore => type != 'TRAINING' && type != 'TEAMBUILDING';
 
+  /// The clock runs from the manual kick-off, otherwise from the planned start.
+  DateTime get startedAt => kickoffAt ?? date;
+
   DateTime get endsAt =>
-      date.add(Duration(minutes: 2 * halfMinutes + breakMinutes));
+      startedAt.add(Duration(minutes: 2 * halfMinutes + breakMinutes));
 
   factory PlannedMatch.fromJson(Map<String, dynamic> json) => PlannedMatch(
     id: json['id'] as int,
@@ -61,6 +66,9 @@ class PlannedMatch {
     matchId: json['matchId'] as int?,
     description: json['description'] as String?,
     hasPhoto: json['hasPhoto'] as bool? ?? false,
+    kickoffAt: json['kickoffAt'] == null
+        ? null
+        : DateTime.parse(json['kickoffAt'] as String),
     halfMinutes: json['halfMinutes'] as int? ?? 30,
     breakMinutes: json['breakMinutes'] as int? ?? 5,
   );

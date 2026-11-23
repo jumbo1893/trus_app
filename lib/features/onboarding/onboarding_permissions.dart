@@ -32,17 +32,19 @@ class OnboardingPermissions {
     return true;
   }
 
-  Future<bool> steps() async {
-    final health = HealthStepService();
-    if (!await health.requestPermission()) return false;
-    final api = ref.read(stepApiServiceProvider);
-    if (!await api.setConsent(true)) throw StateError('Consent not saved');
-    final team = ref.read(globalVariablesControllerProvider).appTeam;
-    if (team != null) await ref.read(stepSyncSchedulerProvider).enable(team.id);
-    await api.sync(await health.readLastDays());
-    return true;
+  /// Single consent for reading steps and for background updates.
+  Future<bool> steps() {
+    final scheduler = ref.read(stepSyncSchedulerProvider);
+    return scheduler.runPermissionFlow(() async {
+      final health = HealthStepService();
+      if (!await health.requestPermission()) return false;
+      final api = ref.read(stepApiServiceProvider);
+      if (!await api.setConsent(true)) throw StateError('Consent not saved');
+      final team = ref.read(globalVariablesControllerProvider).appTeam;
+      if (team != null) await scheduler.enable(team.id);
+      await scheduler.tryEnableBackground();
+      await api.sync(await health.readLastDays());
+      return true;
+    });
   }
-
-  Future<bool> backgroundSteps() async =>
-      ref.read(stepSyncSchedulerProvider).setBackgroundEnabled(true);
 }

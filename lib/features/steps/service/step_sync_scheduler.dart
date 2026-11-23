@@ -21,6 +21,7 @@ class StepSyncScheduler {
   final HealthStepService _health = HealthStepService();
   Timer? _timer;
   bool _running = false;
+  bool _permissionFlowActive = false;
 
   StepSyncScheduler(this.ref);
 
@@ -41,6 +42,36 @@ class StepSyncScheduler {
       (_) => syncIfNeeded(),
     );
     return syncIfNeeded(force: true);
+  }
+
+  /// System permission UI (HealthKit sheet, Health Connect activity) sends the
+  /// app through inactive/paused -> resumed. The resume handler must not reload
+  /// step state while a permission flow is still saving consent.
+  bool get permissionFlowActive => _permissionFlowActive;
+
+  Future<T> runPermissionFlow<T>(Future<T> Function() flow) async {
+    _permissionFlowActive = true;
+    try {
+      return await flow();
+    } finally {
+      _permissionFlowActive = false;
+      startForegroundMonitoring();
+    }
+  }
+
+  /// Part of the single step consent: background updates are switched on with
+  /// it and can be turned off on the Steps screen. Failure keeps foreground sync.
+  Future<bool> tryEnableBackground() async {
+    try {
+      return await setBackgroundEnabled(true);
+    } catch (error, stack) {
+      await CrashReportingService.recordError(
+        error,
+        stack,
+        reason: 'Zapnutí synchronizace kroků na pozadí selhalo',
+      );
+      return false;
+    }
   }
 
   void pauseForegroundMonitoring() {

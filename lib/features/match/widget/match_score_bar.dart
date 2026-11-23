@@ -11,6 +11,8 @@ import 'package:trus_app/features/match/match_notifier_args.dart';
 import 'package:trus_app/features/match/post_match_flow.dart';
 import 'package:trus_app/features/match/repository/match_repository.dart';
 import 'package:trus_app/features/match/screens/match_detail_screen.dart';
+import 'package:trus_app/features/match_participation/widgets/participation_pitch.dart';
+import 'package:trus_app/models/api/match/match_setup.dart';
 import 'package:trus_app/models/api/match/match_api_model.dart';
 import 'package:trus_app/models/api/match/planned_match.dart';
 import 'package:trus_app/theme/app_colors.dart';
@@ -21,7 +23,15 @@ class MatchScoreBar extends ConsumerStatefulWidget {
   final int matchId;
   final PlannedMatch? live;
 
-  const MatchScoreBar({super.key, required this.matchId, this.live});
+  /// Called after the lineup was edited from the live bar.
+  final VoidCallback? onLineupChanged;
+
+  const MatchScoreBar({
+    super.key,
+    required this.matchId,
+    this.live,
+    this.onLineupChanged,
+  });
 
   @override
   ConsumerState<MatchScoreBar> createState() => _MatchScoreBarState();
@@ -95,6 +105,39 @@ class _MatchScoreBarState extends ConsumerState<MatchScoreBar> {
     });
   }
 
+  Future<void> _editLineup() async {
+    final repository = ref.read(matchRepositoryProvider);
+    repository.invalidateMatchSetup(widget.matchId);
+    final MatchSetup setup;
+    try {
+      setup = await repository.fetchMatchSetup(widget.matchId);
+    } catch (_) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Sestavu se nepodařilo načíst.')),
+        );
+      }
+      return;
+    }
+    if (!mounted) return;
+    await showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      useSafeArea: true,
+      showDragHandle: true,
+      builder: (sheetContext) => SizedBox(
+        height: MediaQuery.sizeOf(sheetContext).height * .8,
+        child: MatchRosterPicker(
+          matchId: widget.matchId,
+          setup: setup,
+          title: 'Sestava',
+        ),
+      ),
+    );
+    repository.invalidateMatchSetup(widget.matchId);
+    widget.onLineupChanged?.call();
+  }
+
   Future<void> _finish(PlannedMatch live) async {
     final confirmed = await showDialog<bool>(
       context: context,
@@ -160,6 +203,11 @@ class _MatchScoreBarState extends ConsumerState<MatchScoreBar> {
                       livePhaseLabel(live, DateTime.now()),
                       style: const TextStyle(fontWeight: FontWeight.w700),
                     ),
+                  ),
+                  IconButton(
+                    tooltip: 'Upravit sestavu',
+                    onPressed: _finishing ? null : _editLineup,
+                    icon: const Icon(Icons.groups_outlined),
                   ),
                   TextButton.icon(
                     onPressed: _finishing ? null : () => _finish(live),

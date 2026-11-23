@@ -11,7 +11,6 @@ import 'package:trus_app/features/notification/repository/notification_api_servi
 import 'package:trus_app/features/notification/push/controller/enabled_notifications_notifier.dart';
 import 'package:trus_app/features/player/repository/player_repository.dart';
 import 'package:trus_app/features/steps/controller/step_controller.dart';
-import 'package:trus_app/features/steps/screens/background_steps_prompt.dart';
 import 'package:trus_app/features/user/controller/view_user_notifier.dart';
 import 'package:trus_app/common/utils/web_view_browser.dart';
 import 'package:trus_app/features/footbar/controller/footbar_connect_notifier.dart';
@@ -260,26 +259,6 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
         );
       }
       return;
-    }
-    if (!mounted) return;
-    if (await askForBackgroundSteps(context) && mounted) {
-      bool allowed;
-      try {
-        allowed = await ref
-            .read(onboardingPermissionsProvider)
-            .backgroundSteps();
-      } catch (_) {
-        allowed = false;
-      }
-      if (!allowed && mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text(
-              'Aktualizace na pozadí nebyla povolena. Kroky se budou aktualizovat při používání aplikace.',
-            ),
-          ),
-        );
-      }
     }
     if (!mounted) return;
     ref.invalidate(stepControllerProvider);
@@ -537,7 +516,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
       ),
       SizedBox(height: 12),
       Text(
-        'Po povolení kroků se na Androidu zvlášť rozhodneš, zda chceš také automatické aktualizace na pozadí. Bez nich se kroky aktualizují při používání aplikace.',
+        'Součástí souhlasu jsou automatické aktualizace na pozadí: přibližně každých 6 hodin načteme součty kroků za dnešek a včerejšek, i když aplikaci nepoužíváš. Na Androidu je Health Connect nabídne jako samostatné oprávnění, které můžeš odmítnout; na iPhonu o načasování rozhoduje systém. Vypnout je můžeš kdykoli na obrazovce Kroky.',
       ),
     ],
     OnboardingStep.footbar => [
